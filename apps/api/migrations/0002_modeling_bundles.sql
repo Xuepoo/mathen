@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS modeling_bundles (
+  id TEXT PRIMARY KEY,
+  commit_sha TEXT NOT NULL,
+  provenance TEXT NOT NULL,
+  bundle_json TEXT NOT NULL,
+  source_path TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

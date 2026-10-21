@@ -146,6 +146,26 @@ app.get("/features", async (c) => {
   });
 });
 
+app.get("/modeling/:id", async (c) => {
+  const row = await c.env.DB.prepare(
+    `SELECT id, commit_sha, provenance, bundle_json, source_path
+     FROM modeling_bundles WHERE id = ?1`,
+  )
+    .bind(c.req.param("id"))
+    .first<{
+      id: string;
+      commit_sha: string;
+      provenance: string;
+      bundle_json: string;
+      source_path: string;
+    }>();
+
+  if (!row) return c.json({ error: "Modeling bundle not found" }, 404);
+  const bundle = parseJson<Record<string, unknown> | null>(row.bundle_json, null);
+  if (!bundle) return c.json({ error: "Stored modeling bundle is invalid" }, 500);
+  return c.json({ data: bundle });
+});
+
 app.get("/graph", async (c) => {
   const systems = await c.env.DB.prepare("SELECT id, name FROM systems ORDER BY name").all<{
     id: string;

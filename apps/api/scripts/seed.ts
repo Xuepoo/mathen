@@ -37,8 +37,10 @@ type Card = {
 };
 
 const root = resolve(import.meta.dir, "../../../data/systems");
+const modelingRoot = resolve(import.meta.dir, "../../../data/modeling");
 const output = resolve(import.meta.dir, "../.wrangler/generated-seed.sql");
 const cards = await loadCards();
+const modelingBundles = await loadModelingBundles();
 
 await mkdir(resolve(import.meta.dir, "../.wrangler"), { recursive: true });
 
@@ -51,7 +53,9 @@ const statements = [
   "DELETE FROM features;",
   "DELETE FROM evidence;",
   "DELETE FROM systems;",
+  "DELETE FROM modeling_bundles;",
   ...cards.flatMap(toStatements),
+  ...modelingBundles.map(toModelingBundleStatement),
 ];
 
 await writeFile(output, `${statements.join("\n")}\n`, "utf8");
@@ -68,6 +72,31 @@ async function loadCards() {
   const files = (await readdir(root)).filter((file) => file.endsWith(".json")).sort();
   return Promise.all(
     files.map(async (file) => JSON.parse(await readFile(resolve(root, file), "utf8")) as Card),
+  );
+}
+
+async function loadModelingBundles() {
+  const files = (await readdir(modelingRoot))
+    .filter((file) => file.endsWith(".json"))
+    .sort();
+  return Promise.all(
+    files.map(async (file) => {
+      const bundle = JSON.parse(
+        await readFile(resolve(modelingRoot, file), "utf8"),
+      ) as {
+        system?: { id?: string; commit?: string; provenance?: string };
+      };
+      if (!bundle.system?.id || !bundle.system.commit || !bundle.system.provenance) {
+        throw new Error(`Invalid modeling bundle: ${file}`);
+      }
+      return {
+        id: bundle.system.id,
+        commit_sha: bundle.system.commit,
+        provenance: bundle.system.provenance,
+        bundle_json: JSON.stringify(bundle),
+        source_path: `data/modeling/${file}`,
+      };
+    }),
   );
 }
 
@@ -127,6 +156,16 @@ function toStatements(card: Card) {
   ];
 
   return statements;
+}
+
+function toModelingBundleStatement(bundle: {
+  id: string;
+  commit_sha: string;
+  provenance: string;
+  bundle_json: string;
+  source_path: string;
+}) {
+  return insert("modeling_bundles", bundle);
 }
 
 function insert(table: string, values: Record<string, unknown>) {
