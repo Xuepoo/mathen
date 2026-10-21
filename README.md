@@ -99,8 +99,9 @@ to the Worker.
 
 The application deliberately uses D1 as the source of truth. Vectorize is an
 optional search index and is not required for local structured browsing. A
-future MCP server can call the same API and submit reviewed Architecture Cards
-generated from a local repository.
+local MCP server exposes read-only system, feature, and modeling-bundle tools;
+see [`docs/mcp.md`](docs/mcp.md). A future hosted MCP server can call the same
+API and submit reviewed Architecture Cards generated from a local repository.
 
 Run the standard checks:
 
@@ -126,6 +127,7 @@ src/mathen/                 Validation and inspection CLI
 tests/                      Unit tests
 apps/api/                   Hono Worker and D1 migrations
 apps/web/                   Bun/Vite browser client
+apps/mcp/                   Read-only stdio MCP server
 packages/                   Shared TypeScript contracts
 ```
 

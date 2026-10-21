@@ -96,6 +96,7 @@ def build_modeling_bundle(
             "evidence_rules": [
                 "Do not promote a path name or file count into a semantic fact.",
                 "Every feature and mathematical view must cite evidence IDs.",
+                "Use only evidence IDs already present in existing_structural_draft.",
                 "Use hypothesis or analogy when the mathematical "
                 "correspondence is not established.",
                 "Keep product-specific facts separate from transferable feature names.",

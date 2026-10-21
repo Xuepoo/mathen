@@ -34,6 +34,8 @@ still required for promotion to `data/systems/`.
 - Add Hono Worker API and a minimal Vite browser client.
 - Add Vectorize as a rebuildable semantic retrieval index.
 - Add queries for reusable features and compatible combinations.
+- Expose the reviewed-card and modeling-bundle read boundary through a local
+  stdio MCP server.
 - Add graph export to JSON-LD or RDF only if the simpler graph model is
   insufficient.
 
