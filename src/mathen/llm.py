@@ -90,6 +90,8 @@ def model_bundles(
 ) -> list[Path]:
     """Model selected bundles and write only validated draft cards."""
 
+    _check_output_dir(output_dir)
+
     bundle_paths = (
         [bundle_dir] if bundle_dir.is_file() else sorted(bundle_dir.glob("*.json"))
     )
@@ -126,11 +128,13 @@ def model_bundle(
     existing_draft = bundle.get("existing_structural_draft")
     if not isinstance(existing_draft, dict):
         raise LLMModelError("modeling bundle has no existing draft")
-    allowed_evidence = {
-        item.get("id")
+    existing_evidence = {
+        item.get("id"): item
         for item in existing_draft.get("evidence", [])
         if isinstance(item, dict) and isinstance(item.get("id"), str)
     }
+    if not existing_evidence:
+        raise LLMModelError("modeling bundle has no usable evidence records")
     response_text = client.complete(render_modeling_prompt(bundle))
     card = extract_card_json(response_text)
     if card.get("id") != system["id"]:
@@ -138,11 +142,26 @@ def model_bundle(
             f"model returned id {card.get('id')!r}; expected {system['id']!r}"
         )
     used_evidence = _card_evidence_ids(card)
-    unknown = used_evidence - allowed_evidence
+    unknown = used_evidence - existing_evidence.keys()
     if unknown:
         raise LLMModelError(
             f"model cited evidence not present in the bundle: {sorted(unknown)}"
         )
+    returned_evidence = card.get("evidence")
+    if not isinstance(returned_evidence, list) or not returned_evidence:
+        raise LLMModelError("model returned no evidence records")
+    for evidence in returned_evidence:
+        if not isinstance(evidence, dict) or not isinstance(evidence.get("id"), str):
+            raise LLMModelError("model returned an invalid evidence record")
+        evidence_id = evidence["id"]
+        if evidence_id not in existing_evidence:
+            raise LLMModelError(
+                f"model returned evidence not present in the bundle: {evidence_id}"
+            )
+        if evidence != existing_evidence[evidence_id]:
+            raise LLMModelError(
+                f"model changed evidence record from the bundle: {evidence_id}"
+            )
     card.setdefault("version_context", f"commit {system['commit']}")
     try:
         validate_card(card)
@@ -222,13 +241,27 @@ def _extract_completion_content(response_data: Any) -> str:
 
 def _card_evidence_ids(card: dict[str, Any]) -> set[str]:
     references: set[str] = set()
-    for feature in card.get("features", []):
+    features = card.get("features", [])
+    for feature in features if isinstance(features, list) else []:
         if isinstance(feature, dict):
-            references.update(feature.get("evidence_ids", []))
-    for view in card.get("mathematical_views", []):
+            evidence_ids = feature.get("evidence_ids", [])
+            if isinstance(evidence_ids, list):
+                references.update(
+                    evidence_id
+                    for evidence_id in evidence_ids
+                    if isinstance(evidence_id, str)
+                )
+    views = card.get("mathematical_views", [])
+    for view in views if isinstance(views, list) else []:
         if isinstance(view, dict):
-            references.update(view.get("evidence_ids", []))
-    return {reference for reference in references if isinstance(reference, str)}
+            evidence_ids = view.get("evidence_ids", [])
+            if isinstance(evidence_ids, list):
+                references.update(
+                    evidence_id
+                    for evidence_id in evidence_ids
+                    if isinstance(evidence_id, str)
+                )
+    return references
 
 
 def _load_json_object(path: Path) -> dict[str, Any]:
@@ -239,3 +272,21 @@ def _load_json_object(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise LLMModelError(f"{path}: bundle must be a JSON object")
     return data
+
+
+def _check_output_dir(output_dir: Path) -> None:
+    """Reject output locations that could overwrite reviewed canonical cards."""
+
+    try:
+        resolved = output_dir.resolve()
+    except OSError as error:
+        raise LLMModelError(
+            f"cannot resolve model output directory: {error}"
+        ) from error
+    systems_dirs = [
+        parent for parent in (resolved, *resolved.parents) if parent.name == "systems"
+    ]
+    if systems_dirs:
+        raise LLMModelError(
+            "model output must stay in a draft directory; data/systems is protected"
+        )

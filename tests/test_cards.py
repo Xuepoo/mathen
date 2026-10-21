@@ -1,5 +1,6 @@
 import http.client
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +11,12 @@ from mathen.cards import (
     discover_cards,
     load_card,
     validate_card,
+)
+from mathen.llm import (
+    LLMModelError,
+    client_from_environment,
+    model_bundle,
+    model_bundles,
 )
 from mathen.modeling import build_modeling_bundle, render_modeling_prompt
 from mathen.repositories import (
@@ -147,3 +154,110 @@ class CardValidationTests(unittest.TestCase):
         self.assertEqual(bundle["system"]["commit"], "c" * 40)
         self.assertEqual(bundle["contract_version"], 1)
         self.assertIn("Architecture Card JSON", render_modeling_prompt(bundle))
+
+    def test_llm_model_rejects_evidence_not_in_bundle(self) -> None:
+        bundle = self._modeling_fixture()
+        response = json.loads(json.dumps(bundle["existing_structural_draft"]))
+        response["features"][0]["evidence_ids"] = ["invented"]
+        with self.assertRaisesRegex(LLMModelError, "not present in the bundle"):
+            model_bundle(bundle, _FakeClient(response))
+
+    def test_llm_model_rejects_changed_evidence_record(self) -> None:
+        bundle = self._modeling_fixture()
+        response = json.loads(json.dumps(bundle["existing_structural_draft"]))
+        response["evidence"][0]["title"] = "untrusted replacement"
+        with self.assertRaisesRegex(LLMModelError, "changed evidence"):
+            model_bundle(bundle, _FakeClient(response))
+
+    def test_llm_model_writes_only_validated_draft(self) -> None:
+        bundle = self._modeling_fixture()
+        with tempfile.TemporaryDirectory() as directory:
+            bundle_path = Path(directory) / "fixture.json"
+            bundle_path.write_text(json.dumps(bundle), encoding="utf-8")
+            output_dir = Path(directory) / "drafts" / "llm"
+            written = model_bundles(
+                bundle_path,
+                output_dir,
+                _FakeClient(bundle["existing_structural_draft"]),
+            )
+            self.assertEqual(written, [output_dir / "fixture.json"])
+            self.assertEqual(json.loads(written[0].read_text())["id"], "fixture")
+
+    def test_llm_model_refuses_systems_output(self) -> None:
+        bundle = self._modeling_fixture()
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(LLMModelError, "data/systems"):
+                model_bundles(
+                    Path(directory),
+                    Path(directory) / "data" / "systems",
+                    _FakeClient(bundle),
+                )
+
+    def test_llm_client_supports_environment_and_explicit_configuration(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "OPENAI_API_KEY": "environment-key",
+                "MATHEN_LLM_MODEL": "environment-model",
+                "MATHEN_LLM_BASE_URL": "https://environment.example/v1",
+            },
+        ):
+            environment_client = client_from_environment()
+        self.assertEqual(environment_client.api_key, "environment-key")
+        self.assertEqual(environment_client.model, "environment-model")
+        self.assertEqual(environment_client.base_url, "https://environment.example/v1")
+
+        explicit_client = client_from_environment(
+            base_url="https://explicit.example/v1",
+            api_key="explicit-key",
+            model="explicit-model",
+        )
+        self.assertEqual(explicit_client.api_key, "explicit-key")
+        self.assertEqual(explicit_client.model, "explicit-model")
+        self.assertEqual(explicit_client.base_url, "https://explicit.example/v1")
+
+    @staticmethod
+    def _modeling_fixture() -> dict:
+        evidence = {
+            "id": "repository-commit",
+            "kind": "source-code",
+            "title": "Fixture source",
+            "uri": "https://example.com/commit",
+        }
+        draft = {
+            "id": "fixture",
+            "name": "Fixture",
+            "summary": "A fixture card.",
+            "scope": ["repository"],
+            "features": [
+                {
+                    "id": "observable-structure",
+                    "name": "Observable structure",
+                    "category": "repository-model",
+                    "claim_type": "fact",
+                    "description": "The repository has observable structure.",
+                    "evidence_ids": ["repository-commit"],
+                }
+            ],
+            "mathematical_views": [],
+            "trade_offs": [
+                {
+                    "feature_id": "observable-structure",
+                    "benefits": ["Reproducible inspection"],
+                    "costs": ["Incomplete semantics"],
+                }
+            ],
+            "evidence": [evidence],
+        }
+        return {
+            "system": {"id": "fixture", "commit": "a" * 40},
+            "existing_structural_draft": draft,
+        }
+
+
+class _FakeClient:
+    def __init__(self, response: dict) -> None:
+        self.response = response
+
+    def complete(self, _prompt: str) -> str:
+        return json.dumps(self.response)

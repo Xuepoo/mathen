@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from .cards import CardValidationError, discover_cards, load_card
+from .llm import LLMModelError, client_from_environment, model_bundles
 from .modeling import (
     ModelingBundleError,
     build_modeling_bundles,
@@ -21,6 +22,7 @@ DEFAULT_CACHE = Path(".cache") / "mathen" / "repos"
 DEFAULT_DRAFTS = Path(__file__).parents[2] / "data" / "drafts"
 DEFAULT_ANALYSES = Path(__file__).parents[2] / "data" / "analyses"
 DEFAULT_BUNDLES = Path(__file__).parents[2] / "data" / "modeling"
+DEFAULT_LLM_DRAFTS = DEFAULT_DRAFTS / "llm"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -63,6 +65,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--write-prompts",
         action="store_true",
         help="also render portable Markdown prompts",
+    )
+    model = subparsers.add_parser(
+        "model", help="run an LLM over evidence bundles into draft cards"
+    )
+    model.add_argument("bundle_dir", nargs="?", type=Path, default=DEFAULT_BUNDLES)
+    model.add_argument("--output-dir", type=Path, default=DEFAULT_LLM_DRAFTS)
+    model.add_argument("--system", action="append", dest="system_ids")
+    model.add_argument("--api-key", help="API key; defaults to OPENAI_API_KEY")
+    model.add_argument("--model", help="model name; defaults to MATHEN_LLM_MODEL")
+    model.add_argument(
+        "--base-url",
+        help="OpenAI-compatible API base URL; defaults to MATHEN_LLM_BASE_URL",
+    )
+    model.add_argument("--timeout", type=float, default=120.0)
+    model.add_argument(
+        "--force", action="store_true", help="overwrite existing draft cards"
     )
     analyze.add_argument(
         "--refresh",
@@ -112,7 +130,23 @@ def main() -> int:
                 set(args.system_ids or []),
                 args.write_prompts,
             )
-    except (CardValidationError, ModelingBundleError, RepositoryAnalysisError) as error:
+        if args.command == "model":
+            return model_command(
+                args.bundle_dir,
+                args.output_dir,
+                set(args.system_ids or []),
+                args.api_key,
+                args.model,
+                args.base_url,
+                args.timeout,
+                args.force,
+            )
+    except (
+        CardValidationError,
+        LLMModelError,
+        ModelingBundleError,
+        RepositoryAnalysisError,
+    ) as error:
         print(f"ERROR: {error}")
         return 1
     return 2
@@ -191,6 +225,42 @@ def prepare_modeling_command(
     if write_prompts:
         for path in write_modeling_prompts(bundle_paths, output_dir / "prompts"):
             print(f"prompt  {path}")
+    return 0
+
+
+def model_command(
+    bundle_dir: Path,
+    output_dir: Path,
+    system_ids: set[str],
+    api_key: str | None,
+    model: str | None,
+    base_url: str | None,
+    timeout: float,
+    force: bool,
+) -> int:
+    """Run the provider-neutral model adapter and print created draft paths."""
+
+    if timeout <= 0:
+        print("ERROR: --timeout must be positive")
+        return 1
+    resolved_output = output_dir.resolve()
+    required_root = DEFAULT_LLM_DRAFTS.resolve()
+    if (
+        resolved_output != required_root
+        and required_root not in resolved_output.parents
+    ):
+        print(f"ERROR: model output must stay under {required_root}")
+        return 1
+    client = client_from_environment(
+        base_url=base_url,
+        api_key=api_key,
+        model=model,
+        timeout=timeout,
+    )
+    for path in model_bundles(
+        bundle_dir, output_dir, client, system_ids or None, overwrite=force
+    ):
+        print(f"draft  {path}")
     return 0
 
 

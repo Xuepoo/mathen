@@ -16,11 +16,17 @@
 
 ## Phase 2: Assisted extraction
 
-- Write an LLM Skill that emits only the Architecture Card format.
+- Add a provider-neutral LLM adapter that emits only the Architecture Card
+  format.
 - Prepare fixed-commit evidence bundles and portable modeling prompts.
 - Require source excerpts and confidence for every extracted claim.
 - Add a review queue for unresolved or conflicting claims.
 - Never allow unreviewed output to overwrite reviewed data.
+
+The initial adapter and CLI workflow are available through `mathen model`.
+Generated files remain in `data/drafts/llm/`, and evidence IDs and records are
+checked against the fixed bundle before a draft is written. Human review is
+still required for promotion to `data/systems/`.
 
 ## Phase 3: Cloudflare application and retrieval
 

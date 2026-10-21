@@ -18,8 +18,9 @@ The project treats a software system as a collection of:
 
 The first milestone is deliberately small: define a stable **Architecture
 Card** format, seed it with representative systems, and provide validation
-and inspection tools. LLM-assisted extraction will be added only after the
-representation and evidence rules are stable.
+and inspection tools. LLM-assisted extraction runs only after the
+representation and evidence rules are stable, and always produces reviewable
+drafts.
 
 ## Project status
 
@@ -66,6 +67,20 @@ uv run mathen prepare-modeling --write-prompts
 This writes fixed-commit JSON bundles to `data/modeling/` and portable prompts
 to `data/modeling/prompts/`. The bundle is the input to the semantic modeling
 step; its output remains a draft until evidence and claims are reviewed.
+
+Run the provider-neutral adapter against those bundles:
+
+```bash
+export OPENAI_API_KEY=...
+export MATHEN_LLM_MODEL=gpt-4.1-mini
+uv run mathen model --system git
+```
+
+Generated cards are written under `data/drafts/llm/`. The adapter checks card
+semantics and prevents model output from introducing or changing evidence
+records. Configure an OpenAI-compatible endpoint with `MATHEN_LLM_BASE_URL`,
+or use the explicit `--api-key`, `--model`, and `--base-url` flags. See
+[`docs/llm-modeling.md`](docs/llm-modeling.md) for the full workflow.
 
 ## Quick start: Cloudflare application
 
