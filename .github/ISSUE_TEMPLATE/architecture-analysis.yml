@@ -1,0 +1,33 @@
+name: Architecture analysis
+description: Add or revise an evidence-backed architecture model.
+title: "analysis: "
+labels: ["type: analysis", "status: triage"]
+body:
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: Which system or repository should be analyzed?
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Research question
+      description: What architecture question should the card answer?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Primary evidence
+      description: Link official documentation, papers, source code, or experiments.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What facts, views, trade-offs, and validation are expected?
+    validations:
+      required: true

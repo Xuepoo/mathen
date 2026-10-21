@@ -1,0 +1,84 @@
+{
+  "id": "firecracker",
+  "name": "AWS Firecracker",
+  "version_context": "MicroVM design for multi-tenant cloud workloads",
+  "summary": "A minimal virtual machine monitor that combines hardware virtualization isolation with a deliberately small device model and fast lifecycle operations.",
+  "scope": [
+    "virtualization",
+    "multi-tenant isolation",
+    "resource control",
+    "microVM lifecycle"
+  ],
+  "features": [
+    {
+      "id": "minimal-machine-model",
+      "name": "Minimal machine model",
+      "category": "virtualization-boundary",
+      "claim_type": "fact",
+      "description": "A Firecracker process encapsulates one microVM and exposes a deliberately limited set of emulated and paravirtualized devices.",
+      "benefits": ["Reduces device-model complexity and attack surface"],
+      "costs": ["Provides less general hardware compatibility than a full VMM"],
+      "evidence_ids": ["firecracker-design"]
+    },
+    {
+      "id": "kvm-event-driven-vmm",
+      "name": "KVM-backed event-driven VMM",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Guest CPU execution uses KVM while device emulation and control work are organized around dedicated threads and an epoll-based event loop.",
+      "benefits": [
+        "Supports fast lifecycle operations and high resource density"
+      ],
+      "costs": [
+        "Correctness and performance depend on carefully coordinating host, VMM, and guest execution"
+      ],
+      "evidence_ids": ["firecracker-design"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Layered isolation boundary",
+      "question": "How can a system combine VM isolation with a smaller operational and device surface?",
+      "assumptions": [
+        "KVM provides the modeled hardware isolation boundary",
+        "The reduced device model is sufficient for the target workloads"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["firecracker-design"]
+    },
+    {
+      "model": "Resource-constrained concurrent state machine",
+      "question": "How do API commands, VMM events, and virtual CPU execution evolve one microVM state?",
+      "assumptions": [
+        "Each command has defined preconditions and state effects",
+        "Resource limits are part of the transition semantics"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["firecracker-design"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "minimal-machine-model",
+      "benefits": ["Smaller trusted computing base and faster startup path"],
+      "costs": [
+        "Reduced compatibility with workloads requiring a broad virtual hardware surface"
+      ]
+    },
+    {
+      "feature_id": "kvm-event-driven-vmm",
+      "benefits": ["Efficient execution of many small virtual machines"],
+      "costs": ["More specialized scheduling and I/O assumptions"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "firecracker-design",
+      "kind": "official-doc",
+      "title": "Firecracker Design",
+      "uri": "https://github.com/firecracker-microvm/firecracker/blob/main/docs/design.md",
+      "notes": "Primary design documentation for the VMM architecture and threading model."
+    }
+  ],
+  "related_systems": ["qemu", "docker"]
+}

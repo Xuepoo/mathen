@@ -1,0 +1,90 @@
+{
+  "id": "duckdb",
+  "name": "DuckDB",
+  "version_context": "Embedded analytical database design",
+  "summary": "An in-process analytical database that combines embedded deployment with columnar and vectorized execution for OLAP workloads.",
+  "scope": [
+    "query execution",
+    "analytical storage",
+    "embedded deployment",
+    "data interchange"
+  ],
+  "features": [
+    {
+      "id": "embedded-process-execution",
+      "name": "Embedded process execution",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "The database runs inside the host process without a separately managed database server.",
+      "benefits": [
+        "Simplifies deployment",
+        "Reduces process and network transfer overhead"
+      ],
+      "costs": [
+        "Database lifecycle and resource behavior are coupled to the host process"
+      ],
+      "evidence_ids": ["duckdb-why"]
+    },
+    {
+      "id": "vectorized-columnar-execution",
+      "name": "Vectorized columnar execution",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Analytical queries process batches of values and use column-oriented execution to reduce per-value overhead.",
+      "benefits": [
+        "Efficient scans, joins, and aggregations over analytical data"
+      ],
+      "costs": [
+        "The execution strategy is optimized for analytical workloads rather than every transactional workload"
+      ],
+      "evidence_ids": ["duckdb-why"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Relational algebra operator pipeline",
+      "question": "How can a declarative query be transformed into composable execution operators?",
+      "assumptions": [
+        "Query operators have defined input and output relations",
+        "Optimizer rewrites preserve query semantics"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["duckdb-why"]
+    },
+    {
+      "model": "Batched dataflow transformation",
+      "question": "How does processing vectors instead of individual rows change execution cost?",
+      "assumptions": [
+        "Batch processing amortizes interpretation and function-call overhead"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["duckdb-why"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "embedded-process-execution",
+      "benefits": [
+        "Low operational overhead and direct host-language integration"
+      ],
+      "costs": ["Less isolation than a separately deployed database service"]
+    },
+    {
+      "feature_id": "vectorized-columnar-execution",
+      "benefits": ["High throughput for large analytical scans"],
+      "costs": [
+        "Workloads dominated by tiny point updates may not benefit equally"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "duckdb-why",
+      "kind": "official-doc",
+      "title": "Why DuckDB",
+      "uri": "https://duckdb.org/why_duckdb.html",
+      "notes": "Primary documentation for embedded operation and vectorized analytical execution."
+    }
+  ],
+  "related_systems": ["sqlite", "postgresql"]
+}

@@ -1,0 +1,89 @@
+{
+  "id": "supabase",
+  "name": "Supabase",
+  "version_context": "PostgreSQL-centered backend platform architecture",
+  "summary": "A backend platform that composes PostgreSQL with generated APIs, authentication, row-level security, realtime services, storage, and edge execution.",
+  "scope": [
+    "backend platform",
+    "database-centric APIs",
+    "authentication",
+    "realtime delivery",
+    "object storage"
+  ],
+  "features": [
+    {
+      "id": "database-centered-platform",
+      "name": "Database-centered platform composition",
+      "category": "platform-architecture",
+      "claim_type": "fact",
+      "description": "PostgreSQL is the core system and surrounding services expose APIs, authentication, realtime behavior, storage, and management capabilities around it.",
+      "benefits": ["Reuses PostgreSQL semantics, extensions, and ecosystem"],
+      "costs": [
+        "The platform inherits operational and conceptual complexity from the database-centered design"
+      ],
+      "evidence_ids": ["supabase-architecture"]
+    },
+    {
+      "id": "database-enforced-access-control",
+      "name": "Database-enforced access control",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Authentication and API access are integrated with PostgreSQL row-level security policies.",
+      "benefits": ["Centralizes fine-grained data authorization near the data"],
+      "costs": [
+        "Authorization behavior depends on correct database policy design and context propagation"
+      ],
+      "evidence_ids": ["supabase-architecture"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Composed service graph with a shared authority",
+      "question": "How do independently deployable services expose a coherent backend contract?",
+      "assumptions": [
+        "PostgreSQL remains the authoritative data system for the platform",
+        "Service boundaries preserve the relevant database security context"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["supabase-architecture"]
+    },
+    {
+      "model": "Policy-constrained query relation",
+      "question": "How can data access be modeled as queries filtered by row-level authorization predicates?",
+      "assumptions": [
+        "Requests carry an authenticated identity",
+        "Policies are evaluated by PostgreSQL for the relevant operation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["supabase-architecture"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "database-centered-platform",
+      "benefits": ["Fast path from schema to application-facing capabilities"],
+      "costs": [
+        "The database becomes a central architectural dependency and governance boundary"
+      ]
+    },
+    {
+      "feature_id": "database-enforced-access-control",
+      "benefits": [
+        "Consistent authorization across generated and direct database access"
+      ],
+      "costs": [
+        "Policy debugging and testing become part of database engineering"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "supabase-architecture",
+      "kind": "official-doc",
+      "title": "Supabase Architecture",
+      "uri": "https://supabase.com/docs/guides/getting-started/architecture",
+      "notes": "Primary documentation listing the platform components and their relationships."
+    }
+  ],
+  "related_systems": ["postgresql", "firebase"]
+}

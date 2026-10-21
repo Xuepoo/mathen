@@ -1,0 +1,25 @@
+{
+  "name": "mathen",
+  "private": true,
+  "packageManager": "bun@1.3.9",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "concurrently -k \"bun run dev:api\" \"bun run dev:web\"",
+    "dev:api": "cd apps/api && bun run dev",
+    "dev:web": "cd apps/web && bun run dev",
+    "build": "cd apps/web && bun run build",
+    "check": "bun run check:api && bun run check:web",
+    "check:api": "cd apps/api && bun run check",
+    "check:web": "cd apps/web && bun run check",
+    "db:migrate:local": "cd apps/api && bun run db:migrate:local",
+    "db:seed:local": "cd apps/api && bun run db:seed:local",
+    "db:reset:local": "cd apps/api && bun run db:reset:local",
+    "db:query:local": "cd apps/api && wrangler d1 execute mathen-db --local"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
