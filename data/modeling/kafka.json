@@ -1,0 +1,318 @@
+{
+  "contract_version": 1,
+  "system": {
+    "id": "kafka",
+    "name": "Apache Kafka",
+    "category": "distributed-log",
+    "repository": "https://github.com/apache/kafka.git",
+    "documentation": "https://kafka.apache.org/documentation/",
+    "requested_ref": "trunk",
+    "commit": "787c2b4d9f032890226590f9956d501812f10cbd",
+    "commit_url": "https://github.com/apache/kafka/commit/787c2b4d9f032890226590f9956d501812f10cbd",
+    "provenance": "github-archive"
+  },
+  "deterministic_observations": {
+    "analysis_version": 2,
+    "system_id": "kafka",
+    "system_name": "Apache Kafka",
+    "category": "distributed-log",
+    "priority": "core",
+    "repository": "https://github.com/apache/kafka.git",
+    "documentation": "https://kafka.apache.org/documentation/",
+    "requested_ref": "trunk",
+    "commit": "787c2b4d9f032890226590f9956d501812f10cbd",
+    "provenance": "github-archive",
+    "commit_url": "https://github.com/apache/kafka/commit/787c2b4d9f032890226590f9956d501812f10cbd",
+    "analyzed_at": "2026-10-21T12:46:29+00:00",
+    "file_count": 7619,
+    "top_level_entries": [
+      ".asf.yaml",
+      ".github",
+      ".gitignore",
+      "AGENTS.md",
+      "CONTRIBUTING.md",
+      "HEADER",
+      "LICENSE",
+      "LICENSE-binary",
+      "NOTICE",
+      "NOTICE-binary",
+      "README.md",
+      "SECURITY.md",
+      "Vagrantfile",
+      "api-checker",
+      "bin",
+      "build.gradle",
+      "checkstyle",
+      "clients",
+      "committer-tools",
+      "config",
+      "connect",
+      "coordinator-common",
+      "core",
+      "doap_Kafka.rdf",
+      "docker",
+      "docs",
+      "examples",
+      "generator",
+      "gradle",
+      "gradle.properties",
+      "gradlew",
+      "gradlewAll",
+      "group-coordinator",
+      "jmh-benchmarks",
+      "licenses",
+      "metadata",
+      "mirror-coordinator",
+      "raft",
+      "release",
+      "server",
+      "server-common",
+      "settings.gradle",
+      "share-coordinator",
+      "shell",
+      "storage",
+      "streams",
+      "test-common",
+      "tests",
+      "tools",
+      "transaction-coordinator",
+      "trogdor",
+      "vagrant",
+      "wrapper.gradle"
+    ],
+    "language_counts": {
+      "Java": 6259,
+      "Python": 185,
+      "Shell": 61,
+      "YAML": 79
+    },
+    "extension_counts": {
+      ".0": 2,
+      ".1": 1,
+      ".bat": 37,
+      ".cfg": 2,
+      ".conf": 7,
+      ".configprovider": 2,
+      ".connectorclientconfigoverridepolicy": 4,
+      ".connectrestextension": 3,
+      ".converter": 16,
+      ".extension": 1,
+      ".gradle": 9,
+      ".header": 1,
+      ".headerconverter": 7,
+      ".html": 3,
+      ".in": 1,
+      ".java": 6259,
+      ".jks": 7,
+      ".jpg": 7,
+      ".json": 308,
+      ".ldiff": 1,
+      ".local": 2,
+      ".md": 134,
+      ".png": 47,
+      ".postdiscoveryfilter": 1,
+      ".predicate": 3,
+      ".properties": 46,
+      ".pub": 1,
+      ".py": 185,
+      ".rdf": 1,
+      ".scala": 256,
+      ".serviceloadedclass": 1,
+      ".sh": 61,
+      ".sinkconnector": 7,
+      ".sourceconnector": 6,
+      ".svg": 2,
+      ".template": 1,
+      ".transformation": 3,
+      ".txt": 6,
+      ".xml": 28,
+      ".xsl": 1,
+      ".yaml": 40,
+      ".yml": 39
+    },
+    "build_markers": [],
+    "readme_paths": [
+      ".github/workflows/README.md",
+      "README.md",
+      "api-checker/README.md",
+      "clients/src/main/resources/common/message/README.md",
+      "committer-tools/README.md",
+      "docker/README.md",
+      "docker/examples/README.md",
+      "docker/native/README.md",
+      "examples/README.md",
+      "gradle/wrapper/README.md"
+    ],
+    "path_signals": {
+      "media": 4,
+      "networking": 86,
+      "orchestration": 85,
+      "query-execution": 31,
+      "storage": 342
+    }
+  },
+  "existing_structural_draft": {
+    "id": "kafka",
+    "name": "Apache Kafka",
+    "version_context": "commit 787c2b4d9f032890226590f9956d501812f10cbd",
+    "summary": "Draft architecture card generated from Apache Kafka at commit 787c2b4d9f03 via github-archive. Semantic features require review.",
+    "scope": [
+      "distributed-log",
+      "repository structure",
+      "build surface",
+      "path-level architecture signals",
+      "initial evidence"
+    ],
+    "features": [
+      {
+        "id": "repository-structure",
+        "name": "Observable repository structure",
+        "category": "repository-model",
+        "claim_type": "fact",
+        "description": "The inspected revision contains 7619 files, top-level entries .asf.yaml, .github, .gitignore, AGENTS.md, CONTRIBUTING.md, HEADER, LICENSE, LICENSE-binary, NOTICE, NOTICE-binary, README.md, SECURITY.md, and source languages including Java, Python, Shell, YAML.",
+        "benefits": [
+          "Provides a reproducible baseline for later modeling."
+        ],
+        "costs": [
+          "Repository metrics do not by themselves explain runtime behavior."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "architecture-path-signals",
+        "name": "Architecture-related path signals",
+        "category": "architecture-evidence",
+        "claim_type": "inference",
+        "description": "Path names contain these weak, non-semantic signals: media, networking, orchestration, query-execution, storage. They identify targets for source review, not proof of runtime architecture.",
+        "benefits": [
+          "Prioritizes files for evidence-backed semantic analysis."
+        ],
+        "costs": [
+          "Names can be historical, incidental, or misleading."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "build-and-integration-surface",
+        "name": "Build and integration surface",
+        "category": "tooling-model",
+        "claim_type": "fact",
+        "description": "The revision exposes these root build markers: no recognized markers.",
+        "benefits": [
+          "Identifies the first deterministic entry points for deeper analysis."
+        ],
+        "costs": [
+          "A marker is evidence of a tool, not proof of the complete build architecture."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "mathematical_views": [
+      {
+        "model": "Finite labeled repository graph",
+        "question": "What observable source and build entities are present at this revision?",
+        "assumptions": [
+          "The checkout is complete enough for structural inspection.",
+          "File paths and recognized markers are useful but incomplete proxies for architecture."
+        ],
+        "claim_type": "inference",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "model": "Evidence-prioritization signal model",
+        "question": "Which source paths should be inspected first for architecture evidence?",
+        "assumptions": [
+          "Path names are weak indicators and require source or documentation review.",
+          "Signal counts are useful for prioritization, not semantic classification."
+        ],
+        "claim_type": "hypothesis",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "trade_offs": [
+      {
+        "feature_id": "repository-structure",
+        "benefits": [
+          "Makes later analysis reproducible and comparable."
+        ],
+        "costs": [
+          "Static counts cannot establish semantic guarantees."
+        ]
+      },
+      {
+        "feature_id": "build-and-integration-surface",
+        "benefits": [
+          "Provides concrete next locations for source analysis."
+        ],
+        "costs": [
+          "Build metadata can vary by platform and configuration."
+        ]
+      },
+      {
+        "feature_id": "architecture-path-signals",
+        "benefits": [
+          "Reduces the search space for later LLM-assisted review."
+        ],
+        "costs": [
+          "Heuristic signals can create false positives and false negatives."
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "repository-commit",
+        "kind": "source-code",
+        "title": "Apache Kafka source at 787c2b4d9f03",
+        "uri": "https://github.com/apache/kafka/commit/787c2b4d9f032890226590f9956d501812f10cbd",
+        "accessed": "2026-10-21T12:46:29+00:00",
+        "notes": "Generated from a github-archive checkout by the deterministic inspector."
+      },
+      {
+        "id": "official-documentation",
+        "kind": "official-doc",
+        "title": "Apache Kafka official documentation",
+        "uri": "https://kafka.apache.org/documentation/",
+        "accessed": "2026-10-21T12:46:29+00:00"
+      }
+    ],
+    "related_systems": []
+  },
+  "modeling_task": {
+    "objective": "Transform repository evidence into a reviewed-quality, evidence-backed architecture model.",
+    "questions": [
+      "What are the system's core abstractions and state components?",
+      "Which operations change state, and what invariants do they preserve?",
+      "Which reusable architecture features are supported by evidence?",
+      "Which mathematical views explain those features, under which assumptions?",
+      "What benefits, costs, failure modes, and counterexamples apply?"
+    ],
+    "required_claim_types": [
+      "fact",
+      "inference",
+      "hypothesis",
+      "analogy"
+    ],
+    "evidence_rules": [
+      "Do not promote a path name or file count into a semantic fact.",
+      "Every feature and mathematical view must cite evidence IDs.",
+      "Use hypothesis or analogy when the mathematical correspondence is not established.",
+      "Keep product-specific facts separate from transferable feature names."
+    ],
+    "output": {
+      "format": "Mathen Architecture Card JSON",
+      "schema": "schemas/architecture-card.schema.json",
+      "destination": "data/drafts/<system-id>.json",
+      "status": "draft; requires human review before data/systems promotion"
+    }
+  }
+}

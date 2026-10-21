@@ -1,0 +1,282 @@
+{
+  "id": "sqlite",
+  "name": "SQLite",
+  "version_context": "commit 4242856e539471ce7b7fc7f7d93679df7f0edd25",
+  "summary": "A serverless embedded relational engine that compiles SQL into bytecode, executes it in a virtual machine, and persists database state through a layered B-tree, pager, journaling, and VFS design.",
+  "scope": [
+    "embedded database",
+    "relational query execution",
+    "transaction durability",
+    "single-host storage",
+    "portable file format"
+  ],
+  "features": [
+    {
+      "id": "embedded-process-database",
+      "name": "Embedded process execution",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "SQLite is designed as a local database engine linked into an application rather than as a separately managed client/server process. Its primary target is local application and device storage, although it can also serve as an application-specific server-side storage engine.",
+      "benefits": [
+        "Avoids a separately deployed database daemon",
+        "Keeps the engine close to the application and its data",
+        "Works in environments with limited administration or unreliable connectivity"
+      ],
+      "costs": [
+        "Database lifecycle and resource use are coupled to the host process",
+        "Direct multi-host network access is a poor fit",
+        "High concurrent write workloads may require a client/server database"
+      ],
+      "evidence_ids": [
+        "sqlite-appropriate-uses"
+      ]
+    },
+    {
+      "id": "sql-to-bytecode-virtual-machine",
+      "name": "SQL compilation to bytecode and virtual-machine execution",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "SQLite compiles SQL text into bytecode stored in a prepared statement and executes that program with a virtual machine. Tokenization, parsing, code generation, and bytecode execution are distinct stages.",
+      "benefits": [
+        "Separates declarative SQL input from execution machinery",
+        "Provides a compact intermediate execution representation",
+        "Creates a stable boundary for query-planning and execution logic"
+      ],
+      "costs": [
+        "Adds compilation and intermediate-representation machinery",
+        "The bytecode model is an implementation-specific execution contract"
+      ],
+      "evidence_ids": [
+        "sqlite-architecture"
+      ]
+    },
+    {
+      "id": "layered-btree-pager-storage",
+      "name": "Layered B-tree and pager storage",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "Tables and indexes are represented by B-trees stored in a database file. The pager mediates fixed-size page I/O, caching, locking, rollback, and commit behavior between the B-tree layer and the operating-system interface.",
+      "benefits": [
+        "Provides indexed relational storage over fixed-size pages",
+        "Centralizes caching and durability coordination in the pager",
+        "Allows higher layers to depend on an abstract page interface"
+      ],
+      "costs": [
+        "Page-level coordination and caching add implementation complexity",
+        "Performance depends on filesystem, device, and cache behavior"
+      ],
+      "evidence_ids": [
+        "sqlite-architecture"
+      ]
+    },
+    {
+      "id": "journal-based-atomic-commit",
+      "name": "Journal-based atomic commit and recovery",
+      "category": "consistency-model",
+      "claim_type": "fact",
+      "description": "In rollback-journal mode, SQLite records original pages before modifying the database and uses the journal to restore an interrupted transaction. The presence and validity of a hot journal determine whether recovery is required after a crash.",
+      "benefits": [
+        "Provides atomic transaction behavior across crashes and power loss under documented assumptions",
+        "Makes recovery automatic to the application",
+        "Supports multi-file atomic commit through a super-journal design"
+      ],
+      "costs": [
+        "Journal writes and synchronization increase commit I/O",
+        "Correctness depends on operating-system and filesystem assumptions",
+        "Recovery and locking introduce additional state transitions"
+      ],
+      "evidence_ids": [
+        "sqlite-atomic-commit"
+      ]
+    },
+    {
+      "id": "wal-snapshot-concurrency",
+      "name": "Write-ahead logging with reader snapshots",
+      "category": "concurrency-model",
+      "claim_type": "fact",
+      "description": "In WAL mode, committed changes are appended to a separate log and readers use an end mark to observe a stable database snapshot while a writer appends. Checkpointing later transfers WAL content back into the main database file.",
+      "benefits": [
+        "Allows readers and a writer to make progress concurrently in common cases",
+        "Turns many writes into sequential log appends",
+        "Provides a snapshot-like read boundary for each reader transaction"
+      ],
+      "costs": [
+        "There is still only one writer for a database file",
+        "Long-running readers can delay checkpoint completion",
+        "WAL requires same-host shared-memory coordination and creates sidecar files"
+      ],
+      "evidence_ids": [
+        "sqlite-wal"
+      ]
+    },
+    {
+      "id": "virtual-file-system-abstraction",
+      "name": "Virtual file system portability boundary",
+      "category": "portability-model",
+      "claim_type": "fact",
+      "description": "SQLite communicates with the operating system through a VFS abstraction that supplies file, time, randomness, locking, and related platform operations. Unix and Windows implementations provide concrete VFSes, and custom VFS implementations can be registered.",
+      "benefits": [
+        "Separates database mechanisms from platform-specific file behavior",
+        "Supports portability across operating systems",
+        "Allows specialized deployments to adapt filesystem capabilities"
+      ],
+      "costs": [
+        "The abstraction must accurately expose filesystem and device properties",
+        "Incorrect or unusual filesystem behavior can invalidate durability assumptions"
+      ],
+      "evidence_ids": [
+        "sqlite-architecture",
+        "sqlite-atomic-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Relational algebra to bytecode operational semantics",
+      "question": "How can declarative SQL be transformed into an executable program while preserving the intended query result?",
+      "assumptions": [
+        "SQL statements can be represented by a relational or procedural execution plan",
+        "The compiler and virtual machine agree on the bytecode instruction semantics",
+        "This view abstracts away optimizer cost-model details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "sqlite-architecture"
+      ]
+    },
+    {
+      "model": "Crash-recovery transition system",
+      "question": "Which transaction states and recovery transitions preserve the appearance of atomic commit?",
+      "assumptions": [
+        "The operating system provides the file and synchronization behavior assumed by SQLite",
+        "Journal metadata and page records are modeled as durable state transitions",
+        "The model distinguishes rollback-journal mode from WAL mode"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "sqlite-atomic-commit",
+        "sqlite-wal"
+      ]
+    },
+    {
+      "model": "Layered refinement boundary",
+      "question": "Which storage and operating-system details can be changed behind the B-tree and pager interfaces without changing the SQL-facing contract?",
+      "assumptions": [
+        "The VFS implementation satisfies the behavioral assumptions required by the pager",
+        "The observation concerns interface behavior rather than performance equivalence",
+        "Custom VFSes are evaluated against the relevant durability and locking contract"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "sqlite-architecture",
+        "sqlite-atomic-commit"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "embedded-process-database",
+      "benefits": [
+        "Low deployment and IPC overhead",
+        "Good fit for local and device-resident data"
+      ],
+      "costs": [
+        "Weak fit for many clients writing through a shared network service",
+        "Less process isolation than a separately deployed database"
+      ]
+    },
+    {
+      "feature_id": "sql-to-bytecode-virtual-machine",
+      "benefits": [
+        "Composable execution pipeline",
+        "Reusable prepared statement representation"
+      ],
+      "costs": [
+        "Requires compiler, bytecode, and VM maintenance"
+      ]
+    },
+    {
+      "feature_id": "layered-btree-pager-storage",
+      "benefits": [
+        "Clear separation between logical storage and page/device mechanics"
+      ],
+      "costs": [
+        "Cross-layer invariants are required for correctness"
+      ]
+    },
+    {
+      "feature_id": "journal-based-atomic-commit",
+      "benefits": [
+        "Crash recovery and atomic transaction semantics"
+      ],
+      "costs": [
+        "Additional writes, synchronization, locks, and recovery work"
+      ]
+    },
+    {
+      "feature_id": "wal-snapshot-concurrency",
+      "benefits": [
+        "Reader/writer overlap and sequential append behavior"
+      ],
+      "costs": [
+        "Checkpoint coordination, sidecar files, and same-host constraints"
+      ]
+    },
+    {
+      "feature_id": "virtual-file-system-abstraction",
+      "benefits": [
+        "Portability and specialized filesystem integration"
+      ],
+      "costs": [
+        "More assumptions must be expressed and validated at the platform boundary"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "sqlite-appropriate-uses",
+      "kind": "official-doc",
+      "title": "Appropriate Uses For SQLite",
+      "uri": "https://www.sqlite.org/whentouse.html",
+      "accessed": "2026-10-21",
+      "notes": "Documents SQLite's embedded/local deployment goals, single-file use cases, and concurrency boundaries."
+    },
+    {
+      "id": "sqlite-architecture",
+      "kind": "official-doc",
+      "title": "Architecture of SQLite",
+      "uri": "https://www.sqlite.org/arch.html",
+      "accessed": "2026-10-21",
+      "notes": "Documents SQL compilation, bytecode execution, B-tree storage, pager, VFS, and test layers."
+    },
+    {
+      "id": "sqlite-wal",
+      "kind": "official-doc",
+      "title": "Write-Ahead Logging",
+      "uri": "https://www.sqlite.org/wal.html",
+      "accessed": "2026-10-21",
+      "notes": "Documents WAL append behavior, reader end marks, checkpointing, concurrency, and trade-offs."
+    },
+    {
+      "id": "sqlite-atomic-commit",
+      "kind": "official-doc",
+      "title": "Atomic Commit In SQLite",
+      "uri": "https://www.sqlite.org/atomiccommit.html",
+      "accessed": "2026-10-21",
+      "notes": "Documents rollback journals, locking, synchronization, crash recovery, and filesystem assumptions."
+    },
+    {
+      "id": "sqlite-repository-commit",
+      "kind": "source-code",
+      "title": "SQLite source at 4242856e5394",
+      "uri": "https://github.com/sqlite/sqlite/commit/4242856e539471ce7b7fc7f7d93679df7f0edd25",
+      "accessed": "2026-10-21",
+      "notes": "Fixed source revision used by the deterministic repository analysis."
+    }
+  ],
+  "related_systems": [
+    "duckdb",
+    "postgresql",
+    "git"
+  ]
+}

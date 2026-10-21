@@ -1,0 +1,155 @@
+[
+  {
+    "id": "git",
+    "name": "Git",
+    "category": "version-control",
+    "repository": "https://github.com/git/git.git",
+    "documentation": "https://git-scm.com/docs",
+    "ref": "master",
+    "priority": "seed"
+  },
+  {
+    "id": "sqlite",
+    "name": "SQLite",
+    "category": "database",
+    "repository": "https://github.com/sqlite/sqlite.git",
+    "documentation": "https://www.sqlite.org/docs.html",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "postgresql",
+    "name": "PostgreSQL",
+    "category": "database",
+    "repository": "https://github.com/postgres/postgres.git",
+    "documentation": "https://www.postgresql.org/docs/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "duckdb",
+    "name": "DuckDB",
+    "category": "database",
+    "repository": "https://github.com/duckdb/duckdb.git",
+    "documentation": "https://duckdb.org/docs/",
+    "ref": "main",
+    "priority": "seed"
+  },
+  {
+    "id": "redis",
+    "name": "Redis",
+    "category": "data-service",
+    "repository": "https://github.com/redis/redis.git",
+    "documentation": "https://redis.io/docs/latest/",
+    "ref": "unstable",
+    "priority": "core"
+  },
+  {
+    "id": "elasticsearch",
+    "name": "Elasticsearch",
+    "category": "search-engine",
+    "repository": "https://github.com/elastic/elasticsearch.git",
+    "documentation": "https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "kafka",
+    "name": "Apache Kafka",
+    "category": "distributed-log",
+    "repository": "https://github.com/apache/kafka.git",
+    "documentation": "https://kafka.apache.org/documentation/",
+    "ref": "trunk",
+    "priority": "core"
+  },
+  {
+    "id": "hadoop",
+    "name": "Apache Hadoop",
+    "category": "distributed-storage-compute",
+    "repository": "https://github.com/apache/hadoop.git",
+    "documentation": "https://hadoop.apache.org/docs/",
+    "ref": "trunk",
+    "priority": "extended"
+  },
+  {
+    "id": "kubernetes",
+    "name": "Kubernetes",
+    "category": "orchestration",
+    "repository": "https://github.com/kubernetes/kubernetes.git",
+    "documentation": "https://kubernetes.io/docs/concepts/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "docker",
+    "name": "Docker Engine",
+    "category": "container-runtime",
+    "repository": "https://github.com/moby/moby.git",
+    "documentation": "https://docs.docker.com/engine/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "linux",
+    "name": "Linux Kernel",
+    "category": "operating-system",
+    "repository": "https://github.com/torvalds/linux.git",
+    "documentation": "https://docs.kernel.org/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "qemu",
+    "name": "QEMU",
+    "category": "virtualization",
+    "repository": "https://github.com/qemu/qemu.git",
+    "documentation": "https://www.qemu.org/documentation/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "firecracker",
+    "name": "Firecracker",
+    "category": "microvirtualization",
+    "repository": "https://github.com/firecracker-microvm/firecracker.git",
+    "documentation": "https://github.com/firecracker-microvm/firecracker/tree/main/docs",
+    "ref": "main",
+    "priority": "seed"
+  },
+  {
+    "id": "nginx",
+    "name": "NGINX",
+    "category": "network-server",
+    "repository": "https://github.com/nginx/nginx.git",
+    "documentation": "https://nginx.org/en/docs/",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "llvm",
+    "name": "LLVM",
+    "category": "compiler-infrastructure",
+    "repository": "https://github.com/llvm/llvm-project.git",
+    "documentation": "https://llvm.org/docs/",
+    "ref": "main",
+    "priority": "extended"
+  },
+  {
+    "id": "ffmpeg",
+    "name": "FFmpeg",
+    "category": "media-processing",
+    "repository": "https://github.com/FFmpeg/FFmpeg.git",
+    "documentation": "https://ffmpeg.org/documentation.html",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "supabase",
+    "name": "Supabase",
+    "category": "backend-platform",
+    "repository": "https://github.com/supabase/supabase.git",
+    "documentation": "https://supabase.com/docs",
+    "ref": "master",
+    "priority": "seed"
+  }
+]

@@ -12,3 +12,6 @@ apps/api/.wrangler/
 .dev.vars
 .carryctx/config.local.toml
 .worktrees/
+.cache/
+data/analyses/
+data/modeling/prompts/

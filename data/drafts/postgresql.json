@@ -1,0 +1,223 @@
+{
+  "id": "postgresql",
+  "name": "PostgreSQL",
+  "version_context": "commit 6b9f40d49ae33eb0b4a7c77666fe4971ef7ba087",
+  "summary": "A client/server relational database whose process architecture, multiversion concurrency control, and extension interfaces expose a broad and durable execution platform.",
+  "scope": [
+    "client-server database",
+    "relational query execution",
+    "transaction isolation",
+    "extensible database kernel",
+    "multi-client concurrency"
+  ],
+  "features": [
+    {
+      "id": "process-per-session-server",
+      "name": "Process-oriented client/server sessions",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "PostgreSQL uses a client/server model with a server process managing database files and accepting connections. The server starts a separate process for each client connection in the documented architecture.",
+      "benefits": [
+        "Separates client applications from database file ownership",
+        "Supports multiple concurrent network clients",
+        "Provides process boundaries for session work"
+      ],
+      "costs": [
+        "Connection processes consume operating-system resources",
+        "Network and process coordination add latency and operational complexity",
+        "The server becomes an independently managed availability boundary"
+      ],
+      "evidence_ids": [
+        "postgresql-architecture"
+      ]
+    },
+    {
+      "id": "mvcc-snapshot-isolation",
+      "name": "MVCC snapshot-based transaction isolation",
+      "category": "concurrency-model",
+      "claim_type": "fact",
+      "description": "PostgreSQL uses multiversion concurrency control. Its documented isolation levels provide command- or transaction-scoped snapshots, and serializable transactions add dependency monitoring that can reject non-serializable executions.",
+      "benefits": [
+        "Allows readers and writers to overlap without reducing every read to a blocking lock",
+        "Makes isolation guarantees explicit through transaction levels",
+        "Provides a path from snapshot behavior to serializable execution guarantees"
+      ],
+      "costs": [
+        "Old row versions and visibility tracking require maintenance work",
+        "Serializable and repeatable-read transactions may need retries",
+        "Isolation semantics require application knowledge of snapshots and anomalies"
+      ],
+      "evidence_ids": [
+        "postgresql-mvcc",
+        "postgresql-transaction-isolation"
+      ]
+    },
+    {
+      "id": "database-extension-contract",
+      "name": "Database-resident extension contract",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "PostgreSQL is designed so that loaded extensions can function like built-in features. The documented extension surface includes independently developed extensions and even external replication solutions.",
+      "benefits": [
+        "Allows domain-specific capabilities to live close to relational data and execution",
+        "Extends types, functions, operators, and operational behavior without forking the core",
+        "Supports an ecosystem beyond the base server distribution"
+      ],
+      "costs": [
+        "Extensions share the database's compatibility and operational boundary",
+        "Version, security, and upgrade coordination become ecosystem concerns",
+        "Extension behavior can widen the effective system surface substantially"
+      ],
+      "evidence_ids": [
+        "postgresql-extensions"
+      ]
+    },
+    {
+      "id": "explicit-isolation-levels",
+      "name": "Explicit transaction isolation spectrum",
+      "category": "consistency-model",
+      "claim_type": "fact",
+      "description": "PostgreSQL exposes Read Committed, Repeatable Read, and Serializable behavior with distinct visibility and anomaly guarantees, while its Read Uncommitted mode behaves like Read Committed internally.",
+      "benefits": [
+        "Lets applications select a consistency/performance point per transaction",
+        "Makes concurrency anomalies part of an explicit contract",
+        "Supports stronger invariants without requiring every workload to pay the strongest cost"
+      ],
+      "costs": [
+        "Applications must understand and handle serialization failures",
+        "Stronger isolation can increase monitoring overhead and retries",
+        "A single database exposes several semantics that complicate application reasoning"
+      ],
+      "evidence_ids": [
+        "postgresql-transaction-isolation"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Session and process transition system",
+      "question": "How do client connections, server processes, and database operations evolve through a distributed session lifecycle?",
+      "assumptions": [
+        "The documented process model abstracts away platform-specific process details",
+        "Database file ownership remains with server-side processes",
+        "Network failures and process crashes are modeled as transition events"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "postgresql-architecture"
+      ]
+    },
+    {
+      "model": "MVCC visibility relation",
+      "question": "Which row versions are visible to a transaction or command under each isolation level?",
+      "assumptions": [
+        "Transactions and row versions can be represented by a visibility predicate",
+        "The view abstracts physical tuple and vacuum implementation details",
+        "Serialization failures are modeled as rejected state transitions"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "postgresql-mvcc",
+        "postgresql-transaction-isolation"
+      ]
+    },
+    {
+      "model": "Extensible relational algebra boundary",
+      "question": "Which new data types, functions, and replication behaviors can be added while retaining the database's extension contract?",
+      "assumptions": [
+        "An extension satisfies the documented loading and compatibility contract",
+        "The model concerns composability at the database interface, not arbitrary semantic equivalence",
+        "Extension interactions may introduce constraints not present in the core system"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "postgresql-extensions"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "process-per-session-server",
+      "benefits": [
+        "Strong client/server separation and familiar multi-client operation"
+      ],
+      "costs": [
+        "More deployment, process, and connection-management overhead than an embedded engine"
+      ]
+    },
+    {
+      "feature_id": "mvcc-snapshot-isolation",
+      "benefits": [
+        "High read concurrency with explicit visibility semantics"
+      ],
+      "costs": [
+        "Version cleanup, visibility bookkeeping, and retry behavior"
+      ]
+    },
+    {
+      "feature_id": "database-extension-contract",
+      "benefits": [
+        "A broad and reusable database platform boundary"
+      ],
+      "costs": [
+        "Larger compatibility, security, and upgrade surface"
+      ]
+    },
+    {
+      "feature_id": "explicit-isolation-levels",
+      "benefits": [
+        "Configurable consistency guarantees for different workloads"
+      ],
+      "costs": [
+        "Application complexity and possible serialization retries"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "postgresql-architecture",
+      "kind": "official-doc",
+      "title": "Architectural Fundamentals",
+      "uri": "https://www.postgresql.org/docs/current/tutorial-arch.html",
+      "accessed": "2026-10-21",
+      "notes": "Documents the client/server architecture and process-per-connection model."
+    },
+    {
+      "id": "postgresql-mvcc",
+      "kind": "official-doc",
+      "title": "Concurrency Control",
+      "uri": "https://www.postgresql.org/docs/current/mvcc.html",
+      "accessed": "2026-10-21",
+      "notes": "Introduces PostgreSQL concurrency-control goals and the transaction isolation documentation."
+    },
+    {
+      "id": "postgresql-transaction-isolation",
+      "kind": "official-doc",
+      "title": "Transaction Isolation",
+      "uri": "https://www.postgresql.org/docs/current/transaction-iso.html",
+      "accessed": "2026-10-21",
+      "notes": "Documents snapshot visibility, isolation levels, serializable behavior, predicate locking, and retry requirements."
+    },
+    {
+      "id": "postgresql-extensions",
+      "kind": "official-doc",
+      "title": "Extensions",
+      "uri": "https://www.postgresql.org/docs/current/external-extensions.html",
+      "accessed": "2026-10-21",
+      "notes": "Documents the extension model and independently developed database and replication extensions."
+    },
+    {
+      "id": "postgresql-repository-commit",
+      "kind": "source-code",
+      "title": "PostgreSQL source at 6b9f40d49ae3",
+      "uri": "https://github.com/postgres/postgres/commit/6b9f40d49ae33eb0b4a7c77666fe4971ef7ba087",
+      "accessed": "2026-10-21",
+      "notes": "Fixed source revision used by deterministic repository analysis."
+    }
+  ],
+  "related_systems": [
+    "sqlite",
+    "duckdb",
+    "supabase"
+  ]
+}

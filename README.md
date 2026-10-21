@@ -34,6 +34,39 @@ uv run mathen list
 uv run mathen show git
 ```
 
+Analyze the representative repository catalog into reviewable draft cards:
+
+```bash
+uv run mathen analyze data/repositories/representative.json \
+  --cache-dir /tmp/mathen/repos \
+  --output-dir data/drafts
+```
+
+The command uses shallow, blob-filtered Git checkouts and reads tracked tree
+metadata without materializing the full worktree. Existing cached checkouts are
+reused by default; pass `--refresh` only when a network update is required.
+The source cache is not committed. Reports are written to the ignored
+`data/analyses/` directory, while draft cards are written to `data/drafts/` and
+must be reviewed before promotion to `data/systems/`.
+
+When GitHub's Git transport is unavailable, use the source archive transport:
+
+```bash
+uv run mathen analyze data/repositories/representative.json \
+  --transport archive \
+  --continue-on-error
+```
+
+Prepare evidence bundles for LLM-assisted architecture modeling:
+
+```bash
+uv run mathen prepare-modeling --write-prompts
+```
+
+This writes fixed-commit JSON bundles to `data/modeling/` and portable prompts
+to `data/modeling/prompts/`. The bundle is the input to the semantic modeling
+step; its output remains a draft until evidence and claims are reviewed.
+
 ## Quick start: Cloudflare application
 
 Prerequisites: Bun and Wrangler.
@@ -71,6 +104,9 @@ The Python development toolchain, including Ruff, is declared in
 docs/                       Research and modeling documentation
 schemas/                    JSON Schema for architecture cards
 data/systems/               Evidence-backed system cards
+data/repositories/          Representative repository analysis catalog
+data/drafts/                Unreviewed generated Architecture Cards
+data/analyses/              Ignored deterministic inspection reports
 src/mathen/                 Validation and inspection CLI
 tests/                      Unit tests
 apps/api/                   Hono Worker and D1 migrations

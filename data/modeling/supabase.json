@@ -1,0 +1,305 @@
+{
+  "contract_version": 1,
+  "system": {
+    "id": "supabase",
+    "name": "Supabase",
+    "category": "backend-platform",
+    "repository": "https://github.com/supabase/supabase.git",
+    "documentation": "https://supabase.com/docs",
+    "requested_ref": "master",
+    "commit": "fdf03de35f5cad4a5e396e98ecbbaa1f8cc5ea8d",
+    "commit_url": "https://github.com/supabase/supabase/commit/fdf03de35f5cad4a5e396e98ecbbaa1f8cc5ea8d",
+    "provenance": "github-archive"
+  },
+  "deterministic_observations": {
+    "analysis_version": 2,
+    "system_id": "supabase",
+    "system_name": "Supabase",
+    "category": "backend-platform",
+    "priority": "seed",
+    "repository": "https://github.com/supabase/supabase.git",
+    "documentation": "https://supabase.com/docs",
+    "requested_ref": "master",
+    "commit": "fdf03de35f5cad4a5e396e98ecbbaa1f8cc5ea8d",
+    "provenance": "github-archive",
+    "commit_url": "https://github.com/supabase/supabase/commit/fdf03de35f5cad4a5e396e98ecbbaa1f8cc5ea8d",
+    "analyzed_at": "2026-10-21T11:55:25+00:00",
+    "file_count": 18103,
+    "top_level_entries": [
+      ".agents",
+      ".claude",
+      ".coderabbit.yaml",
+      ".dockerignore",
+      ".github",
+      ".gitignore",
+      ".mcp.json",
+      ".misspell-fixer.ignore",
+      ".nvmrc",
+      ".prettierignore",
+      ".vscode",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "CONTRIBUTING.md",
+      "DEVELOPERS.md",
+      "LICENSE",
+      "Makefile",
+      "README.md",
+      "apps",
+      "assets",
+      "blocks",
+      "docker",
+      "e2e",
+      "examples",
+      "i18n",
+      "knip.jsonc",
+      "package.json",
+      "packages",
+      "patches",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      "prettier.config.mjs",
+      "scripts",
+      "supabase",
+      "tsconfig.json",
+      "turbo.jsonc",
+      "zizmor.yml"
+    ],
+    "language_counts": {
+      "C/C++ headers": 4,
+      "JavaScript": 131,
+      "Kotlin": 58,
+      "Python": 5,
+      "Rust": 1,
+      "SQL": 110,
+      "Shell": 27,
+      "TypeScript": 8599,
+      "YAML": 118
+    },
+    "extension_counts": {
+      ".astro": 7,
+      ".avif": 1,
+      ".bat": 1,
+      ".cjs": 13,
+      ".code-snippets": 1,
+      ".code-workspace": 2,
+      ".crt": 1,
+      ".css": 125,
+      ".csv": 5,
+      ".cts": 1,
+      ".dart": 29,
+      ".development": 1,
+      ".eot": 1,
+      ".example": 40,
+      ".exs": 1,
+      ".gif": 47,
+      ".glb": 2,
+      ".gradle": 15,
+      ".graphql": 1,
+      ".h": 4,
+      ".html": 33,
+      ".ico": 33,
+      ".ignore": 1,
+      ".include": 1,
+      ".ipynb": 4,
+      ".jar": 1,
+      ".jpeg": 68,
+      ".jpg": 774,
+      ".js": 131,
+      ".json": 446,
+      ".jsonc": 11,
+      ".jsx": 8,
+      ".key": 1,
+      ".kt": 58,
+      ".local": 1,
+      ".lock": 10,
+      ".md": 315,
+      ".mdx": 1705,
+      ".mermaid": 3,
+      ".mjs": 48,
+      ".mov": 4,
+      ".mp4": 27,
+      ".mts": 8,
+      ".otf": 9,
+      ".patch": 1,
+      ".pbxproj": 5,
+      ".pdf": 3,
+      ".plist": 18,
+      ".png": 3457,
+      ".preview": 1,
+      ".pro": 1,
+      ".production": 1,
+      ".properties": 11,
+      ".py": 5,
+      ".resolved": 1,
+      ".rs": 1,
+      ".scss": 9,
+      ".sh": 27,
+      ".snap": 2,
+      ".sql": 110,
+      ".storyboard": 8,
+      ".svelte": 22,
+      ".svg": 1248,
+      ".swift": 14,
+      ".template": 1,
+      ".toml": 36,
+      ".tpl": 1,
+      ".ts": 3786,
+      ".tsx": 4813,
+      ".ttf": 6,
+      ".txt": 15,
+      ".vue": 70,
+      ".webmanifest": 3,
+      ".webp": 27,
+      ".woff": 17,
+      ".woff2": 24,
+      ".xcconfig": 8,
+      ".xcscheme": 4,
+      ".xcsettings": 8,
+      ".xcworkspacedata": 9,
+      ".xml": 60,
+      ".yaml": 27,
+      ".yml": 91,
+      ".zip": 2
+    },
+    "build_markers": [
+      "Makefile"
+    ],
+    "readme_paths": [
+      "README.md",
+      "apps/design-system/README.md",
+      "apps/docs/README.md",
+      "apps/docs/features/directives/README.md",
+      "apps/docs/spec/README.md",
+      "apps/docs/spec/reference/README.md",
+      "apps/docs/style-guide/README.md",
+      "apps/kb/README.md",
+      "apps/learn/README.md",
+      "apps/lite-studio/README.md"
+    ]
+  },
+  "existing_structural_draft": {
+    "id": "supabase",
+    "name": "Supabase",
+    "version_context": "commit fdf03de35f5cad4a5e396e98ecbbaa1f8cc5ea8d",
+    "summary": "Draft architecture card generated from Supabase at commit fdf03de35f5c via github-archive. Semantic features require review.",
+    "scope": [
+      "repository structure",
+      "build surface",
+      "initial evidence"
+    ],
+    "features": [
+      {
+        "id": "repository-structure",
+        "name": "Observable repository structure",
+        "category": "repository-model",
+        "claim_type": "fact",
+        "description": "The inspected revision contains 18103 files, top-level entries .agents, .claude, .coderabbit.yaml, .dockerignore, .github, .gitignore, .mcp.json, .misspell-fixer.ignore, .nvmrc, .prettierignore, .vscode, AGENTS.md, and source languages including C/C++ headers, JavaScript, Kotlin, Python, Rust, SQL, Shell, TypeScript, YAML.",
+        "benefits": [
+          "Provides a reproducible baseline for later modeling."
+        ],
+        "costs": [
+          "Repository metrics do not by themselves explain runtime behavior."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "build-and-integration-surface",
+        "name": "Build and integration surface",
+        "category": "tooling-model",
+        "claim_type": "fact",
+        "description": "The revision exposes these root build markers: Makefile.",
+        "benefits": [
+          "Identifies the first deterministic entry points for deeper analysis."
+        ],
+        "costs": [
+          "A marker is evidence of a tool, not proof of the complete build architecture."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "mathematical_views": [
+      {
+        "model": "Finite labeled repository graph",
+        "question": "What observable source and build entities are present at this revision?",
+        "assumptions": [
+          "The checkout is complete enough for structural inspection.",
+          "File paths and recognized markers are useful but incomplete proxies for architecture."
+        ],
+        "claim_type": "inference",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "trade_offs": [
+      {
+        "feature_id": "repository-structure",
+        "benefits": [
+          "Makes later analysis reproducible and comparable."
+        ],
+        "costs": [
+          "Static counts cannot establish semantic guarantees."
+        ]
+      },
+      {
+        "feature_id": "build-and-integration-surface",
+        "benefits": [
+          "Provides concrete next locations for source analysis."
+        ],
+        "costs": [
+          "Build metadata can vary by platform and configuration."
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "repository-commit",
+        "kind": "source-code",
+        "title": "Supabase source at fdf03de35f5c",
+        "uri": "https://github.com/supabase/supabase/commit/fdf03de35f5cad4a5e396e98ecbbaa1f8cc5ea8d",
+        "accessed": "2026-10-21T11:55:25+00:00",
+        "notes": "Generated from a github-archive checkout by the deterministic inspector."
+      },
+      {
+        "id": "official-documentation",
+        "kind": "official-doc",
+        "title": "Supabase official documentation",
+        "uri": "https://supabase.com/docs",
+        "accessed": "2026-10-21T11:55:25+00:00"
+      }
+    ],
+    "related_systems": []
+  },
+  "modeling_task": {
+    "objective": "Transform repository evidence into a reviewed-quality, evidence-backed architecture model.",
+    "questions": [
+      "What are the system's core abstractions and state components?",
+      "Which operations change state, and what invariants do they preserve?",
+      "Which reusable architecture features are supported by evidence?",
+      "Which mathematical views explain those features, under which assumptions?",
+      "What benefits, costs, failure modes, and counterexamples apply?"
+    ],
+    "required_claim_types": [
+      "fact",
+      "inference",
+      "hypothesis",
+      "analogy"
+    ],
+    "evidence_rules": [
+      "Do not promote a path name or file count into a semantic fact.",
+      "Every feature and mathematical view must cite evidence IDs.",
+      "Use hypothesis or analogy when the mathematical correspondence is not established.",
+      "Keep product-specific facts separate from transferable feature names."
+    ],
+    "output": {
+      "format": "Mathen Architecture Card JSON",
+      "schema": "schemas/architecture-card.schema.json",
+      "destination": "data/drafts/<system-id>.json",
+      "status": "draft; requires human review before data/systems promotion"
+    }
+  }
+}

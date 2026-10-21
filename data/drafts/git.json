@@ -1,0 +1,97 @@
+{
+  "id": "git",
+  "name": "Git",
+  "version_context": "commit 47fdf2208c5b94c8cc01c106b8f7c85efb91c926",
+  "summary": "Draft architecture card generated from Git at commit 47fdf2208c5b via github-archive. Semantic features require review.",
+  "scope": [
+    "repository structure",
+    "build surface",
+    "initial evidence"
+  ],
+  "features": [
+    {
+      "id": "repository-structure",
+      "name": "Observable repository structure",
+      "category": "repository-model",
+      "claim_type": "fact",
+      "description": "The inspected revision contains 4854 files, top-level entries .b4-config, .b4-cover-template, .cirrus.yml, .clang-format, .editorconfig, .gitattributes, .github, .gitignore, .gitlab-ci.yml, .gitmodules, .mailmap, .tsan-suppressions, and source languages including C, C/C++ headers, JavaScript, Python, Rust, Shell, YAML.",
+      "benefits": [
+        "Provides a reproducible baseline for later modeling."
+      ],
+      "costs": [
+        "Repository metrics do not by themselves explain runtime behavior."
+      ],
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    },
+    {
+      "id": "build-and-integration-surface",
+      "name": "Build and integration surface",
+      "category": "tooling-model",
+      "claim_type": "fact",
+      "description": "The revision exposes these root build markers: Cargo.toml, Makefile.",
+      "benefits": [
+        "Identifies the first deterministic entry points for deeper analysis."
+      ],
+      "costs": [
+        "A marker is evidence of a tool, not proof of the complete build architecture."
+      ],
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Finite labeled repository graph",
+      "question": "What observable source and build entities are present at this revision?",
+      "assumptions": [
+        "The checkout is complete enough for structural inspection.",
+        "File paths and recognized markers are useful but incomplete proxies for architecture."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "repository-structure",
+      "benefits": [
+        "Makes later analysis reproducible and comparable."
+      ],
+      "costs": [
+        "Static counts cannot establish semantic guarantees."
+      ]
+    },
+    {
+      "feature_id": "build-and-integration-surface",
+      "benefits": [
+        "Provides concrete next locations for source analysis."
+      ],
+      "costs": [
+        "Build metadata can vary by platform and configuration."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Git source at 47fdf2208c5b",
+      "uri": "https://github.com/git/git/commit/47fdf2208c5b94c8cc01c106b8f7c85efb91c926",
+      "accessed": "2026-10-21T11:55:24+00:00",
+      "notes": "Generated from a github-archive checkout by the deterministic inspector."
+    },
+    {
+      "id": "official-documentation",
+      "kind": "official-doc",
+      "title": "Git official documentation",
+      "uri": "https://git-scm.com/docs",
+      "accessed": "2026-10-21T11:55:24+00:00"
+    }
+  ],
+  "related_systems": []
+}

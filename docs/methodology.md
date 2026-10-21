@@ -54,6 +54,23 @@ Validation should progress from cheap to expensive:
 4. executable examples or property tests;
 5. benchmarks, fault injection, or model checking where applicable.
 
+## 6. Repository analysis stages
+
+Repository analysis is deliberately staged:
+
+1. resolve a repository ref to a commit;
+2. record reproducible source provenance;
+3. extract deterministic observations such as tracked paths, language counts,
+   build markers, and weak path-level signals;
+4. use those observations to prioritize source and documentation review;
+5. ask an LLM to propose semantic features and mathematical views;
+6. review and validate the resulting draft before promotion.
+
+Tree statistics and path signals are evidence for navigation, not architecture
+claims. A source archive is sufficient for tree inspection but does not preserve
+history-sensitive evidence; use a Git checkout when commit history or blame is
+part of the question.
+
 ## Architecture Card contract
 
 The machine-readable contract lives in

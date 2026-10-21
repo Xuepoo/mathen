@@ -17,6 +17,7 @@
 ## Phase 2: Assisted extraction
 
 - Write an LLM Skill that emits only the Architecture Card format.
+- Prepare fixed-commit evidence bundles and portable modeling prompts.
 - Require source excerpts and confidence for every extracted claim.
 - Add a review queue for unresolved or conflicting claims.
 - Never allow unreviewed output to overwrite reviewed data.
@@ -32,7 +33,9 @@
 
 ## Phase 4: Local repository analysis and MCP
 
-- Analyze a local repository into a draft Architecture Card.
+- Analyze a local repository or a catalog entry into a draft Architecture
+  Card. The first catalog covers databases, logs, orchestration, isolation,
+  virtualization, networking, compilers, media, and backend platforms.
 - Expose comparison and retrieval through an MCP server.
 - Keep draft analysis separate from reviewed canonical cards.
 
