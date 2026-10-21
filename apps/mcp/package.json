@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "bun run src/index.ts",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "bun test src/backend.test.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

@@ -1,74 +1,22 @@
-import { readdir, readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { BackendError, createBackend } from "./backend.js";
 
-type Evidence = {
-  id: string;
-  kind: string;
-  title: string;
-  uri: string;
-  notes?: string;
-};
-
-type Feature = {
-  id: string;
-  name: string;
-  category: string;
-  claim_type: string;
-  description: string;
-  benefits?: string[];
-  costs?: string[];
-  evidence_ids: string[];
-};
-
-type ArchitectureCard = {
-  id: string;
-  name: string;
-  summary: string;
-  scope: string[];
-  features: Feature[];
-  mathematical_views: Array<Record<string, unknown>>;
-  trade_offs: Array<Record<string, unknown>>;
-  evidence: Evidence[];
-  related_systems?: string[];
-  version_context?: string;
-};
-
-const repositoryRoot = resolve(
-  process.env.MATHEN_ROOT ?? fileURLToPath(new URL("../../..", import.meta.url)),
-);
-const systemsDirectory = resolve(repositoryRoot, "data/systems");
-const draftsDirectory = resolve(repositoryRoot, "data/drafts");
-const bundlesDirectory = resolve(repositoryRoot, "data/modeling");
-
-async function readJson<T>(path: string): Promise<T> {
-  return JSON.parse(await readFile(path, "utf8")) as T;
-}
-
-async function loadCards(directory: string): Promise<ArchitectureCard[]> {
-  const entries = (await readdir(directory, { withFileTypes: true }))
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-    .map((entry) => entry.name);
-  const cards = await Promise.all(
-    entries.sort().map((entry) => readJson<ArchitectureCard>(resolve(directory, entry))),
-  );
-  return cards;
-}
-
-async function loadAllCards(includeDrafts: boolean): Promise<ArchitectureCard[]> {
-  const reviewed = await loadCards(systemsDirectory);
-  if (!includeDrafts) return reviewed;
-  const drafts = await loadCards(draftsDirectory);
-  return [...reviewed, ...drafts.filter((draft) => !reviewed.some((card) => card.id === draft.id))];
-}
+const repositoryRoot = resolveRepositoryRoot();
+const backend = createBackend(repositoryRoot);
 
 function jsonResult(value: unknown) {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }],
   };
+}
+
+function errorResult(error: unknown) {
+  return jsonResult({
+    error: error instanceof BackendError ? error.message : "backend request failed",
+  });
 }
 
 const server = new McpServer({ name: "mathen", version: "0.1.0" });
@@ -80,16 +28,11 @@ server.registerTool(
     inputSchema: { include_drafts: z.boolean().optional() },
   },
   async ({ include_drafts }) => {
-    const cards = await loadAllCards(include_drafts ?? false);
-    return jsonResult(
-      cards.map(({ id, name, summary, version_context }) => ({
-        id,
-        name,
-        summary,
-        version_context,
-        status: include_drafts ? "reviewed-or-draft" : "reviewed",
-      })),
-    );
+    try {
+      return jsonResult(await backend.listSystems(include_drafts ?? false));
+    } catch (error) {
+      return errorResult(error);
+    }
   },
 );
 
@@ -103,10 +46,12 @@ server.registerTool(
     },
   },
   async ({ system_id, include_drafts }) => {
-    const cards = await loadAllCards(include_drafts ?? false);
-    const card = cards.find((candidate) => candidate.id === system_id);
-    if (!card) return jsonResult({ error: `system not found: ${system_id}` });
-    return jsonResult(card);
+    try {
+      const card = await backend.getSystem(system_id, include_drafts ?? false);
+      return jsonResult(card ?? { error: `system not found: ${system_id}` });
+    } catch (error) {
+      return errorResult(error);
+    }
   },
 );
 
@@ -117,26 +62,25 @@ server.registerTool(
     inputSchema: {
       query: z.string().min(1),
       category: z.string().optional(),
+      claim_type: z.string().optional(),
       include_drafts: z.boolean().optional(),
       limit: z.number().int().min(1).max(50).optional(),
     },
   },
-  async ({ query, category, include_drafts, limit }) => {
-    const normalizedQuery = query.toLowerCase();
-    const cards = await loadAllCards(include_drafts ?? false);
-    const results = cards.flatMap((card) =>
-      card.features
-        .filter((feature) => {
-          const haystack = `${feature.name} ${feature.description} ${feature.category}`.toLowerCase();
-          return haystack.includes(normalizedQuery) && (!category || feature.category === category);
-        })
-        .map((feature) => ({
-          system_id: card.id,
-          system_name: card.name,
-          feature,
-        })),
-    );
-    return jsonResult(results.slice(0, limit ?? 20));
+  async ({ query, category, claim_type, include_drafts, limit }) => {
+    try {
+      return jsonResult(
+        await backend.searchFeatures(
+          query,
+          category,
+          claim_type,
+          include_drafts ?? false,
+          limit ?? 20,
+        ),
+      );
+    } catch (error) {
+      return errorResult(error);
+    }
   },
 );
 
@@ -148,12 +92,16 @@ server.registerTool(
   },
   async ({ system_id }) => {
     try {
-      return jsonResult(await readJson(resolve(bundlesDirectory, `${system_id}.json`)));
-    } catch {
-      return jsonResult({ error: `modeling bundle not found: ${system_id}` });
+      return jsonResult(await backend.getModelingBundle(system_id));
+    } catch (error) {
+      return errorResult(error);
     }
   },
 );
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
+
+function resolveRepositoryRoot(): string {
+  return process.env.MATHEN_ROOT ?? fileURLToPath(new URL("../../..", import.meta.url));
+}
