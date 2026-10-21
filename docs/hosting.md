@@ -14,6 +14,12 @@ Hono Worker API
     └── Vectorize: optional semantic retrieval index
 ```
 
+The current read API includes:
+
+- `GET /api/systems` and `GET /api/systems/:id` for reviewed cards;
+- `GET /api/features` for reusable feature retrieval;
+- `GET /api/modeling/:id` for fixed-commit modeling bundles.
+
 D1 is intentionally sufficient for the first knowledge graph. Systems,
 features, evidence, mathematical views, trade-offs, and explicit relations are
 stored as normalized tables. Recursive SQL, join tables, and API-side graph
