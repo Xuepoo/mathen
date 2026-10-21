@@ -26,13 +26,11 @@ the API origin before starting the server:
 MATHEN_API_URL=https://api.example.com bun run mcp
 ```
 
-API mode uses `GET /api/systems`, `GET /api/systems/:id`, and
-`GET /api/features`. Requests have a 10-second timeout and API failures are
-returned as concise JSON tool errors. Drafts are filesystem-only, so
-`include_drafts: true` returns an explicit unsupported-backend error when
-`MATHEN_API_URL` is set. Modeling bundles are also filesystem-only until the
-API provides `GET /api/modeling/:id`; API mode reports that limitation rather
-than reading local files silently.
+API mode uses `GET /api/systems`, `GET /api/systems/:id`, `GET /api/features`,
+and `GET /api/modeling/:id`. Requests have a 10-second timeout and API
+failures are returned as concise JSON tool errors. Draft cards are
+filesystem-only, so `include_drafts: true` returns an explicit
+unsupported-backend error when `MATHEN_API_URL` is set.
 
 ## Tools
 
@@ -49,6 +47,6 @@ included unless the caller sets `include_drafts: true`.
 ## Boundary
 
 The MCP process reads the repository filesystem when `MATHEN_API_URL` is unset.
-When it is set, system and feature reads use the Hono/D1 API. Write and
-promotion operations are deliberately absent until an authenticated review
-workflow exists.
+When it is set, reviewed system, feature, and modeling-bundle reads use the
+Hono/D1 API. Write and promotion operations are deliberately absent until an
+authenticated review workflow exists.

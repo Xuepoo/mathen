@@ -58,17 +58,14 @@ test("API backend calls the Hono endpoints and preserves MCP result records", as
   );
 });
 
-test("API backend rejects unsupported API-only operations explicitly", async () => {
-  const backend = new ApiBackend("https://api.example.test", async () =>
-    jsonResponse({ data: [] }),
-  );
+test("API backend reads modeling bundles and rejects drafts explicitly", async () => {
+  const backend = new ApiBackend("https://api.example.test", async (input) => {
+    assert.match(String(input), /\/api\/modeling\/duckdb$/);
+    return jsonResponse({ data: { contract_version: 1, system: { id: "duckdb" } } });
+  });
 
-  await assert.rejects(
-    backend.getModelingBundle("duckdb"),
-    (error: unknown) =>
-      error instanceof UnsupportedBackendError &&
-      error.message.includes("/api/modeling/:id is not implemented"),
-  );
+  const bundle = await backend.getModelingBundle("duckdb");
+  assert.deepEqual(bundle, { contract_version: 1, system: { id: "duckdb" } });
   await assert.rejects(backend.listSystems(true), /include_drafts is unavailable/);
 });
 

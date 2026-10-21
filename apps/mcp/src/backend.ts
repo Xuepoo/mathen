@@ -217,10 +217,15 @@ export class ApiBackend implements Backend {
     });
   }
 
-  async getModelingBundle(_systemId: string): Promise<unknown> {
-    throw new UnsupportedBackendError(
-      "modeling bundles are unavailable with MATHEN_API_URL because GET /api/modeling/:id is not implemented",
-    );
+  async getModelingBundle(systemId: string): Promise<unknown> {
+    try {
+      return await this.request<unknown>(`/modeling/${encodeURIComponent(systemId)}`);
+    } catch (error) {
+      if (error instanceof ApiHttpError && error.status === 404) {
+        throw new BackendError(`modeling bundle not found: ${systemId}`);
+      }
+      throw error;
+    }
   }
 
   private rejectDrafts(includeDrafts: boolean): void {
