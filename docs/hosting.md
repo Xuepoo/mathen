@@ -48,13 +48,20 @@ bun run dev
 ```
 
 The local D1 database is disposable. Seed data is derived from
-`data/systems/*.json`, so the same reviewed cards can populate a fresh remote
-database later.
+`data/systems/*.json` and the fixed-commit modeling bundles under
+`data/modeling/*.json`, so a fresh local or remote database can serve both
+reviewed cards and modeling context.
 
 ## MCP boundary
 
-A future MCP server should call the same canonical API or a shared service
-layer. Its first tools can be:
+The local MCP server can use the canonical Hono API by setting `MATHEN_API_URL`
+(for example, `http://localhost:8787/api`). When unset, it uses the repository
+filesystem for offline operation. The API currently serves reviewed systems,
+features, and fixed-commit modeling bundles; draft cards remain filesystem-only
+until an authenticated draft-review API exists.
+
+The MCP tools call the same canonical API or a shared service layer. Its first
+tools can be:
 
 - analyze a local repository into a draft Architecture Card;
 - compare a draft card with known systems and features;
