@@ -100,8 +100,11 @@ to the Worker.
 The application deliberately uses D1 as the source of truth. Vectorize is an
 optional search index and is not required for local structured browsing. A
 local MCP server exposes read-only system, feature, and modeling-bundle tools;
-see [`docs/mcp.md`](docs/mcp.md). A future hosted MCP server can call the same
-API and submit reviewed Architecture Cards generated from a local repository.
+see [`docs/mcp.md`](docs/mcp.md). Set `MATHEN_API_URL=http://localhost:8787/api`
+to make it read reviewed data and modeling bundles through the Hono/D1 API;
+without that variable it uses the local filesystem. A future hosted MCP server
+can call the same API and submit reviewed Architecture Cards generated from a
+local repository.
 
 Run the standard checks:
 
