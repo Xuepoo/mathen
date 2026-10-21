@@ -23,6 +23,11 @@ Vectorize is an optimization and retrieval companion. It stores embeddings and
 metadata that point back to D1 records; it is not authoritative and can be
 rebuilt from reviewed cards.
 
+The deployment workflow expects the repository secrets
+`CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_KEY`. The latter must contain a
+Cloudflare API token with the required D1 and Workers permissions; the secret
+name is retained for compatibility with the planned repository configuration.
+
 ## Future graph stores
 
 If graph traversals become the dominant workload, the repository can add a

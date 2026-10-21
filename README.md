@@ -62,6 +62,9 @@ ruff check .
 uv run python -m unittest discover -s tests -v
 ```
 
+The Python development toolchain, including Ruff, is declared in
+`pyproject.toml` and installed by `uv sync --locked`.
+
 ## Repository layout
 
 ```text
