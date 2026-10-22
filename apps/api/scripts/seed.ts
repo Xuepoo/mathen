@@ -143,6 +143,7 @@ function toStatements(card: Card) {
       insert("evidence", {
         system_id: card.id,
         ...item,
+        id: evidenceKey(card.id, item.id),
         accessed: item.accessed ?? null,
         notes: item.notes ?? null,
       }),
@@ -164,7 +165,7 @@ function toStatements(card: Card) {
         insert("feature_evidence", {
           system_id: card.id,
           feature_id: feature.id,
-          evidence_id,
+          evidence_id: evidenceKey(card.id, evidence_id),
         }),
       ),
     ),
@@ -179,7 +180,7 @@ function toStatements(card: Card) {
       ...view.evidence_ids.map(
         (evidence_id) =>
           "INSERT INTO mathematical_view_evidence (view_id, evidence_id) " +
-          `SELECT id, ${quote(evidence_id)} FROM mathematical_views ` +
+          `SELECT id, ${quote(evidenceKey(card.id, evidence_id))} FROM mathematical_views ` +
           `WHERE system_id = ${quote(card.id)} AND id = (` +
           `SELECT MAX(id) FROM mathematical_views WHERE system_id = ${quote(card.id)}` +
           `);`,
@@ -206,6 +207,10 @@ function toModelingBundleStatement(bundle: {
   source_path: string;
 }) {
   return insert("modeling_bundles", bundle);
+}
+
+function evidenceKey(systemId: string, evidenceId: string) {
+  return `${systemId}:${evidenceId}`;
 }
 
 function insert(table: string, values: Record<string, unknown>) {

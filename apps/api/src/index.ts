@@ -107,7 +107,7 @@ app.get("/systems/:id", async (c) => {
     c.env.DB.prepare(
       `SELECT id, name, category, claim_type, description, benefits_json, costs_json
               , COALESCE((
-                SELECT json_group_array(fe.evidence_id)
+                SELECT json_group_array(substr(fe.evidence_id, length(fe.system_id) + 2))
                 FROM feature_evidence fe
                 WHERE fe.system_id = ?1 AND fe.feature_id = features.id
                 ORDER BY fe.evidence_id
@@ -119,7 +119,7 @@ app.get("/systems/:id", async (c) => {
     c.env.DB.prepare(
       `SELECT id, model, question, assumptions_json, claim_type,
               COALESCE((
-                SELECT json_group_array(mve.evidence_id)
+                SELECT json_group_array(substr(mve.evidence_id, length(mathematical_views.system_id) + 2))
                 FROM mathematical_view_evidence mve
                 WHERE mve.view_id = mathematical_views.id
                 ORDER BY mve.evidence_id
@@ -147,7 +147,7 @@ app.get("/systems/:id", async (c) => {
         costs_json: string;
       }>(),
     c.env.DB.prepare(
-      `SELECT id, kind, title, uri, accessed, notes
+      `SELECT substr(id, length(system_id) + 2) AS id, kind, title, uri, accessed, notes
        FROM evidence WHERE system_id = ?1 ORDER BY id`,
     )
       .bind(system.id)
@@ -186,7 +186,7 @@ app.get("/features", async (c) => {
     `SELECT f.id, f.system_id, s.name AS system_name, f.name, f.category,
             f.claim_type, f.description, f.benefits_json, f.costs_json,
             COALESCE((
-              SELECT json_group_array(fe.evidence_id)
+              SELECT json_group_array(substr(fe.evidence_id, length(fe.system_id) + 2))
               FROM feature_evidence fe
               WHERE fe.system_id = f.system_id AND fe.feature_id = f.id
               ORDER BY fe.evidence_id
@@ -219,7 +219,7 @@ app.get("/compositions", async (c) => {
     `SELECT id, name, version_context, composition_json,
             COALESCE((
               SELECT json_group_array(json_object(
-                'id', e.id,
+                'id', substr(e.id, length(e.system_id) + 2),
                 'kind', e.kind,
                 'title', e.title,
                 'uri', e.uri,
