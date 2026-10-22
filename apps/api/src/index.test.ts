@@ -100,8 +100,38 @@ test("buildCompositions filters valid proposals by input and status", () => {
         claim_status: "under-review",
         evidence_ids: ["architecture-doc"],
       },
+      evidence: [],
     },
   ]);
+});
+
+test("buildCompositions resolves only cited evidence metadata", () => {
+  const evidence = {
+    id: "architecture-doc",
+    kind: "official-doc",
+    title: "Architecture documentation",
+    uri: "https://example.test/architecture",
+    accessed: "2026-01-01",
+    notes: "Relevant boundary.",
+  };
+  const result = buildCompositions([
+    {
+      id: "candidate",
+      name: "Candidate",
+      version_context: null,
+      composition_json: JSON.stringify({
+        inputs: [{ system_id: "alpha" }],
+        constraints: [],
+        preserved_properties: [],
+        conflicts: [],
+        claim_status: "accepted",
+        evidence_ids: ["architecture-doc", "missing"],
+      }),
+      evidence_json: JSON.stringify([evidence]),
+    },
+  ]);
+
+  assert.deepEqual(result[0]?.evidence, [evidence]);
 });
 
 test("buildGraph exposes typed relations and preserves legacy related-system edges", () => {

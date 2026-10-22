@@ -39,6 +39,7 @@ unsupported-backend error when `MATHEN_API_URL` is set.
 - `get_system`: retrieve one reviewed card or explicitly requested draft;
 - `search_features`: find reusable features by text and optional category;
 - `list_compositions`: find reviewed composition proposals by input system or claim status;
+  each result includes the cited `evidence` records resolved from the owning card;
 - `get_modeling_bundle`: retrieve a fixed-commit evidence bundle for semantic
   modeling.
 

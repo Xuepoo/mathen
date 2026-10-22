@@ -345,7 +345,7 @@ The Hono Worker uses the `/api` base path. Successful responses use a
 | `GET /api/systems?query=&limit=` | Search reviewed system summaries |
 | `GET /api/systems/:id` | Retrieve one reviewed card projection |
 | `GET /api/features?query=&category=&claim_type=&limit=` | Search reviewed features |
-| `GET /api/compositions?input_system=&claim_status=&limit=` | Search reviewed composition proposals |
+| `GET /api/compositions?input_system=&claim_status=&limit=` | Search reviewed composition proposals, including cited evidence records |
 | `GET /api/modeling/:id` | Retrieve one fixed-commit modeling bundle |
 | `GET /api/graph` | Return current system nodes and valid typed or legacy edges |
 
@@ -368,7 +368,7 @@ The stdio MCP server provides the same read boundary to agents:
 | `list_systems` | optional `include_drafts` | System summaries |
 | `get_system` | `system_id`, optional `include_drafts` | One Architecture Card |
 | `search_features` | `query`, optional `category`, `claim_type`, `include_drafts`, `limit` | Matching reusable features |
-| `list_compositions` | optional `input_system`, `claim_status`, `include_drafts`, `limit` | Matching reviewed composition proposals |
+| `list_compositions` | optional `input_system`, `claim_status`, `include_drafts`, `limit` | Matching reviewed composition proposals with cited evidence records |
 | `get_modeling_bundle` | `system_id` | Fixed-commit modeling bundle |
 
 Without `MATHEN_API_URL`, the server uses the local filesystem. With

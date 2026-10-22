@@ -6,6 +6,7 @@ export type Evidence = {
   kind: string;
   title: string;
   uri: string;
+  accessed?: string;
   notes?: string;
 };
 
@@ -54,6 +55,7 @@ export type CompositionSearchResult = {
   system_name: string;
   version_context: string | null;
   composition: Record<string, unknown>;
+  evidence: Evidence[];
 };
 
 export interface Backend {
@@ -402,17 +404,22 @@ function normalizeCompositionResult(value: unknown): CompositionSearchResult {
     system_name: requiredString(result.system_name, "system_name", "/api/compositions"),
     version_context: optionalString(result.version_context) ?? null,
     composition: asRecord(result.composition),
+    evidence: Array.isArray(result.evidence)
+      ? result.evidence.map(normalizeEvidence)
+      : [],
   };
 }
 
 function normalizeEvidence(value: unknown): Evidence {
   const evidence = asRecord(value);
+  const accessed = optionalString(evidence.accessed);
   const notes = optionalString(evidence.notes);
   return {
     id: requiredString(evidence.id, "id", "/api/systems/:id"),
     kind: requiredString(evidence.kind, "kind", "/api/systems/:id"),
     title: requiredString(evidence.title, "title", "/api/systems/:id"),
     uri: requiredString(evidence.uri, "uri", "/api/systems/:id"),
+    ...(accessed ? { accessed } : {}),
     ...(notes ? { notes } : {}),
   };
 }
@@ -498,6 +505,9 @@ function toCompositionResult(
     system_name: card.name,
     version_context: card.version_context ?? null,
     composition,
+    evidence: (card.evidence ?? []).filter((evidence) =>
+      composition.evidence_ids.includes(evidence.id),
+    ),
   };
 }
 
