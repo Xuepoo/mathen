@@ -42,6 +42,10 @@ These entries are already present in the repository at different review levels:
 | `redis` | Redis | in-memory data service | `reviewed` | Compare native structures, RESP, and persistence representations |
 | `elasticsearch` | Elasticsearch | search engine | `reviewed` | Compare shard partitioning, scatter-gather search, replication, and near-real-time visibility |
 | `kafka` | Apache Kafka | distributed log | `reviewed` | Compare partitioned logs, replay, replication, and stream processing |
+| `zookeeper` | Apache ZooKeeper | coordination service | `reviewed` | Compare hierarchical coordination state, sessions, watches, and quorum ordering using fixed-commit evidence |
+| `etcd` | etcd | distributed key-value store | `reviewed` | Compare Raft-backed revisions, transactions, watches, and leases using fixed-commit evidence |
+| `consul` | Consul | service networking | `reviewed` | Compare service catalog, health-aware discovery, datacenter topology, and distributed KV using fixed-commit evidence |
+| `rabbitmq` | RabbitMQ | message broker | `reviewed` | Compare exchange routing, durable queues, acknowledgements, confirms, and flow control using fixed-commit evidence |
 | `mysql-server` | MySQL Server | database | `reviewed` | Compare storage-engine, transaction, and recovery boundaries with PostgreSQL and SQLite |
 | `rocksdb` | RocksDB | embedded database | `reviewed` | Compare LSM, WAL, compaction, and snapshot boundaries with SQLite and Redis |
 | `docker` | Docker Engine | container runtime | `draft` | Compare daemon, image, namespace, and filesystem boundaries |
@@ -179,10 +183,10 @@ identifiers, not claims that the projects share the same architecture.
 | --- | --- | --- | --- |
 | `kafka` | Apache Kafka | `P0` | Partitioned append-only log and consumer offsets |
 | `hadoop` | Apache Hadoop | `P1` | Distributed filesystem and batch resource scheduling |
-| `zookeeper` | Apache ZooKeeper | `P0` | Coordination tree, sessions, and consensus-adjacent state |
-| `etcd` | etcd | `P0` | Raft-backed consistent key-value store and watch stream |
-| `consul` | Consul | `P1` | Service discovery, health state, and distributed KV |
-| `rabbitmq` | RabbitMQ | `P1` | Broker queues, routing, acknowledgements, and flow control |
+| `zookeeper` | Apache ZooKeeper | `reviewed` | Compare hierarchical coordination state, sessions, watches, and quorum ordering using fixed-commit evidence |
+| `etcd` | etcd | `reviewed` | Compare Raft-backed revisions, transactions, watches, and leases using fixed-commit evidence |
+| `consul` | Consul | `reviewed` | Compare service catalog, health-aware discovery, datacenter topology, and distributed KV using fixed-commit evidence |
+| `rabbitmq` | RabbitMQ | `reviewed` | Compare exchange routing, durable queues, acknowledgements, confirms, and flow control using fixed-commit evidence |
 | `nats` | NATS | `P1` | Lightweight messaging, subjects, and stream persistence |
 | `pulsar` | Apache Pulsar | `P2` | Segmented logs, brokers, and separated storage |
 | `flink` | Apache Flink | `P1` | Stateful stream processing and event-time semantics |
