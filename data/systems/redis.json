@@ -1,0 +1,297 @@
+{
+  "id": "redis",
+  "name": "Redis",
+  "version_context": "commit 6ea763ceb8b417bd35973c828c93afc0d7145e56",
+  "summary": "A networked data-structure server that exposes typed operations over RESP and offers selectable snapshot and append-only persistence representations.",
+  "scope": [
+    "data-structure server",
+    "request-response protocol",
+    "in-memory state",
+    "persistence modes",
+    "append-only event data"
+  ],
+  "features": [
+    {
+      "id": "native-data-structure-command-model",
+      "name": "Native data structures as the command model",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "Redis presents native data types such as strings, hashes, lists, sets, sorted sets, streams, probabilistic structures, and vector sets through commands designed around those structures.",
+      "benefits": [
+        "Makes common operations available as server-side primitives",
+        "Maps different workloads to specialized data structures",
+        "Keeps application clients relatively thin for supported operations"
+      ],
+      "costs": [
+        "The data model is command- and type-specific rather than relationally uniform",
+        "Memory use and command complexity vary substantially by structure",
+        "Applications must select and understand the semantics of each type"
+      ],
+      "evidence_ids": [
+        "redis-data-types"
+      ]
+    },
+    {
+      "id": "typed-request-response-protocol",
+      "name": "Typed binary-safe request/response protocol",
+      "category": "protocol-model",
+      "claim_type": "fact",
+      "description": "Redis clients communicate using RESP, where commands are encoded as arrays of bulk strings and replies use typed scalar, aggregate, error, and push representations. Length prefixes make bulk payloads binary-safe and straightforward to parse.",
+      "benefits": [
+        "Provides a small interoperable boundary between clients and the server",
+        "Supports pipelining while retaining ordered command replies in the normal mode",
+        "Avoids scanning bulk payloads for delimiter characters"
+      ],
+      "costs": [
+        "The protocol must preserve command-specific type semantics",
+        "Push and subscription modes complicate the basic request/response model",
+        "Network serialization remains part of every operation's latency"
+      ],
+      "evidence_ids": [
+        "redis-resp"
+      ]
+    },
+    {
+      "id": "selectable-persistence-representations",
+      "name": "Selectable snapshot and append-log persistence",
+      "category": "persistence-model",
+      "claim_type": "fact",
+      "description": "Redis supports no persistence, point-in-time RDB snapshots, append-only AOF logging, or a combination. AOF recovery reconstructs the dataset by replaying write operations, while RDB provides compact snapshots.",
+      "benefits": [
+        "Lets deployments choose a durability and restart profile",
+        "Separates the in-memory command state from its durable representations",
+        "Supports both compact backup artifacts and replayable operation logs"
+      ],
+      "costs": [
+        "Durability, latency, disk usage, and recovery behavior depend on the selected mode",
+        "AOF rewriting and snapshotting require additional background work",
+        "No-persistence deployments accept data loss on process failure"
+      ],
+      "evidence_ids": [
+        "redis-persistence"
+      ]
+    },
+    {
+      "id": "append-only-stream-data-structure",
+      "name": "Append-only streams as a native data structure",
+      "category": "event-model",
+      "claim_type": "fact",
+      "description": "Redis Streams are described as a data structure that acts like an append-only log, recording events in order and syndicating them for processing.",
+      "benefits": [
+        "Provides event-oriented state without requiring a separate log service",
+        "Preserves insertion order for stream processing use cases",
+        "Combines log-like access with the Redis command/data-type interface"
+      ],
+      "costs": [
+        "Stream retention and consumer coordination remain application and configuration concerns",
+        "A native stream does not automatically provide the distributed durability model of a log cluster"
+      ],
+      "evidence_ids": [
+        "redis-data-types"
+      ]
+    },
+    {
+      "id": "atomic-background-persistence",
+      "name": "Forked background persistence",
+      "category": "persistence-execution",
+      "claim_type": "fact",
+      "description": "Redis documents RDB snapshot creation and AOF rewriting as forked background work. Copy-on-write lets the child write a snapshot or replacement representation while the parent continues serving clients, subject to the documented fork, memory, and I/O costs.",
+      "benefits": [
+        "Keeps the main serving process out of most snapshot and rewrite disk I/O",
+        "Allows a new persistence representation to be constructed without replacing the active one until completion",
+        "Provides an operationally useful atomic handoff point for completed files or manifests"
+      ],
+      "costs": [
+        "Fork and copy-on-write can consume CPU and memory under large or write-heavy datasets",
+        "Background persistence competes for disk bandwidth and other resources",
+        "A rewrite or snapshot still needs an explicit recovery and backup policy"
+      ],
+      "evidence_ids": [
+        "redis-persistence"
+      ]
+    },
+    {
+      "id": "configurable-durability-window",
+      "name": "Configurable durability window",
+      "category": "durability-model",
+      "claim_type": "fact",
+      "description": "Redis exposes persistence policies ranging from no persistence and periodic RDB snapshots to AOF fsync policies of never, every second, or every query. The selected policy determines the documented balance between write latency, disk work, restart recovery, and the amount of acknowledged data that may be lost after a failure.",
+      "benefits": [
+        "Lets deployments choose an explicit durability and performance point",
+        "Separates dataset-serving semantics from the persistence schedule",
+        "Makes the possible loss window an operational configuration choice"
+      ],
+      "costs": [
+        "No single mode optimizes latency, compactness, restart speed, and loss bounds simultaneously",
+        "The fsync policy and snapshot interval create different failure windows",
+        "Operators must test backups and restoration in addition to selecting a mode"
+      ],
+      "evidence_ids": [
+        "redis-persistence"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed keyspace transition system",
+      "question": "How do commands transform a keyspace whose values belong to different native data-type domains?",
+      "assumptions": [
+        "Each command has a precondition on key existence and value type",
+        "A command is modeled as a partial state transition that may return an error",
+        "The view abstracts implementation-specific memory representations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "redis-data-types",
+        "redis-resp"
+      ]
+    },
+    {
+      "model": "State reconstruction from an append-only command log",
+      "question": "Under what conditions does replaying a valid sequence of write commands reconstruct the in-memory dataset?",
+      "assumptions": [
+        "Commands are replayed in the order represented by the durable log",
+        "The command semantics and configuration are compatible with the original state",
+        "AOF truncation and rewrite boundaries are modeled explicitly"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "redis-persistence"
+      ]
+    },
+    {
+      "model": "Persistence representation refinement",
+      "question": "Which durable representations can replace one another while preserving the observable recovered dataset at a chosen durability boundary?",
+      "assumptions": [
+        "The comparison is made at a specified snapshot or fsync boundary",
+        "RDB and AOF are compared for recovered state, not identical history",
+        "Performance, crash windows, and backup procedures are separate properties"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "redis-persistence"
+      ]
+    },
+    {
+      "model": "Fork-and-replace persistence transition system",
+      "question": "How can Redis construct a new snapshot or rewritten log concurrently and make it the active durable representation only after completion?",
+      "assumptions": [
+        "The serving dataset is the parent state and the child observes a copy-on-write view",
+        "Temporary files and the final rename or manifest replacement are modeled as an atomic handoff boundary",
+        "The view abstracts operating-system fork, rename, fsync, and crash behavior beyond the documented workflow"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "redis-persistence"
+      ]
+    },
+    {
+      "model": "Durability-latency Pareto frontier",
+      "question": "Which persistence configurations are nondominated when comparing write cost, recovery representation, and maximum failure loss window?",
+      "assumptions": [
+        "Configurations are compared at a stated fsync or snapshot boundary",
+        "A loss window means acknowledged writes not guaranteed to have reached durable storage under the selected policy",
+        "The model treats dataset size, disk behavior, and process failure timing as workload parameters"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "redis-persistence"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "native-data-structure-command-model",
+      "benefits": [
+        "Efficient specialized operations and a compact application interface"
+      ],
+      "costs": [
+        "Type-specific semantics and memory-oriented workload constraints"
+      ]
+    },
+    {
+      "feature_id": "typed-request-response-protocol",
+      "benefits": [
+        "Simple, fast-to-parse, binary-safe client boundary"
+      ],
+      "costs": [
+        "Protocol modes and command-specific response handling"
+      ]
+    },
+    {
+      "feature_id": "selectable-persistence-representations",
+      "benefits": [
+        "Deployment-specific control over durability and restart cost"
+      ],
+      "costs": [
+        "Operational complexity and different data-loss windows"
+      ]
+    },
+    {
+      "feature_id": "append-only-stream-data-structure",
+      "benefits": [
+        "Log-like event processing within the data-structure server"
+      ],
+      "costs": [
+        "Retention, scaling, and durability guarantees remain bounded by the deployment"
+      ]
+    },
+    {
+      "feature_id": "atomic-background-persistence",
+      "benefits": [
+        "Online snapshot and rewrite construction with a controlled handoff"
+      ],
+      "costs": [
+        "Fork, copy-on-write, and background I/O resource pressure"
+      ]
+    },
+    {
+      "feature_id": "configurable-durability-window",
+      "benefits": [
+        "Explicit tuning of durability against latency and storage work"
+      ],
+      "costs": [
+        "Operational complexity and policy-dependent data-loss windows"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "redis-data-types",
+      "kind": "official-doc",
+      "title": "Redis data types",
+      "uri": "https://redis.io/docs/latest/develop/data-types/",
+      "accessed": "2026-10-21",
+      "notes": "Documents Redis as a data structure server and lists native structures including Streams and vector sets."
+    },
+    {
+      "id": "redis-resp",
+      "kind": "official-doc",
+      "title": "Redis serialization protocol specification",
+      "uri": "https://redis.io/docs/latest/develop/reference/protocol-spec/",
+      "accessed": "2026-10-21",
+      "notes": "Documents RESP request/response types, binary-safe length prefixes, pipelining, and push modes."
+    },
+    {
+      "id": "redis-persistence",
+      "kind": "official-doc",
+      "title": "Redis persistence",
+      "uri": "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/",
+      "accessed": "2026-10-21",
+      "notes": "Documents RDB snapshots, AOF replay, fsync choices, rewrite behavior, recovery, and backup trade-offs."
+    },
+    {
+      "id": "redis-repository-commit",
+      "kind": "source-code",
+      "title": "Redis source at 6ea763ceb8b4",
+      "uri": "https://github.com/redis/redis/commit/6ea763ceb8b417bd35973c828c93afc0d7145e56",
+      "accessed": "2026-10-21",
+      "notes": "Fixed source revision used by deterministic repository analysis; the revision is the provenance boundary for this card, while semantic claims are supported by the cited Redis documentation."
+    }
+  ],
+  "related_systems": [
+    "kafka",
+    "sqlite",
+    "elasticsearch"
+  ]
+}

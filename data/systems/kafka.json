@@ -1,0 +1,352 @@
+{
+  "id": "kafka",
+  "name": "Apache Kafka",
+  "version_context": "commit 787c2b4d9f032890226590f9956d501812f10cbd",
+  "summary": "A distributed event-streaming platform that stores partitioned event logs durably, decouples producers from consumers, and supports replayable stream processing.",
+  "scope": [
+    "distributed event streaming",
+    "partitioned append logs",
+    "durable retention",
+    "replicated storage",
+    "stream processing"
+  ],
+  "features": [
+    {
+      "id": "partitioned-append-log",
+      "name": "Partitioned append-only event storage",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "Kafka organizes events into topics, distributes each topic across partitions on brokers, and appends each published event to a partition. Consumers of one topic-partition observe events in the order written to that partition.",
+      "benefits": [
+        "Provides a scalable unit for parallel reads and writes",
+        "Preserves per-partition ordering for keyed event streams",
+        "Supports sequential durable storage and repeated reads"
+      ],
+      "costs": [
+        "Ordering is scoped to a partition rather than a whole topic or cluster",
+        "Partition-key selection affects locality and load balance",
+        "Partition count and placement become long-lived operational decisions"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "id": "retained-replayable-events",
+      "name": "Retained and replayable event history",
+      "category": "consistency-model",
+      "claim_type": "fact",
+      "description": "Kafka does not delete events merely because a consumer has read them. Topic retention determines when older events are discarded, allowing events to be read repeatedly and processed retrospectively.",
+      "benefits": [
+        "Decouples event production from consumer timing",
+        "Supports backfills, replay, and multiple independent consumers",
+        "Turns the messaging substrate into a durable event history"
+      ],
+      "costs": [
+        "Storage cost grows with the configured retention window and event volume",
+        "Consumers must manage their position and replay semantics",
+        "Retention is not the same as permanent archival"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "id": "producer-consumer-decoupling",
+      "name": "Producer and consumer decoupling",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "Kafka's official introduction describes producers and consumers as fully decoupled and agnostic of each other. Producers publish events while consumers independently subscribe to and process them.",
+      "benefits": [
+        "Allows independent scaling and deployment of producers and consumers",
+        "Supports multiple consumers with different processing purposes",
+        "Provides a stable integration boundary between services"
+      ],
+      "costs": [
+        "Schemas, compatibility, and event ownership must be governed across teams",
+        "End-to-end behavior becomes asynchronous and harder to reason about locally",
+        "Consumer lag and replay can create operational backlogs"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "id": "replicated-topic-partitions",
+      "name": "Replicated topic partitions",
+      "category": "fault-tolerance-model",
+      "claim_type": "fact",
+      "description": "Kafka can replicate topic-partitions across brokers and even across regions or datacenters so that multiple brokers retain copies for fault tolerance and availability.",
+      "benefits": [
+        "Maintains copies of event data across broker failures",
+        "Supports maintenance and failure recovery without a single storage copy",
+        "Applies the replication unit to the same partition unit used for scaling"
+      ],
+      "costs": [
+        "Replication consumes additional storage and network bandwidth",
+        "Availability and durability depend on replica placement and cluster state",
+        "Failure handling adds coordination to the append path"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "id": "stream-processing-composition",
+      "name": "Composable stream-processing pipeline",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Kafka provides APIs for processing event streams, including transformations, stateful aggregations, joins, and windowing, with input topics transformed into output topics.",
+      "benefits": [
+        "Expresses event-processing stages as connected stream transformations",
+        "Supports both real-time and retrospective processing over retained events",
+        "Allows derived streams to be consumed by further applications"
+      ],
+      "costs": [
+        "Stateful processing requires checkpointing and recovery design",
+        "Topology behavior depends on partitioning and event-time assumptions",
+        "A pipeline introduces cumulative latency and operational coupling"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "id": "key-affine-partition-ordering",
+      "name": "Key-affine partition ordering",
+      "category": "ordering-model",
+      "claim_type": "fact",
+      "description": "Kafka maps events to topic partitions, and events with the same key are written to the same partition in the documented model. Consumers observe the write order within a topic-partition, while no total order is established across partitions.",
+      "benefits": [
+        "Provides a predictable ordering scope for per-entity event streams",
+        "Allows partitions to be read and written in parallel",
+        "Makes the key-selection policy an explicit part of the event contract"
+      ],
+      "costs": [
+        "Cross-entity or cross-partition ordering requires additional coordination",
+        "A skewed key distribution can concentrate work on one partition",
+        "Changing partitioning assumptions can alter locality and processing behavior"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "id": "retained-event-replay-boundary",
+      "name": "Retained-event replay boundary",
+      "category": "consumption-model",
+      "claim_type": "fact",
+      "description": "Kafka retains events independently of whether a consumer has read them, so events can be read repeatedly and processed retrospectively. Replay remains bounded by topic retention and by the consumer's processing semantics.",
+      "benefits": [
+        "Supports recovery, backfills, and multiple independent processing applications",
+        "Separates event retention from consumer completion",
+        "Makes a consumer position a reusable state component of stream processing"
+      ],
+      "costs": [
+        "Replay can duplicate external effects unless processing is idempotent or transactional",
+        "Consumer lag consumes retained storage and processing capacity",
+        "Expired retention creates a hard lower bound on replayable history"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "id": "partition-replica-fault-tolerance",
+      "name": "Partition-level replica fault tolerance",
+      "category": "replication-model",
+      "claim_type": "fact",
+      "description": "Kafka replicates topic-partitions across brokers, including across datacenters or regions in the documented overview. Replication uses the same partition as the unit of retained event history and fault-tolerance placement.",
+      "benefits": [
+        "Keeps multiple broker copies of a partition's event history",
+        "Aligns scaling, ordering, and replication boundaries",
+        "Supports broker maintenance and failure recovery"
+      ],
+      "costs": [
+        "Replica copies consume storage and network bandwidth",
+        "Availability and durability depend on replica placement and cluster state",
+        "Replication adds coordination and does not create a global order"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Partitioned append-log system",
+      "question": "How do topic events map to ordered partition sequences while enabling parallel distribution?",
+      "assumptions": [
+        "Each partition is modeled as an append-only sequence with a local order",
+        "A key-to-partition mapping is stable enough for the required ordering scope",
+        "The model does not infer a total order across partitions"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "model": "Replayable event transition system",
+      "question": "How can the same retained event sequence drive multiple consumers or be replayed to reconstruct derived state?",
+      "assumptions": [
+        "Consumers maintain a position in the retained sequence",
+        "Event processing is deterministic or explicitly models external effects",
+        "Retention has not removed the required prefix of the event history"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "model": "Replicated log refinement",
+      "question": "Which observable event-history properties are preserved when a partition is represented by multiple broker replicas?",
+      "assumptions": [
+        "Replica coordination provides the availability and durability behavior claimed by the deployment",
+        "The comparison concerns observable retained events and ordering, not identical internal timing",
+        "Failure and recovery transitions are included in the refinement model"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "model": "Key-indexed partial-order log",
+      "question": "Which event-order relations are guaranteed when a topic is partitioned by key?",
+      "assumptions": [
+        "Each partition is a sequence ordered by append position",
+        "The key-to-partition mapping sends equal keys to the same partition for the modeled interval",
+        "Events in different partitions are incomparable unless an additional application protocol supplies an order"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "model": "Retention-bounded replay transition system",
+      "question": "When can replay from a consumer position reproduce a derived state from retained events?",
+      "assumptions": [
+        "The requested prefix of each partition remains within the configured retention window",
+        "The consumer's transition function is deterministic or explicitly accounts for external effects",
+        "The model distinguishes event replay from exactly-once external side effects"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "model": "Replica-set availability refinement",
+      "question": "Which retained partition observations can remain available when one broker copy is unavailable?",
+      "assumptions": [
+        "Replica placement and coordination satisfy the deployment's availability and durability policy",
+        "The comparison concerns the partition's observable event history, not identical broker timing",
+        "Failure, catch-up, and retention transitions are included in the model"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "partitioned-append-log",
+      "benefits": [
+        "Parallel scale with local ordering and sequential append behavior"
+      ],
+      "costs": [
+        "Cross-partition ordering and load balance require explicit design"
+      ]
+    },
+    {
+      "feature_id": "retained-replayable-events",
+      "benefits": [
+        "Consumer independence, replay, and retrospective processing"
+      ],
+      "costs": [
+        "Retention storage, lag management, and schema evolution obligations"
+      ]
+    },
+    {
+      "feature_id": "producer-consumer-decoupling",
+      "benefits": [
+        "Independent service evolution and fan-out"
+      ],
+      "costs": [
+        "Asynchronous failure modes and distributed contract governance"
+      ]
+    },
+    {
+      "feature_id": "replicated-topic-partitions",
+      "benefits": [
+        "Fault tolerance and high availability for retained event data"
+      ],
+      "costs": [
+        "Additional storage, network traffic, and coordination"
+      ]
+    },
+    {
+      "feature_id": "stream-processing-composition",
+      "benefits": [
+        "Reusable transformations from input topics to derived topics"
+      ],
+      "costs": [
+        "State recovery, topology management, and cumulative latency"
+      ]
+    },
+    {
+      "feature_id": "key-affine-partition-ordering",
+      "benefits": [
+        "Parallel processing with explicit per-key ordering"
+      ],
+      "costs": [
+        "Hot partitions and no automatic cross-partition order"
+      ]
+    },
+    {
+      "feature_id": "retained-event-replay-boundary",
+      "benefits": [
+        "Independent recovery, replay, and backfill from retained history"
+      ],
+      "costs": [
+        "Lag, duplicate effects, and retention-expiry constraints"
+      ]
+    },
+    {
+      "feature_id": "partition-replica-fault-tolerance",
+      "benefits": [
+        "Fault tolerance at the same boundary as ordering and scale"
+      ],
+      "costs": [
+        "Replica storage, network traffic, and coordination overhead"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "kafka-introduction",
+      "kind": "official-doc",
+      "title": "Introduction to Apache Kafka",
+      "uri": "https://kafka.apache.org/intro/",
+      "accessed": "2026-10-21",
+      "notes": "Documents event streaming, durable topics, partitioning and ordering, retention and replay, producer/consumer decoupling, replication, and stream-processing APIs."
+    },
+    {
+      "id": "kafka-repository-commit",
+      "kind": "source-code",
+      "title": "Apache Kafka source at 787c2b4d9f03",
+      "uri": "https://github.com/apache/kafka/commit/787c2b4d9f032890226590f9956d501812f10cbd",
+      "accessed": "2026-10-21",
+      "notes": "Fixed source revision used by deterministic repository analysis; the revision is the provenance boundary for this card, while semantic claims are supported by the cited Apache Kafka documentation."
+    }
+  ],
+  "related_systems": [
+    "redis",
+    "elasticsearch",
+    "kubernetes"
+  ]
+}

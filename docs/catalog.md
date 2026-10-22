@@ -39,9 +39,11 @@ These entries are already present in the repository at different review levels:
 | `supabase` | Supabase | backend platform | `reviewed` | Model platform composition and lineage |
 | `sqlite` | SQLite | embedded database | `reviewed` | Compare with DuckDB and columnar engines |
 | `postgresql` | PostgreSQL | relational database | `reviewed` | Compare PostgreSQL MVCC and extension boundaries with SQLite and Supabase using fixed-commit evidence |
-| `redis` | Redis | in-memory data service | `draft` | Review event loop, data structures, and persistence |
+| `redis` | Redis | in-memory data service | `reviewed` | Compare native structures, RESP, and persistence representations |
 | `elasticsearch` | Elasticsearch | search engine | `draft` | Review inverted indexes, shards, and query execution |
-| `kafka` | Apache Kafka | distributed log | `draft` | Review append-only log, partitions, and replay |
+| `kafka` | Apache Kafka | distributed log | `reviewed` | Compare partitioned logs, replay, replication, and stream processing |
+| `mysql-server` | MySQL Server | database | `draft` | Pin documentation and inspect fixed source for storage-engine, transaction, and recovery claims |
+| `rocksdb` | RocksDB | embedded database | `draft` | Pin documentation and inspect fixed source for LSM, WAL, compaction, and snapshot claims |
 | `docker` | Docker Engine | container runtime | `draft` | Compare daemon, image, namespace, and filesystem boundaries |
 | `qemu` | QEMU | virtualization | `draft` | Compare complete machine emulation with Firecracker |
 | `kubernetes` | Kubernetes | orchestration | `cataloged` | Analyze reconciliation, API resources, and etcd state |
