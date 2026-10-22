@@ -58,12 +58,15 @@ trying to execute it or prove its properties. It contains:
 - `constraints`: conditions the composition must satisfy;
 - `preserved_properties`: properties expected to survive composition;
 - `conflicts`: incompatibilities, trade-offs, or unresolved tensions;
+- `validation_gaps`: evidence or experiments still needed before the proposal
+  can be accepted;
 - `claim_status` and `evidence_ids` for the composition as a whole.
 
-Every constraint, preserved property, and conflict is a claim with a
-description, `claim_type`, `claim_status`, and evidence IDs. Empty lists are
-allowed for those three categories so that a known absence is distinguishable
-from an omitted contract.
+Every constraint, preserved property, conflict, and validation gap is a claim
+with a description, `claim_type`, `claim_status`, and evidence IDs. Empty lists
+are allowed for these categories so that a known absence is distinguishable
+from an omitted contract. `validation_gaps` is optional for compatibility with
+composition records written before this field existed.
 
 ## Validation and storage boundary
 
