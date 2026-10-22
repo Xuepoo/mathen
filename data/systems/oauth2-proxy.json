@@ -1,0 +1,199 @@
+{
+  "id": "oauth2-proxy",
+  "name": "OAuth2 Proxy",
+  "version_context": "oauth2-proxy commit bea3f04bf87b93f5354f392fe2216a88e6031350 (v7.15.5)",
+  "summary": "A reverse-proxy authentication boundary that turns OAuth2/OIDC provider sessions into authenticated requests and forwards authorized traffic to configured upstreams.",
+  "scope": [
+    "HTTP authentication middleware",
+    "OAuth2/OIDC provider adapters",
+    "session storage",
+    "upstream request forwarding"
+  ],
+  "features": [
+    {
+      "id": "reverse-proxy-authentication-boundary",
+      "name": "Reverse-proxy authentication boundary",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "The proxy routes authentication endpoints and protected requests through middleware before forwarding requests to configured upstream servers.",
+      "benefits": [
+        "Adds authentication without requiring each upstream application to implement the provider protocol",
+        "Provides a single place for request and response header policy"
+      ],
+      "costs": [
+        "The proxy becomes part of every protected request path",
+        "Incorrect trusted-proxy or header configuration can change the security boundary"
+      ],
+      "evidence_ids": [
+        "oauth2-proxy-readme",
+        "oauth2-proxy-main-source"
+      ]
+    },
+    {
+      "id": "provider-adapter-authorization",
+      "name": "Provider adapter and authorization pipeline",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "A configured provider adapter performs OAuth2/OIDC login and session validation, while provider-specific claims can be used by authorization checks and forwarded to upstreams.",
+      "benefits": [
+        "Supports multiple provider protocols behind a common proxy contract",
+        "Keeps provider-specific token and claim handling behind an adapter"
+      ],
+      "costs": [
+        "Provider behavior and supported claims are not uniform",
+        "Authentication correctness depends on external identity-provider availability and configuration"
+      ],
+      "evidence_ids": [
+        "oauth2-proxy-provider-doc",
+        "oauth2-proxy-main-source"
+      ]
+    },
+    {
+      "id": "encrypted-session-storage",
+      "name": "Encrypted session storage choices",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "The default cookie store keeps encrypted session state client-side, while the Redis store keeps encrypted session data server-side and places a short ticket handle in the cookie.",
+      "benefits": [
+        "Cookie storage can make a deployment stateless",
+        "Redis storage reduces per-request cookie size and centralizes session data"
+      ],
+      "costs": [
+        "Cookie storage has concurrent refresh conflicts and size constraints",
+        "Redis storage adds a stateful dependency and expiration coordination"
+      ],
+      "evidence_ids": [
+        "oauth2-proxy-session-doc",
+        "oauth2-proxy-session-source"
+      ]
+    },
+    {
+      "id": "request-middleware-chain",
+      "name": "Composable request middleware chain",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Pre-authentication, session, and header middleware chains are assembled around route handlers for readiness checks, session loading, validation, and upstream handling.",
+      "benefits": [
+        "Makes cross-cutting authentication steps reusable across endpoints",
+        "Allows token, cookie, and basic-auth mechanisms to be combined in a route-specific order"
+      ],
+      "costs": [
+        "Ordering and short-circuit behavior become part of the security contract",
+        "Debugging requires tracing behavior across middleware and endpoint handlers"
+      ],
+      "evidence_ids": [
+        "oauth2-proxy-main-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "HTTP request state machine",
+      "question": "Which transitions take a request from unauthenticated access through provider login, session validation, authorization, and upstream forwarding?",
+      "assumptions": [
+        "A request has an observable route, session state, and authorization result",
+        "Provider redirects and callbacks are modeled as external transitions",
+        "An upstream response is emitted only after the configured middleware chain completes"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "oauth2-proxy-main-source",
+        "oauth2-proxy-provider-doc"
+      ]
+    },
+    {
+      "model": "Session representation refinement",
+      "question": "How can the same logical authenticated session be represented either directly in a protected cookie or indirectly by an encrypted Redis record and ticket?",
+      "assumptions": [
+        "Both stores implement the same logical session load and save operations",
+        "Encryption and signature validation are modeled as representation-preserving boundaries",
+        "Backend availability and cookie-size limits are outside semantic equivalence"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "oauth2-proxy-session-doc",
+        "oauth2-proxy-session-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "reverse-proxy-authentication-boundary",
+      "benefits": [
+        "Centralized authentication for otherwise unmodified upstreams"
+      ],
+      "costs": [
+        "Adds a latency and availability dependency before the upstream"
+      ]
+    },
+    {
+      "feature_id": "provider-adapter-authorization",
+      "benefits": [
+        "Common request boundary across several identity providers"
+      ],
+      "costs": [
+        "Provider-specific semantics and external failures remain visible to applications"
+      ]
+    },
+    {
+      "feature_id": "encrypted-session-storage",
+      "benefits": [
+        "Choice between stateless operation and smaller client cookies"
+      ],
+      "costs": [
+        "The choice exchanges backend dependency for cookie-size and refresh-concurrency constraints"
+      ]
+    },
+    {
+      "feature_id": "request-middleware-chain",
+      "benefits": [
+        "Reusable and composable request checks"
+      ],
+      "costs": [
+        "Chain order and short-circuit paths increase operational reasoning burden"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "oauth2-proxy-readme",
+      "kind": "official-doc",
+      "title": "OAuth2 Proxy README at fixed commit",
+      "uri": "https://github.com/oauth2-proxy/oauth2-proxy/blob/bea3f04bf87b93f5354f392fe2216a88e6031350/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Local checkout /tmp/opencode/mth-0050/oauth2-proxy; describes reverse-proxy and middleware roles, OAuth2/OIDC providers, and upstream headers."
+    },
+    {
+      "id": "oauth2-proxy-main-source",
+      "kind": "source-code",
+      "title": "OAuthProxy construction and request chains at fixed commit",
+      "uri": "https://github.com/oauth2-proxy/oauth2-proxy/blob/bea3f04bf87b93f5354f392fe2216a88e6031350/oauthproxy.go",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/oauth2-proxy/oauthproxy.go; NewOAuthProxy assembles provider, session store, upstream proxy, and middleware chains."
+    },
+    {
+      "id": "oauth2-proxy-session-doc",
+      "kind": "official-doc",
+      "title": "OAuth2 Proxy session storage documentation at fixed commit",
+      "uri": "https://github.com/oauth2-proxy/oauth2-proxy/blob/bea3f04bf87b93f5354f392fe2216a88e6031350/docs/docs/configuration/sessions.md",
+      "accessed": "2026-10-23",
+      "notes": "Documents cookie and Redis stores, encryption, ticket handles, refresh, expiration, and concurrency caveats."
+    },
+    {
+      "id": "oauth2-proxy-session-source",
+      "kind": "source-code",
+      "title": "OAuth2 Proxy session package at fixed commit",
+      "uri": "https://github.com/oauth2-proxy/oauth2-proxy/tree/bea3f04bf87b93f5354f392fe2216a88e6031350/pkg/sessions",
+      "accessed": "2026-10-23",
+      "notes": "Local repository evidence boundary is the fixed checkout /tmp/opencode/mth-0050/oauth2-proxy/pkg/sessions."
+    },
+    {
+      "id": "oauth2-proxy-provider-doc",
+      "kind": "official-doc",
+      "title": "OAuth2 Proxy provider configuration documentation at fixed commit",
+      "uri": "https://github.com/oauth2-proxy/oauth2-proxy/blob/bea3f04bf87b93f5354f392fe2216a88e6031350/docs/docs/configuration/providers/index.md",
+      "accessed": "2026-10-23",
+      "notes": "Lists provider adapters, common provider configuration, claim limitations, and authorization settings."
+    }
+  ]
+}

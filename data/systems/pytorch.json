@@ -1,0 +1,206 @@
+{
+  "id": "pytorch",
+  "name": "PyTorch",
+  "version_context": "PyTorch commit b5a6f9805c93977afe7ff19fd3a3f2d3fcecbb17",
+  "summary": "A tensor and neural-network framework that combines imperative tensor computation, tape-based reverse-mode autograd, and dispatch to CPU, accelerator, and extension kernels.",
+  "scope": [
+    "tensor computation",
+    "reverse-mode automatic differentiation",
+    "operator dispatch",
+    "CPU and accelerator execution"
+  ],
+  "features": [
+    {
+      "id": "imperative-tensor-runtime",
+      "name": "Imperative tensor runtime",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Tensor operations execute through an imperative API, with tensors living on CPU or GPU devices and operations producing runtime values.",
+      "benefits": [
+        "Supports interactive debugging and data-dependent control flow",
+        "Allows a common tensor API across CPU and accelerator devices"
+      ],
+      "costs": [
+        "Runtime execution can expose more per-operation overhead than ahead-of-time graph execution",
+        "Device placement and synchronization remain observable operational concerns"
+      ],
+      "evidence_ids": [
+        "pytorch-readme",
+        "pytorch-dispatch-source"
+      ]
+    },
+    {
+      "id": "tape-based-reverse-autograd",
+      "name": "Tape-based reverse-mode autograd",
+      "category": "differentiation-model",
+      "claim_type": "fact",
+      "description": "Differentiable tensor operations construct a runtime graph of autograd Nodes and gradient edges that can be traversed in reverse during backward execution.",
+      "benefits": [
+        "Handles dynamic computation paths without prebuilding one static graph",
+        "Provides hooks and graph metadata for extension and inspection"
+      ],
+      "costs": [
+        "Retained graph state and saved tensors consume memory",
+        "In-place mutation and graph lifetime rules constrain valid programs"
+      ],
+      "evidence_ids": [
+        "pytorch-readme",
+        "pytorch-autograd-source"
+      ]
+    },
+    {
+      "id": "operator-dispatch-registry",
+      "name": "Schema and dispatch-key operator registry",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "The dispatcher stores operator schemas and registered kernels, resolves dispatch keys and fallbacks, and exposes registration handles for lifecycle management.",
+      "benefits": [
+        "Separates operator API schemas from backend-specific implementations",
+        "Supports Python, composite, autograd, and device-specific extensions"
+      ],
+      "costs": [
+        "Dispatch-key precedence and fallback rules increase execution-path complexity",
+        "Registration and deregistration must preserve dispatcher invariants"
+      ],
+      "evidence_ids": [
+        "pytorch-dispatch-readme",
+        "pytorch-dispatch-source"
+      ]
+    },
+    {
+      "id": "backend-extension-boundary",
+      "name": "Backend and extension boundary",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "The framework integrates CPU and GPU acceleration libraries and exposes C/C++ and Python extension paths around the tensor API.",
+      "benefits": [
+        "Reuses specialized kernels and hardware libraries",
+        "Allows custom operators and neural-network layers without replacing the tensor core"
+      ],
+      "costs": [
+        "Build, binary, and hardware compatibility become part of deployment",
+        "Backend-specific behavior can differ in performance and supported operations"
+      ],
+      "evidence_ids": [
+        "pytorch-readme",
+        "pytorch-dispatch-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Dynamic computation DAG with reverse-mode accumulation",
+      "question": "How does a runtime tensor computation record dependencies and propagate gradients from outputs back to differentiable inputs?",
+      "assumptions": [
+        "Each differentiable operation contributes a node and edges to its inputs",
+        "The recorded graph is acyclic for one backward traversal",
+        "Gradient accumulation is modeled over the framework's tensor value domain"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "pytorch-readme",
+        "pytorch-autograd-source"
+      ]
+    },
+    {
+      "model": "Dispatch-key resolution algebra",
+      "question": "Given an operator and an ordered dispatch-key context, which registered kernel or fallback is selected?",
+      "assumptions": [
+        "Operator schemas and kernel registrations are the observable registry state",
+        "Dispatch-key alias inclusion and precedence are fixed for one runtime",
+        "A selected kernel preserves the operator schema expected by the caller"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "pytorch-dispatch-readme",
+        "pytorch-dispatch-source"
+      ]
+    },
+    {
+      "model": "Backend implementation refinement",
+      "question": "Under what conditions can a CPU, accelerator, composite, or extension kernel refine the same operator contract?",
+      "assumptions": [
+        "All implementations are compared against the registered operator schema",
+        "Numerical tolerance and device-specific performance are modeled separately from functional behavior",
+        "The model does not assume equivalence for unsupported dtypes or edge cases"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "pytorch-dispatch-source",
+        "pytorch-readme"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "imperative-tensor-runtime",
+      "benefits": [
+        "Flexible runtime control flow and straightforward debugging"
+      ],
+      "costs": [
+        "Per-operation runtime behavior and synchronization can limit optimization opportunities"
+      ]
+    },
+    {
+      "feature_id": "tape-based-reverse-autograd",
+      "benefits": [
+        "Dynamic differentiation with local graph construction"
+      ],
+      "costs": [
+        "Graph retention and saved intermediates increase memory pressure"
+      ]
+    },
+    {
+      "feature_id": "operator-dispatch-registry",
+      "benefits": [
+        "One operator surface can select specialized implementations"
+      ],
+      "costs": [
+        "Dispatch precedence and registration lifecycle are complex global contracts"
+      ]
+    },
+    {
+      "feature_id": "backend-extension-boundary",
+      "benefits": [
+        "Hardware acceleration and extensibility without changing the high-level API"
+      ],
+      "costs": [
+        "Deployment inherits backend build and compatibility matrices"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "pytorch-readme",
+      "kind": "official-doc",
+      "title": "PyTorch README at fixed commit",
+      "uri": "https://github.com/pytorch/pytorch/blob/b5a6f9805c93977afe7ff19fd3a3f2d3fcecbb17/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Local checkout /tmp/opencode/mth-0050/pytorch; describes tensor computation, GPU support, tape-based autograd, imperative execution, and extension APIs."
+    },
+    {
+      "id": "pytorch-autograd-source",
+      "kind": "source-code",
+      "title": "PyTorch autograd graph API at fixed commit",
+      "uri": "https://github.com/pytorch/pytorch/blob/b5a6f9805c93977afe7ff19fd3a3f2d3fcecbb17/torch/autograd/graph.py",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/pytorch/torch/autograd/graph.py; Node exposes next_functions, metadata, and backward hooks."
+    },
+    {
+      "id": "pytorch-dispatch-readme",
+      "kind": "official-doc",
+      "title": "PyTorch dispatcher README at fixed commit",
+      "uri": "https://github.com/pytorch/pytorch/blob/b5a6f9805c93977afe7ff19fd3a3f2d3fcecbb17/aten/src/ATen/core/dispatch/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Documents the dispatcher as a single point for routing kernel calls and the Dispatcher/dispatch-table components."
+    },
+    {
+      "id": "pytorch-dispatch-source",
+      "kind": "source-code",
+      "title": "PyTorch Dispatcher and OperatorEntry at fixed commit",
+      "uri": "https://github.com/pytorch/pytorch/blob/b5a6f9805c93977afe7ff19fd3a3f2d3fcecbb17/aten/src/ATen/core/dispatch/Dispatcher.h",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/pytorch/aten/src/ATen/core/dispatch/Dispatcher.h and OperatorEntry.h; records schemas, kernels, fallbacks, and registration lifecycle."
+    }
+  ]
+}

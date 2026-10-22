@@ -349,8 +349,8 @@ identifiers, not claims that the projects share the same architecture.
 | `temporal` | Temporal | `reviewed` | Compare durable event histories, task queues, deterministic replay, and activity retry boundaries using fixed-commit evidence |
 | `airflow` | Apache Airflow | `reviewed` | Compare DAG readiness, metadata-mediated scheduling, pluggable executors, and separated DAG processing using fixed-commit evidence |
 | `celery` | Celery | `reviewed` | Compare broker-mediated task delivery, acknowledgement/redelivery, result backends, and message-composed workflows using fixed-commit evidence |
-| `oauth2-proxy` | OAuth2 Proxy | `P2` | Reverse-proxy authentication, session cookies, upstream forwarding, and provider adapters |
-| `authentik` | authentik | `P2` | Identity flows, policy evaluation, provider/application boundaries, and outposts |
+| `oauth2-proxy` | OAuth2 Proxy | `reviewed` | Compare middleware-chain authentication, provider adapters, encrypted cookie/Redis sessions, and upstream forwarding using fixed-commit evidence |
+| `authentik` | authentik | `reviewed` | Compare staged flow planning, policy aggregation, provider/application boundaries, and managed outpost reconciliation using fixed-commit evidence |
 
 ### Machine learning and computer vision
 
