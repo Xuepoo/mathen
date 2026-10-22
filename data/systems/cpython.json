@@ -1,0 +1,160 @@
+{
+  "id": "cpython",
+  "name": "CPython",
+  "version_context": "commit c1c4c18dfc7c4daa37cba79ebc00ea07286c90a0",
+  "summary": "A Python runtime organized around interpreters and thread states, execution frames for code blocks, dynamic name binding, and a reference-managed object and C extension boundary.",
+  "scope": [
+    "language execution",
+    "interpreter state",
+    "object lifetime",
+    "C API boundary"
+  ],
+  "features": [
+    {
+      "id": "interpreter-and-thread-state-hierarchy",
+      "name": "Interpreter and thread-state hierarchy",
+      "category": "runtime-state",
+      "claim_type": "fact",
+      "description": "The Python runtime model distinguishes global runtime state, interpreters, and thread states. An interpreter encapsulates non-process-global runtime state, while each thread state is tied to one interpreter and one host thread.",
+      "benefits": [
+        "Provides a reusable boundary for runtime state and execution context",
+        "Allows multiple interpreters and thread states to be reasoned about separately"
+      ],
+      "costs": [
+        "Shared interpreter resources require coordination across host threads",
+        "State ownership and thread affinity add embedding complexity"
+      ],
+      "evidence_ids": [
+        "cpython-execution-model",
+        "cpython-fixed-source"
+      ]
+    },
+    {
+      "id": "execution-frame-and-dynamic-binding",
+      "name": "Execution frames and dynamic name binding",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Python code blocks execute in execution frames, and names refer to objects through binding and scope-resolution rules. Dynamic features such as eval and exec can supply or alter namespaces at runtime.",
+      "benefits": [
+        "Supports a flexible object and module programming model",
+        "Makes execution context available for debugging and dynamic evaluation"
+      ],
+      "costs": [
+        "Runtime name resolution limits some static optimization opportunities",
+        "Dynamic namespace mutation can make behavior harder to predict"
+      ],
+      "evidence_ids": [
+        "cpython-execution-model",
+        "cpython-fixed-source"
+      ]
+    },
+    {
+      "id": "reference-managed-object-api",
+      "name": "Reference-managed object and C API boundary",
+      "category": "memory-and-extension-model",
+      "claim_type": "fact",
+      "description": "The CPython C API exposes strong-reference operations such as Py_INCREF, Py_DECREF, and Py_NewRef. Releasing the last strong reference invokes the object's deallocation function, which can execute arbitrary Python code.",
+      "benefits": [
+        "Provides explicit lifetime operations for native extensions and embedding",
+        "Allows objects to be reclaimed when their strong-reference count reaches zero"
+      ],
+      "costs": [
+        "Extension code must obey reference ownership rules",
+        "Deallocation can re-enter Python and therefore requires consistent object state"
+      ],
+      "evidence_ids": [
+        "cpython-refcounting",
+        "cpython-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Hierarchical runtime transition system",
+      "question": "How do runtime, interpreter, thread-state, and execution-frame entities evolve as Python code runs?",
+      "assumptions": [
+        "The documented runtime layers are modeled as state components rather than literal implementation objects",
+        "Thread affinity and interpreter ownership are transition preconditions",
+        "The view abstracts host scheduler behavior and platform-specific internals"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "cpython-execution-model",
+        "cpython-fixed-source"
+      ]
+    },
+    {
+      "model": "Reference-counted object graph",
+      "question": "How do strong references and deallocation transitions govern the lifetime of Python objects exposed through the C API?",
+      "assumptions": [
+        "Objects are vertices and strong references are counted ownership edges",
+        "A zero strong-reference count permits a deallocation transition under the documented rules",
+        "Immortal objects, cyclic garbage collection, and implementation-specific optimizations are outside this simplified view"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "cpython-refcounting",
+        "cpython-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "interpreter-and-thread-state-hierarchy",
+      "benefits": [
+        "Explicit runtime isolation and execution ownership boundaries"
+      ],
+      "costs": [
+        "Embedding and concurrency require coordination across nested state"
+      ]
+    },
+    {
+      "feature_id": "execution-frame-and-dynamic-binding",
+      "benefits": [
+        "Flexible introspection, modules, and dynamic evaluation"
+      ],
+      "costs": [
+        "Dynamic lookup and mutation complicate static reasoning and optimization"
+      ]
+    },
+    {
+      "feature_id": "reference-managed-object-api",
+      "benefits": [
+        "Direct, interoperable lifetime control for native extensions"
+      ],
+      "costs": [
+        "Reference mistakes and re-entrant deallocation can cause correctness failures"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "cpython-fixed-source",
+      "kind": "source-code",
+      "title": "CPython source tree at fixed commit c1c4c18dfc7c",
+      "uri": "https://github.com/python/cpython/commit/c1c4c18dfc7c4daa37cba79ebc00ea07286c90a0",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance requested for this review; the commit page identifies the inspected CPython revision. It is not used as a substitute for subsystem documentation."
+    },
+    {
+      "id": "cpython-execution-model",
+      "kind": "official-doc",
+      "title": "Python Language Reference: Execution model",
+      "uri": "https://docs.python.org/3/reference/executionmodel.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Primary documentation for code blocks, execution frames, binding, and Python runtime layers."
+    },
+    {
+      "id": "cpython-refcounting",
+      "kind": "official-doc",
+      "title": "Python/C API Reference: Reference Counting",
+      "uri": "https://docs.python.org/3/c-api/refcounting.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Primary documentation for strong references, reference-count operations, and deallocation behavior."
+    }
+  ],
+  "related_systems": [
+    "rust",
+    "wasmtime"
+  ]
+}

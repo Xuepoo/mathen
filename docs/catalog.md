@@ -50,26 +50,26 @@ These entries are already present in the repository at different review levels:
 | `linux` | Linux Kernel | operating system | `reviewed` | Analyze system calls, scheduling, memory, and modules |
 | `hadoop` | Apache Hadoop | distributed storage and compute | `cataloged` | Analyze HDFS, YARN, and batch computation |
 | `nginx` | NGINX | network server | `reviewed` | Analyze event-driven I/O and worker processes |
-| `llvm` | LLVM | compiler infrastructure | `cataloged` | Analyze IR, passes, and target-independent compilation |
+| `llvm` | LLVM | compiler infrastructure | `reviewed` | Add temporal IR and pass-pipeline relations |
 | `ffmpeg` | FFmpeg | media processing | `reviewed` | Compare format contexts, codec state machines, and filter graphs using fixed-commit evidence |
 | `protobuf` | Protocol Buffers | serialization protocol | `reviewed` | Compare numbered schema evolution and generated interfaces with gRPC using fixed-commit evidence |
 | `grpc` | gRPC | RPC framework | `reviewed` | Compare generated service boundaries and streaming lifecycle with Protocol Buffers using fixed-commit evidence |
+| `cpython` | CPython | language runtime | `reviewed` | Compare interpreter state, object lifetime, and extension boundaries |
+| `rust` | Rust | language toolchain | `reviewed` | Compare ownership, compiler IR, and incremental query boundaries |
+| `wasmtime` | Wasmtime | WebAssembly runtime | `reviewed` | Compare Engine/Store isolation and JIT compilation boundaries |
 
 The operational manifest now contains 44 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
-deterministic analysis, but they do not yet have reviewed Architecture Cards:
+deterministic analysis; entries with reviewed cards are listed above:
 
 | ID | Name | Domain | Priority |
 | --- | --- | --- | --- |
-| `cpython` | CPython | language runtime | `P1` |
-| `rust` | Rust | language toolchain | `P1` |
 | `lua` | Lua | language runtime | `P1` |
 | `go` | Go | language toolchain | `P2` |
 | `ruby` | Ruby | language runtime | `P2` |
 | `node` | Node.js | JavaScript runtime | `P1` |
 | `deno` | Deno | JavaScript runtime | `P2` |
 | `v8` | V8 | JavaScript engine | `P2` |
-| `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
 | `freebsd` | FreeBSD | operating system | `P2` |
 | `systemd` | systemd | init system | `P1` |
 | `xv6-public` | xv6 | educational operating system | `P1` |

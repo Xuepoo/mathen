@@ -1,0 +1,168 @@
+{
+  "id": "llvm",
+  "name": "LLVM",
+  "version_context": "commit 49bc45ccc8063a79016beefe72a7127fe63bef9c",
+  "summary": "A compiler infrastructure centered on a typed SSA-based intermediate representation and composable analysis and transformation passes between language front ends and target code generation.",
+  "scope": [
+    "intermediate representation",
+    "compiler transformations",
+    "target-independent code generation",
+    "link-time integration"
+  ],
+  "features": [
+    {
+      "id": "typed-ssa-intermediate-representation",
+      "name": "Typed SSA intermediate representation",
+      "category": "intermediate-representation",
+      "claim_type": "fact",
+      "description": "LLVM IR is a typed, low-level, SSA-based representation used as a common code representation across compilation phases. The representation has in-memory, bitcode, and human-readable assembly forms.",
+      "benefits": [
+        "Gives analyses and transformations a shared, language-independent representation",
+        "Supports verification and serialization across compiler tools"
+      ],
+      "costs": [
+        "Front ends must lower higher-level language semantics into a lower-level representation",
+        "IR well-formedness and target-specific semantics constrain transformations"
+      ],
+      "evidence_ids": [
+        "llvm-langref",
+        "llvm-fixed-source"
+      ]
+    },
+    {
+      "id": "analysis-transform-pass-pipeline",
+      "name": "Analysis and transformation pass pipeline",
+      "category": "transformation-model",
+      "claim_type": "fact",
+      "description": "LLVM organizes compiler work into analysis, transform, and utility passes. Analysis passes compute information, while transform passes may mutate the program and interact with analysis results.",
+      "benefits": [
+        "Allows reusable analyses to support multiple transformations",
+        "Makes optimization behavior inspectable as a sequence of bounded transformations"
+      ],
+      "costs": [
+        "Transformations can invalidate analyses and require dependency management",
+        "Pass ordering and target assumptions affect optimization outcomes"
+      ],
+      "evidence_ids": [
+        "llvm-passes",
+        "llvm-fixed-source"
+      ]
+    },
+    {
+      "id": "front-end-and-back-end-boundary",
+      "name": "Front-end and back-end boundary",
+      "category": "compiler-platform",
+      "claim_type": "fact",
+      "description": "LLVM's documented system accepts IR from language front ends and provides tools, libraries, and headers to process IR and convert it into object files, with target-specific code generation at the back end.",
+      "benefits": [
+        "Permits multiple front ends to share middle-end infrastructure",
+        "Separates language lowering concerns from target code generation"
+      ],
+      "costs": [
+        "The shared boundary must preserve enough semantics for different languages and targets",
+        "Interfaces expose compatibility and target-feature coordination costs"
+      ],
+      "evidence_ids": [
+        "llvm-getting-started",
+        "llvm-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed SSA dataflow graph",
+      "question": "How can compiler analyses and transformations operate on a shared representation of typed values and control flow?",
+      "assumptions": [
+        "An LLVM module can be abstracted as typed values, basic blocks, control-flow edges, and uses",
+        "The model treats verifier conditions and undefined-behavior details as explicit preconditions",
+        "The graph abstraction omits layout and target-specific lowering details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "llvm-langref",
+        "llvm-fixed-source"
+      ]
+    },
+    {
+      "model": "Analysis-transform refinement pipeline",
+      "question": "When does a sequence of LLVM passes preserve the intended program behavior while changing its representation or cost?",
+      "assumptions": [
+        "Each transformation has a documented or implementation-defined validity precondition",
+        "Analysis results are treated as conditional knowledge that may be invalidated by mutation",
+        "The view describes a candidate refinement relation and does not establish equivalence for arbitrary passes"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "llvm-passes",
+        "llvm-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "typed-ssa-intermediate-representation",
+      "benefits": [
+        "Shared representation for optimization, verification, and serialization"
+      ],
+      "costs": [
+        "Lowering and well-formedness rules add compiler complexity"
+      ]
+    },
+    {
+      "feature_id": "analysis-transform-pass-pipeline",
+      "benefits": [
+        "Composable optimization and analysis infrastructure"
+      ],
+      "costs": [
+        "Pass invalidation and ordering make global behavior harder to reason about"
+      ]
+    },
+    {
+      "feature_id": "front-end-and-back-end-boundary",
+      "benefits": [
+        "Reuse across source languages and target architectures"
+      ],
+      "costs": [
+        "The shared contract must accommodate language and target variation"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "llvm-fixed-source",
+      "kind": "source-code",
+      "title": "LLVM source tree at fixed commit 49bc45ccc806",
+      "uri": "https://github.com/llvm/llvm-project/commit/49bc45ccc8063a79016beefe72a7127fe63bef9c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance requested for this review; the commit page identifies the inspected LLVM revision. It is not used as a substitute for subsystem documentation."
+    },
+    {
+      "id": "llvm-langref",
+      "kind": "official-doc",
+      "title": "LLVM Language Reference Manual",
+      "uri": "https://llvm.org/docs/LangRef.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Primary documentation for typed SSA IR, its forms, modules, and well-formedness."
+    },
+    {
+      "id": "llvm-passes",
+      "kind": "official-doc",
+      "title": "LLVM's Analysis and Transform Passes",
+      "uri": "https://llvm.org/docs/Passes.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Primary documentation for analysis, transform, and utility pass roles."
+    },
+    {
+      "id": "llvm-getting-started",
+      "kind": "official-doc",
+      "title": "Getting Started with the LLVM System",
+      "uri": "https://llvm.org/docs/GettingStarted.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Primary documentation for LLVM components, front-end integration, and object-file code generation."
+    }
+  ],
+  "related_systems": [
+    "rust",
+    "cpython"
+  ]
+}

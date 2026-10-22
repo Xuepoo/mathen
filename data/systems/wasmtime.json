@@ -1,0 +1,152 @@
+{
+  "id": "wasmtime",
+  "name": "Wasmtime",
+  "version_context": "commit 54501e9d94bf5b25718f11f69d50583d4e7ce47b",
+  "summary": "An embeddable WebAssembly runtime that separates shared compilation context from store-scoped instance state, compiles modules through validation and parallel function compilation, and enters JIT code through typed trampolines.",
+  "scope": [
+    "WebAssembly embedding",
+    "module compilation",
+    "store isolation",
+    "JIT execution and traps"
+  ],
+  "features": [
+    {
+      "id": "engine-store-state-boundary",
+      "name": "Engine and store state boundary",
+      "category": "runtime-state-model",
+      "claim_type": "fact",
+      "description": "Wasmtime uses an Engine as a shared compilation context and a Store as the container and isolation unit for WebAssembly objects such as instances, globals, memories, and tables. Objects from different stores do not interact through the Wasmtime object model.",
+      "benefits": [
+        "Allows compiled artifacts and type interning to be shared through an Engine",
+        "Provides a clear lifetime and isolation boundary for instantiated objects"
+      ],
+      "costs": [
+        "Objects are store-affine and cannot be freely moved across stores",
+        "Engine synchronization and store lifetime rules add embedding constraints"
+      ],
+      "evidence_ids": [
+        "wasmtime-architecture",
+        "wasmtime-fixed-source"
+      ]
+    },
+    {
+      "id": "validated-parallel-module-compilation",
+      "name": "Validated parallel module compilation",
+      "category": "compilation-model",
+      "claim_type": "fact",
+      "description": "Module compilation first validates the module and builds an environment descriptor, then validates and compiles functions in parallel, collects inert compilation artifacts, and finally maps code into executable memory before producing a compiled Module.",
+      "benefits": [
+        "Separates validation, function compilation, artifact assembly, and executable publication",
+        "Allows independent function compilation work to proceed in parallel"
+      ],
+      "costs": [
+        "Compilation requires several intermediate artifacts and publication steps",
+        "Function-level compilation without inter-procedural analysis limits some optimization opportunities"
+      ],
+      "evidence_ids": [
+        "wasmtime-architecture",
+        "wasmtime-fixed-source"
+      ]
+    },
+    {
+      "id": "typed-host-to-wasm-entry",
+      "name": "Typed host-to-WebAssembly entry boundary",
+      "category": "embedding-interface",
+      "claim_type": "fact",
+      "description": "Wasmtime generates trampolines for exported function signatures so a host call with a known ABI can enter JIT code compiled with a different native function signature. Instantiation type-checks imports before creating the instance state.",
+      "benefits": [
+        "Hides native ABI differences from the embedding API",
+        "Makes import and call compatibility checks explicit at the runtime boundary"
+      ],
+      "costs": [
+        "Trampolines add generated code and signature-management work",
+        "Host and guest values remain constrained by WebAssembly type matching"
+      ],
+      "evidence_ids": [
+        "wasmtime-architecture",
+        "wasmtime-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Partitioned runtime state machine",
+      "question": "How do Engine-level shared state, Store-level ownership, and instance lifecycle transitions constrain WebAssembly execution?",
+      "assumptions": [
+        "Engine, Store, Module, and Instance are modeled as state components with explicit ownership edges",
+        "Store affinity is treated as an invariant for WebAssembly objects",
+        "The view abstracts allocator implementation details and host scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "wasmtime-architecture",
+        "wasmtime-fixed-source"
+      ]
+    },
+    {
+      "model": "Compilation and publication pipeline",
+      "question": "Which stages must a WebAssembly module pass before compiled code can be instantiated and called?",
+      "assumptions": [
+        "Validation, function compilation, artifact assembly, executable mapping, and instantiation are ordered transitions",
+        "The compiled artifact is inert until the executable publication stage",
+        "The view describes the documented pipeline and does not prove performance or complete implementation equivalence"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "wasmtime-architecture",
+        "wasmtime-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "engine-store-state-boundary",
+      "benefits": [
+        "Shared compilation resources with store-scoped isolation"
+      ],
+      "costs": [
+        "Store affinity and synchronization rules constrain embedding design"
+      ]
+    },
+    {
+      "feature_id": "validated-parallel-module-compilation",
+      "benefits": [
+        "Parallel compilation and an explicit executable-publication boundary"
+      ],
+      "costs": [
+        "Intermediate artifacts and limited inter-procedural analysis add complexity"
+      ]
+    },
+    {
+      "feature_id": "typed-host-to-wasm-entry",
+      "benefits": [
+        "Stable host call boundary despite guest function ABI variation"
+      ],
+      "costs": [
+        "Signature checking and trampoline generation add runtime and compilation surface"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "wasmtime-fixed-source",
+      "kind": "source-code",
+      "title": "Wasmtime source tree at fixed commit 54501e9d94bf",
+      "uri": "https://github.com/bytecodealliance/wasmtime/commit/54501e9d94bf5b25718f11f69d50583d4e7ce47b",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance requested for this review; the commit page identifies the inspected Wasmtime revision. It is not used as a substitute for architecture documentation."
+    },
+    {
+      "id": "wasmtime-architecture",
+      "kind": "official-doc",
+      "title": "Wasmtime Architecture",
+      "uri": "https://docs.wasmtime.dev/contributing-architecture.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Primary architecture documentation for Engine, Store, compilation, instantiation, trampolines, and runtime state."
+    }
+  ],
+  "related_systems": [
+    "rust",
+    "llvm"
+  ]
+}
