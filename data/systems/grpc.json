@@ -1,0 +1,67 @@
+{
+  "id": "grpc",
+  "name": "gRPC",
+  "version_context": "commit e2542a83cc3626c2dda4cc9426cb4e4d271dc0e5",
+  "summary": "An interface-defined RPC framework that turns service methods into generated client and server APIs over unary and independently flowing streaming calls with deadline and cancellation lifecycles.",
+  "scope": ["remote procedure calls", "service definitions", "generated clients and servers", "streaming lifecycles", "deadline propagation"],
+  "features": [
+    {
+      "id": "idl-defined-service-boundary",
+      "name": "IDL-defined service boundary",
+      "category": "interface-model",
+      "claim_type": "fact",
+      "description": "gRPC defines services and RPC methods in an interface definition, using Protocol Buffers by default for service and message descriptions. The fixed C++ generator emits client stub and server method interfaces from method descriptors.",
+      "benefits": ["Creates a language-neutral contract", "Generates matching client and server API surfaces", "Separates transport invocation from application implementation"],
+      "costs": ["Participants couple to generated APIs and serialization", "Definition changes require coordinated rollout", "Generated APIs expose language-specific lifecycle details"],
+      "evidence_ids": ["grpc-core-concepts", "grpc-source-cpp-generator"]
+    },
+    {
+      "id": "unary-and-streaming-call-shapes",
+      "name": "Unary and streaming call shapes",
+      "category": "communication-model",
+      "claim_type": "fact",
+      "description": "gRPC supports unary, server-streaming, client-streaming, and bidirectional-streaming methods. The fixed C++ generator selects distinct reader and writer interfaces for the streaming combinations.",
+      "benefits": ["Supports request-response and sequence exchange", "Preserves order within an individual RPC stream", "Allows independent read and write progress in bidirectional calls"],
+      "costs": ["Streaming needs lifecycle, buffering, and backpressure reasoning", "Bidirectional interleaving remains application-specific", "Generated method variants expand the API surface"],
+      "evidence_ids": ["grpc-core-concepts", "grpc-source-cpp-generator"]
+    },
+    {
+      "id": "deadline-bounded-call-lifecycle",
+      "name": "Deadline-bounded call lifecycle",
+      "category": "failure-model",
+      "claim_type": "fact",
+      "description": "gRPC lets clients specify a deadline and documents DEADLINE_EXCEEDED on expiry. The fixed core Call stores a send deadline, propagates the minimum parent deadline, and cancels the call when the deadline expires.",
+      "benefits": ["Bounds waiting and resource retention", "Nested calls inherit a no-later-than parent bound", "Timeout behavior is explicit in the RPC lifecycle"],
+      "costs": ["Client and server can reach different local success conclusions", "Cancellation does not roll back already-applied work", "Applications must classify deadline failures"],
+      "evidence_ids": ["grpc-core-concepts", "grpc-source-call"]
+    },
+    {
+      "id": "generated-transport-facing-stubs",
+      "name": "Generated transport-facing stubs",
+      "category": "programming-model",
+      "claim_type": "fact",
+      "description": "The gRPC programming model presents a local client stub whose methods wrap request messages, perform remote calls, and return response messages. The fixed C++ generator emits synchronous, asynchronous, callback, and streaming method declarations.",
+      "benefits": ["Makes remote methods look like typed local APIs", "Offers blocking and asynchronous execution styles", "Aligns message construction with the service definition"],
+      "costs": ["Local-looking calls retain network failure semantics", "Several execution styles increase generated API complexity", "Channels and call contexts remain application concerns"],
+      "evidence_ids": ["grpc-core-concepts", "grpc-source-cpp-generator"]
+    }
+  ],
+  "mathematical_views": [
+    {"model": "Typed service contract graph", "question": "How does one service definition connect method signatures to generated client and server boundaries?", "assumptions": ["Each method has one request and response type", "Generated interfaces preserve the declared method shape", "Transport details are abstracted behind generated APIs"], "claim_type": "inference", "evidence_ids": ["grpc-core-concepts", "grpc-source-cpp-generator"]},
+    {"model": "Bidirectional stream product state", "question": "How can an RPC represent independently progressing client and server message sequences?", "assumptions": ["Each direction has an ordered sequence within one call", "The directions may advance independently", "No cross-direction order is inferred without application rules"], "claim_type": "inference", "evidence_ids": ["grpc-core-concepts", "grpc-source-cpp-generator"]},
+    {"model": "Deadline-bounded call transition system", "question": "Which call transitions remain possible before a deadline and what terminal outcome follows expiration?", "assumptions": ["A call has a deadline and can be cancelled", "Nested propagation takes the minimum bound", "Local termination is distinct from remote work"], "claim_type": "inference", "evidence_ids": ["grpc-core-concepts", "grpc-source-call"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "idl-defined-service-boundary", "benefits": ["Typed cross-language contract"], "costs": ["Schema and generated-code compatibility require coordination"]},
+    {"feature_id": "unary-and-streaming-call-shapes", "benefits": ["One framework covers unary and sequence protocols"], "costs": ["Streaming adds buffering and termination complexity"]},
+    {"feature_id": "deadline-bounded-call-lifecycle", "benefits": ["Bounds remote wait and inherited work"], "costs": ["Timeouts can produce asymmetric outcomes"]},
+    {"feature_id": "generated-transport-facing-stubs", "benefits": ["Reduces handwritten transport glue"], "costs": ["Generated APIs expose several concurrency models"]}
+  ],
+  "evidence": [
+    {"id": "grpc-repository-commit", "kind": "source-code", "title": "gRPC source at e2542a83cc36", "uri": "https://github.com/grpc/grpc/commit/e2542a83cc3626c2dda4cc9426cb4e4d271dc0e5", "accessed": "2026-10-23", "notes": "Fixed source revision resolved from the repository manifest."},
+    {"id": "grpc-source-call", "kind": "source-code", "title": "gRPC core Call implementation", "uri": "https://github.com/grpc/grpc/blob/e2542a83cc3626c2dda4cc9426cb4e4d271dc0e5/src/core/lib/surface/call.cc", "accessed": "2026-10-23", "notes": "Fixed revision lines 120-140 store role and deadline; lines 186-190 propagate the minimum; lines 407-412 cancel on expiry."},
+    {"id": "grpc-source-cpp-generator", "kind": "source-code", "title": "gRPC C++ code generator", "uri": "https://github.com/grpc/grpc/blob/e2542a83cc3626c2dda4cc9426cb4e4d271dc0e5/src/compiler/cpp_generator.cc", "accessed": "2026-10-23", "notes": "Fixed revision lines 193-375 and 450-805 generate interfaces; lines 2105-2115 classify normal and three streaming shapes."},
+    {"id": "grpc-core-concepts", "kind": "official-doc", "title": "gRPC Core concepts, architecture and lifecycle", "uri": "https://grpc.io/docs/what-is-grpc/core-concepts/", "accessed": "2026-10-23", "notes": "Documents service definitions, generated APIs, RPC shapes, ordering, deadlines, cancellation, and asymmetric termination."}
+  ],
+  "related_systems": ["protobuf"]
+}

@@ -51,7 +51,9 @@ These entries are already present in the repository at different review levels:
 | `hadoop` | Apache Hadoop | distributed storage and compute | `cataloged` | Analyze HDFS, YARN, and batch computation |
 | `nginx` | NGINX | network server | `reviewed` | Analyze event-driven I/O and worker processes |
 | `llvm` | LLVM | compiler infrastructure | `cataloged` | Analyze IR, passes, and target-independent compilation |
-| `ffmpeg` | FFmpeg | media processing | `cataloged` | Analyze codec, filter, and stream pipelines |
+| `ffmpeg` | FFmpeg | media processing | `reviewed` | Compare format contexts, codec state machines, and filter graphs using fixed-commit evidence |
+| `protobuf` | Protocol Buffers | serialization protocol | `reviewed` | Compare numbered schema evolution and generated interfaces with gRPC using fixed-commit evidence |
+| `grpc` | gRPC | RPC framework | `reviewed` | Compare generated service boundaries and streaming lifecycle with Protocol Buffers using fixed-commit evidence |
 
 The operational manifest now contains 44 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
@@ -78,8 +80,6 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | `libuv` | libuv | asynchronous I/O library | `P1` |
 | `curl` | curl | network library | `P1` |
 | `openssl` | OpenSSL | cryptography library | `P2` |
-| `protobuf` | Protocol Buffers | serialization protocol | `P1` |
-| `grpc` | gRPC | RPC framework | `P1` |
 | `mosquitto` | Eclipse Mosquitto | messaging protocol | `P2` |
 | `mysql-server` | MySQL Server | database | `P2` |
 | `rocksdb` | RocksDB | embedded database | `P1` |
