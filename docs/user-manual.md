@@ -72,6 +72,9 @@ The top-level object has these fields:
 | `trade_offs` | yes | object array | Benefits and costs of features |
 | `evidence` | yes | non-empty object array | Sources supporting the card |
 | `related_systems` | no | string array | IDs of related cards |
+| `temporal_context` | no | object | Version lifecycle and temporal claims |
+| `relations` | no | object array | Typed, directed architecture relations |
+| `composition` | no | object | Proposed or reviewed system composition |
 
 ### 3.1 Feature fields
 
@@ -139,6 +142,28 @@ Every feature and mathematical view must reference existing evidence IDs.
 
 Do not use `fact` for an elegant mathematical interpretation unless the source
 actually establishes it.
+
+### 3.6 Temporal and composition fields
+
+The optional temporal contract is backward-compatible with existing cards. A
+`temporal_context` object can contain `version`, `valid_from`, `valid_to`,
+`status`, `supersedes`, `superseded_by`, `claim_status`, and `evidence_ids`.
+Lifecycle `status` can be `planned`, `current`, `superseded`, `deprecated`, or
+`historical`. Review `claim_status` is separate and can be `proposed`,
+`under-review`, `accepted`, `rejected`, or `deprecated`.
+
+The optional `relations` array stores typed directed assertions. Each relation
+contains `type`, `target`, `claim_type`, `claim_status`, and `evidence_ids`.
+The current relation vocabulary is `uses`, `extends`, `composes`, `resembles`,
+and `influenced-by`. Historical influence must have historical evidence;
+structural resemblance should normally be an inference or analogy.
+
+The optional `composition` object records `inputs`, `constraints`,
+`preserved_properties`, `conflicts`, `claim_status`, and `evidence_ids`.
+Each input has a `system_id`, a role, optional version context, review status,
+and evidence. Each constraint, preserved property, and conflict is itself an
+evidence-backed claim. This contract records a composition proposal; it does
+not execute or prove the proposed architecture.
 
 ## 4. Repository Manifest schema
 
@@ -300,6 +325,11 @@ Stores the feature reference and JSON-encoded benefits and costs.
 Stores the bundle ID, fixed `commit_sha`, `provenance`, complete `bundle_json`,
 and source path. `commit_sha` is used instead of `commit` because `commit` is a
 SQLite reserved word in the migration context.
+
+The `systems` table also has optional JSON columns for
+`temporal_context_json`, `relations_json`, and `composition_json`. Legacy
+`version_context` and `related_systems_json` fields remain available to older
+consumers.
 
 ## 10. HTTP API
 

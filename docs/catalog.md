@@ -51,6 +51,40 @@ These entries are already present in the repository at different review levels:
 | `llvm` | LLVM | compiler infrastructure | `cataloged` | Analyze IR, passes, and target-independent compilation |
 | `ffmpeg` | FFmpeg | media processing | `cataloged` | Analyze codec, filter, and stream pipelines |
 
+The operational manifest now contains 44 repositories. The following entries
+were added during the foundational catalog expansion and are ready for bounded
+deterministic analysis, but they do not yet have reviewed Architecture Cards:
+
+| ID | Name | Domain | Priority |
+| --- | --- | --- | --- |
+| `cpython` | CPython | language runtime | `P1` |
+| `rust` | Rust | language toolchain | `P1` |
+| `lua` | Lua | language runtime | `P1` |
+| `go` | Go | language toolchain | `P2` |
+| `ruby` | Ruby | language runtime | `P2` |
+| `node` | Node.js | JavaScript runtime | `P1` |
+| `deno` | Deno | JavaScript runtime | `P2` |
+| `v8` | V8 | JavaScript engine | `P2` |
+| `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
+| `freebsd` | FreeBSD | operating system | `P2` |
+| `systemd` | systemd | init system | `P1` |
+| `xv6-public` | xv6 | educational operating system | `P1` |
+| `coreutils` | GNU Coreutils | Unix system tools | `P2` |
+| `gcc` | GCC | compiler | `P1` |
+| `tree-sitter` | tree-sitter | parser library | `P1` |
+| `boost` | Boost | C++ library | `P2` |
+| `libuv` | libuv | asynchronous I/O library | `P1` |
+| `curl` | curl | network library | `P1` |
+| `openssl` | OpenSSL | cryptography library | `P2` |
+| `protobuf` | Protocol Buffers | serialization protocol | `P1` |
+| `grpc` | gRPC | RPC framework | `P1` |
+| `mosquitto` | Eclipse Mosquitto | messaging protocol | `P2` |
+| `mysql-server` | MySQL Server | database | `P2` |
+| `rocksdb` | RocksDB | embedded database | `P1` |
+| `threejs` | Three.js | 3D graphics library | `P1` |
+| `blender` | Blender | 3D graphics application | `P2` |
+| `sdl` | SDL | multimedia library | `P2` |
+
 ## Catalog
 
 The following list is the intended expansion order. The IDs are stable Mathen
