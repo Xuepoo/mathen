@@ -345,10 +345,10 @@ identifiers, not claims that the projects share the same architecture.
 | --- | --- | --- |
 | `keycloak` | Keycloak | `P1` | Realm/tenant boundaries, identity flows, token issuance, and adapters |
 | `kong` | Kong Gateway | `P1` | Plugin pipeline, route/service abstraction, control/data plane, and credentials |
-| `apisix` | Apache APISIX | `P2` | Dynamic routing, plugin execution, etcd-backed configuration, and hot reload |
-| `temporal` | Temporal | `P1` | Durable workflow history, task queues, replay, retries, and worker execution |
-| `airflow` | Apache Airflow | `P1` | DAG scheduling, task instances, executor boundaries, and metadata state |
-| `celery` | Celery | `P1` | Task/message protocol, broker/backend separation, workers, retries, and routing |
+| `apisix` | Apache APISIX | `reviewed` | Compare dynamic routing, phase-aware plugins, etcd-backed configuration, and upstream proxy boundaries using fixed-commit evidence |
+| `temporal` | Temporal | `reviewed` | Compare durable event histories, task queues, deterministic replay, and activity retry boundaries using fixed-commit evidence |
+| `airflow` | Apache Airflow | `reviewed` | Compare DAG readiness, metadata-mediated scheduling, pluggable executors, and separated DAG processing using fixed-commit evidence |
+| `celery` | Celery | `reviewed` | Compare broker-mediated task delivery, acknowledgement/redelivery, result backends, and message-composed workflows using fixed-commit evidence |
 | `oauth2-proxy` | OAuth2 Proxy | `P2` | Reverse-proxy authentication, session cookies, upstream forwarding, and provider adapters |
 | `authentik` | authentik | `P2` | Identity flows, policy evaluation, provider/application boundaries, and outposts |
 

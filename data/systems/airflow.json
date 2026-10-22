@@ -1,0 +1,83 @@
+{
+  "id": "airflow",
+  "name": "Apache Airflow",
+  "version_context": "commit c01a68cb1e30092e379ddf4459b8d2e1c7f3bc56",
+  "summary": "A workflow platform that represents work as DAGs, stores task and workflow state in a metadata database, and uses a scheduler with pluggable executors to dispatch task instances.",
+  "scope": ["DAG scheduling", "task instances", "metadata state", "pluggable executors", "distributed task execution"],
+  "features": [
+    {
+      "id": "dag-dependency-graph",
+      "name": "DAG dependency graph",
+      "category": "workflow-model",
+      "claim_type": "fact",
+      "description": "Airflow represents a workflow as a directed acyclic graph of tasks, where dependencies define the order in which task instances become eligible to run.",
+      "benefits": ["Makes workflow ordering and fan-in/fan-out explicit", "Supports repeated runs of the same workflow definition"],
+      "costs": ["The acyclic model cannot directly represent unbounded cyclic control flow", "Complex dependency graphs increase scheduling and operational complexity"],
+      "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"]
+    },
+    {
+      "id": "scheduler-metadata-state",
+      "name": "Scheduler and metadata state",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "The scheduler triggers workflows, submits task instances to an executor, and coordinates through a metadata database that stores DAG, task, and variable state.",
+      "benefits": ["Centralizes scheduling decisions and observable task state", "Allows scheduler and execution components to be deployed separately"],
+      "costs": ["The metadata database is a coordination dependency and capacity boundary", "Scheduler decisions can lag when parsing, database, or executor work is backlogged"],
+      "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"]
+    },
+    {
+      "id": "pluggable-executor-boundary",
+      "name": "Pluggable executor boundary",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Airflow exposes a common executor interface so task instances can run locally in the scheduler process or be sent to remote worker and container systems.",
+      "benefits": ["Separates DAG scheduling from deployment-specific task execution", "Offers a trade-off between low latency, isolation, and scaling"],
+      "costs": ["Executor selection changes resource, latency, and failure behavior", "Remote executors add queueing and infrastructure dependencies"],
+      "evidence_ids": ["airflow-executor-doc", "airflow-source-commit"]
+    },
+    {
+      "id": "dag-processing-separation",
+      "name": "Separated DAG processing and task execution",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "Airflow 3 separates DAG processing from the scheduler and API server, while workers receive task execution requests and access the selected DAG bundle version.",
+      "benefits": ["Reduces the scheduler's direct exposure to DAG author code", "Permits component-specific scaling and security boundaries"],
+      "costs": ["Multiple component boundaries create synchronization and deployment complexity", "DAG bundle versioning affects whether processors and workers observe the same definition"],
+      "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "DAG readiness relation",
+      "question": "How do task dependency edges and prior task-instance states determine which task instances are eligible for execution?",
+      "assumptions": ["The workflow graph is acyclic for each modeled DAG", "Trigger rules and mapped-task details are abstracted into an eligibility predicate", "A DAG run has a stable definition while the predicate is evaluated"],
+      "claim_type": "inference",
+      "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"]
+    },
+    {
+      "model": "Metadata-mediated scheduler transition system",
+      "question": "How does the scheduler transform persisted DAG and task state into executor workloads and observed task outcomes?",
+      "assumptions": ["The metadata database is the shared state boundary for the modeled scheduler", "Executor event reporting eventually reaches the scheduler", "The view abstracts SQL transaction details and scheduler heartbeat timing"],
+      "claim_type": "inference",
+      "evidence_ids": ["airflow-architecture-doc", "airflow-executor-doc"]
+    },
+    {
+      "model": "Executor refinement lattice",
+      "question": "Which workflow-level properties remain invariant when the same task workload is assigned to local, queued, or containerized executors?",
+      "assumptions": ["The executor honors the common task workload contract", "Task code and dependencies are available in each execution environment", "Latency, isolation, and failure semantics are allowed to differ between executors"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["airflow-executor-doc", "airflow-architecture-doc"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "dag-dependency-graph", "benefits": ["Explicit and inspectable workflow ordering"], "costs": ["Graph complexity and acyclic constraints limit expression"]},
+    {"feature_id": "scheduler-metadata-state", "benefits": ["Centralized orchestration and visibility"], "costs": ["Metadata storage and scheduler throughput become coordination bottlenecks"]},
+    {"feature_id": "pluggable-executor-boundary", "benefits": ["Deployment-specific execution without changing DAG semantics"], "costs": ["Executor choices trade latency, isolation, and operational cost"]},
+    {"feature_id": "dag-processing-separation", "benefits": ["Stronger component isolation and independent scaling"], "costs": ["Version synchronization and multiple services add complexity"]}
+  ],
+  "evidence": [
+    {"id": "airflow-source-commit", "kind": "source-code", "title": "Apache Airflow source at c01a68cb1e30", "uri": "https://github.com/apache/airflow/commit/c01a68cb1e30092e379ddf4459b8d2e1c7f3bc56", "accessed": "2026-10-23", "notes": "Fixed official repository revision used as the provenance boundary for this card."},
+    {"id": "airflow-architecture-doc", "kind": "official-doc", "title": "Apache Airflow Architecture Overview", "uri": "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html", "accessed": "2026-10-23", "notes": "Official documentation for DAGs, scheduler, DAG processor, API server, metadata database, workers, and separated deployment."},
+    {"id": "airflow-executor-doc", "kind": "official-doc", "title": "Apache Airflow Executor", "uri": "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/index.html", "accessed": "2026-10-23", "notes": "Official documentation for local and remote executors, the common executor interface, and execution trade-offs."}
+  ]
+}
