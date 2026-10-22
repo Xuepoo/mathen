@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "Apache Hadoop source at 35bbaa10e886",
       "uri": "https://github.com/apache/hadoop/commit/35bbaa10e886f10947f35f1ae32e86e6c4c52ef1",
-      "accessed": "2026-10-22T02:53:16+00:00",
+      "accessed": "2026-10-22T06:07:14+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "Apache Hadoop official documentation",
       "uri": "https://hadoop.apache.org/docs/",
-      "accessed": "2026-10-22T02:53:16+00:00"
+      "accessed": "2026-10-22T06:07:14+00:00"
     }
   ],
   "related_systems": []

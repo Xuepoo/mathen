@@ -31,6 +31,7 @@ jobs:
           bun-version: latest
       - run: bun install --frozen-lockfile
       - run: bun run check
+      - run: bun run test:api
       - run: bun run build
       - run: bun run db:migrate:local
       - run: bun run db:seed:local

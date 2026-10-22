@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "LLVM source at 49bc45ccc806",
       "uri": "https://github.com/llvm/llvm-project/commit/49bc45ccc8063a79016beefe72a7127fe63bef9c",
-      "accessed": "2026-10-22T03:37:56+00:00",
+      "accessed": "2026-10-22T06:07:28+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "LLVM official documentation",
       "uri": "https://llvm.org/docs/",
-      "accessed": "2026-10-22T03:37:56+00:00"
+      "accessed": "2026-10-22T06:07:28+00:00"
     }
   ],
   "related_systems": []

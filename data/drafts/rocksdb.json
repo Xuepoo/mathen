@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "RocksDB source at 553b52b4a709",
       "uri": "https://github.com/facebook/rocksdb/commit/553b52b4a709820fac1dbadc7796506740517582",
-      "accessed": "2026-10-22T03:51:15+00:00",
+      "accessed": "2026-10-22T06:07:31+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "RocksDB official documentation",
       "uri": "https://github.com/facebook/rocksdb/wiki",
-      "accessed": "2026-10-22T03:51:15+00:00"
+      "accessed": "2026-10-22T06:07:31+00:00"
     }
   ],
   "related_systems": []

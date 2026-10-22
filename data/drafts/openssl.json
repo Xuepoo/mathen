@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "OpenSSL source at aff3d3cf2550",
       "uri": "https://github.com/openssl/openssl/commit/aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c",
-      "accessed": "2026-10-22T03:14:15+00:00",
+      "accessed": "2026-10-22T06:07:29+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "OpenSSL official documentation",
       "uri": "https://docs.openssl.org/",
-      "accessed": "2026-10-22T03:14:15+00:00"
+      "accessed": "2026-10-22T06:07:29+00:00"
     }
   ],
   "related_systems": []

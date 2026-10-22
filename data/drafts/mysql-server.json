@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "MySQL Server source at 561753af986c",
       "uri": "https://github.com/mysql/mysql-server/commit/561753af986c3c006c4b6c7caa8359748fb55b22",
-      "accessed": "2026-10-22T03:51:12+00:00",
+      "accessed": "2026-10-22T06:07:31+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "MySQL Server official documentation",
       "uri": "https://dev.mysql.com/doc/",
-      "accessed": "2026-10-22T03:51:12+00:00"
+      "accessed": "2026-10-22T06:07:31+00:00"
     }
   ],
   "related_systems": []

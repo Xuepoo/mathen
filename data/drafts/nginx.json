@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "NGINX source at 140aa9427118",
       "uri": "https://github.com/nginx/nginx/commit/140aa942711868a8daeb95810bc9a81f272ada72",
-      "accessed": "2026-10-22T03:37:06+00:00",
+      "accessed": "2026-10-22T06:07:20+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "NGINX official documentation",
       "uri": "https://nginx.org/en/docs/",
-      "accessed": "2026-10-22T03:37:06+00:00"
+      "accessed": "2026-10-22T06:07:20+00:00"
     }
   ],
   "related_systems": []

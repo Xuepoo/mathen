@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "libuv source at e36964a094fa",
       "uri": "https://github.com/libuv/libuv/commit/e36964a094fadba7926e88fe333dd1d6a6baf13c",
-      "accessed": "2026-10-22T03:14:06+00:00",
+      "accessed": "2026-10-22T06:07:29+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "libuv official documentation",
       "uri": "https://docs.libuv.org/en/v1.x/",
-      "accessed": "2026-10-22T03:14:06+00:00"
+      "accessed": "2026-10-22T06:07:29+00:00"
     }
   ],
   "related_systems": []

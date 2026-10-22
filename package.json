@@ -16,6 +16,7 @@
     "check:api": "cd apps/api && bun run check",
     "check:web": "cd apps/web && bun run check",
     "check:mcp": "cd apps/mcp && bun run check",
+    "test:api": "bun test apps/api/src/index.test.ts",
     "db:migrate:local": "cd apps/api && bun run db:migrate:local",
     "db:seed:local": "cd apps/api && bun run db:seed:local",
     "db:reset:local": "cd apps/api && bun run db:reset:local",

@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "gRPC source at e2542a83cc36",
       "uri": "https://github.com/grpc/grpc/commit/e2542a83cc3626c2dda4cc9426cb4e4d271dc0e5",
-      "accessed": "2026-10-22T03:27:16+00:00",
+      "accessed": "2026-10-22T06:07:29+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "gRPC official documentation",
       "uri": "https://grpc.io/docs/",
-      "accessed": "2026-10-22T03:27:16+00:00"
+      "accessed": "2026-10-22T06:07:29+00:00"
     }
   ],
   "related_systems": []

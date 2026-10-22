@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "Three.js source at 6b608fca539c",
       "uri": "https://github.com/mrdoob/three.js/commit/6b608fca539c49cfa8348a48e250e7ae01c03aea",
-      "accessed": "2026-10-22T05:55:41+00:00",
+      "accessed": "2026-10-22T06:07:32+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "Three.js official documentation",
       "uri": "https://threejs.org/docs/",
-      "accessed": "2026-10-22T05:55:41+00:00"
+      "accessed": "2026-10-22T06:07:32+00:00"
     }
   ],
   "related_systems": []

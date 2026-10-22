@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "Kubernetes source at 2770c7b39f56",
       "uri": "https://github.com/kubernetes/kubernetes/commit/2770c7b39f56a750c23d026bd311cb8d0eda8b4d",
-      "accessed": "2026-10-22T03:35:43+00:00",
+      "accessed": "2026-10-22T06:07:16+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "Kubernetes official documentation",
       "uri": "https://kubernetes.io/docs/concepts/",
-      "accessed": "2026-10-22T03:35:43+00:00"
+      "accessed": "2026-10-22T06:07:16+00:00"
     }
   ],
   "related_systems": []

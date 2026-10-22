@@ -41,3 +41,25 @@ summary { cursor: pointer; color: #a8d8ff; }
 .error-message { color: #fca5a5; }
 footer { display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid #263241; color: #66778e; font-size: .8rem; padding: 22px 0 40px; }
 @media (max-width: 780px) { .site-header, .layout, footer { width: min(100% - 32px, 680px); } .site-header { display: block; padding: 48px 0 36px; } .github-link { display: inline-block; margin-top: 12px; } .layout { display: block; padding: 32px 0; } .catalog-panel { border-right: 0; border-bottom: 1px solid #263241; padding: 0 0 32px; } .detail-panel { padding-top: 34px; } footer { display: block; } footer span { display: block; margin-bottom: 6px; } }
+
+.graph-workspace { width: min(1240px, calc(100% - 48px)); margin: 42px auto 0; border: 1px solid #263241; border-radius: 18px; background: radial-gradient(circle at 70% 20%, #172d42 0, #101a27 42%, #0f1722 100%); overflow: hidden; }
+.graph-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding: 28px 30px 22px; border-bottom: 1px solid #263241; }
+.graph-heading h2 { margin-bottom: 8px; }
+.graph-intro { color: #aebbd0; margin-bottom: 0; }
+.graph-actions { display: flex; align-items: center; gap: 10px; color: #93a4ba; font-size: .82rem; white-space: nowrap; }
+.relation-filter, .graph-button { color: #e8ecf4; background: #111a27; border: 1px solid #34445a; border-radius: 8px; padding: 9px 12px; cursor: pointer; }
+.graph-button:hover, .relation-filter:focus { border-color: #7dd3fc; }
+.graph-layout { display: grid; grid-template-columns: 1fr 250px; min-height: 470px; }
+.graph-canvas { min-height: 470px; position: relative; }
+.graph-inspector { border-left: 1px solid #263241; padding: 28px 24px; background: #0d1520aa; }
+.graph-inspector h3 { margin-bottom: 10px; }
+.graph-inspector p:not(.eyebrow) { color: #aebbd0; font-size: .9rem; }
+.graph-legend { display: grid; gap: 12px; margin-top: 30px; color: #93a4ba; font-size: .8rem; }
+.graph-legend span { display: flex; align-items: center; gap: 9px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; background: #38bdf8; box-shadow: 0 0 0 2px #b9ecff55; }
+.legend-line { width: 18px; height: 2px; background: #7dd3fc; }
+.inspector-link { color: #0d1117; background: #7dd3fc; border: 0; border-radius: 8px; padding: 9px 12px; font-size: .82rem; cursor: pointer; }
+.graph-note { border-left: 2px solid #fbbf24; padding-left: 10px; }
+.graph-error { color: #fca5a5; padding: 30px; }
+
+@media (max-width: 780px) { .site-header, .graph-workspace, .layout, footer { width: min(100% - 32px, 680px); } .site-header { display: block; padding: 48px 0 36px; } .github-link { display: inline-block; margin-top: 12px; } .graph-heading { display: block; padding: 22px; } .graph-actions { margin-top: 20px; flex-wrap: wrap; white-space: normal; } .graph-layout { display: block; } .graph-canvas { min-height: 390px; } .graph-inspector { border-left: 0; border-top: 1px solid #263241; } .layout { display: block; padding: 32px 0; } .catalog-panel { border-right: 0; border-bottom: 1px solid #263241; padding: 0 0 32px; } .detail-panel { padding-top: 34px; } footer { display: block; } footer span { display: block; margin-bottom: 6px; } }

@@ -343,7 +343,7 @@ The Hono Worker uses the `/api` base path. Successful responses use a
 | `GET /api/systems/:id` | Retrieve one reviewed card projection |
 | `GET /api/features?query=&category=&claim_type=&limit=` | Search reviewed features |
 | `GET /api/modeling/:id` | Retrieve one fixed-commit modeling bundle |
-| `GET /api/graph` | Return current system nodes and valid related-system edges |
+| `GET /api/graph` | Return current system nodes and valid typed or legacy edges |
 
 The current API is read-only. It does not expose draft cards or provide review,
 promotion, or synthesis writes.

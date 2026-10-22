@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "SDL source at 9bb6a8610a97",
       "uri": "https://github.com/libsdl-org/SDL/commit/9bb6a8610a974d1952c11be45a7fce1b2f3592b9",
-      "accessed": "2026-10-22T04:50:19+00:00",
+      "accessed": "2026-10-22T06:07:32+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "SDL official documentation",
       "uri": "https://wiki.libsdl.org/SDL3/",
-      "accessed": "2026-10-22T04:50:19+00:00"
+      "accessed": "2026-10-22T06:07:32+00:00"
     }
   ],
   "related_systems": []

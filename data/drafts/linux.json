@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "Linux Kernel source at 4403278e4ea2",
       "uri": "https://github.com/torvalds/linux/commit/4403278e4ea2f654f8130a5c03eb8b4516a0f201",
-      "accessed": "2026-10-22T03:37:02+00:00",
+      "accessed": "2026-10-22T06:07:20+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "Linux Kernel official documentation",
       "uri": "https://docs.kernel.org/",
-      "accessed": "2026-10-22T03:37:02+00:00"
+      "accessed": "2026-10-22T06:07:20+00:00"
     }
   ],
   "related_systems": []

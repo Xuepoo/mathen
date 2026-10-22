@@ -121,7 +121,7 @@
       "kind": "source-code",
       "title": "FFmpeg source at 23918b32004a",
       "uri": "https://github.com/FFmpeg/FFmpeg/commit/23918b32004a517278ba441b9d0cb5307ced0cdb",
-      "accessed": "2026-10-22T03:38:01+00:00",
+      "accessed": "2026-10-22T06:07:29+00:00",
       "notes": "Generated from a github-archive checkout by the deterministic inspector."
     },
     {
@@ -129,7 +129,7 @@
       "kind": "official-doc",
       "title": "FFmpeg official documentation",
       "uri": "https://ffmpeg.org/documentation.html",
-      "accessed": "2026-10-22T03:38:01+00:00"
+      "accessed": "2026-10-22T06:07:29+00:00"
     }
   ],
   "related_systems": []

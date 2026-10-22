@@ -283,10 +283,14 @@ or use the explicit `--api-key`, `--model`, and `--base-url` flags. See
 
 Prerequisites: Bun and Wrangler.
 
+The repository also provides a `just` command layer for the common local
+workflows below. The existing `bun` and `uv` commands remain the underlying
+implementation commands.
+
 ```bash
 bun install
-bun run db:reset:local
-bun run dev
+just db-reset
+just dev
 ```
 
 The local API runs at `http://localhost:8787` and the Vite client runs at
@@ -305,10 +309,12 @@ local repository.
 Run the standard checks:
 
 ```bash
-ruff format --check .
-ruff check .
-uv run python -m unittest discover -s tests -v
+just check
 ```
+
+Run `just` or `just --list` from the repository root to see all available
+recipes. Useful focused commands include `just python-check`, `just api-test`,
+`just typescript-check`, `just build`, and `just mcp`.
 
 The Python development toolchain, including Ruff, is declared in
 `pyproject.toml` and installed by `uv sync --locked`.

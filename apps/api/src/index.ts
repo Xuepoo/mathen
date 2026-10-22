@@ -37,6 +37,26 @@ type EvidenceRow = {
   notes: string | null;
 };
 
+type GraphSystem = Pick<
+  SystemRow,
+  "id" | "name" | "related_systems_json" | "relations_json"
+>;
+
+export type GraphEdge = {
+  source: string;
+  target: string;
+  type: string;
+  claim_type?: string;
+  claim_status?: string;
+  evidence_ids?: string[];
+  notes?: string;
+};
+
+export type Graph = {
+  nodes: Array<{ id: string; name: string; type: "system" }>;
+  edges: GraphEdge[];
+};
+
 const app = new Hono<{ Bindings: Bindings }>().basePath("/api");
 
 app.get("/health", (c) =>
@@ -98,7 +118,12 @@ app.get("/systems/:id", async (c) => {
        FROM trade_offs WHERE system_id = ?1 ORDER BY id`,
     )
       .bind(system.id)
-      .all<{ id: number; feature_id: string; benefits_json: string; costs_json: string }>(),
+      .all<{
+        id: number;
+        feature_id: string;
+        benefits_json: string;
+        costs_json: string;
+      }>(),
     c.env.DB.prepare(
       `SELECT id, kind, title, uri, accessed, notes
        FROM evidence WHERE system_id = ?1 ORDER BY id`,
@@ -172,31 +197,76 @@ app.get("/modeling/:id", async (c) => {
     }>();
 
   if (!row) return c.json({ error: "Modeling bundle not found" }, 404);
-  const bundle = parseJson<Record<string, unknown> | null>(row.bundle_json, null);
-  if (!bundle) return c.json({ error: "Stored modeling bundle is invalid" }, 500);
+  const bundle = parseJson<Record<string, unknown> | null>(
+    row.bundle_json,
+    null,
+  );
+  if (!bundle)
+    return c.json({ error: "Stored modeling bundle is invalid" }, 500);
   return c.json({ data: bundle });
 });
 
 app.get("/graph", async (c) => {
-  const systems = await c.env.DB.prepare("SELECT id, name FROM systems ORDER BY name").all<{
-    id: string;
-    name: string;
-  }>();
-  const relations = await c.env.DB.prepare("SELECT id, related_systems_json FROM systems").all<{
-    id: string;
-    related_systems_json: string;
-  }>();
-  const edges = relations.results.flatMap((row) =>
-    parseJson<string[]>(row.related_systems_json, [])
-      .filter((target) => systems.results.some((system) => system.id === target))
-      .map((target) => ({ source: row.id, target, type: "related" })),
-  );
+  const systems = await c.env.DB.prepare(
+    "SELECT id, name, related_systems_json, relations_json FROM systems ORDER BY name",
+  ).all<GraphSystem>();
 
-  return c.json({
-    nodes: systems.results.map((system) => ({ ...system, type: "system" })),
-    edges,
-  });
+  return c.json(buildGraph(systems.results));
 });
+
+export function buildGraph(systems: GraphSystem[]): Graph {
+  const knownSystemIds = new Set(systems.map((system) => system.id));
+  const nodes = systems.map((system) => ({
+    id: system.id,
+    name: system.name,
+    type: "system" as const,
+  }));
+  const edges = systems.flatMap((system) => [
+    ...typedRelationEdges(system, knownSystemIds),
+    ...legacyRelationEdges(system, knownSystemIds),
+  ]);
+
+  return { nodes, edges };
+}
+
+function typedRelationEdges(
+  system: GraphSystem,
+  knownSystemIds: Set<string>,
+): GraphEdge[] {
+  const relations = parseJsonArray<Record<string, unknown>>(
+    system.relations_json,
+  ).filter(isRecord);
+  return relations.flatMap((relation) => {
+    const target = stringValue(relation.target);
+    const type = stringValue(relation.type);
+    if (!target || !type || !knownSystemIds.has(target)) return [];
+
+    const edge: GraphEdge = { source: system.id, target, type };
+    const claimType = stringValue(relation.claim_type);
+    const claimStatus = stringValue(relation.claim_status);
+    const notes = stringValue(relation.notes);
+    const evidenceIds = stringArrayValue(relation.evidence_ids);
+    if (claimType) edge.claim_type = claimType;
+    if (claimStatus) edge.claim_status = claimStatus;
+    if (notes) edge.notes = notes;
+    if (evidenceIds) edge.evidence_ids = evidenceIds;
+    return [edge];
+  });
+}
+
+function legacyRelationEdges(
+  system: GraphSystem,
+  knownSystemIds: Set<string>,
+): GraphEdge[] {
+  return parseJsonArray<string>(system.related_systems_json).flatMap(
+    (target) => {
+      const normalizedTarget = stringValue(target);
+      return normalizedTarget && knownSystemIds.has(normalizedTarget)
+        ? [{ source: system.id, target: normalizedTarget, type: "related" }]
+        : [];
+    },
+  );
+}
 
 function serializeSystem(system: SystemRow) {
   return {
@@ -206,9 +276,18 @@ function serializeSystem(system: SystemRow) {
     summary: system.summary,
     scope: parseJson<string[]>(system.scope_json, []),
     related_systems: parseJson<string[]>(system.related_systems_json, []),
-    temporal_context: parseJson<Record<string, unknown> | null>(system.temporal_context_json, null),
-    relations: parseJson<Array<Record<string, unknown>>>(system.relations_json, []),
-    composition: parseJson<Record<string, unknown> | null>(system.composition_json, null),
+    temporal_context: parseJson<Record<string, unknown> | null>(
+      system.temporal_context_json,
+      null,
+    ),
+    relations: parseJson<Array<Record<string, unknown>>>(
+      system.relations_json,
+      [],
+    ),
+    composition: parseJson<Record<string, unknown> | null>(
+      system.composition_json,
+      null,
+    ),
     source_path: system.source_path,
   };
 }
@@ -234,7 +313,33 @@ function parseJson<T>(value: string | null, fallback: T): T {
   }
 }
 
-function boundedInteger(value: string | undefined, fallback: number, min: number, max: number) {
+function parseJsonArray<T>(value: string | null): T[] {
+  const parsed = parseJson<unknown>(value, null);
+  return Array.isArray(parsed) ? (parsed as T[]) : [];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function stringArrayValue(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const values = value.filter(
+    (item): item is string => typeof item === "string" && item.length > 0,
+  );
+  return values.length ? values : undefined;
+}
+
+function boundedInteger(
+  value: string | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+) {
   const parsed = Number.parseInt(value ?? "", 10);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(Math.max(parsed, min), max);
