@@ -52,7 +52,7 @@ These entries are already present in the repository at different review levels:
 | `foundationdb` | FoundationDB | distributed database | `reviewed` | Compare ordered key-value transactions, versioning, layers, and distributed recovery with PostgreSQL and Cassandra |
 | `mongodb` | MongoDB | document database | `reviewed` | Compare document collections, storage engines, oplog replication, and shard routing with PostgreSQL and Cassandra |
 | `cassandra` | Apache Cassandra | distributed database | `reviewed` | Compare partitioned wide-column storage, replica coordination, commit-log recovery, and tunable consistency with Kafka and FoundationDB |
-| `docker` | Docker Engine | container runtime | `draft` | Compare daemon, image, namespace, and filesystem boundaries |
+| `docker` | Docker Engine | container runtime | `reviewed` | Compare daemon, image, runtime, namespace, and filesystem boundaries using fixed-commit evidence |
 | `containerd` | containerd | container runtime | `reviewed` | Compare runtime-v2 shims, typed plugins, client boundaries, and content/snapshot lifecycle using fixed-revision evidence |
 | `runc` | runc | container runtime | `reviewed` | Compare OCI bundle refinement, Linux isolation primitives, lifecycle state, and checkpoint boundaries using fixed-revision evidence |
 | `kata-containers` | Kata Containers | container runtime | `reviewed` | Compare VM-backed sandbox layers, shim/agent/hypervisor composition, and CRI-to-device mapping using fixed-revision evidence |
@@ -60,7 +60,9 @@ These entries are already present in the repository at different review levels:
 | `qemu` | QEMU | virtualization | `reviewed` | Compare complete machine emulation with Firecracker |
 | `kubernetes` | Kubernetes | orchestration | `reviewed` | Analyze reconciliation, API resources, and etcd state |
 | `linux` | Linux Kernel | operating system | `reviewed` | Analyze system calls, scheduling, memory, and modules |
-| `hadoop` | Apache Hadoop | distributed storage and compute | `cataloged` | Analyze HDFS, YARN, and batch computation |
+| `freebsd` | FreeBSD | operating system | `reviewed` | Compare kernel subsystems, jails, networking, and GEOM storage using fixed-commit evidence |
+| `systemd` | systemd | init system | `reviewed` | Compare typed units, dependency transactions, service supervision, and activation using fixed-commit evidence |
+| `hadoop` | Apache Hadoop | distributed storage and compute | `reviewed` | Compare HDFS metadata, replicated blocks, YARN arbitration, and batch computation using fixed-commit evidence |
 | `nginx` | NGINX | network server | `reviewed` | Analyze event-driven I/O and worker processes |
 | `llvm` | LLVM | compiler infrastructure | `reviewed` | Add temporal IR and pass-pipeline relations |
 | `gcc` | GCC | compiler | `reviewed` | Compare front-end, IR, pass, and target-backend boundaries with LLVM |
@@ -93,8 +95,6 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | `go` | Go | language toolchain | `reviewed` | Compare goroutine/channel ordering, package interfaces, and toolchain integration using fixed-commit evidence |
 | `ruby` | Ruby | language runtime | `reviewed` | Compare dynamic object dispatch, VM frames, GC, and the C extension boundary using fixed-commit evidence |
 | `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
-| `freebsd` | FreeBSD | operating system | `P2` |
-| `systemd` | systemd | init system | `P1` |
 | `xv6-public` | xv6 | educational operating system | `P1` |
 | `libuv` | libuv | asynchronous I/O library | `reviewed` | Compare event-loop, handle/request, cross-platform, and thread-pool boundaries using fixed-commit evidence |
 | `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
@@ -119,11 +119,11 @@ identifiers, not claims that the projects share the same architecture.
 | --- | --- | --- | --- |
 | `unix` | Unix history and interfaces | `P0` | Process, file, pipe, and permission abstractions |
 | `linux` | Linux Kernel | `P0` | Kernel resource model, syscalls, scheduling, and modules |
-| `freebsd` | FreeBSD | `P1` | Unix kernel, networking, jails, and ports |
+| `freebsd` | FreeBSD | `reviewed` | Compare kernel subsystems, jails, networking, and GEOM storage using fixed-commit evidence |
 | `openbsd` | OpenBSD | `P2` | Security-oriented defaults and audited system design |
 | `plan9` | Plan 9 | `P1` | Uniform namespace, distributed resources, and 9P |
 | `minix` | MINIX 3 | `P2` | Microkernel services and fault isolation |
-| `systemd` | systemd | `P1` | Service supervision, dependency graph, and lifecycle state |
+| `systemd` | systemd | `reviewed` | Compare typed units, dependency transactions, service supervision, and activation using fixed-commit evidence |
 | `busybox` | BusyBox | `P2` | Multi-call binary and minimal userland composition |
 | `coreutils` | GNU Coreutils | `P2` | Unix command algebra and composable process interfaces |
 | `musl` | musl libc | `P1` | Portable C runtime and static-linking boundary |
@@ -190,7 +190,7 @@ identifiers, not claims that the projects share the same architecture.
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
 | `kafka` | Apache Kafka | `P0` | Partitioned append-only log and consumer offsets |
-| `hadoop` | Apache Hadoop | `P1` | Distributed filesystem and batch resource scheduling |
+| `hadoop` | Apache Hadoop | `reviewed` | Compare HDFS metadata, replicated blocks, YARN arbitration, and batch computation using fixed-commit evidence |
 | `zookeeper` | Apache ZooKeeper | `reviewed` | Compare hierarchical coordination state, sessions, watches, and quorum ordering using fixed-commit evidence |
 | `etcd` | etcd | `reviewed` | Compare Raft-backed revisions, transactions, watches, and leases using fixed-commit evidence |
 | `consul` | Consul | `reviewed` | Compare service catalog, health-aware discovery, datacenter topology, and distributed KV using fixed-commit evidence |
@@ -205,11 +205,11 @@ identifiers, not claims that the projects share the same architecture.
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
-| `docker` | Docker Engine | `P0` | Images, namespaces, cgroups, and daemon boundary |
-| `containerd` | containerd | container runtime | `reviewed` | Compare runtime-v2 shims, typed plugins, client boundaries, and content/snapshot lifecycle using fixed-revision evidence |
-| `runc` | runc | container runtime | `reviewed` | Compare OCI bundle refinement, Linux isolation primitives, lifecycle state, and checkpoint boundaries using fixed-revision evidence |
-| `kata-containers` | Kata Containers | container runtime | `reviewed` | Compare VM-backed sandbox layers, shim/agent/hypervisor composition, and CRI-to-device mapping using fixed-revision evidence |
-| `gvisor` | gVisor | container runtime | `reviewed` | Compare Sentry/Gofer mediation, OCI runtime integration, and selectable syscall interception platforms using fixed-revision evidence |
+| `docker` | Docker Engine | `reviewed` | Compare daemon, image, runtime, namespace, and filesystem boundaries using fixed-commit evidence |
+| `containerd` | containerd | `reviewed` | Compare runtime-v2 shims, typed plugins, client boundaries, and content/snapshot lifecycle using fixed-revision evidence |
+| `runc` | runc | `reviewed` | Compare OCI bundle refinement, Linux isolation primitives, lifecycle state, and checkpoint boundaries using fixed-revision evidence |
+| `kata-containers` | Kata Containers | `reviewed` | Compare VM-backed sandbox layers, shim/agent/hypervisor composition, and CRI-to-device mapping using fixed-revision evidence |
+| `gvisor` | gVisor | `reviewed` | Compare Sentry/Gofer mediation, OCI runtime integration, and selectable syscall interception platforms using fixed-revision evidence |
 | `qemu` | QEMU | `P0` | Full machine emulation and device models |
 | `firecracker` | Firecracker | `P0` | Minimal VMM, KVM, VirtIO, and fast startup |
 | `kvm` | KVM | `P0` | Hardware virtualization interface in the Linux kernel |

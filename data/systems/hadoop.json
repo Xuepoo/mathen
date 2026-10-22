@@ -1,0 +1,199 @@
+{
+  "id": "hadoop",
+  "name": "Apache Hadoop",
+  "version_context": "commit 35bbaa10e886f10947f35f1ae32e86e6c4c52ef1",
+  "summary": "A distributed storage and batch-compute platform that separates HDFS namespace metadata from replicated block storage and YARN resource arbitration from per-application execution.",
+  "scope": [
+    "distributed filesystem",
+    "replicated block storage",
+    "cluster resource scheduling",
+    "batch computation"
+  ],
+  "features": [
+    {
+      "id": "namenode-datanode-storage",
+      "name": "NameNode and DataNode storage split",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "HDFS assigns namespace and block-placement metadata to the NameNode while DataNodes store and serve block replicas; clients transfer data through DataNodes rather than through the NameNode.",
+      "benefits": [
+        "Separates metadata coordination from bulk data transfer",
+        "Supports large files and distributed storage across commodity nodes"
+      ],
+      "costs": [
+        "NameNode metadata is a central coordination boundary",
+        "Replication and failure detection add network and storage overhead"
+      ],
+      "evidence_ids": [
+        "hadoop-hdfs-doc",
+        "hadoop-namenode-source",
+        "hadoop-datanode-source"
+      ]
+    },
+    {
+      "id": "replicated-block-recovery",
+      "name": "Replicated blocks with failure recovery",
+      "category": "fault-tolerance",
+      "claim_type": "fact",
+      "description": "HDFS splits files into blocks, replicates them according to a configured factor, and uses DataNode heartbeats and block reports to detect failures and initiate re-replication.",
+      "benefits": [
+        "Maintains availability across node or disk failures",
+        "Places replicas with rack awareness for reliability and bandwidth"
+      ],
+      "costs": [
+        "Replication consumes storage and write bandwidth",
+        "Failure detection and re-replication are eventually convergent"
+      ],
+      "evidence_ids": [
+        "hadoop-hdfs-doc",
+        "hadoop-namenode-source"
+      ]
+    },
+    {
+      "id": "yarn-resource-arbitration",
+      "name": "YARN resource arbitration",
+      "category": "compute-model",
+      "claim_type": "fact",
+      "description": "YARN separates cluster resource management in the ResourceManager and NodeManagers from per-application coordination in ApplicationMasters, with schedulers allocating resource containers.",
+      "benefits": [
+        "Separates cluster-wide allocation from application-specific execution",
+        "Supports pluggable scheduling policies and resource reservations"
+      ],
+      "costs": [
+        "Applications must coordinate through an additional control layer",
+        "Allocation and monitoring state can diverge during failures"
+      ],
+      "evidence_ids": [
+        "hadoop-yarn-doc",
+        "hadoop-resourcemanager-source",
+        "hadoop-nodemanager-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Replicated block state machine",
+      "question": "How do namespace operations, block reports, heartbeats, and re-replication evolve durable HDFS file state?",
+      "assumptions": [
+        "Blocks and replica locations are modeled explicitly",
+        "Failure detection is based on observed DataNode reports and heartbeats"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "hadoop-hdfs-doc",
+        "hadoop-namenode-source",
+        "hadoop-datanode-source"
+      ]
+    },
+    {
+      "model": "Metadata/data bipartite graph",
+      "question": "How are files and blocks connected to namespace metadata, DataNodes, racks, and client transfers?",
+      "assumptions": [
+        "The NameNode metadata graph is authoritative for placement decisions",
+        "The view abstracts wire protocols and local disk layouts"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "hadoop-hdfs-doc",
+        "hadoop-namenode-source"
+      ]
+    },
+    {
+      "model": "Hierarchical resource allocation state machine",
+      "question": "How do applications move from submission through ApplicationMaster negotiation to container execution?",
+      "assumptions": [
+        "The ResourceManager arbitrates cluster resources",
+        "NodeManagers report execution and resource observations"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "hadoop-yarn-doc",
+        "hadoop-resourcemanager-source",
+        "hadoop-nodemanager-source"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "hadoop-hdfs-doc",
+      "kind": "official-doc",
+      "title": "HDFS architecture",
+      "uri": "https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Apache Hadoop documentation for NameNode, DataNode, blocks, replication, checkpoints, and failure recovery."
+    },
+    {
+      "id": "hadoop-yarn-doc",
+      "kind": "official-doc",
+      "title": "YARN architecture",
+      "uri": "https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Apache Hadoop documentation for ResourceManager, NodeManager, ApplicationMaster, schedulers, and containers."
+    },
+    {
+      "id": "hadoop-namenode-source",
+      "kind": "source-code",
+      "title": "Hadoop NameNode source at 35bbaa10e886",
+      "uri": "https://github.com/apache/hadoop/blob/35bbaa10e886f10947f35f1ae32e86e6c4c52ef1/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/NameNode.java",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for HDFS namespace and NameNode lifecycle."
+    },
+    {
+      "id": "hadoop-datanode-source",
+      "kind": "source-code",
+      "title": "Hadoop DataNode source at 35bbaa10e886",
+      "uri": "https://github.com/apache/hadoop/blob/35bbaa10e886f10947f35f1ae32e86e6c4c52ef1/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataNode.java",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for block storage and DataNode reporting."
+    },
+    {
+      "id": "hadoop-resourcemanager-source",
+      "kind": "source-code",
+      "title": "Hadoop ResourceManager source at 35bbaa10e886",
+      "uri": "https://github.com/apache/hadoop/blob/35bbaa10e886f10947f35f1ae32e86e6c4c52ef1/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/main/java/org/apache/hadoop/yarn/server/resourcemanager/ResourceManager.java",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for YARN resource-manager assembly."
+    },
+    {
+      "id": "hadoop-nodemanager-source",
+      "kind": "source-code",
+      "title": "Hadoop NodeManager source at 35bbaa10e886",
+      "uri": "https://github.com/apache/hadoop/blob/35bbaa10e886f10947f35f1ae32e86e6c4c52ef1/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/src/main/java/org/apache/hadoop/yarn/server/nodemanager/NodeManager.java",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for per-node container management."
+    }
+  ],
+  "related_systems": [
+    "kafka",
+    "kubernetes"
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "namenode-datanode-storage",
+      "benefits": [
+        "Separates metadata coordination from bulk data transfer"
+      ],
+      "costs": [
+        "NameNode metadata is a central coordination boundary"
+      ]
+    },
+    {
+      "feature_id": "replicated-block-recovery",
+      "benefits": [
+        "Maintains availability across node or disk failures"
+      ],
+      "costs": [
+        "Replication consumes storage and write bandwidth"
+      ]
+    },
+    {
+      "feature_id": "yarn-resource-arbitration",
+      "benefits": [
+        "Separates cluster-wide allocation from application-specific execution"
+      ],
+      "costs": [
+        "Applications must coordinate through an additional control layer"
+      ]
+    }
+  ]
+}

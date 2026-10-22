@@ -1,0 +1,187 @@
+{
+  "id": "systemd",
+  "name": "systemd",
+  "version_context": "commit 558da3129cce0f4ab52cc03d7444d12355300daa",
+  "summary": "A system and service manager that models boot and runtime work as typed units, dependency transactions, supervised services, and activation-driven lifecycle state.",
+  "scope": [
+    "init and service manager",
+    "unit dependency graph",
+    "service supervision",
+    "socket and bus activation"
+  ],
+  "features": [
+    {
+      "id": "typed-unit-model",
+      "name": "Typed unit model",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "systemd represents services, sockets, mounts, devices, targets, timers, slices, and scopes as typed units loaded from unit files and managed through a common state model.",
+      "benefits": [
+        "Provides one lifecycle abstraction across system resources",
+        "Makes configuration and relationships inspectable"
+      ],
+      "costs": [
+        "Unit type semantics and default dependencies create a large configuration surface",
+        "Misconfiguration can affect boot and service availability"
+      ],
+      "evidence_ids": [
+        "systemd-unit-doc",
+        "systemd-manager-source"
+      ]
+    },
+    {
+      "id": "dependency-transaction-graph",
+      "name": "Dependency transaction graph",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "Unit requirements and ordering directives form transactions in which systemd pulls in dependencies, orders jobs, and resolves conflicts before executing lifecycle operations.",
+      "benefits": [
+        "Coordinates complex startup and shutdown relationships",
+        "Separates requirement relationships from ordering relationships"
+      ],
+      "costs": [
+        "Graph composition and conflicting jobs are operationally complex",
+        "Dependency success does not by itself guarantee service readiness"
+      ],
+      "evidence_ids": [
+        "systemd-unit-doc",
+        "systemd-transaction-source"
+      ]
+    },
+    {
+      "id": "supervised-service-lifecycle",
+      "name": "Supervised service lifecycle",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "systemd starts and tracks service processes, supports explicit readiness protocols such as notify, applies timeouts and watchdogs, and can restart services according to exit outcomes.",
+      "benefits": [
+        "Makes process supervision and failure recovery explicit",
+        "Supports readiness-aware ordering and socket activation"
+      ],
+      "costs": [
+        "Service behavior must conform to selected supervision protocol",
+        "Restart and timeout policies can amplify resource pressure"
+      ],
+      "evidence_ids": [
+        "systemd-service-doc",
+        "systemd-service-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed unit dependency graph",
+      "question": "How do unit types, requirements, ordering edges, aliases, and drop-ins define the managed system graph?",
+      "assumptions": [
+        "Unit files and generated units are the modeled configuration inputs",
+        "Requirement and ordering edges remain distinct"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "systemd-unit-doc",
+        "systemd-manager-source"
+      ]
+    },
+    {
+      "model": "Lifecycle transaction state machine",
+      "question": "How do queued jobs move units through activation, running, failure, reload, and shutdown states?",
+      "assumptions": [
+        "A transaction may be changed to resolve conflicts",
+        "Runtime state can be reloaded while preserving selected service state"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "systemd-unit-doc",
+        "systemd-transaction-source"
+      ]
+    },
+    {
+      "model": "Supervision and recovery policy",
+      "question": "Under what service outcomes does systemd declare readiness, failure, timeout, or restart?",
+      "assumptions": [
+        "Readiness depends on the configured service type",
+        "Restart behavior is policy-dependent and rate-limited"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "systemd-service-doc",
+        "systemd-service-source"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "systemd-unit-doc",
+      "kind": "official-doc",
+      "title": "systemd.unit manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for unit types, load paths, dependencies, ordering, aliases, and drop-ins."
+    },
+    {
+      "id": "systemd-service-doc",
+      "kind": "official-doc",
+      "title": "systemd.service manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for service supervision, readiness, timeouts, watchdogs, and restart policy."
+    },
+    {
+      "id": "systemd-manager-source",
+      "kind": "source-code",
+      "title": "systemd manager source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/manager.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for manager state and unit lifecycle orchestration."
+    },
+    {
+      "id": "systemd-transaction-source",
+      "kind": "source-code",
+      "title": "systemd transaction source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/transaction.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for dependency transaction assembly and conflict handling."
+    },
+    {
+      "id": "systemd-service-source",
+      "kind": "source-code",
+      "title": "systemd service source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/service.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for service state transitions, readiness, and restart handling."
+    }
+  ],
+  "related_systems": [
+    "linux",
+    "freebsd"
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "typed-unit-model",
+      "benefits": [
+        "Provides one lifecycle abstraction across system resources"
+      ],
+      "costs": [
+        "Unit type semantics and default dependencies create a large configuration surface"
+      ]
+    },
+    {
+      "feature_id": "dependency-transaction-graph",
+      "benefits": [
+        "Coordinates complex startup and shutdown relationships"
+      ],
+      "costs": [
+        "Graph composition and conflicting jobs are operationally complex"
+      ]
+    },
+    {
+      "feature_id": "supervised-service-lifecycle",
+      "benefits": [
+        "Makes process supervision and failure recovery explicit"
+      ],
+      "costs": [
+        "Service behavior must conform to selected supervision protocol"
+      ]
+    }
+  ]
+}
