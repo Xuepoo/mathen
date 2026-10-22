@@ -179,7 +179,10 @@ function toStatements(card: Card) {
       ...view.evidence_ids.map(
         (evidence_id) =>
           "INSERT INTO mathematical_view_evidence (view_id, evidence_id) " +
-          `SELECT last_insert_rowid(), ${quote(evidence_id)};`,
+          `SELECT id, ${quote(evidence_id)} FROM mathematical_views ` +
+          `WHERE system_id = ${quote(card.id)} AND id = (` +
+          `SELECT MAX(id) FROM mathematical_views WHERE system_id = ${quote(card.id)}` +
+          `);`,
       ),
     ]),
     ...card.trade_offs.map((tradeOff) =>
