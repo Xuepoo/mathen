@@ -40,7 +40,7 @@ These entries are already present in the repository at different review levels:
 | `sqlite` | SQLite | embedded database | `reviewed` | Compare with DuckDB and columnar engines |
 | `postgresql` | PostgreSQL | relational database | `reviewed` | Compare PostgreSQL MVCC and extension boundaries with SQLite and Supabase using fixed-commit evidence |
 | `redis` | Redis | in-memory data service | `reviewed` | Compare native structures, RESP, and persistence representations |
-| `elasticsearch` | Elasticsearch | search engine | `draft` | Review inverted indexes, shards, and query execution |
+| `elasticsearch` | Elasticsearch | search engine | `reviewed` | Compare shard partitioning, scatter-gather search, replication, and near-real-time visibility |
 | `kafka` | Apache Kafka | distributed log | `reviewed` | Compare partitioned logs, replay, replication, and stream processing |
 | `mysql-server` | MySQL Server | database | `draft` | Pin documentation and inspect fixed source for storage-engine, transaction, and recovery claims |
 | `rocksdb` | RocksDB | embedded database | `draft` | Pin documentation and inspect fixed source for LSM, WAL, compaction, and snapshot claims |
@@ -60,16 +60,19 @@ These entries are already present in the repository at different review levels:
 
 The operational manifest now contains 44 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
-deterministic analysis; entries with reviewed cards are listed above:
+deterministic analysis, but they do not yet have reviewed Architecture Cards:
 
 | ID | Name | Domain | Priority |
 | --- | --- | --- | --- |
+| `cpython` | CPython | language runtime | `P1` |
+| `rust` | Rust | language toolchain | `P1` |
 | `lua` | Lua | language runtime | `P1` |
 | `go` | Go | language toolchain | `P2` |
 | `ruby` | Ruby | language runtime | `P2` |
 | `node` | Node.js | JavaScript runtime | `P1` |
 | `deno` | Deno | JavaScript runtime | `P2` |
 | `v8` | V8 | JavaScript engine | `P2` |
+| `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
 | `freebsd` | FreeBSD | operating system | `P2` |
 | `systemd` | systemd | init system | `P1` |
 | `xv6-public` | xv6 | educational operating system | `P1` |
@@ -80,6 +83,8 @@ deterministic analysis; entries with reviewed cards are listed above:
 | `libuv` | libuv | asynchronous I/O library | `P1` |
 | `curl` | curl | network library | `P1` |
 | `openssl` | OpenSSL | cryptography library | `P2` |
+| `protobuf` | Protocol Buffers | serialization protocol | `P1` |
+| `grpc` | gRPC | RPC framework | `P1` |
 | `mosquitto` | Eclipse Mosquitto | messaging protocol | `P2` |
 | `mysql-server` | MySQL Server | database | `P2` |
 | `rocksdb` | RocksDB | embedded database | `P1` |
