@@ -1,31 +1,228 @@
 # Mathen
 
-Mathen is an experimental knowledge base for translating software systems
-into reusable architecture models. The initial application target is
-Cloudflare: D1 stores canonical structured data, Vectorize provides optional
-semantic retrieval, Hono exposes the API from Workers, and a small Vite client
-supports browsing and search.
+Mathen is an evidence-backed, temporal knowledge graph for software
+architecture.
 
-The project treats a software system as a collection of:
+It studies software systems from two complementary directions:
 
-- abstractions and data structures;
-- states and state transitions;
-- invariants and consistency conditions;
-- composition patterns;
-- mathematical views;
-- operational trade-offs;
-- evidence-backed claims.
+1. **Analysis:** translate systems into reusable architectural features,
+   state models, invariants, trade-offs, and mathematical views.
+2. **Synthesis:** compose those features under explicit requirements and
+   constraints to explore candidate architectures for new systems.
 
-The first milestone is deliberately small: define a stable **Architecture
-Card** format, seed it with representative systems, and provide validation
-and inspection tools. LLM-assisted extraction runs only after the
-representation and evidence rules are stable, and always produces reviewable
-drafts.
+Mathen treats architecture as an evolving network rather than a static list of
+products. Systems acquire new features, dependencies, relationships, and
+community memberships over time. New systems are often formed by recombining
+existing ideas under a new workload, deployment boundary, hardware context, or
+set of operational constraints.
+
+> **Mathen turns software architecture into a time-aware, evidence-backed,
+> mathematically informed intermediate representation that can be compared,
+> composed, and validated.**
+
+## Why Mathen exists
+
+Architecture knowledge is scattered across source code, design documents,
+papers, benchmarks, protocol specifications, and operational experience. This
+makes it difficult to answer questions such as:
+
+- Which design properties do SQLite and DuckDB share, and where do they
+  diverge?
+- How does PostgreSQL connect relational databases, extensibility, indexing,
+  replication, and domain-specific extensions?
+- Which existing structures are composed by Supabase or Firecracker?
+- Which properties are preserved when two architectural patterns are combined?
+- What new conflicts, assumptions, and costs appear in the combination?
+- How did a system's architecture and relationships change between versions?
+
+Mathen makes these questions machine-readable without reducing architecture to
+ungrounded labels or a single oversimplified definition.
 
 ## Project status
 
-This repository is a research prototype. The cards are structured hypotheses
-with evidence, not formal proofs of the corresponding implementations.
+This repository is a research prototype. Architecture Cards are structured,
+evidence-backed models, not automatic formal proofs of the corresponding
+implementations.
+
+## The core model
+
+Mathen represents a system through several complementary views:
+
+```text
+System and version
+├── data model and types
+├── state space and transitions
+├── operations and composition laws
+├── dependency and causality graph
+├── consistency and convergence model
+├── storage and execution model
+├── isolation and security boundary
+├── failure and recovery model
+├── resource, performance, and cost model
+└── evolution, migration, and composition history
+```
+
+No single mathematical structure is expected to explain an entire system. A
+mathematical view is useful only when it answers a concrete question and states
+its assumptions. Depending on the question, a view may use:
+
+| Architecture question | Candidate mathematical view |
+| --- | --- |
+| What are the data and objects? | Sets, types, algebraic data types |
+| How are objects related? | Graphs, DAGs, partial orders |
+| How does the system evolve? | State machines, transition systems |
+| Which operations compose? | Monoids, algebras, compositional semantics |
+| Does state converge? | Semilattices, monotone systems |
+| Is an optimization transparent? | Refinement, simulation, bisimulation |
+| How do failures affect service? | Probability, queueing, reliability models |
+| How are resources bounded? | Complexity and cost models |
+
+These are candidate abstractions, not automatic proofs. Each claim is labeled
+as a `fact`, `inference`, `hypothesis`, or `analogy`, and remains connected to
+its evidence and scope.
+
+## A temporal, multi-layer architecture graph
+
+The long-term knowledge graph contains more than software names. It can include
+systems, versions, features, primitives, mathematical models, programming
+languages, operating systems, protocols, organizations, evidence, and candidate
+architectures.
+
+Relationships are typed rather than collapsed into a generic similarity edge:
+
+```text
+implements       uses              extends
+composes         resembles         influenced-by
+depends-on       conflicts-with    optimizes-for
+evolves-to       verified-by       constrained-by
+```
+
+This distinction matters. Historical influence needs historical evidence;
+structural similarity can be inferred from architecture analysis; a dependency
+should be supported by implementation or documentation evidence.
+
+The graph is temporal:
+
+```text
+version A ──evolves-to──> version B ──adds──> feature C
+       │                         └──uses──> primitive D
+       └──belongs-to──> community E
+```
+
+It can represent the first appearance of a feature, version-specific changes,
+new dependencies, community membership, composition lineage, and candidate
+architectures that have not yet been implemented. Systems can belong to many
+overlapping communities: PostgreSQL can connect relational databases, MVCC,
+database extensibility, geospatial data, vector search, replication, and
+backend platforms at the same time.
+
+## From analysis to synthesis
+
+Mathen uses a staged workflow:
+
+```text
+source code / documents / papers / experiments
+                         ↓
+                 fixed evidence and provenance
+                         ↓
+             deterministic repository observations
+                         ↓
+       semantic features, mathematical views, trade-offs
+                         ↓
+             reviewed temporal architecture graph
+                         ↓
+        constraint-based comparison and composition
+                         ↓
+             prototype, benchmark, and failure tests
+```
+
+When exploring a new architecture, Mathen records more than its input
+features:
+
+```text
+inputs
+new constraints
+target workload
+preserved properties
+introduced conflicts
+new trade-offs
+unverified assumptions
+validation plan
+```
+
+Architecture synthesis is not feature shopping. For example, combining
+embedded execution, columnar vectorization, append-only recovery, and
+content-addressed snapshots requires checking the write model, transaction
+boundary, recovery protocol, update pattern, and storage costs.
+
+## Representative examples
+
+The current cards and repository analyses use systems that expose different
+architectural patterns:
+
+| System | Reusable structure being studied |
+| --- | --- |
+| Git | Immutable content-addressed objects, mutable references, causal history |
+| SQLite | Embedded execution, layered storage, atomic commit, WAL snapshots |
+| DuckDB | Embedded analytical execution, columnar data, vectorized operators |
+| PostgreSQL | Extensible relational engine, MVCC, process isolation, extensions |
+| Kafka | Durable append-only logs, ordered offsets, replay-oriented consumption |
+| Kubernetes | Declarative state, reconciliation loops, control-plane convergence |
+| Firecracker | Minimal virtual machine model, KVM isolation, event-driven VMM |
+| Supabase | Database-centered platform composition, API, auth, and data policy |
+
+These are starting points for extracting structures that can be compared across
+databases, distributed systems, operating systems, runtimes, network protocols,
+compilers, media systems, and programming languages. They are not claimed to
+be complete formal models or evidence of historical influence.
+
+## Evidence and review boundary
+
+Mathen separates observations, interpretations, and reviewed knowledge:
+
+```text
+data/systems/       reviewed canonical Architecture Cards
+data/drafts/        unreviewed generated cards
+data/modeling/      fixed-commit evidence bundles and prompts
+data/analyses/      ignored deterministic repository reports
+```
+
+The project follows these rules:
+
+1. Extract observable facts before assigning mathematical terminology.
+2. Cite primary evidence wherever possible.
+3. Give every mathematical view a question and assumptions.
+4. Record benefits, costs, preconditions, failure modes, and counterexamples.
+5. Keep structural similarity separate from historical influence.
+6. Never let LLM output overwrite reviewed cards.
+7. Treat candidate compositions as hypotheses until implemented or validated.
+
+An LLM proposes abstractions and comparisons; deterministic tools provide
+provenance and observations; schema and semantic validation constrain output;
+human review decides what becomes canonical.
+
+## Current implementation
+
+The repository currently provides:
+
+- a versioned Architecture Card schema and semantic validator;
+- a representative repository catalog across databases, logs,
+  orchestration, isolation, virtualization, networking, compilers, media, and
+  backend platforms;
+- fixed-commit repository analysis with Git and GitHub archive transports;
+- deterministic reports for source structure, build surfaces, and navigation
+  signals;
+- portable modeling bundles and a provider-neutral OpenAI-compatible LLM
+  adapter;
+- a Cloudflare-first Hono Worker API backed by D1;
+- a Vite browser client for browsing reviewed architecture cards;
+- a read-only stdio MCP server with filesystem and API backends;
+- explicit separation between reviewed cards, drafts, and modeling evidence.
+
+The current knowledge graph is intentionally relational and small. D1 is the
+canonical structured store. Vectorize is an optional rebuildable semantic
+index, and a dedicated graph database remains a future adapter rather than a
+first-milestone dependency.
 
 ## Quick start: Python card tooling
 
@@ -88,8 +285,7 @@ Prerequisites: Bun and Wrangler.
 
 ```bash
 bun install
-bun run db:migrate:local
-bun run db:seed:local
+bun run db:reset:local
 bun run dev
 ```
 
@@ -117,6 +313,25 @@ uv run python -m unittest discover -s tests -v
 The Python development toolchain, including Ruff, is declared in
 `pyproject.toml` and installed by `uv sync --locked`.
 
+## Quick start: MCP
+
+Start the local read-only MCP server from the repository root:
+
+```bash
+bun run mcp
+```
+
+By default it reads the local filesystem. To read reviewed systems and fixed
+modeling bundles through the Hono/D1 API instead:
+
+```bash
+MATHEN_API_URL=http://localhost:8787/api bun run mcp
+```
+
+The server exposes `list_systems`, `get_system`, `search_features`, and
+`get_modeling_bundle`. API mode does not expose drafts; filesystem mode exposes
+them only when explicitly requested. See [`docs/mcp.md`](docs/mcp.md).
+
 ## Repository layout
 
 ```text
@@ -125,13 +340,13 @@ schemas/                    JSON Schema for architecture cards
 data/systems/               Evidence-backed system cards
 data/repositories/          Representative repository analysis catalog
 data/drafts/                Unreviewed generated Architecture Cards
+data/modeling/              Fixed-commit modeling bundles
 data/analyses/              Ignored deterministic inspection reports
-src/mathen/                 Validation and inspection CLI
+src/mathen/                 Validation, analysis, and LLM tooling
 tests/                      Unit tests
 apps/api/                   Hono Worker and D1 migrations
 apps/web/                   Bun/Vite browser client
 apps/mcp/                   Read-only stdio MCP server
-packages/                   Shared TypeScript contracts
 ```
 
 ## Design principles
@@ -149,4 +364,51 @@ packages/                   Shared TypeScript contracts
 
 ## Roadmap
 
-See [`docs/roadmap.md`](docs/roadmap.md) for the staged implementation plan.
+The project is developed in stages:
+
+1. **Representation and evidence:** stabilize Architecture Cards and review
+   rules.
+2. **Assisted extraction:** turn fixed-commit evidence into constrained drafts.
+3. **Application and retrieval:** provide D1, API, browser, semantic search,
+   and MCP access.
+4. **Temporal and relational graph:** model versions, evolution, communities,
+   composition, constraints, and evidence lineage.
+5. **Architecture synthesis:** query requirements, generate candidate
+   compositions, expose conflicts, and validate candidates with prototypes,
+   benchmarks, and failure tests.
+
+The long-term goal is a disciplined intermediate layer between implementation
+and design reasoning:
+
+```text
+existing systems → reusable architectural structures → candidate designs
+```
+
+## Non-goals
+
+Mathen does not currently aim to:
+
+- automatically prove that an implementation satisfies a mathematical model;
+- claim originality from structural similarity alone;
+- replace source review, experiments, benchmarks, or human architecture
+  judgment;
+- treat every mathematical analogy as a formal equivalence;
+- operate a general-purpose graph database before relational query patterns
+  demonstrate that it is necessary.
+
+## Documentation
+
+- [`docs/user-manual.md`](docs/user-manual.md) — schemas, data flow, and
+  operating procedures
+- [`docs/vision.md`](docs/vision.md) — project motivation and modeling views
+- [`docs/methodology.md`](docs/methodology.md) — evidence and validation rules
+- [`docs/repository-catalog.md`](docs/repository-catalog.md) — repository
+  analysis policy and catalog
+- [`docs/llm-modeling.md`](docs/llm-modeling.md) — constrained LLM modeling
+- [`docs/mcp.md`](docs/mcp.md) — read-only agent access
+- [`docs/hosting.md`](docs/hosting.md) — Cloudflare deployment boundary
+- [`docs/roadmap.md`](docs/roadmap.md) — staged implementation plan
+
+## License
+
+See [`LICENSE`](LICENSE).
