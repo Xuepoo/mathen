@@ -19,6 +19,14 @@ originality.
 | Compilation | LLVM | How are language-independent intermediate representations composed with passes? |
 | Media processing | FFmpeg | How are codecs, filters, and streaming pipelines composed? |
 | Backend platforms | Supabase | How are mature database and service primitives assembled into a product boundary? |
+| Foundational languages | CPython, Rust, Lua, Go, Ruby | How do language implementations represent syntax, values, memory, and execution? |
+| JavaScript and WebAssembly runtimes | Node.js, Deno, V8, Wasmtime | How do embeddable engines and host runtimes expose execution, modules, and capabilities? |
+| Operating-system foundations | FreeBSD, systemd, xv6, GNU Coreutils | How do kernels, initialization, educational systems, and Unix tools expose process and resource boundaries? |
+| Compiler and parser infrastructure | GCC, tree-sitter | How do front ends, syntax trees, intermediate representations, and code-generation pipelines differ? |
+| Systems and networking libraries | Boost, libuv, curl, OpenSSL | How do reusable libraries package concurrency, transport, protocol, and cryptographic primitives? |
+| Protocol and messaging infrastructure | Protocol Buffers, gRPC, Eclipse Mosquitto | How are schemas, RPC boundaries, and publish/subscribe delivery represented? |
+| Database engines | MySQL Server, RocksDB | How do server-oriented relational storage and embedded key-value storage organize state and durability? |
+| Graphics and multimedia libraries | Three.js, Blender, SDL | How do scene graphs, content tools, windows, input, and rendering abstractions compose? |
 
 ## Analysis policy
 
@@ -30,6 +38,15 @@ originality.
 - Use the `priority` field to process the core set before the extended set.
 - Treat repository metrics as evidence for further analysis, not as semantic
   proof of architecture.
+- The catalog deliberately combines older foundational systems with current
+  runtimes and libraries: xv6, Coreutils, GCC, Lua, and FreeBSD provide
+  historical and systems-oriented anchors, while Rust, Wasmtime, gRPC, and
+  Three.js cover modern language, runtime, protocol, and graphics boundaries.
+- Categories are comparative lenses rather than mutually exclusive taxonomy.
+  A repository is included where its source structure and official
+  documentation make a useful architectural boundary visible; it is not a
+  claim that the project is representative of every implementation in its
+  category.
 
 ## Command
 
