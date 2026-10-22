@@ -1,0 +1,257 @@
+{
+  "id": "laravel",
+  "name": "Laravel",
+  "version_context": "commit bd8aeb64d3f9fa4b11690d702bdf289f5f32ae97 (v12.0.0)",
+  "summary": "A PHP application framework centered on an application service container, bootstrapper and service-provider lifecycle, and composable HTTP routing and middleware pipelines.",
+  "scope": [
+    "application lifecycle",
+    "service container and providers",
+    "HTTP routing and middleware",
+    "deferred service resolution"
+  ],
+  "features": [
+    {
+      "id": "application-service-container",
+      "name": "Application service container",
+      "category": "dependency-model",
+      "claim_type": "fact",
+      "description": "Illuminate Foundation Application extends the service Container and registers base bindings, aliases, instances, bindings, and singleton services used by the framework and application.",
+      "benefits": [
+        "Centralizes construction and replacement of application services",
+        "Supports interface-to-implementation and shared-instance boundaries"
+      ],
+      "costs": [
+        "Runtime resolution can hide dependencies from static call sites",
+        "Binding scope and alias configuration become application-wide behavior"
+      ],
+      "evidence_ids": [
+        "laravel-repository-commit",
+        "laravel-application-source",
+        "laravel-container-source",
+        "laravel-container-doc"
+      ]
+    },
+    {
+      "id": "provider-bootstrap-lifecycle",
+      "name": "Service-provider bootstrap lifecycle",
+      "category": "lifecycle-model",
+      "claim_type": "fact",
+      "description": "Laravel runs a configured sequence of bootstrappers, registers configured service providers, and then boots providers so framework and application services can be prepared in phases.",
+      "benefits": [
+        "Separates environment loading, configuration, registration, and boot work",
+        "Gives packages a standard extension point"
+      ],
+      "costs": [
+        "Provider ordering and side effects affect startup",
+        "Bootstrapping adds phase-dependent failure modes"
+      ],
+      "evidence_ids": [
+        "laravel-application-source",
+        "laravel-lifecycle-doc",
+        "laravel-service-provider-doc"
+      ]
+    },
+    {
+      "id": "deferred-provider-resolution",
+      "name": "Deferred provider resolution",
+      "category": "availability-and-loading",
+      "claim_type": "fact",
+      "description": "The application tracks deferred providers and can register and boot a provider when a deferred service is first resolved rather than eagerly loading every provider at application creation.",
+      "benefits": [
+        "Defers initialization cost for unused services",
+        "Lets packages advertise service availability through the container"
+      ],
+      "costs": [
+        "First resolution may include hidden registration work",
+        "Deferred dependencies complicate failure diagnosis"
+      ],
+      "evidence_ids": [
+        "laravel-application-source",
+        "laravel-service-provider-doc"
+      ]
+    },
+    {
+      "id": "router-middleware-pipeline",
+      "name": "Router and middleware pipeline",
+      "category": "request-execution",
+      "claim_type": "fact",
+      "description": "Laravel matches requests to route actions and sends them through a pipeline in which middleware successively transforms or delegates execution to the next stage.",
+      "benefits": [
+        "Composes authentication, authorization, sessions, and other concerns",
+        "Keeps routing and request interception explicit"
+      ],
+      "costs": [
+        "Pipeline order changes request semantics",
+        "Deep stacks increase per-request work"
+      ],
+      "evidence_ids": [
+        "laravel-router-source",
+        "laravel-pipeline-source",
+        "laravel-middleware-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Service resolution directed graph",
+      "question": "How do service identifiers, bindings, providers, aliases, and resolved instances relate during execution?",
+      "assumptions": [
+        "Abstracts and concrete services are vertices with binding and resolution edges",
+        "Singleton edges denote shared lifetime within a container scope",
+        "PHP reflection details are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "laravel-container-source",
+        "laravel-container-doc",
+        "laravel-application-source"
+      ]
+    },
+    {
+      "model": "Phased bootstrap state machine",
+      "question": "Which transitions take Laravel from construction through environment bootstrap, provider registration, provider boot, and request readiness?",
+      "assumptions": [
+        "Bootstrapper and provider phases are ordered transitions",
+        "Deferred services add registration transitions after initial boot",
+        "A successful transition does not guarantee a healthy deployment"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "laravel-application-source",
+        "laravel-lifecycle-doc",
+        "laravel-service-provider-doc"
+      ]
+    },
+    {
+      "model": "Middleware endomorphism composition",
+      "question": "How does a request pass through ordered middleware before and after a route action?",
+      "assumptions": [
+        "Each middleware is modeled as a function around a downstream continuation",
+        "Composition order follows the router pipeline",
+        "This is explanatory and does not assert algebraic identity or invertibility"
+      ],
+      "claim_type": "analogy",
+      "evidence_ids": [
+        "laravel-router-source",
+        "laravel-pipeline-source",
+        "laravel-middleware-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "application-service-container",
+      "benefits": [
+        "Centralized bindings and lifecycle-aware construction"
+      ],
+      "costs": [
+        "Implicit runtime dependencies hinder local reasoning"
+      ]
+    },
+    {
+      "feature_id": "provider-bootstrap-lifecycle",
+      "benefits": [
+        "Packages share registration and boot extension points"
+      ],
+      "costs": [
+        "Provider ordering expands startup coordination"
+      ]
+    },
+    {
+      "feature_id": "deferred-provider-resolution",
+      "benefits": [
+        "Unused services avoid some eager work"
+      ],
+      "costs": [
+        "First-use latency and deferred failures complicate operations"
+      ]
+    },
+    {
+      "feature_id": "router-middleware-pipeline",
+      "benefits": [
+        "Cross-cutting behavior composes around route actions"
+      ],
+      "costs": [
+        "Ordering and stack depth affect performance and semantics"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "laravel-repository-commit",
+      "kind": "source-code",
+      "title": "Laravel source at bd8aeb64d3f9 (v12.0.0)",
+      "uri": "https://github.com/laravel/framework/commit/bd8aeb64d3f9fa4b11690d702bdf289f5f32ae97",
+      "accessed": "2026-10-23",
+      "notes": "Fixed official repository revision."
+    },
+    {
+      "id": "laravel-application-source",
+      "kind": "source-code",
+      "title": "Laravel application lifecycle at v12.0.0",
+      "uri": "https://github.com/laravel/framework/blob/bd8aeb64d3f9fa4b11690d702bdf289f5f32ae97/src/Illuminate/Foundation/Application.php",
+      "accessed": "2026-10-23",
+      "notes": "Base bindings, bootstrappers, providers, deferred providers, and lifecycle."
+    },
+    {
+      "id": "laravel-container-source",
+      "kind": "source-code",
+      "title": "Laravel container at v12.0.0",
+      "uri": "https://github.com/laravel/framework/blob/bd8aeb64d3f9fa4b11690d702bdf289f5f32ae97/src/Illuminate/Container/Container.php",
+      "accessed": "2026-10-23",
+      "notes": "Bindings, instances, singleton scope, aliases, and contextual resolution."
+    },
+    {
+      "id": "laravel-router-source",
+      "kind": "source-code",
+      "title": "Laravel router at v12.0.0",
+      "uri": "https://github.com/laravel/framework/blob/bd8aeb64d3f9fa4b11690d702bdf289f5f32ae97/src/Illuminate/Routing/Router.php",
+      "accessed": "2026-10-23",
+      "notes": "Route matching, dispatch, and middleware entry."
+    },
+    {
+      "id": "laravel-pipeline-source",
+      "kind": "source-code",
+      "title": "Laravel pipeline at v12.0.0",
+      "uri": "https://github.com/laravel/framework/blob/bd8aeb64d3f9fa4b11690d702bdf289f5f32ae97/src/Illuminate/Pipeline/Pipeline.php",
+      "accessed": "2026-10-23",
+      "notes": "Ordered middleware and continuation composition."
+    },
+    {
+      "id": "laravel-container-doc",
+      "kind": "official-doc",
+      "title": "Laravel service container",
+      "uri": "https://laravel.com/docs/12.x/container",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for bindings, singleton services, contextual binding, and injection."
+    },
+    {
+      "id": "laravel-lifecycle-doc",
+      "kind": "official-doc",
+      "title": "Laravel request lifecycle",
+      "uri": "https://laravel.com/docs/12.x/lifecycle",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for bootstrap, providers, kernel handling, and dispatch."
+    },
+    {
+      "id": "laravel-service-provider-doc",
+      "kind": "official-doc",
+      "title": "Laravel service providers",
+      "uri": "https://laravel.com/docs/12.x/providers",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for register and boot phases."
+    },
+    {
+      "id": "laravel-middleware-doc",
+      "kind": "official-doc",
+      "title": "Laravel middleware",
+      "uri": "https://laravel.com/docs/12.x/middleware",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for middleware groups, aliases, ordering, and pipelines."
+    }
+  ],
+  "related_systems": [
+    "php",
+    "rails"
+  ]
+}

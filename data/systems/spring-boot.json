@@ -1,0 +1,245 @@
+{
+  "id": "spring-boot",
+  "name": "Spring Boot",
+  "version_context": "commit 8964203688c111e11604bc4454743998bc387993 (v3.4.0)",
+  "summary": "A JVM application framework that prepares an environment, creates and refreshes a Spring application context, selects conditional auto-configuration, and can attach an embedded web server to that context.",
+  "scope": [
+    "application startup",
+    "Spring application context",
+    "conditional auto-configuration",
+    "embedded web deployment"
+  ],
+  "features": [
+    {
+      "id": "application-context-startup-orchestration",
+      "name": "Application-context startup orchestration",
+      "category": "lifecycle-model",
+      "claim_type": "fact",
+      "description": "SpringApplication sequences environment preparation, application-context creation, context preparation and loading, context refresh, startup listeners, runners, and failure handling.",
+      "benefits": [
+        "Provides a common startup protocol",
+        "Exposes listener and initializer extension points"
+      ],
+      "costs": [
+        "Startup spans several callback and context phases",
+        "Refresh failures can cross bean and environment interactions"
+      ],
+      "evidence_ids": [
+        "spring-boot-repository-commit",
+        "spring-application-source",
+        "spring-application-doc"
+      ]
+    },
+    {
+      "id": "conditional-auto-configuration",
+      "name": "Conditional auto-configuration",
+      "category": "configuration-model",
+      "claim_type": "fact",
+      "description": "Spring Boot discovers auto-configuration candidates and filters them according to metadata and conditions so the application context receives conventional infrastructure when relevant classes, beans, and properties are present.",
+      "benefits": [
+        "Reduces explicit configuration for common deployments",
+        "Lets classpath and environment select infrastructure"
+      ],
+      "costs": [
+        "Effective configuration depends on classpath, conditions, properties, and ordering",
+        "Unexpected condition outcomes can be difficult to inspect"
+      ],
+      "evidence_ids": [
+        "spring-auto-config-source",
+        "spring-auto-config-doc",
+        "spring-boot-repository-commit"
+      ]
+    },
+    {
+      "id": "environment-profile-property-model",
+      "name": "Environment, profile, and property model",
+      "category": "configuration-model",
+      "claim_type": "fact",
+      "description": "SpringApplication creates and configures an Environment with property sources and profiles, binds application properties, and passes that environment into context configuration.",
+      "benefits": [
+        "Separates deploy-time configuration from code",
+        "Supports profile-specific and command-line configuration"
+      ],
+      "costs": [
+        "Property precedence and profiles add state",
+        "Runtime behavior varies with environment inputs"
+      ],
+      "evidence_ids": [
+        "spring-application-source",
+        "spring-external-config-doc"
+      ]
+    },
+    {
+      "id": "embedded-web-server-context",
+      "name": "Embedded web-server application context",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "For servlet web applications, Spring Boot uses a web-capable application context that can create and start an embedded web server and publish the server namespace through the context lifecycle.",
+      "benefits": [
+        "Packages application and web-server startup together",
+        "Lets web infrastructure participate in context refresh"
+      ],
+      "costs": [
+        "Server availability is coupled to context refresh",
+        "Embedded deployment differs from external-container assumptions"
+      ],
+      "evidence_ids": [
+        "spring-web-context-source",
+        "spring-web-deployment-doc",
+        "spring-boot-repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Application startup state machine",
+      "question": "How does a process move from argument and environment preparation to a refreshed, running application context?",
+      "assumptions": [
+        "Environment preparation, context creation, loading, refresh, and readiness are ordered transitions",
+        "Failure transitions may close a partial context",
+        "Bean-factory operations are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "spring-application-source",
+        "spring-application-doc"
+      ]
+    },
+    {
+      "model": "Conditional dependency graph",
+      "question": "Which configuration candidates and beans become part of the context under a given classpath, property, and bean environment?",
+      "assumptions": [
+        "Configuration classes and beans are vertices with imports and condition guards",
+        "Condition evaluation selects a candidate subgraph",
+        "Selection does not prove semantic compatibility"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "spring-auto-config-source",
+        "spring-auto-config-doc"
+      ]
+    },
+    {
+      "model": "Environment-indexed context family",
+      "question": "How do profiles and property sources select a different application configuration while retaining one codebase?",
+      "assumptions": [
+        "An environment is a tuple of property sources, profiles, and arguments",
+        "Context configuration is a partial function from that tuple to a bean graph",
+        "Precedence and external secret management are abstracted"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "spring-application-source",
+        "spring-external-config-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "application-context-startup-orchestration",
+      "benefits": [
+        "A shared lifecycle supports diverse JVM entry points"
+      ],
+      "costs": [
+        "Failures can cross environment, context, bean, listener, and runner phases"
+      ]
+    },
+    {
+      "feature_id": "conditional-auto-configuration",
+      "benefits": [
+        "Conventionally useful infrastructure needs less explicit configuration"
+      ],
+      "costs": [
+        "Classpath and condition state make effective configuration less explicit"
+      ]
+    },
+    {
+      "feature_id": "environment-profile-property-model",
+      "benefits": [
+        "One artifact can serve multiple environments"
+      ],
+      "costs": [
+        "Precedence and profile combinations enlarge runtime configuration space"
+      ]
+    },
+    {
+      "feature_id": "embedded-web-server-context",
+      "benefits": [
+        "Web server and context deploy together"
+      ],
+      "costs": [
+        "Readiness and server lifecycle couple to context refresh"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "spring-boot-repository-commit",
+      "kind": "source-code",
+      "title": "Spring Boot source at 8964203688c1 (v3.4.0)",
+      "uri": "https://github.com/spring-projects/spring-boot/commit/8964203688c111e11604bc4454743998bc387993",
+      "accessed": "2026-10-23",
+      "notes": "Fixed official repository revision."
+    },
+    {
+      "id": "spring-application-source",
+      "kind": "source-code",
+      "title": "SpringApplication at v3.4.0",
+      "uri": "https://github.com/spring-projects/spring-boot/blob/8964203688c111e11604bc4454743998bc387993/spring-boot-project/spring-boot/src/main/java/org/springframework/boot/SpringApplication.java",
+      "accessed": "2026-10-23",
+      "notes": "Environment preparation, context creation, loading, refresh, listeners, runners, and failures."
+    },
+    {
+      "id": "spring-auto-config-source",
+      "kind": "source-code",
+      "title": "AutoConfigurationImportSelector at v3.4.0",
+      "uri": "https://github.com/spring-projects/spring-boot/blob/8964203688c111e11604bc4454743998bc387993/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/AutoConfigurationImportSelector.java",
+      "accessed": "2026-10-23",
+      "notes": "Discovery, filtering, and selection of auto-configuration candidates."
+    },
+    {
+      "id": "spring-web-context-source",
+      "kind": "source-code",
+      "title": "Servlet web application context at v3.4.0",
+      "uri": "https://github.com/spring-projects/spring-boot/blob/8964203688c111e11604bc4454743998bc387993/spring-boot-project/spring-boot/src/main/java/org/springframework/boot/web/servlet/context/ServletWebServerApplicationContext.java",
+      "accessed": "2026-10-23",
+      "notes": "Embedded web-server creation and context integration."
+    },
+    {
+      "id": "spring-application-doc",
+      "kind": "official-doc",
+      "title": "Spring Boot application events and listeners",
+      "uri": "https://docs.spring.io/spring-boot/reference/features/spring-application.html",
+      "accessed": "2026-10-23",
+      "notes": "Official startup and lifecycle documentation."
+    },
+    {
+      "id": "spring-auto-config-doc",
+      "kind": "official-doc",
+      "title": "Spring Boot auto-configuration",
+      "uri": "https://docs.spring.io/spring-boot/reference/using/auto-configuration.html",
+      "accessed": "2026-10-23",
+      "notes": "Official conditional auto-configuration documentation."
+    },
+    {
+      "id": "spring-external-config-doc",
+      "kind": "official-doc",
+      "title": "Spring Boot externalized configuration",
+      "uri": "https://docs.spring.io/spring-boot/reference/features/external-config.html",
+      "accessed": "2026-10-23",
+      "notes": "Official property sources, profiles, precedence, and binding documentation."
+    },
+    {
+      "id": "spring-web-deployment-doc",
+      "kind": "official-doc",
+      "title": "Spring Boot web application deployment",
+      "uri": "https://docs.spring.io/spring-boot/reference/web/servlet.html",
+      "accessed": "2026-10-23",
+      "notes": "Official embedded servlet container documentation."
+    }
+  ],
+  "related_systems": [
+    "java",
+    "kubernetes"
+  ]
+}

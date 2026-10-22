@@ -98,6 +98,10 @@ These entries are already present in the repository at different review levels:
 | `tauri` | Tauri | desktop application framework | `reviewed` | Compare native shell/webview composition, command IPC, capabilities, and packaging using fixed-commit evidence |
 | `qt` | Qt | desktop application framework | `reviewed` | Compare QObject ownership, event dispatch, signals/slots, widgets, and platform abstraction using fixed-commit evidence |
 | `gtk` | GTK | desktop application framework | `reviewed` | Compare GObject types, event controllers, widget trees, and GDK backend boundaries using fixed-commit evidence |
+| `rails` | Ruby on Rails | web framework | `reviewed` | Compare engine composition, ordered initialization, autoloading, and Rack middleware using fixed-commit evidence |
+| `laravel` | Laravel | web framework | `reviewed` | Compare service-container resolution, provider bootstrap, deferred services, and middleware pipelines using fixed-commit evidence |
+| `spring-boot` | Spring Boot | web framework | `reviewed` | Compare application-context startup, conditional auto-configuration, environment binding, and embedded web deployment using fixed-commit evidence |
+| `nestjs` | NestJS | web framework | `reviewed` | Compare module graph scanning, provider resolution, initialization phases, and transport adapters using fixed-commit evidence |
 
 The operational manifest now contains 52 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
@@ -297,10 +301,10 @@ identifiers, not claims that the projects share the same architecture.
 | `express` | Express | `P1` | Middleware composition, request lifecycle, routing, and adapter boundaries |
 | `fastapi` | FastAPI | `P1` | Typed request validation, dependency injection, async handlers, and OpenAPI generation |
 | `django` | Django | `P1` | Model/view/template boundaries, middleware, ORM, and application configuration |
-| `rails` | Ruby on Rails | `P2` | Convention-driven MVC, Active Record, routing, and background jobs |
-| `laravel` | Laravel | `P2` | Service container, middleware pipeline, ORM, queues, and application lifecycle |
-| `spring-boot` | Spring Boot | `P1` | Dependency injection, auto-configuration, web filters, and actuator boundaries |
-| `nestjs` | NestJS | `P2` | Module graph, decorators, dependency injection, and transport adapters |
+| `rails` | Ruby on Rails | `reviewed` | Engine composition, ordered initialization, autoloading, routing, and middleware |
+| `laravel` | Laravel | `reviewed` | Service container, provider bootstrap, deferred resolution, routing, and middleware pipeline |
+| `spring-boot` | Spring Boot | `reviewed` | Application-context lifecycle, conditional auto-configuration, environment binding, and embedded web deployment |
+| `nestjs` | NestJS | `reviewed` | Module graph scanning, provider resolution, initialization lifecycle, and transport adapters |
 
 ### Desktop and cross-platform application frameworks
 
