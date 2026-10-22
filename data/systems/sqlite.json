@@ -364,5 +364,18 @@
     "duckdb",
     "postgresql",
     "git"
+  ],
+  "relations": [
+    {
+      "type": "resembles",
+      "target": "duckdb",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "sqlite-appropriate-uses",
+        "sqlite-architecture"
+      ],
+      "notes": "Both provide embedded database execution, but their workload and execution models differ; this is a structural comparison, not historical influence."
+    }
   ]
 }
