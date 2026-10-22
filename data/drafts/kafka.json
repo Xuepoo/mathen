@@ -110,6 +110,66 @@
       "evidence_ids": [
         "kafka-introduction"
       ]
+    },
+    {
+      "id": "key-affine-partition-ordering",
+      "name": "Key-affine partition ordering",
+      "category": "ordering-model",
+      "claim_type": "fact",
+      "description": "Kafka maps events to topic partitions, and events with the same key are written to the same partition in the documented model. Consumers observe the write order within a topic-partition, while no total order is established across partitions.",
+      "benefits": [
+        "Provides a predictable ordering scope for per-entity event streams",
+        "Allows partitions to be read and written in parallel",
+        "Makes the key-selection policy an explicit part of the event contract"
+      ],
+      "costs": [
+        "Cross-entity or cross-partition ordering requires additional coordination",
+        "A skewed key distribution can concentrate work on one partition",
+        "Changing partitioning assumptions can alter locality and processing behavior"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "id": "retained-event-replay-boundary",
+      "name": "Retained-event replay boundary",
+      "category": "consumption-model",
+      "claim_type": "fact",
+      "description": "Kafka retains events independently of whether a consumer has read them, so events can be read repeatedly and processed retrospectively. Replay remains bounded by topic retention and by the consumer's processing semantics.",
+      "benefits": [
+        "Supports recovery, backfills, and multiple independent processing applications",
+        "Separates event retention from consumer completion",
+        "Makes a consumer position a reusable state component of stream processing"
+      ],
+      "costs": [
+        "Replay can duplicate external effects unless processing is idempotent or transactional",
+        "Consumer lag consumes retained storage and processing capacity",
+        "Expired retention creates a hard lower bound on replayable history"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "id": "partition-replica-fault-tolerance",
+      "name": "Partition-level replica fault tolerance",
+      "category": "replication-model",
+      "claim_type": "fact",
+      "description": "Kafka replicates topic-partitions across brokers, including across datacenters or regions in the documented overview. Replication uses the same partition as the unit of retained event history and fault-tolerance placement.",
+      "benefits": [
+        "Keeps multiple broker copies of a partition's event history",
+        "Aligns scaling, ordering, and replication boundaries",
+        "Supports broker maintenance and failure recovery"
+      ],
+      "costs": [
+        "Replica copies consume storage and network bandwidth",
+        "Availability and durability depend on replica placement and cluster state",
+        "Replication adds coordination and does not create a global order"
+      ],
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
     }
   ],
   "mathematical_views": [
@@ -146,6 +206,45 @@
         "Replica coordination provides the availability and durability behavior claimed by the deployment",
         "The comparison concerns observable retained events and ordering, not identical internal timing",
         "Failure and recovery transitions are included in the refinement model"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "model": "Key-indexed partial-order log",
+      "question": "Which event-order relations are guaranteed when a topic is partitioned by key?",
+      "assumptions": [
+        "Each partition is a sequence ordered by append position",
+        "The key-to-partition mapping sends equal keys to the same partition for the modeled interval",
+        "Events in different partitions are incomparable unless an additional application protocol supplies an order"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "model": "Retention-bounded replay transition system",
+      "question": "When can replay from a consumer position reproduce a derived state from retained events?",
+      "assumptions": [
+        "The requested prefix of each partition remains within the configured retention window",
+        "The consumer's transition function is deterministic or explicitly accounts for external effects",
+        "The model distinguishes event replay from exactly-once external side effects"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "kafka-introduction"
+      ]
+    },
+    {
+      "model": "Replica-set availability refinement",
+      "question": "Which retained partition observations can remain available when one broker copy is unavailable?",
+      "assumptions": [
+        "Replica placement and coordination satisfy the deployment's availability and durability policy",
+        "The comparison concerns the partition's observable event history, not identical broker timing",
+        "Failure, catch-up, and retention transitions are included in the model"
       ],
       "claim_type": "hypothesis",
       "evidence_ids": [
@@ -197,6 +296,33 @@
       ],
       "costs": [
         "State recovery, topology management, and cumulative latency"
+      ]
+    },
+    {
+      "feature_id": "key-affine-partition-ordering",
+      "benefits": [
+        "Parallel processing with explicit per-key ordering"
+      ],
+      "costs": [
+        "Hot partitions and no automatic cross-partition order"
+      ]
+    },
+    {
+      "feature_id": "retained-event-replay-boundary",
+      "benefits": [
+        "Independent recovery, replay, and backfill from retained history"
+      ],
+      "costs": [
+        "Lag, duplicate effects, and retention-expiry constraints"
+      ]
+    },
+    {
+      "feature_id": "partition-replica-fault-tolerance",
+      "benefits": [
+        "Fault tolerance at the same boundary as ordering and scale"
+      ],
+      "costs": [
+        "Replica storage, network traffic, and coordination overhead"
       ]
     }
   ],

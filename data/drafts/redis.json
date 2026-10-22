@@ -89,6 +89,46 @@
       "evidence_ids": [
         "redis-data-types"
       ]
+    },
+    {
+      "id": "atomic-background-persistence",
+      "name": "Forked background persistence",
+      "category": "persistence-execution",
+      "claim_type": "fact",
+      "description": "Redis performs RDB snapshot creation and AOF rewriting in a background child process created with fork. Copy-on-write lets the parent continue serving clients while the child writes a snapshot or a compact replacement representation, subject to the resource costs documented for forking and rewrite buffering.",
+      "benefits": [
+        "Keeps the main serving process out of most snapshot and rewrite disk I/O",
+        "Allows a new persistence representation to be constructed without replacing the active one until completion",
+        "Provides an operationally useful atomic handoff point for completed files or manifests"
+      ],
+      "costs": [
+        "Fork and copy-on-write can consume CPU and memory under large or write-heavy datasets",
+        "Background persistence competes for disk bandwidth and other resources",
+        "A rewrite or snapshot still needs an explicit recovery and backup policy"
+      ],
+      "evidence_ids": [
+        "redis-persistence"
+      ]
+    },
+    {
+      "id": "configurable-durability-window",
+      "name": "Configurable durability window",
+      "category": "durability-model",
+      "claim_type": "fact",
+      "description": "Redis exposes persistence policies ranging from no persistence and periodic RDB snapshots to AOF fsync policies of never, every second, or every query. The selected policy determines the documented balance between write latency, disk work, restart recovery, and the amount of acknowledged data that may be lost after a failure.",
+      "benefits": [
+        "Lets deployments choose an explicit durability and performance point",
+        "Separates dataset-serving semantics from the persistence schedule",
+        "Makes the possible loss window an operational configuration choice"
+      ],
+      "costs": [
+        "No single mode optimizes latency, compactness, restart speed, and loss bounds simultaneously",
+        "The fsync policy and snapshot interval create different failure windows",
+        "Operators must test backups and restoration in addition to selecting a mode"
+      ],
+      "evidence_ids": [
+        "redis-persistence"
+      ]
     }
   ],
   "mathematical_views": [
@@ -131,6 +171,32 @@
       "evidence_ids": [
         "redis-persistence"
       ]
+    },
+    {
+      "model": "Fork-and-replace persistence transition system",
+      "question": "How can Redis construct a new snapshot or rewritten log concurrently and make it the active durable representation only after completion?",
+      "assumptions": [
+        "The serving dataset is the parent state and the child observes a copy-on-write view",
+        "Temporary files and the final rename or manifest replacement are modeled as an atomic handoff boundary",
+        "The view abstracts operating-system fork, rename, fsync, and crash behavior beyond the documented workflow"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "redis-persistence"
+      ]
+    },
+    {
+      "model": "Durability-latency Pareto frontier",
+      "question": "Which persistence configurations are nondominated when comparing write cost, recovery representation, and maximum failure loss window?",
+      "assumptions": [
+        "Configurations are compared at a stated fsync or snapshot boundary",
+        "A loss window means acknowledged writes not guaranteed to have reached durable storage under the selected policy",
+        "The model treats dataset size, disk behavior, and process failure timing as workload parameters"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "redis-persistence"
+      ]
     }
   ],
   "trade_offs": [
@@ -168,6 +234,24 @@
       ],
       "costs": [
         "Retention, scaling, and durability guarantees remain bounded by the deployment"
+      ]
+    },
+    {
+      "feature_id": "atomic-background-persistence",
+      "benefits": [
+        "Online snapshot and rewrite construction with a controlled handoff"
+      ],
+      "costs": [
+        "Fork, copy-on-write, and background I/O resource pressure"
+      ]
+    },
+    {
+      "feature_id": "configurable-durability-window",
+      "benefits": [
+        "Explicit tuning of durability against latency and storage work"
+      ],
+      "costs": [
+        "Operational complexity and policy-dependent data-loss windows"
       ]
     }
   ],

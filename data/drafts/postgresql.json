@@ -91,6 +91,47 @@
       "evidence_ids": [
         "postgresql-transaction-isolation"
       ]
+    },
+    {
+      "id": "serializable-dependency-monitoring",
+      "name": "Serializable dependency monitoring",
+      "category": "concurrency-control",
+      "claim_type": "fact",
+      "description": "At Serializable isolation, PostgreSQL monitors read/write dependencies, including predicate-lock information, and rejects transactions when the concurrent execution could not be explained by any serial order. The application must retry the complete transaction after a serialization failure.",
+      "benefits": [
+        "Provides a database-enforced serializability boundary for committed transactions",
+        "Avoids requiring every conflict to be resolved by blocking locks",
+        "Makes retry the explicit recovery path for detected anomalies"
+      ],
+      "costs": [
+        "Dependency tracking consumes resources and can increase serialization failures",
+        "Rejected transactions require idempotent or otherwise retryable application work",
+        "Query plans and predicate-lock granularity affect monitoring behavior"
+      ],
+      "evidence_ids": [
+        "postgresql-transaction-isolation",
+        "postgresql-mvcc"
+      ]
+    },
+    {
+      "id": "transaction-scoped-retry-boundary",
+      "name": "Transaction-scoped retry boundary",
+      "category": "failure-recovery-model",
+      "claim_type": "fact",
+      "description": "PostgreSQL documents serialization failures as transaction-level failures: an application should abort the current transaction and retry the whole transaction from the beginning. Results read by a transaction that later aborts are not valid for decisions that require a successfully committed transaction.",
+      "benefits": [
+        "Defines a reusable recovery boundary around a complete unit of work",
+        "Prevents partially applied application decisions from escaping an aborted transaction",
+        "Allows stronger isolation to coexist with concurrent execution"
+      ],
+      "costs": [
+        "Retries add latency and duplicate application-side work",
+        "External side effects need coordination with transaction success",
+        "Retry rates depend on workload conflicts and predicate-lock behavior"
+      ],
+      "evidence_ids": [
+        "postgresql-transaction-isolation"
+      ]
     }
   ],
   "mathematical_views": [
@@ -133,6 +174,33 @@
       "evidence_ids": [
         "postgresql-extensions"
       ]
+    },
+    {
+      "model": "Serialization dependency graph",
+      "question": "When can concurrent snapshot transactions be accepted as equivalent to some serial execution?",
+      "assumptions": [
+        "Transactions are vertices and relevant read/write dependencies are directed edges",
+        "Predicate-lock observations are an abstraction of the conflicts PostgreSQL monitors",
+        "A cycle or otherwise unsafe dependency pattern is represented by a rejected commit, while implementation details of lock promotion are omitted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "postgresql-transaction-isolation",
+        "postgresql-mvcc"
+      ]
+    },
+    {
+      "model": "Isolation-level refinement lattice",
+      "question": "Which visibility and anomaly guarantees become stronger as a transaction moves from Read Committed through Repeatable Read to Serializable?",
+      "assumptions": [
+        "Guarantees are compared by prohibited phenomena rather than raw performance",
+        "The comparison uses PostgreSQL's documented implementations, including Read Uncommitted behaving as Read Committed",
+        "Higher guarantees may reject executions rather than produce a result"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "postgresql-transaction-isolation"
+      ]
     }
   ],
   "trade_offs": [
@@ -170,6 +238,24 @@
       ],
       "costs": [
         "Application complexity and possible serialization retries"
+      ]
+    },
+    {
+      "feature_id": "serializable-dependency-monitoring",
+      "benefits": [
+        "Strong consistency without making every read/write conflict block"
+      ],
+      "costs": [
+        "Dependency-tracking overhead and serialization failures"
+      ]
+    },
+    {
+      "feature_id": "transaction-scoped-retry-boundary",
+      "benefits": [
+        "Clear and reusable recovery semantics for aborted work"
+      ],
+      "costs": [
+        "End-to-end retry design and repeated transaction work"
       ]
     }
   ],

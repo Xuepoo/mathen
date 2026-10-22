@@ -128,6 +128,47 @@
         "sqlite-architecture",
         "sqlite-atomic-commit"
       ]
+    },
+    {
+      "id": "transaction-locking-protocol",
+      "name": "Journal and WAL locking protocol",
+      "category": "concurrency-control",
+      "claim_type": "fact",
+      "description": "SQLite coordinates transaction access with file locks and journal state. Rollback-journal commits use lock acquisition and synchronization before changing the database, while WAL readers, writers, and checkpoints coordinate through the WAL and its shared-memory index.",
+      "benefits": [
+        "Turns crash recovery and concurrent access into explicit protocol states",
+        "Allows readers to proceed during WAL writes in the documented common case",
+        "Keeps the database file and its journal or WAL state as the durable coordination boundary"
+      ],
+      "costs": [
+        "Lock contention can return SQLITE_BUSY or delay progress",
+        "The protocol depends on filesystem locking, synchronization, and shared-memory behavior",
+        "The database still has one writer at a time in WAL mode"
+      ],
+      "evidence_ids": [
+        "sqlite-atomic-commit",
+        "sqlite-wal"
+      ]
+    },
+    {
+      "id": "checkpointed-wal-log",
+      "name": "Checkpointed write-ahead log",
+      "category": "log-structured-persistence",
+      "claim_type": "fact",
+      "description": "WAL commits append changed pages and a commit record to a separate log; checkpointing transfers WAL content back to the database file. Automatic or application-controlled checkpoints bound the log in normal operation, but active readers can prevent a checkpoint from completing.",
+      "benefits": [
+        "Separates append-oriented commit work from later database-file consolidation",
+        "Provides a tunable point at which log growth is exchanged for checkpoint I/O",
+        "Allows checkpoint scheduling to be adapted to read-heavy or write-heavy workloads"
+      ],
+      "costs": [
+        "Checkpointing adds synchronization, seeking, and database-file writes",
+        "Long-running readers can cause checkpoint starvation and WAL growth",
+        "The WAL and shared-memory sidecar files must be managed with the database"
+      ],
+      "evidence_ids": [
+        "sqlite-wal"
+      ]
     }
   ],
   "mathematical_views": [
@@ -169,6 +210,33 @@
       "claim_type": "hypothesis",
       "evidence_ids": [
         "sqlite-architecture",
+        "sqlite-atomic-commit"
+      ]
+    },
+    {
+      "model": "Snapshot visibility as a bounded WAL prefix",
+      "question": "Which database-file and WAL pages constitute the state observed by one WAL reader?",
+      "assumptions": [
+        "A reader records a fixed end mark at the start of its read transaction",
+        "For each page, the visible version is the latest WAL copy at or before that end mark, or the database-file page when no such copy exists",
+        "The view abstracts the wal-index lookup and does not claim a total order across independent database files"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "sqlite-wal"
+      ]
+    },
+    {
+      "model": "Checkpoint cost and retention model",
+      "question": "How does checkpoint frequency trade WAL retention, read lookup cost, write amortization, and synchronization work?",
+      "assumptions": [
+        "WAL size is represented by the number of appended pages not yet reset",
+        "Reader lookup cost grows with retained WAL content when cache effects are abstracted away",
+        "The model treats workload mix, filesystem behavior, and synchronous settings as external parameters"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "sqlite-wal",
         "sqlite-atomic-commit"
       ]
     }
@@ -229,6 +297,24 @@
       ],
       "costs": [
         "More assumptions must be expressed and validated at the platform boundary"
+      ]
+    },
+    {
+      "feature_id": "transaction-locking-protocol",
+      "benefits": [
+        "Makes access coordination and crash-recovery ordering explicit"
+      ],
+      "costs": [
+        "Contention, busy errors, and platform-specific locking assumptions"
+      ]
+    },
+    {
+      "feature_id": "checkpointed-wal-log",
+      "benefits": [
+        "Fast append commits with a controllable consolidation boundary"
+      ],
+      "costs": [
+        "Checkpoint I/O and reader-dependent log growth"
       ]
     }
   ],
