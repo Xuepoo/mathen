@@ -1,0 +1,203 @@
+{
+  "id": "qemu",
+  "name": "QEMU",
+  "version_context": "commit 8967b2fe1b2aaae3c29e207d85fab901d580a2dc",
+  "summary": "A machine emulator and virtualizer that assembles configurable machine models from CPU, memory, device, storage, and networking components while selecting between software emulation and host accelerators.",
+  "scope": [
+    "system emulation",
+    "virtualization",
+    "device models",
+    "machine composition",
+    "management interfaces"
+  ],
+  "features": [
+    {
+      "id": "composable-machine-model",
+      "name": "Composable machine model",
+      "category": "virtual-machine-model",
+      "claim_type": "fact",
+      "description": "QEMU system emulation models a guest machine as a composition of CPU, memory, machine type, devices, backends, and interfaces; the selected machine and device configuration determines the guest-visible hardware topology.",
+      "benefits": [
+        "Supports many guest architectures and machine types",
+        "Allows storage, networking, and device topologies to be assembled per workload"
+      ],
+      "costs": [
+        "Configuration compatibility depends on the selected architecture and machine type",
+        "A broad device model increases implementation and validation surface"
+      ],
+      "evidence_ids": ["qemu-system-emulation", "qemu-vl-source"]
+    },
+    {
+      "id": "pluggable-execution-accelerators",
+      "name": "Pluggable execution accelerators",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "QEMU can execute guest CPUs through software translation with TCG or delegate supported virtualization work to host accelerators such as KVM, while retaining the machine and device model around that execution path.",
+      "benefits": [
+        "Provides portability when hardware virtualization is unavailable",
+        "Can use host virtualization support when it is available"
+      ],
+      "costs": [
+        "Performance and feature availability vary by accelerator, host, and guest architecture",
+        "The accelerator boundary adds host-specific behavior to the execution model"
+      ],
+      "evidence_ids": ["qemu-system-emulation", "qemu-kvm-source"]
+    },
+    {
+      "id": "qom-device-composition",
+      "name": "QOM-based device composition",
+      "category": "object-model",
+      "claim_type": "fact",
+      "description": "The QEMU Object Model registers dynamically creatable types with single inheritance, stateless interfaces, properties, and device lifecycle hooks; the QOM tree represents the objects that make up a machine.",
+      "benefits": [
+        "Provides reusable type and interface boundaries for machine components",
+        "Makes device creation and lifecycle behavior inspectable through a common model"
+      ],
+      "costs": [
+        "Inheritance and lifecycle hooks introduce ordering and ownership constraints",
+        "The object model does not remove device-specific correctness obligations"
+      ],
+      "evidence_ids": ["qemu-qom-doc", "qemu-qdev-source"]
+    },
+    {
+      "id": "versioned-management-boundary",
+      "name": "Machine management boundary",
+      "category": "control-plane",
+      "claim_type": "fact",
+      "description": "QEMU exposes monitor interfaces including the versioned, machine-usable QEMU Machine Protocol for external tools to inspect and control virtual machines.",
+      "benefits": [
+        "Separates machine control from the process that runs the guest",
+        "Enables higher-level management tooling"
+      ],
+      "costs": [
+        "Management clients must track the protocol and machine configuration they use",
+        "Dynamic device changes can alter the guest-visible topology"
+      ],
+      "evidence_ids": ["qemu-system-emulation", "qemu-qmp-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Layered labeled machine graph",
+      "question": "How does a configured virtual machine connect guest-visible devices to host execution and I/O backends?",
+      "assumptions": [
+        "Machine, device, backend, and accelerator nodes are represented explicitly",
+        "Edges describe configuration or ownership rather than guaranteeing runtime success",
+        "The selected machine type and target architecture constrain valid configurations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["qemu-system-emulation", "qemu-vl-source"]
+    },
+    {
+      "model": "Typed object composition tree",
+      "question": "How can QEMU represent a machine as dynamically registered device types with lifecycle transitions?",
+      "assumptions": [
+        "QOM inheritance and interfaces define reusable type relationships",
+        "Realize and unrealize transitions are treated as lifecycle edges",
+        "The QOM tree is a structural model and does not by itself prove device behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["qemu-qom-doc", "qemu-qdev-source"]
+    },
+    {
+      "model": "Heterogeneous execution state machine",
+      "question": "What changes when the same machine model selects TCG, KVM, or another accelerator?",
+      "assumptions": [
+        "Accelerator selection is a state component of VM startup",
+        "The host exposes the capabilities required by the selected accelerator",
+        "Performance equivalence between accelerators is not assumed"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["qemu-system-emulation", "qemu-kvm-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "composable-machine-model",
+      "benefits": [
+        "Broad hardware and guest compatibility through explicit machine composition"
+      ],
+      "costs": [
+        "More configuration dimensions and device interactions must be validated"
+      ]
+    },
+    {
+      "feature_id": "pluggable-execution-accelerators",
+      "benefits": [
+        "Portability plus optional hardware-assisted performance"
+      ],
+      "costs": [
+        "Host-specific accelerator semantics and fallback differences"
+      ]
+    },
+    {
+      "feature_id": "qom-device-composition",
+      "benefits": [
+        "Reusable type boundaries and common device lifecycle conventions"
+      ],
+      "costs": [
+        "Lifecycle ordering and polymorphic dispatch increase reasoning overhead"
+      ]
+    },
+    {
+      "feature_id": "versioned-management-boundary",
+      "benefits": [
+        "Automatable VM inspection and control"
+      ],
+      "costs": [
+        "Protocol and topology compatibility become part of integration work"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "qemu-system-emulation",
+      "kind": "official-doc",
+      "title": "QEMU system emulation introduction",
+      "uri": "https://www.qemu.org/docs/master/system/introduction.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation describing the virtual machine model, accelerators, device emulation, backends, and QMP."
+    },
+    {
+      "id": "qemu-qom-doc",
+      "kind": "official-doc",
+      "title": "QEMU Object Model",
+      "uri": "https://www.qemu.org/docs/master/devel/qom.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for QOM registration, inheritance, interfaces, composition trees, and device lifecycle."
+    },
+    {
+      "id": "qemu-vl-source",
+      "kind": "source-code",
+      "title": "QEMU system emulator entry point at 8967b2fe1b2a",
+      "uri": "https://github.com/qemu/qemu/blob/8967b2fe1b2aaae3c29e207d85fab901d580a2dc/system/vl.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for system emulator initialization and machine configuration."
+    },
+    {
+      "id": "qemu-kvm-source",
+      "kind": "source-code",
+      "title": "QEMU KVM accelerator source at 8967b2fe1b2a",
+      "uri": "https://github.com/qemu/qemu/blob/8967b2fe1b2aaae3c29e207d85fab901d580a2dc/accel/kvm/kvm-all.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for the KVM accelerator integration."
+    },
+    {
+      "id": "qemu-qdev-source",
+      "kind": "source-code",
+      "title": "QEMU device implementation source at 8967b2fe1b2a",
+      "uri": "https://github.com/qemu/qemu/blob/8967b2fe1b2aaae3c29e207d85fab901d580a2dc/hw/core/qdev.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for the device model and lifecycle boundary."
+    },
+    {
+      "id": "qemu-qmp-source",
+      "kind": "source-code",
+      "title": "QEMU QMP command implementation source at 8967b2fe1b2a",
+      "uri": "https://github.com/qemu/qemu/blob/8967b2fe1b2aaae3c29e207d85fab901d580a2dc/hw/core/machine-qmp-cmds.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for machine-usable monitor command implementation."
+    }
+  ],
+  "related_systems": ["firecracker"]
+}

@@ -1,0 +1,203 @@
+{
+  "id": "kubernetes",
+  "name": "Kubernetes",
+  "version_context": "commit 2770c7b39f56a750c23d026bd311cb8d0eda8b4d",
+  "summary": "A distributed control system that exposes declarative resources through an API, persists cluster state, and uses controllers and schedulers to drive observed state toward desired state across nodes.",
+  "scope": [
+    "container orchestration",
+    "declarative resources",
+    "control loops",
+    "cluster state",
+    "scheduling"
+  ],
+  "features": [
+    {
+      "id": "declarative-api-resource-model",
+      "name": "Declarative API resource model",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "Kubernetes represents workloads and cluster configuration as API objects with desired and observed state, exposed through the control plane and consumed by cluster components.",
+      "benefits": [
+        "Provides a common, inspectable boundary for workload and infrastructure state",
+        "Allows clients and controllers to converge on API-described intent"
+      ],
+      "costs": [
+        "API versions, validation, and compatibility become system-wide constraints",
+        "An API object records intent but does not itself perform the requested work"
+      ],
+      "evidence_ids": ["kubernetes-architecture-doc", "kubernetes-apiserver-source"]
+    },
+    {
+      "id": "controller-reconciliation-loops",
+      "name": "Controller reconciliation loops",
+      "category": "control-loop",
+      "claim_type": "fact",
+      "description": "Kubernetes controllers watch relevant resources, enqueue work, and repeatedly reconcile observed cluster state toward the desired state represented by those resources.",
+      "benefits": [
+        "Supports self-healing and incremental convergence",
+        "Allows responsibilities to be split among specialized controllers"
+      ],
+      "costs": [
+        "Convergence depends on retries, event delivery, and idempotent handlers",
+        "Transient divergence is expected while reconciliation is in progress"
+      ],
+      "evidence_ids": ["kubernetes-controller-doc", "kubernetes-controller-source"]
+    },
+    {
+      "id": "etcd-backed-cluster-state",
+      "name": "etcd-backed cluster state",
+      "category": "state-storage",
+      "claim_type": "fact",
+      "description": "The Kubernetes API server uses a storage layer backed by etcd for persistent cluster state, while API-server code mediates serialization, resource operations, and storage access.",
+      "benefits": [
+        "Centralizes authoritative control-plane state",
+        "Provides a durable coordination substrate for API reads, writes, and watches"
+      ],
+      "costs": [
+        "Control-plane availability and latency depend on the storage path",
+        "Storage schema and consistency behavior constrain API evolution"
+      ],
+      "evidence_ids": ["kubernetes-architecture-doc", "kubernetes-etcd-source"]
+    },
+    {
+      "id": "scheduler-node-placement",
+      "name": "Scheduler-based node placement",
+      "category": "resource-placement",
+      "claim_type": "fact",
+      "description": "Kubernetes separates the decision to place a pending workload on a node from the node agent that runs it, allowing scheduling policies and node capabilities to participate in placement.",
+      "benefits": [
+        "Makes placement a policy-driven control-plane decision",
+        "Supports heterogeneous nodes and resource constraints"
+      ],
+      "costs": [
+        "Placement quality depends on current cluster observations and policy configuration",
+        "A scheduling decision can become stale before execution"
+      ],
+      "evidence_ids": ["kubernetes-architecture-doc", "kubernetes-scheduler-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Distributed feedback control system",
+      "question": "How do controllers use observations and desired resource state to drive cluster state toward a target?",
+      "assumptions": [
+        "Desired state is represented by API resources",
+        "Controllers can observe relevant state and perform idempotent actions",
+        "The system may remain temporarily divergent while work is queued or retried"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["kubernetes-controller-doc", "kubernetes-controller-source"]
+    },
+    {
+      "model": "Typed resource graph with durable state",
+      "question": "How are API resources, ownership relationships, storage records, and node assignments connected?",
+      "assumptions": [
+        "Resource kinds and references define typed graph nodes and edges",
+        "etcd-backed API state is treated as authoritative for the modeled control plane",
+        "The graph abstracts away implementation details of individual workloads"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["kubernetes-architecture-doc", "kubernetes-etcd-source", "kubernetes-apiserver-source"]
+    },
+    {
+      "model": "Eventually convergent placement state machine",
+      "question": "How does a pending workload move through scheduling, binding, and node execution states?",
+      "assumptions": [
+        "A workload has a pending state before a placement decision",
+        "Scheduler observations and node availability can change between decision and execution",
+        "The model does not claim that every workload reaches running state"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["kubernetes-architecture-doc", "kubernetes-scheduler-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "declarative-api-resource-model",
+      "benefits": [
+        "Common API boundary for automation and independent controllers"
+      ],
+      "costs": [
+        "Schema, versioning, and admission behavior add coordination overhead"
+      ]
+    },
+    {
+      "feature_id": "controller-reconciliation-loops",
+      "benefits": [
+        "Resilience through retries and separation of control responsibilities"
+      ],
+      "costs": [
+        "Eventual convergence and duplicate work require idempotency and observability"
+      ]
+    },
+    {
+      "feature_id": "etcd-backed-cluster-state",
+      "benefits": [
+        "Durable, shared control-plane state with watchable changes"
+      ],
+      "costs": [
+        "Storage health becomes a critical dependency for cluster management"
+      ]
+    },
+    {
+      "feature_id": "scheduler-node-placement",
+      "benefits": [
+        "Centralized, policy-aware resource placement"
+      ],
+      "costs": [
+        "Decisions can be constrained by stale observations and competing workloads"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "kubernetes-architecture-doc",
+      "kind": "official-doc",
+      "title": "Kubernetes cluster architecture",
+      "uri": "https://kubernetes.io/docs/concepts/architecture/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for control-plane components, nodes, API resources, scheduling, and cluster state."
+    },
+    {
+      "id": "kubernetes-controller-doc",
+      "kind": "official-doc",
+      "title": "Kubernetes controllers",
+      "uri": "https://kubernetes.io/docs/concepts/architecture/controller/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation describing controller loops and reconciliation."
+    },
+    {
+      "id": "kubernetes-controller-source",
+      "kind": "source-code",
+      "title": "Kubernetes controller source at 2770c7b39f56",
+      "uri": "https://github.com/kubernetes/kubernetes/blob/2770c7b39f56a750c23d026bd311cb8d0eda8b4d/pkg/controller/controller.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for controller work processing and lifecycle."
+    },
+    {
+      "id": "kubernetes-apiserver-source",
+      "kind": "source-code",
+      "title": "Kubernetes API server source at 2770c7b39f56",
+      "uri": "https://github.com/kubernetes/kubernetes/blob/2770c7b39f56a750c23d026bd311cb8d0eda8b4d/cmd/kube-apiserver/app/server.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for API-server assembly and storage wiring."
+    },
+    {
+      "id": "kubernetes-etcd-source",
+      "kind": "source-code",
+      "title": "Kubernetes etcd storage source at 2770c7b39f56",
+      "uri": "https://github.com/kubernetes/kubernetes/blob/2770c7b39f56a750c23d026bd311cb8d0eda8b4d/staging/src/k8s.io/apiserver/pkg/storage/etcd3/store.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for the etcd3 API storage implementation."
+    },
+    {
+      "id": "kubernetes-scheduler-source",
+      "kind": "source-code",
+      "title": "Kubernetes scheduler source at 2770c7b39f56",
+      "uri": "https://github.com/kubernetes/kubernetes/blob/2770c7b39f56a750c23d026bd311cb8d0eda8b4d/pkg/scheduler/scheduler.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for scheduler decisions and binding."
+    }
+  ],
+  "related_systems": ["linux"]
+}

@@ -1,0 +1,195 @@
+{
+  "id": "nginx",
+  "name": "NGINX",
+  "version_context": "commit 140aa942711868a8daeb95810bc9a81f272ada72",
+  "summary": "An event-driven network server that uses a master and worker process topology, nonblocking connection processing, configuration-built module graphs, and bounded memory ownership for request data.",
+  "scope": [
+    "network server",
+    "event-driven I/O",
+    "worker processes",
+    "configuration lifecycle",
+    "HTTP and stream modules"
+  ],
+  "features": [
+    {
+      "id": "master-worker-process-topology",
+      "name": "Master-worker process topology",
+      "category": "process-model",
+      "claim_type": "fact",
+      "description": "NGINX separates configuration and process supervision in a master process from request and connection handling in worker processes, with configuration and resources represented in a cycle inherited by workers.",
+      "benefits": [
+        "Allows workers to handle connections concurrently without sharing all process state",
+        "Supports graceful reload and worker lifecycle control"
+      ],
+      "costs": [
+        "Process coordination and resource inheritance must be handled explicitly",
+        "Shared state requires dedicated shared-memory or synchronization mechanisms"
+      ],
+      "evidence_ids": ["nginx-development-doc", "nginx-process-source"]
+    },
+    {
+      "id": "event-driven-connection-processing",
+      "name": "Event-driven connection processing",
+      "category": "I/O-model",
+      "claim_type": "fact",
+      "description": "NGINX workers process socket readiness through an event core and platform-specific notification modules such as epoll, kqueue, and select, rather than dedicating a blocking thread to each connection.",
+      "benefits": [
+        "Handles many concurrent connections with bounded worker resources",
+        "Uses platform-specific readiness mechanisms behind a common event boundary"
+      ],
+      "costs": [
+        "Handlers must preserve nonblocking progress and correctly resume partial operations",
+        "A blocking operation in a worker can affect unrelated connections"
+      ],
+      "evidence_ids": ["nginx-development-doc", "nginx-event-source"]
+    },
+    {
+      "id": "configuration-built-module-graph",
+      "name": "Configuration-built module graph",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "NGINX builds a runtime cycle from configuration, module arrays, listening objects, paths, open files, and shared-memory zones; HTTP, stream, mail, core, and event functionality are organized as modules.",
+      "benefits": [
+        "Makes deployment behavior configurable without changing request-processing code",
+        "Provides extension boundaries for protocol and event functionality"
+      ],
+      "costs": [
+        "Configuration validity and module ordering affect runtime behavior",
+        "Reloads must preserve or deliberately replace resources across cycles"
+      ],
+      "evidence_ids": ["nginx-development-doc", "nginx-cycle-source"]
+    },
+    {
+      "id": "pool-and-buffer-request-lifetime",
+      "name": "Pool and buffer request lifetime",
+      "category": "memory-model",
+      "claim_type": "fact",
+      "description": "NGINX uses pools for scoped allocation and buffers/chains for input and output data, tying cleanup and reuse to connection, request, or cycle lifetimes.",
+      "benefits": [
+        "Reduces per-object allocation bookkeeping for common request paths",
+        "Makes cleanup handlers and buffer ownership explicit at scope boundaries"
+      ],
+      "costs": [
+        "Pool lifetime errors can retain more memory than an individual object needs",
+        "Buffer chains require careful handling of partial consumption and reuse"
+      ],
+      "evidence_ids": ["nginx-development-doc", "nginx-http-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Event-driven connection state machine",
+      "question": "How do readiness notifications, partial I/O, timers, and protocol handlers advance a connection?",
+      "assumptions": [
+        "A connection can move between readable, writable, waiting, and closing states",
+        "Handlers return control to the event loop when progress requires more I/O",
+        "The model abstracts operating-system notification details behind event modules"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["nginx-development-doc", "nginx-event-source"]
+    },
+    {
+      "model": "Process and shared-state topology",
+      "question": "Which state is private to workers and which state is inherited or shared across NGINX processes?",
+      "assumptions": [
+        "Worker-local connections and pools are process-local",
+        "Configured shared-memory zones represent explicit cross-process state",
+        "The master-worker relationship is modeled as lifecycle coordination, not arbitrary shared memory"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["nginx-development-doc", "nginx-process-source", "nginx-cycle-source"]
+    },
+    {
+      "model": "Configuration-dependent module graph",
+      "question": "How does configuration select the modules, listeners, resources, and protocol phases active in a runtime cycle?",
+      "assumptions": [
+        "Configuration parsing produces a cycle with typed module and resource entries",
+        "Module hooks define phase participation and resource setup",
+        "The graph describes composition and ordering constraints rather than proving configuration correctness"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["nginx-development-doc", "nginx-cycle-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "master-worker-process-topology",
+      "benefits": [
+        "Process isolation and controlled reload behavior"
+      ],
+      "costs": [
+        "Cross-process state and lifecycle coordination add operational complexity"
+      ]
+    },
+    {
+      "feature_id": "event-driven-connection-processing",
+      "benefits": [
+        "High connection concurrency with a small number of workers"
+      ],
+      "costs": [
+        "Nonblocking handlers and partial-progress state are harder to implement"
+      ]
+    },
+    {
+      "feature_id": "configuration-built-module-graph",
+      "benefits": [
+        "Composable protocol and platform features"
+      ],
+      "costs": [
+        "Configuration and module interactions expand the deployment state space"
+      ]
+    },
+    {
+      "feature_id": "pool-and-buffer-request-lifetime",
+      "benefits": [
+        "Fast scoped allocation and explicit buffer reuse"
+      ],
+      "costs": [
+        "Scope mistakes can cause retention or use-after-lifetime defects"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "nginx-development-doc",
+      "kind": "official-doc",
+      "title": "NGINX development guide",
+      "uri": "https://nginx.org/en/docs/dev/development_guide.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for code layout, event loops, processes, modules, pools, buffers, cycles, and shared memory."
+    },
+    {
+      "id": "nginx-process-source",
+      "kind": "source-code",
+      "title": "NGINX process cycle source at 140aa9427118",
+      "uri": "https://github.com/nginx/nginx/blob/140aa942711868a8daeb95810bc9a81f272ada72/src/os/unix/ngx_process_cycle.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for master and worker process lifecycle."
+    },
+    {
+      "id": "nginx-event-source",
+      "kind": "source-code",
+      "title": "NGINX event core source at 140aa9427118",
+      "uri": "https://github.com/nginx/nginx/blob/140aa942711868a8daeb95810bc9a81f272ada72/src/event/ngx_event.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for event initialization and event-loop state."
+    },
+    {
+      "id": "nginx-cycle-source",
+      "kind": "source-code",
+      "title": "NGINX cycle source at 140aa9427118",
+      "uri": "https://github.com/nginx/nginx/blob/140aa942711868a8daeb95810bc9a81f272ada72/src/core/ngx_cycle.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for configuration cycles, resource inheritance, and shared-memory setup."
+    },
+    {
+      "id": "nginx-http-source",
+      "kind": "source-code",
+      "title": "NGINX HTTP core source at 140aa9427118",
+      "uri": "https://github.com/nginx/nginx/blob/140aa942711868a8daeb95810bc9a81f272ada72/src/http/ngx_http.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for HTTP module initialization and request processing structures."
+    }
+  ],
+  "related_systems": ["kubernetes"]
+}

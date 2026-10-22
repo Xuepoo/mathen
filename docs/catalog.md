@@ -45,11 +45,11 @@ These entries are already present in the repository at different review levels:
 | `mysql-server` | MySQL Server | database | `draft` | Pin documentation and inspect fixed source for storage-engine, transaction, and recovery claims |
 | `rocksdb` | RocksDB | embedded database | `draft` | Pin documentation and inspect fixed source for LSM, WAL, compaction, and snapshot claims |
 | `docker` | Docker Engine | container runtime | `draft` | Compare daemon, image, namespace, and filesystem boundaries |
-| `qemu` | QEMU | virtualization | `draft` | Compare complete machine emulation with Firecracker |
-| `kubernetes` | Kubernetes | orchestration | `cataloged` | Analyze reconciliation, API resources, and etcd state |
-| `linux` | Linux Kernel | operating system | `cataloged` | Analyze system calls, scheduling, memory, and modules |
+| `qemu` | QEMU | virtualization | `reviewed` | Compare complete machine emulation with Firecracker |
+| `kubernetes` | Kubernetes | orchestration | `reviewed` | Analyze reconciliation, API resources, and etcd state |
+| `linux` | Linux Kernel | operating system | `reviewed` | Analyze system calls, scheduling, memory, and modules |
 | `hadoop` | Apache Hadoop | distributed storage and compute | `cataloged` | Analyze HDFS, YARN, and batch computation |
-| `nginx` | NGINX | network server | `cataloged` | Analyze event-driven I/O and worker processes |
+| `nginx` | NGINX | network server | `reviewed` | Analyze event-driven I/O and worker processes |
 | `llvm` | LLVM | compiler infrastructure | `cataloged` | Analyze IR, passes, and target-independent compilation |
 | `ffmpeg` | FFmpeg | media processing | `cataloged` | Analyze codec, filter, and stream pipelines |
 
