@@ -302,7 +302,9 @@ optional access and notes fields.
 ### `features`
 
 Stores feature identity within a system, name, category, claim type,
-description, and JSON-encoded benefits and costs.
+description, and JSON-encoded benefits and costs. The feature search and system
+detail projections also return `evidence_ids` resolved from
+`feature_evidence`.
 
 ### `feature_evidence`
 
@@ -310,7 +312,8 @@ Resolves the many-to-many relationship between features and evidence.
 
 ### `mathematical_views`
 
-Stores model, question, JSON-encoded assumptions, and claim type.
+Stores model, question, JSON-encoded assumptions, claim type, and evidence
+references in the system detail projection.
 
 ### `mathematical_view_evidence`
 

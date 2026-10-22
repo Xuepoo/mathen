@@ -1,6 +1,55 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildCompositions, buildGraph } from "./index.js";
+import {
+  buildCompositions,
+  buildGraph,
+  serializeFeature,
+  serializeMathematicalView,
+} from "./index.js";
+
+test("serializes feature and mathematical-view evidence references", () => {
+  assert.deepEqual(
+    serializeFeature({
+      id: "embedded",
+      name: "Embedded execution",
+      category: "execution-model",
+      claim_type: "fact",
+      description: "Runs in-process.",
+      benefits_json: '["low deployment overhead"]',
+      costs_json: "[]",
+      evidence_ids_json: '["architecture", "source"]',
+    }),
+    {
+      id: "embedded",
+      name: "Embedded execution",
+      category: "execution-model",
+      claim_type: "fact",
+      description: "Runs in-process.",
+      benefits: ["low deployment overhead"],
+      costs: [],
+      evidence_ids: ["architecture", "source"],
+    },
+  );
+
+  assert.deepEqual(
+    serializeMathematicalView({
+      id: 1,
+      model: "state machine",
+      question: "How does execution transition?",
+      assumptions_json: '["single process"]',
+      claim_type: "inference",
+      evidence_ids_json: '["architecture"]',
+    }),
+    {
+      id: 1,
+      model: "state machine",
+      question: "How does execution transition?",
+      assumptions: ["single process"],
+      claim_type: "inference",
+      evidence_ids: ["architecture"],
+    },
+  );
+});
 
 test("buildCompositions filters valid proposals by input and status", () => {
   const result = buildCompositions(

@@ -26,6 +26,7 @@ type FeatureRow = {
   description: string;
   benefits_json: string;
   costs_json: string;
+  evidence_ids_json: string;
 };
 
 type EvidenceRow = {
@@ -102,12 +103,24 @@ app.get("/systems/:id", async (c) => {
   const [features, views, tradeOffs, evidence] = await Promise.all([
     c.env.DB.prepare(
       `SELECT id, name, category, claim_type, description, benefits_json, costs_json
+              , COALESCE((
+                SELECT json_group_array(fe.evidence_id)
+                FROM feature_evidence fe
+                WHERE fe.system_id = ?1 AND fe.feature_id = features.id
+                ORDER BY fe.evidence_id
+              ), '[]') AS evidence_ids_json
        FROM features WHERE system_id = ?1 ORDER BY category, name`,
     )
       .bind(system.id)
       .all<FeatureRow>(),
     c.env.DB.prepare(
-      `SELECT id, model, question, assumptions_json, claim_type
+      `SELECT id, model, question, assumptions_json, claim_type,
+              COALESCE((
+                SELECT json_group_array(mve.evidence_id)
+                FROM mathematical_view_evidence mve
+                WHERE mve.view_id = mathematical_views.id
+                ORDER BY mve.evidence_id
+              ), '[]') AS evidence_ids_json
        FROM mathematical_views WHERE system_id = ?1 ORDER BY id`,
     )
       .bind(system.id)
@@ -353,7 +366,7 @@ function serializeSystem(system: SystemRow) {
   };
 }
 
-function serializeFeature(feature: FeatureRow) {
+export function serializeFeature(feature: FeatureRow) {
   return {
     id: feature.id,
     name: feature.name,
@@ -362,6 +375,25 @@ function serializeFeature(feature: FeatureRow) {
     description: feature.description,
     benefits: parseJson<string[]>(feature.benefits_json, []),
     costs: parseJson<string[]>(feature.costs_json, []),
+    evidence_ids: parseJsonArray<string>(feature.evidence_ids_json),
+  };
+}
+
+export function serializeMathematicalView(view: {
+  id: number;
+  model: string;
+  question: string;
+  assumptions_json: string;
+  claim_type: string;
+  evidence_ids_json: string;
+}) {
+  return {
+    id: view.id,
+    model: view.model,
+    question: view.question,
+    assumptions: parseJson<string[]>(view.assumptions_json, []),
+    claim_type: view.claim_type,
+    evidence_ids: parseJsonArray<string>(view.evidence_ids_json),
   };
 }
 
