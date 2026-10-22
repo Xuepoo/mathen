@@ -1,0 +1,138 @@
+{
+  "id": "mlflow",
+  "name": "MLflow",
+  "version_context": "source commit 2f283ac1fbaf8fc99db807e5e735f935ffef4b0f",
+  "summary": "An experiment and model lifecycle platform that records run metadata and artifacts, packages models through flavor-aware formats, and manages registered model versions.",
+  "scope": [
+    "experiment tracking",
+    "artifact storage",
+    "model packaging",
+    "model registry"
+  ],
+  "features": [
+    {
+      "id": "run-metadata-and-artifact-lineage",
+      "name": "Run metadata and artifact lineage",
+      "category": "provenance-model",
+      "claim_type": "fact",
+      "description": "MLflow Tracking associates runs with parameters, metrics, tags, and files or models logged as artifacts; model registry entries can retain the producing run relationship.",
+      "benefits": [
+        "Makes experiment comparisons and reproduction-oriented investigation queryable",
+        "Connects a model artifact to the run that produced it"
+      ],
+      "costs": [
+        "The tracking backend and artifact store become operational dependencies",
+        "Lineage is only as complete as the metadata and artifacts that callers log"
+      ],
+      "evidence_ids": ["mlflow-tracking-doc", "mlflow-registry-doc", "mlflow-source"]
+    },
+    {
+      "id": "flavor-aware-model-packaging",
+      "name": "Flavor-aware model packaging",
+      "category": "interoperability-model",
+      "claim_type": "fact",
+      "description": "An MLflow Model is a directory with an MLmodel metadata file whose flavors describe representations that different loaders or deployment tools can consume.",
+      "benefits": [
+        "Separates a model artifact from the assumptions of one consuming library",
+        "Allows a single package to expose native and generic inference interfaces"
+      ],
+      "costs": [
+        "Consumers must provide compatible flavor loaders and environments",
+        "Multiple representations add packaging and dependency-management complexity"
+      ],
+      "evidence_ids": ["mlflow-model-doc", "mlflow-source"]
+    },
+    {
+      "id": "registered-model-lifecycle",
+      "name": "Registered model lifecycle",
+      "category": "lifecycle-model",
+      "claim_type": "fact",
+      "description": "The Model Registry provides a centralized model store and APIs for versioning, aliases, tags, annotations, and lifecycle-oriented collaboration around model versions.",
+      "benefits": [
+        "Provides a stable named boundary between producing runs and consumers",
+        "Supports controlled promotion and rollback-oriented workflows"
+      ],
+      "costs": [
+        "Registry metadata and permissions require governance outside model training code",
+        "A registry alias does not by itself validate model quality or deployment safety"
+      ],
+      "evidence_ids": ["mlflow-registry-doc", "mlflow-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Attributed bipartite provenance graph",
+      "question": "How can runs, artifacts, and registered model versions be related so that a consumer can trace a model back to its producing experiment?",
+      "assumptions": [
+        "Run identifiers and artifact or model references are stable within the tracking backend",
+        "The model registry preserves the producing-run relationship",
+        "The graph abstracts storage transactions and access-control details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["mlflow-tracking-doc", "mlflow-registry-doc"]
+    },
+    {
+      "model": "Model-version state machine with interface projections",
+      "question": "How do registered model versions move through collaboration states while remaining loadable through one or more model flavors?",
+      "assumptions": [
+        "A registered model version has a distinguishable lifecycle state or alias assignment",
+        "Each flavor projection has a loader contract and compatible runtime",
+        "State labels and aliases are treated as coordination metadata rather than proof of model correctness"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["mlflow-model-doc", "mlflow-registry-doc"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "run-metadata-and-artifact-lineage",
+      "benefits": ["Auditable experiment-to-artifact relationships"],
+      "costs": ["Tracking and artifact persistence add backend and retention costs"]
+    },
+    {
+      "feature_id": "flavor-aware-model-packaging",
+      "benefits": ["Interoperability across supported model libraries and serving tools"],
+      "costs": ["Portable packages still depend on flavor-specific runtimes and dependencies"]
+    },
+    {
+      "feature_id": "registered-model-lifecycle",
+      "benefits": ["Named, versioned coordination point for model consumers"],
+      "costs": ["Lifecycle metadata introduces governance and consistency obligations"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "mlflow-source",
+      "kind": "source-code",
+      "title": "MLflow source at 2f283ac1fbaf",
+      "uri": "https://github.com/mlflow/mlflow/commit/2f283ac1fbaf8fc99db807e5e735f935ffef4b0f",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision used as the implementation provenance boundary for this card."
+    },
+    {
+      "id": "mlflow-tracking-doc",
+      "kind": "official-doc",
+      "title": "MLflow Tracking",
+      "uri": "https://mlflow.org/docs/latest/ml/tracking/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for experiments, runs, metadata, and artifacts."
+    },
+    {
+      "id": "mlflow-model-doc",
+      "kind": "official-doc",
+      "title": "MLflow Models",
+      "uri": "https://mlflow.org/docs/latest/ml/model/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for the MLmodel directory format and model flavors."
+    },
+    {
+      "id": "mlflow-registry-doc",
+      "kind": "official-doc",
+      "title": "MLflow Model Registry",
+      "uri": "https://mlflow.org/docs/latest/ml/model-registry/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for registered model versions, lineage, aliases, and metadata."
+    }
+  ],
+  "related_systems": ["pytorch", "scikit-learn"]
+}

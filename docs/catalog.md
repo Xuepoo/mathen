@@ -362,16 +362,16 @@ identifiers, not claims that the projects share the same architecture.
 | `scikit-learn` | scikit-learn | `P1` | Estimator protocols, pipelines, transformers, and model selection |
 | `opencv` | OpenCV | `P1` | Matrix/image data model, algorithm modules, backends, and streaming pipelines |
 | `transformers` | Hugging Face Transformers | `P1` | Model/config/tokenizer boundaries, generation loops, and weight loading |
-| `mlflow` | MLflow | `P2` | Experiment tracking, model registry, artifact stores, and deployment flavors |
+| `mlflow` | MLflow | `P2` | Run/artifact provenance, flavor-aware model packaging, registry versions, aliases, and lifecycle |
 | `ray` | Ray | `P2` | Distributed task and actor execution |
 
 ### Storage, data platforms, and infrastructure services
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- |
-| `dbt` | dbt Core | `P1` | Declarative SQL graph, model materialization, adapters, and lineage |
-| `dagster` | Dagster | `P1` | Software-defined assets, orchestration graphs, sensors, and run storage |
-| `minio` | MinIO | `P1` | S3-compatible object storage, erasure coding, namespace, and healing |
+| `dbt` | dbt Core | `P1` | Declarative resource DAGs, ref ordering, adapter execution, materialization strategies, and tests |
+| `dagster` | Dagster | `P1` | Software-defined asset dependencies, schedules, sensors, daemon coordination, and run state |
+| `minio` | MinIO | `P1` | S3 object namespace, erasure-coded fragment layout, quorum, and background healing |
 | `seaweedfs` | SeaweedFS | `P2` | Volume/filer/master separation, object API, replication, and topology |
 | `vault` | HashiCorp Vault | `P1` | Secret engines, leases, authentication backends, and seal/unseal state |
 | `openbao` | OpenBao | `P2` | Secret storage, auth methods, leases, plugins, and compatibility boundary |

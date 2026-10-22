@@ -1,0 +1,138 @@
+{
+  "id": "dagster",
+  "name": "Dagster",
+  "version_context": "source commit d21ac06fb220d6db43fe8730eed101444c323789",
+  "summary": "A data orchestrator that models persistent data assets and their dependencies in code, then coordinates runs through schedules, sensors, executors, and run storage.",
+  "scope": [
+    "software-defined assets",
+    "dependency orchestration",
+    "schedules and sensors",
+    "run and event storage"
+  ],
+  "features": [
+    {
+      "id": "software-defined-asset-graph",
+      "name": "Software-defined asset graph",
+      "category": "dependency-model",
+      "claim_type": "fact",
+      "description": "Dagster asset definitions describe persistent objects and how to produce or update them; unlike bare ops, asset definitions carry dependency information.",
+      "benefits": [
+        "Makes data products and their dependencies first-class orchestration objects",
+        "Keeps the intended data boundary close to the producing code"
+      ],
+      "costs": [
+        "The asset graph can obscure dependencies that occur outside the declared definitions",
+        "Materialization still depends on storage and IO-manager behavior"
+      ],
+      "evidence_ids": ["dagster-assets-doc", "dagster-source"]
+    },
+    {
+      "id": "event-and-time-automation",
+      "name": "Event and time automation",
+      "category": "control-model",
+      "claim_type": "fact",
+      "description": "Dagster provides schedules for time-based runs and sensors for event-based triggers, with the daemon responsible for evaluating these automation mechanisms in an OSS deployment.",
+      "benefits": [
+        "Supports both periodic execution and data/event-driven execution",
+        "Separates trigger evaluation from the code that performs asset work"
+      ],
+      "costs": [
+        "Automation depends on daemon availability and correctly configured run coordination",
+        "Event-triggered systems require idempotence and cursor or deduplication policy"
+      ],
+      "evidence_ids": ["dagster-automation-doc", "dagster-deployment-doc", "dagster-source"]
+    },
+    {
+      "id": "durable-run-and-event-state",
+      "name": "Durable run and event state",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "Dagster OSS deployments compose orchestration components with storages, executors, and a daemon; run and event records provide persistent coordination state for operations and observation.",
+      "benefits": [
+        "Supports inspection and coordination beyond the lifetime of one worker process",
+        "Allows execution policy and storage policy to be configured at deployment boundaries"
+      ],
+      "costs": [
+        "The deployment has more components and operational state to manage",
+        "Stored run and event data require retention, migration, and access-control choices"
+      ],
+      "evidence_ids": ["dagster-deployment-doc", "dagster-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Directed asset dependency graph",
+      "question": "How can persistent data assets and their producing functions be ordered and selected for materialization?",
+      "assumptions": [
+        "Declared asset dependencies form a graph with a usable execution order",
+        "Each materialization updates the asset boundary described by its definition",
+        "Storage side effects and external systems are represented by explicit resources or treated as graph boundaries"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["dagster-assets-doc"]
+    },
+    {
+      "model": "Event-driven and time-driven transition system",
+      "question": "How do schedules, sensors, and run records turn external observations or clock ticks into orchestrated runs?",
+      "assumptions": [
+        "The daemon evaluates automation definitions and records enough state to avoid unintended duplicate work",
+        "A run has observable lifecycle states managed by the instance",
+        "The model abstracts executor-specific concurrency and failure-retry details"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["dagster-automation-doc", "dagster-deployment-doc"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "software-defined-asset-graph",
+      "benefits": ["Asset-centric lineage and dependency-aware orchestration"],
+      "costs": ["Declared graph boundaries must be maintained as data systems evolve"]
+    },
+    {
+      "feature_id": "event-and-time-automation",
+      "benefits": ["Flexible periodic and event-triggered operation"],
+      "costs": ["Daemon availability and trigger idempotence become production concerns"]
+    },
+    {
+      "feature_id": "durable-run-and-event-state",
+      "benefits": ["Operational visibility and coordination across process lifetimes"],
+      "costs": ["Persistent orchestration state increases deployment and retention complexity"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "dagster-source",
+      "kind": "source-code",
+      "title": "Dagster source at d21ac06fb220",
+      "uri": "https://github.com/dagster-io/dagster/commit/d21ac06fb220d6db43fe8730eed101444c323789",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision used as the implementation provenance boundary for this card."
+    },
+    {
+      "id": "dagster-assets-doc",
+      "kind": "official-doc",
+      "title": "Dagster assets",
+      "uri": "https://docs.dagster.io/guides/build/assets",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for asset definitions, persistent objects, and dependency-aware execution."
+    },
+    {
+      "id": "dagster-automation-doc",
+      "kind": "official-doc",
+      "title": "Dagster schedules and sensors",
+      "uri": "https://docs.dagster.io/api/dagster/schedules-sensors",
+      "accessed": "2026-10-23",
+      "notes": "Official API documentation for time-based schedules and event-based sensors."
+    },
+    {
+      "id": "dagster-deployment-doc",
+      "kind": "official-doc",
+      "title": "Dagster OSS deployment architecture",
+      "uri": "https://docs.dagster.io/deployment/oss/oss-deployment-architecture",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for daemon, storage, executor, and run coordination boundaries."
+    }
+  ],
+  "related_systems": ["dbt", "airflow", "temporal"]
+}
