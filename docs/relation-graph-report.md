@@ -2,149 +2,92 @@
 
 ## Scope and method
 
-This report evaluates the 20 reviewed Architecture Cards currently under
-`data/systems/`. It asks which directed, typed relations can be recorded
-without turning generic similarity, legacy metadata, or an unreviewed
-repository signal into a semantic claim.
+This report evaluates the 154 reviewed Architecture Cards under `data/systems/`. It distinguishes evidence-backed typed relations from legacy navigation metadata and refuses to add generic similarity edges solely to remove isolated nodes. Draft cards remain outside the public reviewed graph.
 
-The relation vocabulary is the card contract: `uses`, `extends`, `composes`,
-`resembles`, and `influenced-by`. Claim type and review status are independent.
-Structural comparison uses `analogy`; documented implementation or product
-integration uses `fact`; every candidate remains `proposed` until a separate
-card review adds it to a canonical card.
+The relation vocabulary is the card contract: `uses`, `extends`, `composes`, `resembles`, and `influenced-by`. Claim type and review status are independent. `fact` describes documented implementation or product integration; `analogy` describes structural comparison; every current typed relation remains `proposed` until a deliberate review accepts it.
 
-Evidence IDs in the source-evidence column are the only IDs that may be copied
-into a source card relation. Target evidence is listed for review context and
-must not be copied into the source card unless it is also defined there. A
-`resembles` edge is stored in one direction to avoid duplicate assertions,
-although the comparison itself may be conceptually symmetric.
+Source-card relation evidence must use IDs defined in the source card. Target evidence is review context only. No current relation claims historical influence or formal equivalence.
 
 ## Reviewed-card inventory
 
-The current reviewed set is:
+The reviewed inventory contains **154 systems**, **553 features**, and **416 mathematical views**:
 
-```text
-cpython, duckdb, elasticsearch, ffmpeg, firecracker, git, grpc, kafka,
-kubernetes, linux, llvm, nginx, postgresql, protobuf, qemu, redis, rust,
-sqlite, supabase, wasmtime
-```
+`airflow`, `angular`, `apisix`, `argo-cd`, `authentik`, `bazel`, `blender`, `boost`
+`busybox`, `caddy`, `capacitor`, `cassandra`, `celery`, `cilium`, `clickhouse`, `clickhouse-operator`
+`cockroachdb`, `consul`, `containerd`, `coreutils`, `cpython`, `crossplane`, `curl`, `dagster`
+`dbt`, `deno`, `django`, `docker`, `duckdb`, `elasticsearch`, `electron`, `envoy`
+`esbuild`, `etcd`, `expo`, `express`, `fastapi`, `fd`, `ffmpeg`, `firecracker`
+`flink`, `flutter`, `foundationdb`, `freebsd`, `gcc`, `git`, `glibc`, `go`
+`grpc`, `gstreamer`, `gtk`, `gvisor`, `hadoop`, `haproxy`, `helm`, `imagemagick`
+`influxdb`, `ionic`, `istio`, `javafx`, `jax`, `jq`, `just`, `kafka`
+`kata-containers`, `keycloak`, `kong`, `kubernetes`, `laravel`, `leveldb`, `libuv`, `linux`
+`llvm`, `lua`, `luajit`, `minio`, `minix`, `mlflow`, `mongodb`, `mosquitto`
+`musl`, `mysql-server`, `nats`, `neovim`, `nestjs`, `nextjs`, `nginx`, `node`
+`oauth2-proxy`, `openbao`, `openbsd`, `opencv`, `opengl`, `openssl`, `opentelemetry`, `plan9`
+`playwright`, `postgresql`, `prometheus`, `protobuf`, `pulsar`, `pytorch`, `qemu`, `qt`
+`rabbitmq`, `rails`, `react`, `react-native`, `redis`, `ripgrep`, `rocksdb`, `rollup`
+`ruby`, `runc`, `rust`, `rustc`, `scikit-learn`, `sdl`, `seaweedfs`, `spark`
+`spring-boot`, `sqlite`, `storybook`, `supabase`, `svelte`, `systemd`, `tauri`, `temporal`
+`tensorflow`, `terraform`, `threejs`, `tidb`, `tikv`, `traefik`, `transformers`, `tree-sitter`
+`v8`, `vault`, `velero`, `vite`, `vscode`, `vue`, `vulkan`, `wails`
+`wasm`, `wasmtime`, `webgl`, `webpack`, `wireguard`, `wxwidgets`, `xv6-public`, `yq`
+`zig`, `zookeeper`
 
-All 20 cards pass the semantic validator. They retain fixed source provenance,
-local evidence IDs, bounded architecture features, mathematical views with
-questions and assumptions, and explicit trade-offs. Draft cards remain outside
-the reviewed graph and are not eligible as public API nodes.
+All reviewed cards pass semantic validation, retain fixed source provenance, local evidence IDs, bounded features, mathematical views with questions and assumptions, and explicit trade-offs. The expansion preserved the separate draft corpus; no draft is promoted automatically by the graph API.
 
-## Current graph inventory
+## Current typed relations
 
-There are four typed relations in the reviewed cards:
+There are **4 directed typed relations**:
 
-| Source     | Type        | Target       | Claim type | Status     | Source evidence IDs                              | Boundary                                                                                                                    |
-| ---------- | ----------- | ------------ | ---------- | ---------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `sqlite`   | `resembles` | `duckdb`     | `analogy`  | `proposed` | `sqlite-appropriate-uses`, `sqlite-architecture` | Embedded database execution is structurally comparable, but workload, storage, and execution models differ.                 |
-| `sqlite`   | `resembles` | `postgresql` | `analogy`  | `proposed` | `sqlite-appropriate-uses`, `sqlite-architecture` | Both expose relational query execution, but SQLite is embedded/local and PostgreSQL is client/server and extensible.        |
-| `duckdb`   | `resembles` | `postgresql` | `analogy`  | `proposed` | `duckdb-why`                                     | Both are relational query engines, while DuckDB is embedded and analytical and PostgreSQL is client/server and extensible.  |
-| `supabase` | `composes`  | `postgresql` | `fact`     | `proposed` | `supabase-architecture`                          | Supabase documents PostgreSQL as the core around which API, auth, realtime, storage, and management services are assembled. |
+| Source | Type | Target | Claim type | Status | Source evidence IDs | Boundary |
+| --- | --- | --- | --- | --- | --- | --- |
+| `duckdb` | `resembles` | `postgresql` | `analogy` | `proposed` | `duckdb-why` | Both are relational query engines, while DuckDB is embedded/analytical and PostgreSQL is client/server/extensible. |
+| `sqlite` | `resembles` | `duckdb` | `analogy` | `proposed` | `sqlite-appropriate-uses`, `sqlite-architecture` | Embedded database execution is structurally comparable, but workload, storage, and execution models differ. |
+| `sqlite` | `resembles` | `postgresql` | `analogy` | `proposed` | `sqlite-appropriate-uses`, `sqlite-architecture` | Both expose relational query execution, but SQLite is embedded/local while PostgreSQL is client/server and extensible. |
+| `supabase` | `composes` | `postgresql` | `fact` | `proposed` | `supabase-architecture` | Supabase documents PostgreSQL as the core around which API, auth, realtime, storage, and management services are assembled. |
 
-The graph API also emits 35 valid legacy `related_systems` edges. These edges
-are retained for compatibility but carry no typed claim or evidence metadata.
-The combined graph therefore contains 39 edges across 20 nodes.
+Typed connectivity is intentionally sparse. Adding 150+ systems did not create evidence for relations merely because systems share words such as “pipeline”, “runtime”, “graph”, “storage”, or “controller”.
 
-### Connectivity summary
+## Connectivity summary
 
-The typed graph alone has 17 connected components:
+- Typed relations: **4 directed edges**; **151 undirected components**, sizes `[4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]`. The only non-singleton typed component is `duckdb, postgresql, sqlite, supabase`.
+- Legacy `related_systems`: **228 valid directed edges**.
+- Combined graph: **232 directed edges** and **190 unique undirected edges**; **48 components**, sizes `[104, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]`.
 
-```text
-{duckdb, postgresql, sqlite, supabase}
-{cpython} {elasticsearch} {ffmpeg} {firecracker} {git} {grpc}
-{kafka} {kubernetes} {linux} {llvm} {nginx} {protobuf} {qemu}
-{redis} {rust} {wasmtime}
-```
+The largest combined component contains:
 
-The combined typed-plus-legacy graph has five undirected components with sizes
-`[11, 4, 2, 2, 1]`:
+`airflow`, `boost`, `busybox`, `capacitor`, `clickhouse`, `cockroachdb`, `consul`, `containerd`, `coreutils`, `cpython`, `curl`, `dagster`, `dbt`, `deno`, `django`, `docker`, `duckdb`, `elasticsearch`, `electron`, `esbuild`, `etcd`, `expo`, `express`, `fastapi`, `fd`, `ffmpeg`, `firecracker`, `freebsd`, `gcc`, `git`, `glibc`, `go`, `grpc`, `gstreamer`, `gvisor`, `hadoop`, `influxdb`, `jax`, `kafka`, `kata-containers`, `kubernetes`, `laravel`, `libuv`, `linux`, `llvm`, `lua`, `luajit`, `minix`, `mlflow`, `mosquitto`, `musl`, `mysql-server`, `neovim`, `nestjs`, `nextjs`, `nginx`, `node`, `openbsd`, `opencv`, `openssl`, `opentelemetry`, `plan9`, `playwright`, `postgresql`, `prometheus`, `protobuf`, `pytorch`, `qemu`, `rabbitmq`, `rails`, `react`, `react-native`, `redis`, `ripgrep`, `rocksdb`, `rollup`, `ruby`, `runc`, `rust`, `rustc`, `scikit-learn`, `sdl`, `spring-boot`, `sqlite`, `storybook`, `supabase`, `systemd`, `temporal`, `tensorflow`, `terraform`, `threejs`, `tidb`, `tikv`, `transformers`, `tree-sitter`, `v8`, `velero`, `vite`, `vscode`, `wasm`, `wasmtime`, `xv6-public`, `zig`, `zookeeper`
 
-```text
-{duckdb, elasticsearch, git, kafka, kubernetes, linux, nginx,
- postgresql, redis, sqlite, supabase}
-{cpython, llvm, rust, wasmtime}
-{firecracker, qemu}
-{grpc, protobuf}
-{ffmpeg}
-```
+Other non-singleton combined components:
 
-This distinction matters: legacy links make the visual graph more navigable,
-but they must not be presented as evidence-backed architecture relations.
-The isolated `ffmpeg` node is an evidence result, not a defect to repair by
-adding a generic stream, graph, or pipeline analogy.
+- `opengl, vulkan, webgl`
+- `minio, seaweedfs`
+
+There are **45 combined isolated nodes**. Isolation is an evidence-backed graph result, not a defect to repair with unsupported relations. The legacy graph is navigation context and must not be presented as typed semantic evidence.
 
 ## Review-ready bridge candidates
 
-The following candidates are supported by the bridge-review reports but are
-not canonical graph updates. Each requires deliberate review of the source
-card and exact local evidence before insertion.
+The following candidates remain review backlog items; they are not canonical graph updates:
 
-| ID  | Source → type → target                  | Claim type / status    | Source evidence IDs                               | Review boundary                                                                                                                                                                                                                                |
-| --- | --------------------------------------- | ---------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B1  | `grpc` → `uses` → `protobuf`            | `fact` / `proposed`    | `grpc-core-concepts`, `grpc-source-cpp-generator` | gRPC documents Protocol Buffers as the default service/message description and generates interfaces from descriptors. This does not claim every deployment uses Protobuf, that Protobuf implements transport, or that the dependency reverses. |
-| B2  | `firecracker` → `resembles` → `qemu`    | `analogy` / `proposed` | `firecracker-design`                              | Both are VMMs with guest execution and device-model boundaries; Firecracker deliberately narrows the machine model while QEMU is broad and configurable. No implementation reuse, equivalence, or historical influence is implied.             |
-| B3  | `rust` → `resembles` → `llvm`           | `analogy` / `proposed` | `rustc-overview`, `rust-fixed-source`             | The Rust card names LLVM IR in a staged compiler pipeline. This is not enough to claim that Rust uses the LLVM project as an implementation dependency, so the candidate remains an analogy pending review.                                    |
-| B4  | `cpython` → `resembles` → `wasmtime`    | `analogy` / `proposed` | `cpython-execution-model`, `cpython-fixed-source` | Both expose embeddable runtime context and scoped execution state, but their APIs, isolation properties, and implementations differ.                                                                                                           |
-| B5  | `redis` → `resembles` → `kafka`         | `analogy` / `proposed` | `redis-data-types`, `redis-persistence`           | Redis Streams and Kafka expose append/replay shapes, but Redis does not provide Kafka's partitioned replicated cluster contract.                                                                                                               |
-| B6  | `redis` → `resembles` → `sqlite`        | `analogy` / `proposed` | `redis-persistence`                               | Redis snapshots/AOF and SQLite journal/WAL both represent durability choices, but Redis reconstructs in-memory command state while SQLite protects a relational pager.                                                                         |
-| B7  | `kafka` → `resembles` → `sqlite`        | `analogy` / `proposed` | `kafka-introduction`                              | Kafka retained partition logs and SQLite WAL both expose append, replay/snapshot, and checkpoint boundaries; their ordering, replication, and transaction semantics differ.                                                                    |
-| B8  | `kafka` → `resembles` → `elasticsearch` | `analogy` / `proposed` | `kafka-introduction`                              | Both distribute and replicate storage units, but Kafka stores ordered event logs and Elasticsearch stores searchable Lucene shards with scatter-gather queries.                                                                                |
+| Candidate | Claim boundary |
+| --- | --- |
+| `grpc` → `uses` → `protobuf` | Strongest direct dependency candidate. Review gRPC source-local evidence for generated service/message descriptors; do not reverse the dependency or claim every deployment uses Protobuf. |
+| `firecracker` → `resembles` → `qemu` | Virtualization comparison candidate: narrowed Firecracker machine model versus QEMU’s broad device/emulation model; no reuse, equivalence, or historical influence. |
+| `rust` → `resembles` → `llvm` | Conservative analogy only. Naming LLVM IR does not prove a dependency on the LLVM project. |
+| `redis`/`kafka`/`sqlite` storage analogies | Keep as hypotheses until source-local evidence and boundaries are reviewed; shared append, replay, snapshot, or durability vocabulary is insufficient. |
 
-`grpc uses protobuf` is the strongest direct dependency candidate. The
-Firecracker/QEMU edge is the strongest virtualization comparison. The
-Rust/LLVM candidate is intentionally conservative: one bridge report proposed
-`uses`, while another rejected that claim because naming LLVM IR does not prove
-use of the LLVM project. The current report therefore keeps it as a reviewable
-analogy rather than adding a dependency edge.
-
-## Relations deliberately rejected or deferred
-
-- No reviewed pair supports `extends`; no compatible base/derived
-  implementation or versioned inheritance claim is present.
-- No reviewed pair supports `influenced-by`; no historical design-lineage
-  evidence is present.
-- `protobuf` → `uses` → `grpc` is not justified by the reviewed Protocol
-  Buffers evidence; the documented dependency direction is gRPC to Protobuf.
-- `kubernetes` → `uses` → `etcd` and `qemu` → `uses` → `kvm` are not emitted
-  because the target cards are not reviewed nodes.
-- `elasticsearch` → `uses` → `lucene` is deferred because Lucene is not a
-  reviewed target card.
-- Firecracker/QEMU, Linux/Kubernetes, Linux/NGINX, Kubernetes/NGINX, and
-  Firecracker/Kubernetes are not connected through generic host, scheduler,
-  process, event, or isolation vocabulary.
-- FFmpeg has no reviewed evidence for a bridge to Protocol Buffers, gRPC, or
-  any other current node. Shared terms such as stream, graph, or pipeline are
-  insufficient.
-- The existing legacy `related_systems` edges are not upgraded automatically:
-  they are navigation context, not typed semantic claims.
+No current reviewed pair supports `extends` or `influenced-by`. Relations to unreviewed targets such as etcd, KVM, Lucene, or other draft systems are not emitted. `FFmpeg` and other isolated nodes remain isolated when no source-supported bridge is available.
 
 ## Composition and review boundary
 
-`data/drafts/sqlite-duckdb-analytical-workflow.json` remains a draft
-composition proposal. Its strongest boundary is that SQLite remains the write
-authority while DuckDB reads a defined derived snapshot. It records staleness
-and shared-resource conflicts, but it does not prove an implementation
-connector or justify a `uses`, `extends`, or `composes` edge between the cards.
+`data/drafts/sqlite-duckdb-analytical-workflow.json` remains a draft composition proposal. It records a possible SQLite write authority plus DuckDB derived-snapshot workflow with staleness and shared-resource conflicts; it does not prove an implementation connector or justify a canonical relation.
 
-Candidate relation payloads must use evidence IDs local to the source card,
-retain `claim_status: proposed`, and preserve the distinction between fact,
-inference, hypothesis, and analogy. Review reports are evidence for a future
-card edit; they are not themselves canonical relations.
+Candidate relation payloads must use source-local evidence IDs, retain `claim_status: proposed`, and preserve the distinction between fact, inference, hypothesis, and analogy. Review reports are inputs to a future card edit, not canonical relations by themselves.
 
 ## Conclusions
 
-1. The reviewed graph has 20 nodes and four typed edges; its sparse typed
-   connectivity is intentional.
-2. Legacy edges produce five visually connected components, while the typed
-   graph has one four-node database component and 16 typed isolates.
-3. Review `grpc uses protobuf` first, followed by `firecracker resembles qemu`.
-   Keep the boundary notes and source-local evidence IDs intact.
-4. Keep `rust`/`llvm`, runtime analogies, and log/storage analogies as explicit
-   review candidates until a maintainer accepts their semantic boundaries.
-5. Do not add edges solely to make the graph connected. Additional reviewed
-   cards and precise evidence-backed relations are preferable to dense but
-   unsupported similarity links.
+1. The reviewed graph now contains 154 nodes, 4 typed relations, and 228 valid legacy navigation edges.
+2. Typed connectivity remains intentionally sparse: one four-node database component and singleton systems elsewhere.
+3. Legacy metadata creates a larger navigational graph, but its edges carry no typed claim or evidence metadata.
+4. Review `grpc uses protobuf` first, followed by `firecracker resembles qemu`, while retaining conservative boundaries for all analogies.
+5. Do not add edges solely to make the graph connected. More evidence-backed relations are preferable to dense unsupported similarity links.
