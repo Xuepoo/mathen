@@ -40,6 +40,7 @@ test("filesystem backend filters reviewed and draft composition proposals", asyn
           system_name: "Zeta",
           version_context: null,
           composition,
+          evidence: [],
         },
       ],
     );
@@ -52,6 +53,54 @@ test("filesystem backend filters reviewed and draft composition proposals", asyn
         ?.system_id,
       "alpha",
     );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("filesystem backend resolves composition evidence from the owning card", async () => {
+  const root = await mkdtemp(resolve(tmpdir(), "mathen-composition-evidence-"));
+  try {
+    await mkdir(resolve(root, "data/systems"), { recursive: true });
+    await mkdir(resolve(root, "data/drafts"), { recursive: true });
+    await writeFile(
+      resolve(root, "data/systems/candidate.json"),
+      JSON.stringify({
+        id: "candidate",
+        name: "Candidate",
+        evidence: [
+          {
+            id: "architecture-doc",
+            kind: "official-doc",
+            title: "Architecture documentation",
+            uri: "https://example.test/architecture",
+          },
+        ],
+        composition: {
+          inputs: [{ system_id: "alpha" }],
+          constraints: [],
+          preserved_properties: [],
+          conflicts: [],
+          claim_status: "accepted",
+          evidence_ids: ["architecture-doc", "missing"],
+        },
+      }),
+    );
+
+    const [result] = await new FilesystemBackend(root).listCompositions(
+      undefined,
+      undefined,
+      false,
+      10,
+    );
+    assert.deepEqual(result?.evidence, [
+      {
+        id: "architecture-doc",
+        kind: "official-doc",
+        title: "Architecture documentation",
+        uri: "https://example.test/architecture",
+      },
+    ]);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -72,6 +121,7 @@ test("API backend normalizes composition query results and preserves draft bound
               inputs: [{ system_id: "duckdb", role: "storage" }],
               claim_status: "under-review",
             },
+            evidence: [],
           },
         ],
       }),

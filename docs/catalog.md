@@ -38,7 +38,7 @@ These entries are already present in the repository at different review levels:
 | `firecracker` | Firecracker | microvirtualization | `reviewed` | Compare with QEMU and container isolation |
 | `supabase` | Supabase | backend platform | `reviewed` | Model platform composition and lineage |
 | `sqlite` | SQLite | embedded database | `reviewed` | Compare with DuckDB and columnar engines |
-| `postgresql` | PostgreSQL | relational database | `draft` | Deepen extensibility, MVCC, and extension relations |
+| `postgresql` | PostgreSQL | relational database | `reviewed` | Compare PostgreSQL MVCC and extension boundaries with SQLite and Supabase using fixed-commit evidence |
 | `redis` | Redis | in-memory data service | `draft` | Review event loop, data structures, and persistence |
 | `elasticsearch` | Elasticsearch | search engine | `draft` | Review inverted indexes, shards, and query execution |
 | `kafka` | Apache Kafka | distributed log | `draft` | Review append-only log, partitions, and replay |

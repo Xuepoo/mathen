@@ -47,7 +47,9 @@ type GraphSystem = Pick<
 type CompositionSystem = Pick<
   SystemRow,
   "id" | "name" | "version_context" | "composition_json"
->;
+> & {
+  evidence_json?: string | null;
+};
 
 export type GraphEdge = {
   source: string;
@@ -214,7 +216,19 @@ app.get("/compositions", async (c) => {
   const claimStatus = c.req.query("claim_status")?.trim() ?? "";
   const limit = boundedInteger(c.req.query("limit"), 100, 1, 200);
   const result = await c.env.DB.prepare(
-    `SELECT id, name, version_context, composition_json
+    `SELECT id, name, version_context, composition_json,
+            COALESCE((
+              SELECT json_group_array(json_object(
+                'id', e.id,
+                'kind', e.kind,
+                'title', e.title,
+                'uri', e.uri,
+                'accessed', e.accessed,
+                'notes', e.notes
+              ))
+              FROM evidence e
+              WHERE e.system_id = systems.id
+            ), '[]') AS evidence_json
      FROM systems
      WHERE composition_json IS NOT NULL
      ORDER BY name, id`,
@@ -277,6 +291,7 @@ export type CompositionResult = {
   system_name: string;
   version_context: string | null;
   composition: Record<string, unknown>;
+  evidence: EvidenceRow[];
 };
 
 export function buildCompositions(
@@ -306,10 +321,27 @@ export function buildCompositions(
           system_name: system.name,
           version_context: system.version_context,
           composition,
+          evidence: compositionEvidence(system, composition),
         },
       ];
     })
     .slice(0, limit);
+}
+
+function compositionEvidence(
+  system: CompositionSystem,
+  composition: { evidence_ids: string[] },
+): EvidenceRow[] {
+  const byId = new Map(
+    parseJsonArray<EvidenceRow>(system.evidence_json ?? null).map((evidence) => [
+      evidence.id,
+      evidence,
+    ]),
+  );
+  return composition.evidence_ids.flatMap((id) => {
+    const evidence = byId.get(id);
+    return evidence ? [evidence] : [];
+  });
 }
 
 function typedRelationEdges(
