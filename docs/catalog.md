@@ -340,21 +340,23 @@ identifiers, not claims that the projects share the same architecture.
 | `argo-cd` | Argo CD | `reviewed` | Desired/observed state reconciliation, GitOps sync, health assessment, and rollback using fixed-commit evidence |
 | `istio` | Istio | `reviewed` | Sidecar proxy mesh, traffic policy, control/data plane, and telemetry propagation using fixed-commit evidence |
 | `cilium` | Cilium | `reviewed` | eBPF datapath, identity policy, service routing, and observability using fixed-commit evidence |
-| `traefik` | Traefik | `P2` | Dynamic provider configuration, routers, middleware chains, and certificates |
-| `crossplane` | Crossplane | `P2` | Kubernetes-native composition, provider controllers, and managed resource reconciliation |
+| `traefik` | Traefik | `reviewed` | Compare dynamic provider configuration, routers, middleware chains, and certificates using fixed-commit evidence |
+| `crossplane` | Crossplane | `reviewed` | Compare Kubernetes-native composition, provider controllers, and managed resource reconciliation using fixed-commit evidence |
+
 
 ### Identity, API, workflow, and application services
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- |
-| `keycloak` | Keycloak | `P1` | Realm/tenant boundaries, identity flows, token issuance, and adapters |
-| `kong` | Kong Gateway | `P1` | Plugin pipeline, route/service abstraction, control/data plane, and credentials |
+| `keycloak` | Keycloak | `reviewed` | Compare realm/tenant boundaries, identity flows, token issuance, and adapters using fixed-commit evidence |
+| `kong` | Kong Gateway | `reviewed` | Compare plugin pipeline, route/service abstraction, control/data plane, and credentials using fixed-commit evidence |
 | `apisix` | Apache APISIX | `reviewed` | Compare dynamic routing, phase-aware plugins, etcd-backed configuration, and upstream proxy boundaries using fixed-commit evidence |
 | `temporal` | Temporal | `reviewed` | Compare durable event histories, task queues, deterministic replay, and activity retry boundaries using fixed-commit evidence |
 | `airflow` | Apache Airflow | `reviewed` | Compare DAG readiness, metadata-mediated scheduling, pluggable executors, and separated DAG processing using fixed-commit evidence |
 | `celery` | Celery | `reviewed` | Compare broker-mediated task delivery, acknowledgement/redelivery, result backends, and message-composed workflows using fixed-commit evidence |
 | `oauth2-proxy` | OAuth2 Proxy | `reviewed` | Compare middleware-chain authentication, provider adapters, encrypted cookie/Redis sessions, and upstream forwarding using fixed-commit evidence |
 | `authentik` | authentik | `reviewed` | Compare staged flow planning, policy aggregation, provider/application boundaries, and managed outpost reconciliation using fixed-commit evidence |
+
 
 ### Machine learning and computer vision
 
