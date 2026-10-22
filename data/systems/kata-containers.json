@@ -1,0 +1,149 @@
+{
+  "id": "kata-containers",
+  "name": "Kata Containers",
+  "version_context": "tag 3.32.0, commit 337b6002681479fb6a605ca8a7a1138e81b6098c",
+  "summary": "An OCI- and CRI-compatible container runtime that maps container workloads into lightweight hardware-virtualized sandboxes with a guest kernel, agent, hypervisor, and paravirtualized devices.",
+  "scope": [
+    "VM-backed container isolation",
+    "containerd shim v2",
+    "guest agent and hypervisor composition",
+    "CRI-to-VM resource mapping"
+  ],
+  "features": [
+    {
+      "id": "vm-backed-sandbox-boundary",
+      "name": "VM-backed sandbox boundary",
+      "category": "isolation-boundary",
+      "claim_type": "fact",
+      "description": "Kata replaces the host-kernel process boundary used by a conventional runtime with a lightweight VM and guest Linux kernel; containers run inside the VM while the host and guest kernels remain separate.",
+      "benefits": [
+        "Adds a hardware-virtualized boundary around the guest kernel and workloads",
+        "Preserves a container-oriented interface for callers"
+      ],
+      "costs": [
+        "Requires a guest kernel, VMM, and virtualization support",
+        "Adds startup, memory, and device-mediation overhead relative to host processes"
+      ],
+      "evidence_ids": ["kata-overview-doc", "kata-virtualization-doc"]
+    },
+    {
+      "id": "shim-agent-hypervisor-composition",
+      "name": "Shim, agent, and hypervisor composition",
+      "category": "runtime-composition",
+      "claim_type": "fact",
+      "description": "The containerd shim launches and manages a Kata sandbox, while the guest agent and selected hypervisor cooperate to create and operate the VM-backed container environment.",
+      "benefits": [
+        "Integrates VM lifecycle with existing containerd and CRI runtime selection",
+        "Allows multiple hypervisor implementations behind a runtime configuration"
+      ],
+      "costs": [
+        "Failures cross host, shim, VMM, guest agent, and guest-kernel boundaries",
+        "Runtime configuration must coordinate several independently evolving components"
+      ],
+      "evidence_ids": ["kata-runtime-doc", "kata-containerd-howto", "kata-virtualization-doc"]
+    },
+    {
+      "id": "cri-to-virtual-device-mapping",
+      "name": "CRI-to-virtual-device mapping",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "Kata maps CRI constructs such as pod sandboxes, containers, networks, storage, and resource constraints to VMs, guest processes and namespaces, virtual NICs, virtual storage, and vCPU or memory resources.",
+      "benefits": [
+        "Makes VM-backed isolation usable through common container APIs",
+        "Provides explicit device boundaries for network, storage, and guest communication"
+      ],
+      "costs": [
+        "Compatibility depends on the selected VMM and available virtual devices",
+        "Device translation can add latency and configuration constraints"
+      ],
+      "evidence_ids": ["kata-virtualization-doc", "kata-containerd-howto"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Layered isolation refinement",
+      "question": "How does a container or pod request refine through a shim into a VM, guest kernel, and guest workload?",
+      "assumptions": [
+        "The host runtime, VM, guest kernel, and workload are separate layers",
+        "The model treats hardware virtualization as an isolation boundary, not as a proof of security",
+        "Each layer exposes only the resource and lifecycle interface needed by the next layer"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["kata-overview-doc", "kata-virtualization-doc"]
+    },
+    {
+      "model": "CRI-to-VM typed resource mapping",
+      "question": "Which VM resources and virtual devices represent each CRI-level workload construct?",
+      "assumptions": [
+        "CRI constructs and VM resources are modeled as typed nodes",
+        "The mapping abstracts VMM-specific implementation differences",
+        "The model does not claim all CRI features have identical behavior across hypervisors"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["kata-virtualization-doc"]
+    },
+    {
+      "model": "Cross-layer lifecycle state machine",
+      "question": "How do shim, VM, agent, and guest container states advance together during create, start, and teardown?",
+      "assumptions": [
+        "The shim owns the external lifecycle contract",
+        "VM and agent readiness are explicit intermediate states",
+        "The model leaves restart and partial-failure recovery as validation gaps"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["kata-runtime-doc", "kata-containerd-howto"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "vm-backed-sandbox-boundary",
+      "benefits": ["Stronger separation from the host kernel than a native process container"],
+      "costs": ["Guest and virtualization overhead"]
+    },
+    {
+      "feature_id": "shim-agent-hypervisor-composition",
+      "benefits": ["Container-compatible control surface over selectable VM implementations"],
+      "costs": ["More components and cross-boundary failure handling"]
+    },
+    {
+      "feature_id": "cri-to-virtual-device-mapping",
+      "benefits": ["Explicit and portable resource translation model"],
+      "costs": ["Virtual device compatibility and performance depend on configuration"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "kata-overview-doc",
+      "kind": "official-doc",
+      "title": "Kata Containers overview",
+      "uri": "https://github.com/kata-containers/kata-containers/blob/337b6002681479fb6a605ca8a7a1138e81b6098c/docs/index.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision official overview of VM-backed container isolation, OCI compatibility, and the shim-to-guest architecture."
+    },
+    {
+      "id": "kata-virtualization-doc",
+      "kind": "official-doc",
+      "title": "Virtualization in Kata Containers",
+      "uri": "https://github.com/kata-containers/kata-containers/blob/337b6002681479fb6a605ca8a7a1138e81b6098c/docs/design/virtualization.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision design documentation for CRI-to-VM mapping, hypervisors, and paravirtualized devices."
+    },
+    {
+      "id": "kata-runtime-doc",
+      "kind": "source-code",
+      "title": "Kata runtime component overview at 3.32.0",
+      "uri": "https://github.com/kata-containers/kata-containers/blob/337b6002681479fb6a605ca8a7a1138e81b6098c/src/runtime/README.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision runtime documentation for containerd shim v2, virtcontainers, configuration, and the guest/hypervisor components."
+    },
+    {
+      "id": "kata-containerd-howto",
+      "kind": "official-doc",
+      "title": "How to use Kata Containers and Containerd",
+      "uri": "https://github.com/kata-containers/kata-containers/blob/337b6002681479fb6a605ca8a7a1138e81b6098c/docs/how-to/containerd-kata.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision integration documentation for RuntimeClass, the containerd shim-v2 API, and runtime configuration."
+    }
+  ],
+  "related_systems": ["containerd", "runc", "firecracker", "qemu", "gvisor"]
+}

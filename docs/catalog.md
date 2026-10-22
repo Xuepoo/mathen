@@ -49,6 +49,10 @@ These entries are already present in the repository at different review levels:
 | `mysql-server` | MySQL Server | database | `reviewed` | Compare storage-engine, transaction, and recovery boundaries with PostgreSQL and SQLite |
 | `rocksdb` | RocksDB | embedded database | `reviewed` | Compare LSM, WAL, compaction, and snapshot boundaries with SQLite and Redis |
 | `docker` | Docker Engine | container runtime | `draft` | Compare daemon, image, namespace, and filesystem boundaries |
+| `containerd` | containerd | container runtime | `reviewed` | Compare runtime-v2 shims, typed plugins, client boundaries, and content/snapshot lifecycle using fixed-revision evidence |
+| `runc` | runc | container runtime | `reviewed` | Compare OCI bundle refinement, Linux isolation primitives, lifecycle state, and checkpoint boundaries using fixed-revision evidence |
+| `kata-containers` | Kata Containers | container runtime | `reviewed` | Compare VM-backed sandbox layers, shim/agent/hypervisor composition, and CRI-to-device mapping using fixed-revision evidence |
+| `gvisor` | gVisor | container runtime | `reviewed` | Compare Sentry/Gofer mediation, OCI runtime integration, and selectable syscall interception platforms using fixed-revision evidence |
 | `qemu` | QEMU | virtualization | `reviewed` | Compare complete machine emulation with Firecracker |
 | `kubernetes` | Kubernetes | orchestration | `reviewed` | Analyze reconciliation, API resources, and etcd state |
 | `linux` | Linux Kernel | operating system | `reviewed` | Analyze system calls, scheduling, memory, and modules |
@@ -198,10 +202,10 @@ identifiers, not claims that the projects share the same architecture.
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
 | `docker` | Docker Engine | `P0` | Images, namespaces, cgroups, and daemon boundary |
-| `containerd` | containerd | `P1` | Container lifecycle and runtime plugin architecture |
-| `runc` | runc | `P1` | OCI runtime and Linux isolation primitives |
-| `kata-containers` | Kata Containers | `P1` | VM-backed container isolation |
-| `gvisor` | gVisor | `P1` | User-space kernel and syscall interception |
+| `containerd` | containerd | container runtime | `reviewed` | Compare runtime-v2 shims, typed plugins, client boundaries, and content/snapshot lifecycle using fixed-revision evidence |
+| `runc` | runc | container runtime | `reviewed` | Compare OCI bundle refinement, Linux isolation primitives, lifecycle state, and checkpoint boundaries using fixed-revision evidence |
+| `kata-containers` | Kata Containers | container runtime | `reviewed` | Compare VM-backed sandbox layers, shim/agent/hypervisor composition, and CRI-to-device mapping using fixed-revision evidence |
+| `gvisor` | gVisor | container runtime | `reviewed` | Compare Sentry/Gofer mediation, OCI runtime integration, and selectable syscall interception platforms using fixed-revision evidence |
 | `qemu` | QEMU | `P0` | Full machine emulation and device models |
 | `firecracker` | Firecracker | `P0` | Minimal VMM, KVM, VirtIO, and fast startup |
 | `kvm` | KVM | `P0` | Hardware virtualization interface in the Linux kernel |

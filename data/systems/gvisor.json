@@ -1,0 +1,170 @@
+{
+  "id": "gvisor",
+  "name": "gVisor",
+  "version_context": "tag release-20261019.0, commit 760b80785dc53311d4c87bd2de167525a99709c1",
+  "summary": "A userspace application kernel and OCI runtime that intercepts sandbox workload system calls, mediates external filesystem access through a Gofer, and uses selectable platforms for syscall and page-fault interception.",
+  "scope": [
+    "userspace kernel isolation",
+    "OCI runtime runsc",
+    "Sentry and Gofer processes",
+    "systrap and KVM platforms"
+  ],
+  "features": [
+    {
+      "id": "sentry-application-kernel",
+      "name": "Sentry application kernel",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The Sentry is a per-sandbox userspace application kernel that implements the Linux-like system-call, signal, memory, filesystem, networking, and process functionality required by the workload instead of passing workload system calls directly to the host kernel.",
+      "benefits": [
+        "Places a large portion of the kernel-facing workload surface in a separately maintained userspace component",
+        "Can preserve a process-oriented resource model without a full guest VM"
+      ],
+      "costs": [
+        "Linux compatibility is limited by what the Sentry reimplements",
+        "System-call-heavy workloads can incur additional mediation overhead"
+      ],
+      "evidence_ids": ["gvisor-overview-doc", "gvisor-architecture-doc"]
+    },
+    {
+      "id": "gofer-filesystem-mediation",
+      "name": "Gofer filesystem mediation",
+      "category": "resource-mediation",
+      "claim_type": "fact",
+      "description": "A Gofer process is associated with each container and communicates with the Sentry over 9P via a socket or shared-memory channel; it mediates filesystem access that the restricted Sentry cannot perform directly.",
+      "benefits": [
+        "Separates filesystem access from the application-kernel process",
+        "Adds a distinct mediation point for host-backed resources"
+      ],
+      "costs": [
+        "Filesystem operations cross a process and protocol boundary",
+        "The Gofer is a more-trusted component and therefore remains part of the security analysis"
+      ],
+      "evidence_ids": ["gvisor-overview-doc", "gvisor-architecture-doc"]
+    },
+    {
+      "id": "selectable-interception-platforms",
+      "name": "Selectable syscall interception platforms",
+      "category": "platform-abstraction",
+      "claim_type": "fact",
+      "description": "gVisor exposes a platform abstraction for address spaces and contexts. The systrap platform uses seccomp trap interception, while the KVM platform uses KVM for address-space isolation and page-fault interception.",
+      "benefits": [
+        "Permits deployment-specific choices for virtualization support and performance",
+        "Keeps the Sentry execution model above platform-specific interception mechanisms"
+      ],
+      "costs": [
+        "Platform choice changes hardware requirements and security assumptions",
+        "Interception and context-switch costs vary by workload and environment"
+      ],
+      "evidence_ids": ["gvisor-platforms-doc", "gvisor-platform-source"]
+    },
+    {
+      "id": "oci-runtime-boundary",
+      "name": "OCI runtime boundary",
+      "category": "runtime-interface",
+      "claim_type": "fact",
+      "description": "The runsc executable implements the OCI runtime specification and consumes OCI filesystem bundles, allowing gVisor sandboxes to be selected by Docker, Kubernetes, or direct OCI tooling.",
+      "benefits": [
+        "Integrates a distinct sandbox architecture with existing container interfaces",
+        "Makes runtime selection a deployment-level decision"
+      ],
+      "costs": [
+        "The OCI contract does not eliminate compatibility differences in kernel behavior",
+        "Container tooling must configure and monitor the additional sandbox processes"
+      ],
+      "evidence_ids": ["gvisor-overview-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Syscall interception transition system",
+      "question": "How does a workload system call become Sentry behavior, optional Gofer mediation, and a workload-visible result?",
+      "assumptions": [
+        "Workload calls are modeled as transitions handled by the Sentry rather than direct host calls",
+        "External filesystem access may transition through the Gofer",
+        "The model abstracts host kernel calls made internally by gVisor"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["gvisor-architecture-doc", "gvisor-overview-doc"]
+    },
+    {
+      "model": "Layered trust and mediation graph",
+      "question": "Which components mediate workload access to host kernel and filesystem resources?",
+      "assumptions": [
+        "Workload, Sentry, Gofer, and host kernel are distinct graph nodes",
+        "Edges represent mediated access rather than historical influence",
+        "The graph does not prove that a component is vulnerability-free"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["gvisor-architecture-doc"]
+    },
+    {
+      "model": "Platform refinement relation",
+      "question": "How can systrap and KVM provide different interception mechanisms under one Sentry platform interface?",
+      "assumptions": [
+        "Both platforms implement the required address-space and context operations",
+        "The abstraction hides implementation details but not hardware and security trade-offs",
+        "Performance equivalence is not assumed"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["gvisor-platforms-doc", "gvisor-platform-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "sentry-application-kernel",
+      "benefits": ["Kernel-like isolation with flexible process-oriented resources"],
+      "costs": ["Compatibility gaps and syscall mediation overhead"]
+    },
+    {
+      "feature_id": "gofer-filesystem-mediation",
+      "benefits": ["A separate filesystem access boundary"],
+      "costs": ["Protocol overhead and a more-trusted sidecar"]
+    },
+    {
+      "feature_id": "selectable-interception-platforms",
+      "benefits": ["Deployment-specific performance and hardware choices"],
+      "costs": ["Different platform assumptions and operational tuning"]
+    },
+    {
+      "feature_id": "oci-runtime-boundary",
+      "benefits": ["Adoption through standard container runtime interfaces"],
+      "costs": ["OCI compatibility does not guarantee Linux syscall compatibility"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "gvisor-overview-doc",
+      "kind": "official-doc",
+      "title": "gVisor overview and runsc",
+      "uri": "https://github.com/google/gvisor/blob/760b80785dc53311d4c87bd2de167525a99709c1/g3doc/README.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision official documentation for the Sentry, Gofer, OCI runtime, compatibility, and isolation model."
+    },
+    {
+      "id": "gvisor-architecture-doc",
+      "kind": "official-doc",
+      "title": "Introduction to gVisor architecture",
+      "uri": "https://github.com/google/gvisor/blob/760b80785dc53311d4c87bd2de167525a99709c1/g3doc/architecture_guide/intro_to_gvisor.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision architecture documentation for Sentry syscall handling, Gofer mediation, and platform security boundaries."
+    },
+    {
+      "id": "gvisor-platforms-doc",
+      "kind": "official-doc",
+      "title": "gVisor platform guide",
+      "uri": "https://github.com/google/gvisor/blob/760b80785dc53311d4c87bd2de167525a99709c1/g3doc/architecture_guide/platforms.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision documentation for the Platform interface and systrap/KVM implementations."
+    },
+    {
+      "id": "gvisor-platform-source",
+      "kind": "source-code",
+      "title": "gVisor sandbox platform integration at release-20261019.0",
+      "uri": "https://github.com/google/gvisor/blob/760b80785dc53311d4c87bd2de167525a99709c1/runsc/sandbox/sandbox.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source for sandbox process lifecycle and platform-related integration."
+    }
+  ],
+  "related_systems": ["containerd", "runc", "kata-containers", "firecracker", "linux"]
+}
