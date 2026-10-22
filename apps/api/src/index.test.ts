@@ -1,6 +1,59 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildGraph } from "./index.js";
+import { buildCompositions, buildGraph } from "./index.js";
+
+test("buildCompositions filters valid proposals by input and status", () => {
+  const result = buildCompositions(
+    [
+      {
+        id: "candidate",
+        name: "Candidate",
+        version_context: "v1",
+        composition_json: JSON.stringify({
+          inputs: [{ system_id: "alpha", role: "storage" }],
+          constraints: [],
+          preserved_properties: [],
+          conflicts: [],
+          claim_status: "under-review",
+          evidence_ids: ["architecture-doc"],
+        }),
+      },
+      {
+        id: "malformed",
+        name: "Malformed",
+        version_context: null,
+        composition_json: JSON.stringify({
+          inputs: [],
+          claim_status: "accepted",
+        }),
+      },
+      {
+        id: "invalid-json",
+        name: "Invalid JSON",
+        version_context: null,
+        composition_json: "not-json",
+      },
+    ],
+    "alpha",
+    "under-review",
+  );
+
+  assert.deepEqual(result, [
+    {
+      system_id: "candidate",
+      system_name: "Candidate",
+      version_context: "v1",
+      composition: {
+        inputs: [{ system_id: "alpha", role: "storage" }],
+        constraints: [],
+        preserved_properties: [],
+        conflicts: [],
+        claim_status: "under-review",
+        evidence_ids: ["architecture-doc"],
+      },
+    },
+  ]);
+});
 
 test("buildGraph exposes typed relations and preserves legacy related-system edges", () => {
   const graph = buildGraph([

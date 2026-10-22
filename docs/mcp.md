@@ -27,7 +27,8 @@ MATHEN_API_URL=https://api.example.com bun run mcp
 ```
 
 API mode uses `GET /api/systems`, `GET /api/systems/:id`, `GET /api/features`,
-and `GET /api/modeling/:id`. Requests have a 10-second timeout and API
+`GET /api/compositions`, and `GET /api/modeling/:id`. Requests have a
+10-second timeout and API
 failures are returned as concise JSON tool errors. Draft cards are
 filesystem-only, so `include_drafts: true` returns an explicit
 unsupported-backend error when `MATHEN_API_URL` is set.
@@ -37,6 +38,7 @@ unsupported-backend error when `MATHEN_API_URL` is set.
 - `list_systems`: list reviewed cards, or include drafts explicitly;
 - `get_system`: retrieve one reviewed card or explicitly requested draft;
 - `search_features`: find reusable features by text and optional category;
+- `list_compositions`: find reviewed composition proposals by input system or claim status;
 - `get_modeling_bundle`: retrieve a fixed-commit evidence bundle for semantic
   modeling.
 
