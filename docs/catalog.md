@@ -90,6 +90,10 @@ These entries are already present in the repository at different review levels:
 | `busybox` | BusyBox | Unix system tools | `reviewed` | Compare multi-call dispatch, configurable applet sets, and shared userland support using fixed-commit evidence |
 | `musl` | musl libc | C runtime | `reviewed` | Compare portable interfaces, static/dynamic linking, and thread-local runtime boundaries using fixed-commit evidence |
 | `glibc` | GNU C Library | C runtime | `reviewed` | Compare ABI versioning, dynamic loading, and process/thread runtime boundaries using fixed-commit evidence |
+| `threejs` | Three.js | 3D graphics library | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
+| `blender` | Blender | 3D graphics application | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
+| `sdl` | SDL | multimedia library | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
+| `godot` | Godot | game engine | `planned` | Add a fixed-commit source bundle and draft before review; no evidence-backed card is present yet |
 
 The operational manifest now contains 52 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
@@ -117,9 +121,9 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | `mosquitto` | Eclipse Mosquitto | messaging protocol | `reviewed` |
 | `mysql-server` | MySQL Server | database | `reviewed` |
 | `rocksdb` | RocksDB | embedded database | `reviewed` |
-| `threejs` | Three.js | 3D graphics library | `P1` |
-| `blender` | Blender | 3D graphics application | `P2` |
-| `sdl` | SDL | multimedia library | `P2` |
+| `threejs` | Three.js | 3D graphics library | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
+| `blender` | Blender | 3D graphics application | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
+| `sdl` | SDL | multimedia library | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
 
 ## Catalog
 
@@ -265,11 +269,12 @@ identifiers, not claims that the projects share the same architecture.
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
-| `threejs` | Three.js | `P0` | Scene graph, rendering pipeline, and WebGL abstraction |
+| `threejs` | Three.js | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
+| `blender` | Blender | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
 | `webgl` | WebGL | `P0` | Browser graphics API and stateful command model |
 | `vulkan` | Vulkan | `P1` | Explicit GPU resources, commands, and synchronization |
 | `opengl` | OpenGL | `P1` | Stateful graphics pipeline and driver boundary |
-| `sdl` | SDL | `P1` | Cross-platform window, input, audio, and device abstraction |
+| `sdl` | SDL | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
 | `godot` | Godot | `P1` | Scene tree, nodes, resources, and game runtime |
 | `react` | React | `P1` | Component tree, declarative rendering, and reconciliation |
 | `vue` | Vue | `P2` | Reactive state, component graph, and compiler/runtime split |

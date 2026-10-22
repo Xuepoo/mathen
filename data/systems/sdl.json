@@ -1,0 +1,262 @@
+{
+  "id": "sdl",
+  "name": "SDL",
+  "version_context": "commit 9bb6a8610a974d1952c11be45a7fce1b2f3592b9",
+  "summary": "A cross-platform multimedia library that exposes portable windows, event queues, audio streams, input devices, and rendering/GPU boundaries while delegating platform-specific implementations behind common APIs.",
+  "scope": [
+    "window and display abstraction",
+    "event queue and input",
+    "audio stream abstraction",
+    "rendering and device boundary"
+  ],
+  "features": [
+    {
+      "id": "cross-platform-window-display-abstraction",
+      "name": "Cross-platform window and display abstraction",
+      "category": "platform-model",
+      "claim_type": "fact",
+      "description": "SDL's video API models windows, displays, fullscreen modes, window properties, and graphics context operations through portable functions and opaque identifiers. The official documentation states that the video subsystem abstracts window management and platform-specific OpenGL differences while allowing direct use of other graphics APIs.",
+      "benefits": [
+        "Provides one application-facing window lifecycle across operating systems",
+        "Allows both SDL-managed rendering and direct access to native graphics handles"
+      ],
+      "costs": [
+        "Platform capabilities and window-system details remain conditional",
+        "Opaque handles require SDL lifecycle and thread-affinity rules"
+      ],
+      "evidence_ids": [
+        "sdl-video-header",
+        "sdl-video-doc",
+        "repository-commit"
+      ]
+    },
+    {
+      "id": "queued-event-input-model",
+      "name": "Queued event and input model",
+      "category": "input-model",
+      "claim_type": "fact",
+      "description": "SDL maintains an event queue that applications can pump, poll, wait on, filter, watch, and extend with user events. The fixed event API and official documentation define event retrieval as a boundary for keyboard, mouse, window, device, and system notifications.",
+      "benefits": [
+        "Decouples platform input production from application event consumption",
+        "Supports polling, blocking waits, filters, watches, and application-defined events"
+      ],
+      "costs": [
+        "Queued state can become stale if applications do not service it regularly",
+        "Ordering and filtering policies affect observed input behavior"
+      ],
+      "evidence_ids": [
+        "sdl-events-source",
+        "sdl-events-header",
+        "sdl-events-doc"
+      ]
+    },
+    {
+      "id": "audio-stream-device-boundary",
+      "name": "Audio stream and device boundary",
+      "category": "audio-model",
+      "claim_type": "fact",
+      "description": "SDL's audio API separates audio streams from physical playback and recording devices. Applications can create streams, bind them to devices, queue or retrieve samples, and control device state through portable handles while SDL performs backend-specific device work.",
+      "benefits": [
+        "Separates sample conversion and buffering from physical device selection",
+        "Supports a common stream lifecycle across audio backends"
+      ],
+      "costs": [
+        "Buffering and format conversion introduce latency and configuration choices",
+        "Device availability and hotplug behavior remain platform-dependent"
+      ],
+      "evidence_ids": [
+        "sdl-audio-header",
+        "sdl-audio-doc",
+        "repository-commit"
+      ]
+    },
+    {
+      "id": "portable-render-and-gpu-boundaries",
+      "name": "Portable renderer and GPU boundaries",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "SDL exposes both a higher-level renderer API and a lower-level GPU API with device, pipeline, resource, command-buffer, and swapchain operations. This gives applications a choice between portable rendering commands and more explicit GPU control while sharing SDL's window and platform integration.",
+      "benefits": [
+        "Offers a portable 2D path and an explicit GPU path under one platform layer",
+        "Connects rendering resources to SDL-managed windows and displays"
+      ],
+      "costs": [
+        "The two abstraction levels have different ownership and synchronization contracts",
+        "Backend feature support can vary across drivers and platforms"
+      ],
+      "evidence_ids": [
+        "sdl-gpu-header",
+        "sdl-render-doc",
+        "sdl-video-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Event queue transition system",
+      "question": "How do platform notifications and application-generated events transition through SDL's queue into polling, waiting, filtering, and watch operations?",
+      "assumptions": [
+        "Events are typed values with queue insertion and retrieval transitions",
+        "Polling and waiting are distinct consumption modes",
+        "Platform-specific event translation is abstracted behind queue operations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "sdl-events-source",
+        "sdl-events-header",
+        "sdl-events-doc"
+      ]
+    },
+    {
+      "model": "Multimedia resource lifecycle graph",
+      "question": "How do windows, displays, audio devices, streams, renderer resources, and GPU objects relate across creation, use, and destruction?",
+      "assumptions": [
+        "Opaque handles represent resource nodes with explicit create/destroy operations",
+        "Window and device relationships are modeled as ownership or binding edges",
+        "Backend implementation details and driver scheduling are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "sdl-video-header",
+        "sdl-audio-header",
+        "sdl-gpu-header"
+      ]
+    },
+    {
+      "model": "Abstraction-layer compatibility relation",
+      "question": "Which application responsibilities are preserved when moving between SDL's portable renderer APIs and backend-specific graphics or audio devices?",
+      "assumptions": [
+        "Portable APIs define common operations but do not guarantee identical backend capabilities",
+        "Native handles and explicit GPU resources are optional escape hatches",
+        "Compatibility is a candidate relation requiring platform-specific validation"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "sdl-video-doc",
+        "sdl-render-doc",
+        "sdl-gpu-header"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "cross-platform-window-display-abstraction",
+      "benefits": [
+        "Portable window lifecycle with native graphics escape hatches"
+      ],
+      "costs": [
+        "Common APIs cannot erase platform-specific capability differences"
+      ]
+    },
+    {
+      "feature_id": "queued-event-input-model",
+      "benefits": [
+        "Flexible decoupling of input production and application handling"
+      ],
+      "costs": [
+        "Queue servicing and filtering become part of application correctness"
+      ]
+    },
+    {
+      "feature_id": "audio-stream-device-boundary",
+      "benefits": [
+        "Portable audio buffering independent of physical device details"
+      ],
+      "costs": [
+        "Format, latency, and hotplug behavior require explicit policy"
+      ]
+    },
+    {
+      "feature_id": "portable-render-and-gpu-boundaries",
+      "benefits": [
+        "One library supports both simple rendering and explicit GPU workflows"
+      ],
+      "costs": [
+        "Multiple abstraction levels increase API and synchronization surface"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "SDL source at 9bb6a8610a97",
+      "uri": "https://github.com/libsdl-org/SDL/commit/9bb6a8610a974d1952c11be45a7fce1b2f3592b9",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "sdl-video-header",
+      "kind": "source-code",
+      "title": "SDL video API at fixed commit",
+      "uri": "https://github.com/libsdl-org/SDL/blob/9bb6a8610a974d1952c11be45a7fce1b2f3592b9/include/SDL3/SDL_video.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for windows, displays, graphics contexts, and video resource lifecycle."
+    },
+    {
+      "id": "sdl-events-header",
+      "kind": "source-code",
+      "title": "SDL event API at fixed commit",
+      "uri": "https://github.com/libsdl-org/SDL/blob/9bb6a8610a974d1952c11be45a7fce1b2f3592b9/include/SDL3/SDL_events.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for event types, event queue operations, filters, watches, and polling."
+    },
+    {
+      "id": "sdl-events-source",
+      "kind": "source-code",
+      "title": "SDL event queue implementation at fixed commit",
+      "uri": "https://github.com/libsdl-org/SDL/blob/9bb6a8610a974d1952c11be45a7fce1b2f3592b9/src/events/SDL_events.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for event queue implementation and event dispatch boundaries."
+    },
+    {
+      "id": "sdl-audio-header",
+      "kind": "source-code",
+      "title": "SDL audio API at fixed commit",
+      "uri": "https://github.com/libsdl-org/SDL/blob/9bb6a8610a974d1952c11be45a7fce1b2f3592b9/include/SDL3/SDL_audio.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for audio streams, devices, sample transfer, and audio lifecycle."
+    },
+    {
+      "id": "sdl-gpu-header",
+      "kind": "source-code",
+      "title": "SDL GPU API at fixed commit",
+      "uri": "https://github.com/libsdl-org/SDL/blob/9bb6a8610a974d1952c11be45a7fce1b2f3592b9/include/SDL3/SDL_gpu.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for GPU devices, resources, pipelines, command buffers, and swapchains."
+    },
+    {
+      "id": "sdl-video-doc",
+      "kind": "official-doc",
+      "title": "SDL video category documentation",
+      "uri": "https://wiki.libsdl.org/SDL3/CategoryVideo",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for window management, display abstraction, graphics contexts, and native API escape hatches."
+    },
+    {
+      "id": "sdl-events-doc",
+      "kind": "official-doc",
+      "title": "SDL events category documentation",
+      "uri": "https://wiki.libsdl.org/SDL3/CategoryEvents",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for event queue pumping, polling, waiting, filtering, watching, and user events."
+    },
+    {
+      "id": "sdl-audio-doc",
+      "kind": "official-doc",
+      "title": "SDL audio category documentation",
+      "uri": "https://wiki.libsdl.org/SDL3/CategoryAudio",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for audio devices, streams, and sample transfer."
+    },
+    {
+      "id": "sdl-render-doc",
+      "kind": "official-doc",
+      "title": "SDL rendering category documentation",
+      "uri": "https://wiki.libsdl.org/SDL3/CategoryRender",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for the portable renderer API and renderer resources."
+    }
+  ],
+  "related_systems": []
+}

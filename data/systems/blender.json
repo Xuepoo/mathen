@@ -1,0 +1,252 @@
+{
+  "id": "blender",
+  "name": "Blender",
+  "version_context": "commit 853d9b449ff7aad97914212148e15a0e6be9b81c",
+  "summary": "A general-purpose 3D content creation application that stores editable scenes as structured data-blocks, evaluates dependency relations through a dependency graph, and exposes multiple editor and rendering boundaries.",
+  "scope": [
+    "scene and data-block model",
+    "dependency graph evaluation",
+    "editor and operator boundary",
+    "rendering pipeline integration"
+  ],
+  "features": [
+    {
+      "id": "scene-collection-datablock-model",
+      "name": "Scene, collection, and data-block model",
+      "category": "content-model",
+      "claim_type": "fact",
+      "description": "Blender's fixed DNA scene types represent scenes, view layers, collections, and objects as structured persistent data. Objects reference separate data-block families such as meshes, cameras, and lights, allowing editable content to be shared and linked rather than embedded in one monolithic scene record.",
+      "benefits": [
+        "Separates reusable content data from object placement and scene membership",
+        "Supports linked and layered organization of complex projects"
+      ],
+      "costs": [
+        "Indirection across data-block relationships increases lifecycle complexity",
+        "Users and tools must preserve consistency between linked collections, objects, and data"
+      ],
+      "evidence_ids": [
+        "blender-dna-scene-source",
+        "blender-scene-api",
+        "blender-manual-scenes"
+      ]
+    },
+    {
+      "id": "dependency-graph-evaluation",
+      "name": "Dependency graph evaluation",
+      "category": "evaluation-model",
+      "claim_type": "fact",
+      "description": "The dependency graph API models relations between original IDs and evaluated copies, and exposes graph evaluation and update operations. This creates a derived evaluation boundary between editable source data and the state consumed by view and render systems.",
+      "benefits": [
+        "Makes derived state and dependency-driven updates explicit",
+        "Allows consumers to request evaluated data without replacing editable originals"
+      ],
+      "costs": [
+        "Evaluation introduces synchronization and invalidation work",
+        "Tools must distinguish original data from evaluated copies"
+      ],
+      "evidence_ids": [
+        "blender-depsgraph-source",
+        "blender-depsgraph-doc",
+        "blender-scene-api"
+      ]
+    },
+    {
+      "id": "editor-operator-data-boundary",
+      "name": "Editor, operator, and data boundaries",
+      "category": "application-model",
+      "claim_type": "inference",
+      "description": "Blender separates persistent scene data from editor spaces and operators that act on context. The documented Python API exposes data access, operators, and context as distinct surfaces, while the source tree places editors, window management, and kernel data APIs in separate subsystems.",
+      "benefits": [
+        "Allows multiple editors and automation paths to act on shared scene data",
+        "Keeps UI context and persistent content conceptually distinct"
+      ],
+      "costs": [
+        "Operator behavior can depend on active context and selection state",
+        "Automation must coordinate UI-independent data APIs with context-sensitive operators"
+      ],
+      "evidence_ids": [
+        "blender-python-api",
+        "blender-editor-source",
+        "blender-scene-api"
+      ]
+    },
+    {
+      "id": "pluggable-render-engine-boundary",
+      "name": "Pluggable render-engine boundary",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "Scene settings contain render-engine selection and render configuration, while the manual presents render engines as selectable systems with different capabilities. Render configuration is therefore a scene-level contract consumed by a chosen engine rather than a single fixed renderer implementation.",
+      "benefits": [
+        "Permits different render strategies to consume common scene content",
+        "Keeps engine-specific settings visible at the scene configuration boundary"
+      ],
+      "costs": [
+        "Engine-specific features reduce complete interchangeability",
+        "Projects must account for capability and output differences between engines"
+      ],
+      "evidence_ids": [
+        "blender-dna-scene-source",
+        "blender-rendering-manual",
+        "blender-manual-scenes"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed scene data graph",
+      "question": "How do scenes, collections, objects, and data-blocks compose into a persistent editable content graph?",
+      "assumptions": [
+        "Nodes represent typed Blender IDs or scene containers",
+        "Edges represent ownership, membership, or data references",
+        "The model abstracts file serialization and UI presentation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "blender-dna-scene-source",
+        "blender-scene-api",
+        "blender-manual-scenes"
+      ]
+    },
+    {
+      "model": "Dependency evaluation transition system",
+      "question": "When does an editable scene relation produce evaluated state available to view and render consumers?",
+      "assumptions": [
+        "Original IDs and evaluated copies are distinct state classes",
+        "Relations and updates trigger graph evaluation transitions",
+        "The model abstracts scheduler implementation and modifier-specific algorithms"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "blender-depsgraph-source",
+        "blender-depsgraph-doc"
+      ]
+    },
+    {
+      "model": "Content-to-engine compatibility relation",
+      "question": "Which scene content and settings can be consumed by a selected render engine without losing required properties?",
+      "assumptions": [
+        "A scene has a selected engine and engine-specific settings",
+        "Each engine supports a subset and interpretation of scene properties",
+        "Compatibility is a candidate model and does not claim equal output across engines"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "blender-dna-scene-source",
+        "blender-rendering-manual"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "scene-collection-datablock-model",
+      "benefits": [
+        "Reusable, linkable content with explicit scene organization"
+      ],
+      "costs": [
+        "Reference-rich data lifecycles are harder to reason about than a flat scene"
+      ]
+    },
+    {
+      "feature_id": "dependency-graph-evaluation",
+      "benefits": [
+        "Derived state can be evaluated from explicit dependencies"
+      ],
+      "costs": [
+        "Invalidation and evaluated-copy boundaries add memory and synchronization cost"
+      ]
+    },
+    {
+      "feature_id": "editor-operator-data-boundary",
+      "benefits": [
+        "Shared content can be manipulated by editors, scripts, and operators"
+      ],
+      "costs": [
+        "Context-sensitive operations increase automation and reproducibility constraints"
+      ]
+    },
+    {
+      "feature_id": "pluggable-render-engine-boundary",
+      "benefits": [
+        "One project model can target multiple rendering strategies"
+      ],
+      "costs": [
+        "Engine-specific behavior and settings limit portable guarantees"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Blender source at 853d9b449ff7",
+      "uri": "https://github.com/blender/blender/commit/853d9b449ff7aad97914212148e15a0e6be9b81c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "blender-dna-scene-source",
+      "kind": "source-code",
+      "title": "Blender scene DNA types at fixed commit",
+      "uri": "https://github.com/blender/blender/blob/853d9b449ff7aad97914212148e15a0e6be9b81c/source/blender/makesdna/DNA_scene_types.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for scene, view layer, collection, object, and render configuration data structures."
+    },
+    {
+      "id": "blender-scene-api",
+      "kind": "source-code",
+      "title": "Blender scene kernel API at fixed commit",
+      "uri": "https://github.com/blender/blender/blob/853d9b449ff7aad97914212148e15a0e6be9b81c/source/blender/blenkernel/BKE_scene.hh",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for scene lifecycle and scene-related kernel interfaces."
+    },
+    {
+      "id": "blender-depsgraph-source",
+      "kind": "source-code",
+      "title": "Blender dependency graph API at fixed commit",
+      "uri": "https://github.com/blender/blender/blob/853d9b449ff7aad97914212148e15a0e6be9b81c/source/blender/depsgraph/DEG_depsgraph.hh",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for dependency graph creation, evaluation, update, and evaluated-data access."
+    },
+    {
+      "id": "blender-editor-source",
+      "kind": "source-code",
+      "title": "Blender editor source at fixed commit",
+      "uri": "https://github.com/blender/blender/tree/853d9b449ff7aad97914212148e15a0e6be9b81c/source/blender/editors",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source tree for editor and operator subsystems."
+    },
+    {
+      "id": "blender-depsgraph-doc",
+      "kind": "official-doc",
+      "title": "Blender dependency graph documentation",
+      "uri": "https://developer.blender.org/docs/features/core/depsgraph/",
+      "accessed": "2026-10-23",
+      "notes": "Official developer documentation for dependency graph relations and evaluation."
+    },
+    {
+      "id": "blender-python-api",
+      "kind": "official-doc",
+      "title": "Blender Python API documentation",
+      "uri": "https://docs.blender.org/api/current/",
+      "accessed": "2026-10-23",
+      "notes": "Official API documentation exposing data, context, and operator surfaces."
+    },
+    {
+      "id": "blender-manual-scenes",
+      "kind": "official-doc",
+      "title": "Blender scene and object manual",
+      "uri": "https://docs.blender.org/manual/en/latest/scene_layout/index.html",
+      "accessed": "2026-10-23",
+      "notes": "Official manual for scene layout, collections, objects, and linked content."
+    },
+    {
+      "id": "blender-rendering-manual",
+      "kind": "official-doc",
+      "title": "Blender rendering manual",
+      "uri": "https://docs.blender.org/manual/en/latest/render/index.html",
+      "accessed": "2026-10-23",
+      "notes": "Official manual for render engines and render configuration."
+    }
+  ],
+  "related_systems": []
+}

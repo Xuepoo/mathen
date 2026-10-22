@@ -1,0 +1,243 @@
+{
+  "id": "threejs",
+  "name": "Three.js",
+  "version_context": "commit 6b608fca539c49cfa8348a48e250e7ae01c03aea",
+  "summary": "A browser-oriented 3D graphics library that composes hierarchical Object3D scenes with geometry and material objects, then submits a scene and camera through renderer backends such as WebGL.",
+  "scope": [
+    "scene graph",
+    "geometry and material composition",
+    "renderer boundary",
+    "browser graphics abstraction"
+  ],
+  "features": [
+    {
+      "id": "object3d-hierarchical-scene-graph",
+      "name": "Hierarchical Object3D scene graph",
+      "category": "scene-model",
+      "claim_type": "fact",
+      "description": "Object3D instances maintain a parent reference and an ordered children collection. The fixed source exposes add/remove/traverse operations and propagates local and world transforms through the hierarchy, giving scenes a compositional tree structure.",
+      "benefits": [
+        "Expresses spatial containment and transform inheritance directly",
+        "Supports traversal-based updates and rendering preparation"
+      ],
+      "costs": [
+        "Hierarchy depth and mutation order affect update work",
+        "World transforms require explicit matrix-update semantics"
+      ],
+      "evidence_ids": [
+        "threejs-object3d-source",
+        "threejs-object3d-doc",
+        "repository-commit"
+      ]
+    },
+    {
+      "id": "mesh-geometry-material-composition",
+      "name": "Mesh geometry and material composition",
+      "category": "renderable-model",
+      "claim_type": "fact",
+      "description": "Mesh is an Object3D subtype whose constructor accepts a BufferGeometry and a Material (or material array). This separates vertex/index data from surface and shader configuration while retaining both under the scene graph node.",
+      "benefits": [
+        "Allows geometry to be reused with different materials",
+        "Keeps renderable placement separate from buffer representation"
+      ],
+      "costs": [
+        "Correct rendering depends on compatible geometry attributes and material inputs",
+        "Separate resource lifecycles increase disposal and ownership work"
+      ],
+      "evidence_ids": [
+        "threejs-mesh-source",
+        "threejs-object3d-source",
+        "threejs-docs"
+      ]
+    },
+    {
+      "id": "renderer-scene-camera-boundary",
+      "name": "Renderer scene and camera boundary",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "WebGLRenderer exposes a render(scene, camera) boundary and owns WebGL-specific state, capabilities, render targets, and resource management behind that API. The scene graph therefore supplies a common input model to a backend-specific renderer.",
+      "benefits": [
+        "Presents a stable scene/camera submission model above WebGL calls",
+        "Centralizes GPU resource and pipeline state management"
+      ],
+      "costs": [
+        "Backend capabilities and browser context limits remain observable constraints",
+        "Renderer state and resource disposal must stay synchronized with scene resources"
+      ],
+      "evidence_ids": [
+        "threejs-webgl-renderer-source",
+        "threejs-manual-scene",
+        "threejs-docs"
+      ]
+    },
+    {
+      "id": "modular-loader-and-addon-surface",
+      "name": "Modular loader and addon surface",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "The official documentation separates core classes from addons, including loaders, controls, postprocessing, exporters, and WebXR helpers. These modules extend the core scene and renderer contracts without making every integration part of the core package surface.",
+      "benefits": [
+        "Keeps optional format and platform integrations independently adoptable",
+        "Makes the extension boundary visible to application authors"
+      ],
+      "costs": [
+        "Applications must coordinate addon versions and resource contracts",
+        "Optional modules widen the number of integration paths to validate"
+      ],
+      "evidence_ids": [
+        "threejs-docs",
+        "threejs-object-loader-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Rooted scene graph with transform propagation",
+      "question": "How do parent-child edges and local transforms determine the world-space state submitted for rendering?",
+      "assumptions": [
+        "Object3D nodes form a rooted forest or tree for the modeled scene",
+        "Each edge represents containment and transform inheritance",
+        "The model abstracts matrix and quaternion arithmetic while retaining update ordering"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "threejs-object3d-source",
+        "threejs-object3d-doc"
+      ]
+    },
+    {
+      "model": "Typed render submission relation",
+      "question": "Which scene resources and camera state are required to map an Object3D hierarchy into a renderer submission?",
+      "assumptions": [
+        "Meshes relate geometry and materials to Object3D placement",
+        "A renderer consumes a scene and camera through a backend API",
+        "GPU command generation and shader execution are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "threejs-mesh-source",
+        "threejs-webgl-renderer-source",
+        "threejs-manual-scene"
+      ]
+    },
+    {
+      "model": "Extension boundary graph",
+      "question": "Where do optional loaders and addons attach to the core scene and renderer model?",
+      "assumptions": [
+        "Core classes and documented addons are modeled as distinct module sets",
+        "Addon edges represent integration with core objects rather than historical influence",
+        "The documentation index is an inventory of public integration surfaces, not a proof of runtime coupling"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "threejs-docs",
+        "threejs-object-loader-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "object3d-hierarchical-scene-graph",
+      "benefits": [
+        "Direct spatial composition and inherited transforms"
+      ],
+      "costs": [
+        "Tree mutation and transform propagation add ordering and update cost"
+      ]
+    },
+    {
+      "feature_id": "mesh-geometry-material-composition",
+      "benefits": [
+        "Reusable data and independent surface configuration"
+      ],
+      "costs": [
+        "Separate resources create compatibility and disposal obligations"
+      ]
+    },
+    {
+      "feature_id": "renderer-scene-camera-boundary",
+      "benefits": [
+        "Backend-specific GPU state is hidden behind a scene submission API"
+      ],
+      "costs": [
+        "Browser and backend capability differences constrain portability"
+      ]
+    },
+    {
+      "feature_id": "modular-loader-and-addon-surface",
+      "benefits": [
+        "Optional integrations avoid forcing all applications onto one feature set"
+      ],
+      "costs": [
+        "Addon compatibility and lifecycle coordination remain application work"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Three.js source at 6b608fca539c",
+      "uri": "https://github.com/mrdoob/three.js/commit/6b608fca539c49cfa8348a48e250e7ae01c03aea",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "threejs-object3d-source",
+      "kind": "source-code",
+      "title": "Three.js Object3D implementation at fixed commit",
+      "uri": "https://github.com/mrdoob/three.js/blob/6b608fca539c49cfa8348a48e250e7ae01c03aea/src/core/Object3D.js",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for parent/children relationships, traversal, and local/world matrix updates."
+    },
+    {
+      "id": "threejs-mesh-source",
+      "kind": "source-code",
+      "title": "Three.js Mesh implementation at fixed commit",
+      "uri": "https://github.com/mrdoob/three.js/blob/6b608fca539c49cfa8348a48e250e7ae01c03aea/src/objects/Mesh.js",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for Mesh construction from geometry and material resources."
+    },
+    {
+      "id": "threejs-webgl-renderer-source",
+      "kind": "source-code",
+      "title": "Three.js WebGLRenderer implementation at fixed commit",
+      "uri": "https://github.com/mrdoob/three.js/blob/6b608fca539c49cfa8348a48e250e7ae01c03aea/src/renderers/WebGLRenderer.js",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for the WebGL renderer boundary, render submission, and renderer-owned state."
+    },
+    {
+      "id": "threejs-object-loader-source",
+      "kind": "source-code",
+      "title": "Three.js ObjectLoader implementation at fixed commit",
+      "uri": "https://github.com/mrdoob/three.js/blob/6b608fca539c49cfa8348a48e250e7ae01c03aea/src/loaders/ObjectLoader.js",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for loading serialized object, geometry, material, and scene data."
+    },
+    {
+      "id": "threejs-docs",
+      "kind": "official-doc",
+      "title": "Three.js official API documentation",
+      "uri": "https://threejs.org/docs/",
+      "accessed": "2026-10-23",
+      "notes": "Official class and addon inventory for core scene, renderer, loader, and integration surfaces."
+    },
+    {
+      "id": "threejs-object3d-doc",
+      "kind": "official-doc",
+      "title": "Three.js Object3D documentation",
+      "uri": "https://threejs.org/docs/#api/en/core/Object3D",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for Object3D hierarchy and transform behavior."
+    },
+    {
+      "id": "threejs-manual-scene",
+      "kind": "official-doc",
+      "title": "Three.js scene creation manual",
+      "uri": "https://threejs.org/manual/#en/creating-a-scene",
+      "accessed": "2026-10-23",
+      "notes": "Official manual example showing scene, camera, geometry, material, mesh, and renderer composition."
+    }
+  ],
+  "related_systems": []
+}
