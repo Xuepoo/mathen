@@ -1,0 +1,76 @@
+{
+  "id": "wxwidgets",
+  "name": "wxWidgets",
+  "version_context": "commit 7c1ce45bce402326de636aa18de3f2d7cb90495c",
+  "summary": "A C++ cross-platform GUI toolkit that presents a common window and event API while adapting controls to native platform toolkits and managing application and event-loop lifecycles.",
+  "scope": [
+    "native widget abstraction",
+    "event routing",
+    "application and event-loop lifecycle",
+    "cross-platform implementation boundary"
+  ],
+  "features": [
+    {
+      "id": "native-widget-adapter-layer",
+      "name": "Native widget adapter layer",
+      "category": "platform-model",
+      "claim_type": "fact",
+      "description": "wxWindow and related public interfaces define portable window and control operations, while platform-specific source directories implement those interfaces for native toolkits. The toolkit therefore exposes a stable application-facing surface with backend-specific behavior behind it.",
+      "benefits": ["Shares application code across supported desktop platforms", "Can use native controls and platform conventions"],
+      "costs": ["Visual behavior and capabilities can vary by backend", "Portable code must respect platform-specific constraints"],
+      "evidence_ids": ["wx-window-header", "wx-repository-commit", "wx-platform-source"]
+    },
+    {
+      "id": "typed-event-table-routing",
+      "name": "Typed event-table routing",
+      "category": "event-model",
+      "claim_type": "fact",
+      "description": "wxEvent defines typed event tags and wxEvtHandler provides event-table and handler machinery. The fixed headers and common implementation show that events are represented as typed values and dispatched through handler tables, with filters and propagation available at the framework boundary.",
+      "benefits": ["Separates platform event production from application handlers", "Supports custom event types and reusable handler registration"],
+      "costs": ["Dispatch order and propagation rules affect behavior", "Handler ownership and lifetime must be coordinated"],
+      "evidence_ids": ["wx-event-header", "wx-event-source", "wx-events-doc"]
+    },
+    {
+      "id": "application-event-loop-lifecycle",
+      "name": "Application and event-loop lifecycle",
+      "category": "runtime-model",
+      "claim_type": "fact",
+      "description": "wxAppConsoleBase defines initialization, run, event-loop entry and exit, and cleanup hooks. Applications enter through this lifecycle rather than directly owning each platform message loop.",
+      "benefits": ["Centralizes startup, dispatch, and shutdown sequencing", "Provides lifecycle hooks shared by GUI and base applications"],
+      "costs": ["Application work is coupled to framework loop semantics", "Nested or platform-specific loop behavior requires care"],
+      "evidence_ids": ["wx-app-header", "wx-event-source", "wx-app-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Backend refinement relation",
+      "question": "Which application-facing window and event operations are preserved when wxWidgets maps them to different native backends?",
+      "assumptions": ["wxWindow and wxEvtHandler define the abstract contract", "Platform implementations refine the contract rather than exposing identical native behavior", "The view does not claim behavioral equivalence for all controls"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["wx-window-header", "wx-platform-source", "wx-events-doc"]
+    },
+    {
+      "model": "Event-loop state machine",
+      "question": "How do initialization, event dispatch, nested loop entry, and shutdown transition an application through its runtime lifecycle?",
+      "assumptions": ["Lifecycle callbacks are states or transitions", "Events are delivered while an active loop is running", "The model abstracts OS message-loop details"],
+      "claim_type": "inference",
+      "evidence_ids": ["wx-app-header", "wx-event-source", "wx-app-doc"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "native-widget-adapter-layer", "benefits": ["Native look and platform integration"], "costs": ["Backend differences remain observable"]},
+    {"feature_id": "typed-event-table-routing", "benefits": ["Reusable typed dispatch"], "costs": ["Routing and lifetime rules add framework coupling"]},
+    {"feature_id": "application-event-loop-lifecycle", "benefits": ["Consistent application lifecycle"], "costs": ["Loop ownership is framework-defined"]}
+  ],
+  "evidence": [
+    {"id": "wx-repository-commit", "kind": "source-code", "title": "wxWidgets source at fixed commit", "uri": "https://github.com/wxWidgets/wxWidgets/commit/7c1ce45bce402326de636aa18de3f2d7cb90495c", "accessed": "2026-10-23", "notes": "Fixed repository provenance for the reviewed revision."},
+    {"id": "wx-window-header", "kind": "source-code", "title": "wxWindow public interface at fixed commit", "uri": "https://github.com/wxWidgets/wxWidgets/blob/7c1ce45bce402326de636aa18de3f2d7cb90495c/include/wx/window.h", "accessed": "2026-10-23", "notes": "Local checkout inspected for the common window and control boundary."},
+    {"id": "wx-event-header", "kind": "source-code", "title": "wxWidgets event API at fixed commit", "uri": "https://github.com/wxWidgets/wxWidgets/blob/7c1ce45bce402326de636aa18de3f2d7cb90495c/include/wx/event.h", "accessed": "2026-10-23", "notes": "Local checkout inspected for typed event tags and handler declarations."},
+    {"id": "wx-event-source", "kind": "source-code", "title": "wxWidgets common event implementation at fixed commit", "uri": "https://github.com/wxWidgets/wxWidgets/blob/7c1ce45bce402326de636aa18de3f2d7cb90495c/src/common/event.cpp", "accessed": "2026-10-23", "notes": "Local checkout inspected for event types and event-table implementation."},
+    {"id": "wx-app-header", "kind": "source-code", "title": "wxApp lifecycle API at fixed commit", "uri": "https://github.com/wxWidgets/wxWidgets/blob/7c1ce45bce402326de636aa18de3f2d7cb90495c/include/wx/app.h", "accessed": "2026-10-23", "notes": "Local checkout inspected for initialization, run, loop, and cleanup hooks."},
+    {"id": "wx-platform-source", "kind": "source-code", "title": "wxWidgets platform implementations at fixed commit", "uri": "https://github.com/wxWidgets/wxWidgets/tree/7c1ce45bce402326de636aa18de3f2d7cb90495c/src", "accessed": "2026-10-23", "notes": "Platform-specific source directories provide local evidence for backend adaptation."},
+    {"id": "wx-events-doc", "kind": "official-doc", "title": "wxWidgets event handling overview", "uri": "https://docs.wxwidgets.org/3.2/overview_events.html", "accessed": "2026-10-23", "notes": "Official documentation URL for event handling and propagation concepts."},
+    {"id": "wx-app-doc", "kind": "official-doc", "title": "wxWidgets application overview", "uri": "https://docs.wxwidgets.org/3.2/overview_app.html", "accessed": "2026-10-23", "notes": "Official documentation URL for application and main-loop concepts."}
+  ],
+  "related_systems": []
+}

@@ -310,10 +310,10 @@ identifiers, not claims that the projects share the same architecture.
 | `tauri` | Tauri | `reviewed` | Compare native shell/webview composition, command IPC, capabilities, and packaging using fixed-commit evidence |
 | `qt` | Qt | `reviewed` | Compare QObject ownership, event dispatch, signals/slots, widgets, and platform abstraction using fixed-commit evidence |
 | `gtk` | GTK | `reviewed` | Compare GObject types, event controllers, widget trees, and GDK backend boundaries using fixed-commit evidence |
-| `wxwidgets` | wxWidgets | `P2` | Native widget adapters, event routing, and cross-platform resource ownership |
-| `javafx` | JavaFX | `P2` | Scene graph, observable properties, event dispatch, and rendering pulse |
-| `flutter` | Flutter | `P1` | Widget tree, reactive rebuilds, engine/embedder boundary, and rendering pipeline |
-| `wails` | Wails | `P2` | Go/native backend, webview frontend, generated bindings, and IPC |
+| `wxwidgets` | wxWidgets | `reviewed` | Compare native widget adapter refinement, typed event routing, and application loop lifecycle using fixed-commit evidence |
+| `javafx` | JavaFX | `reviewed` | Compare constrained scene graphs, observable property dependencies, and pulse-driven rendering using fixed-commit evidence |
+| `flutter` | Flutter | `reviewed` | Compare immutable widget reconciliation, render-object pipelines, and engine/embedder boundaries using fixed-commit evidence |
+| `wails` | Wails | `reviewed` | Compare Go/webview shells, generated typed bindings, runtime events, and native window bridges using fixed-commit evidence |
 
 ### CLI and developer tools
 
