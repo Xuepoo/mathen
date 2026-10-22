@@ -1,0 +1,77 @@
+{
+  "id": "prometheus",
+  "name": "Prometheus",
+  "version_context": "commit 22c287a36a6f8ee2a605c4bde68208101dddbd55",
+  "summary": "A monitoring system that stores labeled time series, evaluates PromQL expressions, and collects samples through scrape and rule-evaluation workflows.",
+  "scope": ["time-series storage", "label matching", "PromQL evaluation", "scrape collection"],
+  "features": [
+    {
+      "id": "labeled-time-series",
+      "name": "Labeled time-series data model",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "Prometheus identifies a time series by a metric name and set of labels, with samples carrying timestamped values. Labels therefore form part of series identity and query selection.",
+      "benefits": ["Supports dimensional filtering and aggregation", "Keeps metric identity explicit in storage and query APIs"],
+      "costs": ["High label cardinality expands series and index state", "Changing labels creates distinct series rather than updating one identity"],
+      "evidence_ids": ["prometheus-data-model", "prometheus-labels-source"]
+    },
+    {
+      "id": "promql-expression-evaluation",
+      "name": "PromQL expression evaluation",
+      "category": "query-model",
+      "claim_type": "fact",
+      "description": "Prometheus evaluates PromQL expressions over instant and range vectors, applying selectors, operators, functions, and aggregations to produce scalar, string, or vector results.",
+      "benefits": ["Combines selection, transformation, and aggregation in one query language", "Makes time and label dimensions first-class query inputs"],
+      "costs": ["Query cost depends on range, cardinality, and expression shape", "Query semantics must account for missing samples and staleness"],
+      "evidence_ids": ["prometheus-promql", "prometheus-engine-source"]
+    },
+    {
+      "id": "scrape-and-rule-workflows",
+      "name": "Scrape and rule-evaluation workflows",
+      "category": "collection-model",
+      "claim_type": "fact",
+      "description": "Prometheus periodically scrapes configured targets and can evaluate recording and alerting rules, writing resulting samples and alert state back into the monitoring workflow.",
+      "benefits": ["Uses a pull-based collection boundary with explicit target discovery", "Turns recurring queries into stored series or alert decisions"],
+      "costs": ["Availability and freshness depend on scrape scheduling and target reachability", "Rule evaluation adds recurring query and storage load"],
+      "evidence_ids": ["prometheus-overview", "prometheus-config"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Labeled time-series relation",
+      "question": "How do label sets and timestamps define a relation from metric identity to ordered samples?",
+      "assumptions": ["A label set identifies one logical series at a time", "Samples are interpreted with Prometheus timestamp and staleness rules", "Storage encoding and compaction are abstracted"],
+      "claim_type": "inference",
+      "evidence_ids": ["prometheus-data-model", "prometheus-labels-source"]
+    },
+    {
+      "model": "Temporal query algebra",
+      "question": "How do selectors, range vectors, functions, operators, and aggregations transform labeled samples over time?",
+      "assumptions": ["PromQL evaluation rules define operator domains and result types", "The evaluation timestamp is fixed for one query step", "The model abstracts engine optimization"],
+      "claim_type": "inference",
+      "evidence_ids": ["prometheus-promql", "prometheus-engine-source"]
+    },
+    {
+      "model": "Periodic observation system",
+      "question": "How does a scheduled scrape and rule loop convert target observations into stored series and alert state?",
+      "assumptions": ["Targets expose compatible metrics when reachable", "Scheduling and timeout behavior are explicit inputs", "The view does not claim that every scrape succeeds"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["prometheus-overview", "prometheus-config"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "labeled-time-series", "benefits": ["Flexible dimensional queries and aggregation"], "costs": ["Cardinality and label hygiene become central resource constraints"]},
+    {"feature_id": "promql-expression-evaluation", "benefits": ["Expressive temporal and dimensional analysis"], "costs": ["Complex queries can consume substantial CPU and memory"]},
+    {"feature_id": "scrape-and-rule-workflows", "benefits": ["Simple recurring pull and evaluation model"], "costs": ["Freshness depends on scheduling, target health, and rule load"]}
+  ],
+  "evidence": [
+    {"id": "prometheus-repository-commit", "kind": "source-code", "title": "Prometheus source at 22c287a36a6f", "uri": "https://github.com/prometheus/prometheus/commit/22c287a36a6f8ee2a605c4bde68208101dddbd55", "accessed": "2026-10-23", "notes": "Fixed source revision used for this reviewed card."},
+    {"id": "prometheus-overview", "kind": "official-doc", "title": "Prometheus overview", "uri": "https://prometheus.io/docs/introduction/overview/", "accessed": "2026-10-23", "notes": "Official overview of the time-series database, pull model, and rule evaluation."},
+    {"id": "prometheus-data-model", "kind": "official-doc", "title": "Prometheus data model", "uri": "https://prometheus.io/docs/concepts/data_model/", "accessed": "2026-10-23", "notes": "Official documentation for metric names, labels, series, and samples."},
+    {"id": "prometheus-promql", "kind": "official-doc", "title": "Prometheus querying basics", "uri": "https://prometheus.io/docs/prometheus/latest/querying/basics/", "accessed": "2026-10-23", "notes": "Official PromQL documentation for selectors, vectors, and expression evaluation."},
+    {"id": "prometheus-config", "kind": "official-doc", "title": "Prometheus configuration", "uri": "https://prometheus.io/docs/prometheus/latest/configuration/configuration/", "accessed": "2026-10-23", "notes": "Official scrape, rule, and target configuration documentation."},
+    {"id": "prometheus-labels-source", "kind": "source-code", "title": "Prometheus label model", "uri": "https://github.com/prometheus/prometheus/blob/22c287a36a6f8ee2a605c4bde68208101dddbd55/model/labels/labels.go", "accessed": "2026-10-23", "notes": "Pinned source for label-set and matcher data structures."},
+    {"id": "prometheus-engine-source", "kind": "source-code", "title": "Prometheus query engine", "uri": "https://github.com/prometheus/prometheus/blob/22c287a36a6f8ee2a605c4bde68208101dddbd55/promql/engine.go", "accessed": "2026-10-23", "notes": "Pinned source for PromQL query evaluation implementation."}
+  ],
+  "related_systems": ["opentelemetry", "clickhouse"]
+}

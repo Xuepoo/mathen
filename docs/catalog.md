@@ -177,7 +177,7 @@ identifiers, not claims that the projects share the same architecture.
 | `cockroachdb` | CockroachDB | `P1` | Distributed SQL, ranges, consensus, and serializability |
 | `tidb` | TiDB | `P2` | Distributed SQL, coprocessors, and separated storage |
 | `tikv` | TiKV | `P2` | Distributed transactional key-value storage and Raft |
-| `clickhouse` | ClickHouse | `P1` | Columnar analytics, vectorized execution, and merge trees |
+| `clickhouse` | ClickHouse | `reviewed` | Compare columnar parts, vectorized execution, and background merges with DuckDB and PostgreSQL using fixed-commit evidence |
 | `influxdb` | InfluxDB | `P2` | Time-series layout, retention, and compaction |
 | `neo4j` | Neo4j | `P2` | Property graph storage and traversal execution |
 
@@ -248,10 +248,10 @@ identifiers, not claims that the projects share the same architecture.
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
-| `prometheus` | Prometheus | `P1` | Time-series collection, labels, and query evaluation |
-| `opentelemetry` | OpenTelemetry | `P0` | Portable telemetry data model and propagation |
+| `prometheus` | Prometheus | `reviewed` | Compare labeled time series, pull collection, and temporal query evaluation with OpenTelemetry using fixed-commit evidence |
+| `opentelemetry` | OpenTelemetry | `reviewed` | Compare signal data models, context propagation, and exporter boundaries with Prometheus using fixed-commit evidence |
 | `grafana` | Grafana | `P2` | Query-driven dashboards and plugin architecture |
-| `terraform` | Terraform | `P1` | Declarative resource graph and provider model |
+| `terraform` | Terraform | `reviewed` | Compare declarative resource graphs, provider boundaries, and plan/state lifecycle with Kubernetes using fixed-commit evidence |
 | `pulumi` | Pulumi | `P2` | General-purpose language plus declarative resource state |
 | `supabase` | Supabase | `P0` | Database-centered backend platform composition |
 | `openresty` | OpenResty | `P2` | NGINX event core plus programmable request processing |

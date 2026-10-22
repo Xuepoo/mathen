@@ -1,0 +1,77 @@
+{
+  "id": "opentelemetry",
+  "name": "OpenTelemetry",
+  "version_context": "specification commit f2dfb6ed0c0009f6eeeb63882f6db47366f49922",
+  "summary": "A vendor-neutral observability specification organized around telemetry signals, context propagation, semantic conventions, and replaceable SDK/exporter boundaries.",
+  "scope": ["traces", "metrics", "context propagation", "telemetry export"],
+  "features": [
+    {
+      "id": "signal-data-models",
+      "name": "Common telemetry signal data models",
+      "category": "observability-model",
+      "claim_type": "fact",
+      "description": "OpenTelemetry specifies interoperable models for traces, metrics, and logs, with signal-specific records such as spans and metric data carrying identity, attributes, timestamps, and relationships appropriate to each signal.",
+      "benefits": ["Provides a shared vocabulary across instrumentation and backends", "Keeps signal semantics explicit at SDK and transport boundaries"],
+      "costs": ["Implementations must preserve signal-specific semantics and cardinality constraints", "A common model does not remove backend-specific feature differences"],
+      "evidence_ids": ["otel-spec-commit", "otel-trace-api", "otel-metrics-model"]
+    },
+    {
+      "id": "context-propagation",
+      "name": "Distributed context propagation",
+      "category": "correlation-model",
+      "claim_type": "fact",
+      "description": "The Context API and propagation specifications define a mechanism for carrying execution context across API boundaries, including trace and baggage information, so related operations can be correlated across processes.",
+      "benefits": ["Connects spans and related telemetry across service boundaries", "Separates correlation state from a particular transport or exporter"],
+      "costs": ["Propagation depends on correct instrumentation and carrier handling", "Context leakage or unbounded baggage can affect correctness and resource use"],
+      "evidence_ids": ["otel-context", "otel-propagation"]
+    },
+    {
+      "id": "sdk-exporter-pipeline",
+      "name": "SDK processing and exporter pipeline",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "OpenTelemetry SDKs provide configurable processing and export boundaries between instrumentation-produced telemetry and exporters that send data to external systems.",
+      "benefits": ["Allows batching, filtering, and export policy to vary independently of instrumentation", "Supports multiple exporter protocols and destinations"],
+      "costs": ["Queues and batching introduce delay and memory pressure", "Exporter configuration and backend compatibility remain operational concerns"],
+      "evidence_ids": ["otel-sdk", "otel-exporter"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Telemetry signal algebra",
+      "question": "How can trace, metric, and log records be composed from instrument identity, attributes, time, and signal-specific relationships?",
+      "assumptions": ["Signal records obey the specification's identity and validity rules", "Backend storage and sampling are abstracted", "Semantic conventions are treated as named vocabulary rather than proof of equivalence"],
+      "claim_type": "inference",
+      "evidence_ids": ["otel-trace-api", "otel-metrics-model"]
+    },
+    {
+      "model": "Distributed context flow",
+      "question": "How does correlation context flow through a graph of process and transport boundaries?",
+      "assumptions": ["Instrumentation extracts and injects context at each boundary", "Carrier encoding preserves the required propagation fields", "The model abstracts sampling and clock uncertainty"],
+      "claim_type": "inference",
+      "evidence_ids": ["otel-context", "otel-propagation"]
+    },
+    {
+      "model": "Telemetry pipeline queue",
+      "question": "Which processing and export policies preserve acceptable signal delivery under batching, backpressure, and exporter failure?",
+      "assumptions": ["Processors receive valid signal records", "Exporter delivery guarantees are protocol-specific", "The view does not claim losslessness unless an implementation documents it"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["otel-sdk", "otel-exporter"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "signal-data-models", "benefits": ["Portable observability semantics"], "costs": ["Signal and backend differences require explicit mapping"]},
+    {"feature_id": "context-propagation", "benefits": ["Cross-boundary correlation"], "costs": ["Correctness depends on every participating boundary"]},
+    {"feature_id": "sdk-exporter-pipeline", "benefits": ["Replaceable processing and export policy"], "costs": ["Buffering, retries, and exporter configuration add operational state"]}
+  ],
+  "evidence": [
+    {"id": "otel-spec-commit", "kind": "source-code", "title": "OpenTelemetry specification at f2dfb6ed0c00", "uri": "https://github.com/open-telemetry/opentelemetry-specification/commit/f2dfb6ed0c0009f6eeeb63882f6db47366f49922", "accessed": "2026-10-23", "notes": "Fixed specification revision used for this reviewed card."},
+    {"id": "otel-trace-api", "kind": "official-doc", "title": "OpenTelemetry trace API specification", "uri": "https://opentelemetry.io/docs/specs/otel/trace/api/", "accessed": "2026-10-23", "notes": "Official specification for tracer, span, span context, and trace lifecycle concepts."},
+    {"id": "otel-metrics-model", "kind": "official-doc", "title": "OpenTelemetry metrics data model", "uri": "https://opentelemetry.io/docs/specs/otel/metrics/data-model/", "accessed": "2026-10-23", "notes": "Official specification for metric instruments and metric data points."},
+    {"id": "otel-context", "kind": "official-doc", "title": "OpenTelemetry context specification", "uri": "https://opentelemetry.io/docs/specs/otel/context/", "accessed": "2026-10-23", "notes": "Official specification for context propagation across API boundaries."},
+    {"id": "otel-propagation", "kind": "official-doc", "title": "OpenTelemetry propagation specification", "uri": "https://opentelemetry.io/docs/specs/otel/context/api-propagators/", "accessed": "2026-10-23", "notes": "Official specification for propagators and carrier extraction/injection."},
+    {"id": "otel-sdk", "kind": "official-doc", "title": "OpenTelemetry SDK specification", "uri": "https://opentelemetry.io/docs/specs/otel/overview/", "accessed": "2026-10-23", "notes": "Official overview of API, SDK, and exporter separation."},
+    {"id": "otel-exporter", "kind": "official-doc", "title": "OpenTelemetry exporter specification", "uri": "https://opentelemetry.io/docs/specs/otel/protocol/exporter/", "accessed": "2026-10-23", "notes": "Official exporter boundary and protocol specification."}
+  ],
+  "related_systems": ["prometheus", "kafka"]
+}
