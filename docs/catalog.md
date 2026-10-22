@@ -94,6 +94,10 @@ These entries are already present in the repository at different review levels:
 | `blender` | Blender | 3D graphics application | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
 | `sdl` | SDL | multimedia library | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
 | `godot` | Godot | game engine | `planned` | Add a fixed-commit source bundle and draft before review; no evidence-backed card is present yet |
+| `electron` | Electron | desktop application framework | `reviewed` | Compare main/renderer process isolation, IPC, preload capabilities, and utility processes using fixed-commit evidence |
+| `tauri` | Tauri | desktop application framework | `reviewed` | Compare native shell/webview composition, command IPC, capabilities, and packaging using fixed-commit evidence |
+| `qt` | Qt | desktop application framework | `reviewed` | Compare QObject ownership, event dispatch, signals/slots, widgets, and platform abstraction using fixed-commit evidence |
+| `gtk` | GTK | desktop application framework | `reviewed` | Compare GObject types, event controllers, widget trees, and GDK backend boundaries using fixed-commit evidence |
 
 The operational manifest now contains 52 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
@@ -302,10 +306,10 @@ identifiers, not claims that the projects share the same architecture.
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
-| `electron` | Electron | `P1` | Main/renderer process isolation, IPC, preload capabilities, and packaging |
-| `tauri` | Tauri | `P1` | Native shell/webview boundary, command IPC, capabilities, and asset packaging |
-| `qt` | Qt | `P1` | Object ownership, event loop, signals/slots, widgets, and platform abstraction |
-| `gtk` | GTK | `P2` | Object system, event dispatch, widget tree, and platform backend boundaries |
+| `electron` | Electron | `reviewed` | Compare main/renderer process isolation, IPC, preload capabilities, and utility processes using fixed-commit evidence |
+| `tauri` | Tauri | `reviewed` | Compare native shell/webview composition, command IPC, capabilities, and packaging using fixed-commit evidence |
+| `qt` | Qt | `reviewed` | Compare QObject ownership, event dispatch, signals/slots, widgets, and platform abstraction using fixed-commit evidence |
+| `gtk` | GTK | `reviewed` | Compare GObject types, event controllers, widget trees, and GDK backend boundaries using fixed-commit evidence |
 | `wxwidgets` | wxWidgets | `P2` | Native widget adapters, event routing, and cross-platform resource ownership |
 | `javafx` | JavaFX | `P2` | Scene graph, observable properties, event dispatch, and rendering pulse |
 | `flutter` | Flutter | `P1` | Widget tree, reactive rebuilds, engine/embedder boundary, and rendering pipeline |
