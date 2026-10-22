@@ -1,0 +1,179 @@
+{
+  "id": "musl",
+  "name": "musl libc",
+  "version_context": "commit 7813e9119eb5fe681b6750b8a033a0490bca0941",
+  "summary": "A portable C standard library and POSIX-oriented runtime with an integrated dynamic linker, thread implementation, allocator, and architecture-specific system boundary.",
+  "scope": [
+    "C and POSIX library interface",
+    "portable architecture boundary",
+    "static and dynamic program startup",
+    "threads and memory allocation"
+  ],
+  "features": [
+    {
+      "id": "portable-c-posix-interface",
+      "name": "Portable C and POSIX interface",
+      "category": "system-interface",
+      "claim_type": "fact",
+      "description": "musl presents a standard C library implementation with POSIX support, and its source separates common interfaces from architecture-specific code and system-call details.",
+      "benefits": [
+        "Gives applications a stable library-facing boundary across supported architectures",
+        "Keeps much of the API and implementation shared across targets"
+      ],
+      "costs": [
+        "The interface remains constrained by platform and standards compatibility",
+        "Architecture-specific behavior must be maintained at the low-level boundary"
+      ],
+      "evidence_ids": [
+        "musl-project-doc",
+        "musl-fixed-source"
+      ]
+    },
+    {
+      "id": "integrated-linker-startup-boundary",
+      "name": "Integrated linker and program-startup boundary",
+      "category": "linking-model",
+      "claim_type": "fact",
+      "description": "The musl source includes an ldso dynamic linker and startup/environment code alongside libc, while the project documentation explicitly describes static linking as a supported deployment mode.",
+      "benefits": [
+        "Supports both statically linked deployment and dynamic loading within one libc project",
+        "Keeps process startup and library loading behavior close to the runtime implementation"
+      ],
+      "costs": [
+        "Static and dynamic deployment have different dependency and update boundaries",
+        "Loader behavior must account for executable, shared object, and TLS layout details"
+      ],
+      "evidence_ids": [
+        "musl-project-doc",
+        "musl-linking-doc",
+        "musl-fixed-source"
+      ]
+    },
+    {
+      "id": "thread-local-runtime-and-allocator",
+      "name": "Thread-local runtime and allocator",
+      "category": "runtime-state",
+      "claim_type": "fact",
+      "description": "The fixed source contains pthread and thread-local state initialization, errno and stdio access through the current thread, and a malloc implementation with synchronization support for multi-threaded use.",
+      "benefits": [
+        "Provides library services whose state follows process and thread execution",
+        "Packages allocation and threading primitives behind the libc boundary"
+      ],
+      "costs": [
+        "Thread-local state and synchronization add lifecycle and memory-ordering obligations",
+        "Allocator behavior remains a runtime performance and fragmentation concern"
+      ],
+      "evidence_ids": [
+        "musl-thread-source",
+        "musl-allocator-source",
+        "musl-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Layered system-interface relation",
+      "question": "How are portable C/POSIX operations related to architecture-specific system-call and ABI implementations?",
+      "assumptions": [
+        "Portable interfaces are modeled as abstract operations and architecture code as their target-specific realization",
+        "The relation abstracts compiler ABI details and kernel implementation internals",
+        "A shared interface does not imply identical timing, errors, or platform capabilities"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "musl-project-doc",
+        "musl-fixed-source"
+      ]
+    },
+    {
+      "model": "Process-linkage state transition",
+      "question": "What runtime state transitions distinguish static startup, dynamic loading, thread creation, and thread-local cleanup?",
+      "assumptions": [
+        "A process is modeled as states containing loaded objects, thread descriptors, and allocator state",
+        "Transitions abstract architecture-specific instruction sequences and kernel scheduling",
+        "The model compares lifecycle boundaries and does not assert behavioral equivalence between static and dynamic programs"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "musl-linking-doc",
+        "musl-thread-source",
+        "musl-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "portable-c-posix-interface",
+      "benefits": [
+        "Portable application-facing C and POSIX boundary"
+      ],
+      "costs": [
+        "Portability requires architecture-specific implementation paths"
+      ]
+    },
+    {
+      "feature_id": "integrated-linker-startup-boundary",
+      "benefits": [
+        "Static and dynamic deployment modes share one project boundary"
+      ],
+      "costs": [
+        "Linking mode changes dependency, update, and startup assumptions"
+      ]
+    },
+    {
+      "feature_id": "thread-local-runtime-and-allocator",
+      "benefits": [
+        "Thread and allocation services are available through libc"
+      ],
+      "costs": [
+        "Synchronization and allocator state complicate runtime reasoning"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "musl-fixed-source",
+      "kind": "source-code",
+      "title": "musl source tree at fixed commit 7813e9119eb5",
+      "uri": "https://git.musl-libc.org/cgit/musl/commit/?id=7813e9119eb5fe681b6750b8a033a0490bca0941",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed official musl repository provenance for the reviewed source tree."
+    },
+    {
+      "id": "musl-project-doc",
+      "kind": "official-doc",
+      "title": "musl libc project overview",
+      "uri": "https://musl.libc.org/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official project description of musl as a lightweight, fast, simple, and standards-conformant C library."
+    },
+    {
+      "id": "musl-linking-doc",
+      "kind": "official-doc",
+      "title": "musl static linking guidance",
+      "uri": "https://wiki.musl-libc.org/faq.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official musl wiki FAQ covering static linking and deployment considerations."
+    },
+    {
+      "id": "musl-thread-source",
+      "kind": "source-code",
+      "title": "musl thread and TLS implementation at fixed commit",
+      "uri": "https://git.musl-libc.org/cgit/musl/tree/src/thread/?id=7813e9119eb5fe681b6750b8a033a0490bca0941",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official fixed-commit source path for pthread, thread-local state, and synchronization implementation."
+    },
+    {
+      "id": "musl-allocator-source",
+      "kind": "source-code",
+      "title": "musl allocator implementation at fixed commit",
+      "uri": "https://git.musl-libc.org/cgit/musl/tree/src/malloc/?id=7813e9119eb5fe681b6750b8a033a0490bca0941",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official fixed-commit source path for malloc implementations and allocator locking glue."
+    }
+  ],
+  "related_systems": [
+    "glibc",
+    "linux"
+  ]
+}

@@ -83,8 +83,11 @@ These entries are already present in the repository at different review levels:
 | `haproxy` | HAProxy | network proxy | `reviewed` | Compare polling, task scheduling, layered connection state, and reload topology using fixed-commit evidence |
 | `caddy` | Caddy | web server | `reviewed` | Compare module lifecycle, atomic configuration swaps, and automatic HTTPS using fixed-commit evidence |
 | `wireguard` | WireGuard | secure tunnel | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
+| `busybox` | BusyBox | Unix system tools | `reviewed` | Compare multi-call dispatch, configurable applet sets, and shared userland support using fixed-commit evidence |
+| `musl` | musl libc | C runtime | `reviewed` | Compare portable interfaces, static/dynamic linking, and thread-local runtime boundaries using fixed-commit evidence |
+| `glibc` | GNU C Library | C runtime | `reviewed` | Compare ABI versioning, dynamic loading, and process/thread runtime boundaries using fixed-commit evidence |
 
-The operational manifest now contains 48 repositories. The following entries
+The operational manifest now contains 52 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
 deterministic analysis, but they do not yet have reviewed Architecture Cards:
 
@@ -124,10 +127,10 @@ identifiers, not claims that the projects share the same architecture.
 | `plan9` | Plan 9 | `P1` | Uniform namespace, distributed resources, and 9P |
 | `minix` | MINIX 3 | `P2` | Microkernel services and fault isolation |
 | `systemd` | systemd | `reviewed` | Compare typed units, dependency transactions, service supervision, and activation using fixed-commit evidence |
-| `busybox` | BusyBox | `P2` | Multi-call binary and minimal userland composition |
+| `busybox` | BusyBox | `reviewed` | Compare multi-call dispatch, configurable applet sets, and shared userland support using fixed-commit evidence |
 | `coreutils` | GNU Coreutils | `P2` | Unix command algebra and composable process interfaces |
-| `musl` | musl libc | `P1` | Portable C runtime and static-linking boundary |
-| `glibc` | GNU C Library | `P1` | ABI, dynamic linking, and operating-system interface |
+| `musl` | musl libc | `reviewed` | Compare portable interfaces, static/dynamic linking, and thread-local runtime boundaries using fixed-commit evidence |
+| `glibc` | GNU C Library | `reviewed` | Compare ABI versioning, dynamic loading, and process/thread runtime boundaries using fixed-commit evidence |
 
 ### Programming languages and language runtimes
 
