@@ -1,0 +1,266 @@
+{
+  "id": "opencv",
+  "name": "OpenCV",
+  "version_context": "commit ce58bb1ee7814766609c7dadd24720a7390e40eb",
+  "summary": "A C++ computer-vision library centered on dense n-dimensional Mat data, generic InputArray/OutputArray interfaces, modular algorithms, parallel execution, and backend-mediated video I/O.",
+  "scope": [
+    "Mat dense array and memory model",
+    "InputArray and OutputArray abstraction",
+    "algorithm and parallel execution modules",
+    "VideoCapture and VideoWriter backend boundary"
+  ],
+  "features": [
+    {
+      "id": "mat-strided-dense-array",
+      "name": "Strided dense Mat array model",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "cv::Mat represents n-dimensional dense single- or multi-channel arrays with dimensions, element type, step metadata, reference-counted storage, submatrix headers, and explicit clone for deep copies.",
+      "benefits": [
+        "Provides one data model for images, matrices, volumes, and other dense numerical arrays",
+        "Supports views and in-place processing without requiring every operation to copy data"
+      ],
+      "costs": [
+        "Shared headers and submatrices require careful lifetime and continuity reasoning",
+        "Type, channel, stride, and ownership choices affect algorithm compatibility"
+      ],
+      "evidence_ids": [
+        "opencv-mat-source",
+        "opencv-mat-doc"
+      ]
+    },
+    {
+      "id": "generic-array-boundary",
+      "name": "Generic InputArray and OutputArray boundary",
+      "category": "api-model",
+      "claim_type": "fact",
+      "description": "OpenCV algorithm APIs accept InputArray and OutputArray wrappers that can be constructed from Mat, vectors, GPU matrices, and other supported array forms; output creation is delegated through the output abstraction.",
+      "benefits": [
+        "Allows algorithms to accept multiple storage representations through one API shape",
+        "Separates public algorithm signatures from concrete allocation details"
+      ],
+      "costs": [
+        "Conversion and backend support can vary by input kind",
+        "Generic wrappers hide ownership and allocation behavior that callers still need to understand"
+      ],
+      "evidence_ids": [
+        "opencv-array-boundary-source",
+        "opencv-mat-doc"
+      ]
+    },
+    {
+      "id": "modular-algorithm-and-parallel-dispatch",
+      "name": "Modular algorithms with parallel dispatch",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The source separates core, image-processing, and other modules; core exposes parallel_for_ and Mat::forEach hooks, while algorithm implementations can use the common dispatch layer.",
+      "benefits": [
+        "Provides reusable algorithm modules over common array contracts",
+        "Offers parallel execution without forcing every caller to manage worker scheduling"
+      ],
+      "costs": [
+        "Performance depends on build options, data layout, and backend availability",
+        "Module boundaries and dispatch layers add configuration and debugging complexity"
+      ],
+      "evidence_ids": [
+        "opencv-parallel-source",
+        "opencv-module-doc"
+      ]
+    },
+    {
+      "id": "backend-mediated-video-io",
+      "name": "Backend-mediated video capture and writing",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "VideoCapture and VideoWriter expose open, read/write, property, and release operations while selecting API backends such as FFmpeg, GStreamer, camera APIs, or image sequences. The implementation includes plugin ABI/API checks and backend loading.",
+      "benefits": [
+        "Provides a stable stream API across files, devices, and network sources",
+        "Allows platform-specific codecs and devices behind backend adapters"
+      ],
+      "costs": [
+        "Effective behavior and properties vary by backend, driver, codec, and device",
+        "Plugin compatibility and availability affect runtime portability"
+      ],
+      "evidence_ids": [
+        "opencv-videoio-source",
+        "opencv-videoio-backend-source",
+        "opencv-videoio-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Strided tensor view relation",
+      "question": "How do shape, type, channels, and step metadata determine addresses and views over dense data?",
+      "assumptions": [
+        "A Mat header describes a dense region with a step per dimension",
+        "Submatrix operations may share storage with a parent",
+        "The view abstracts allocator and SIMD implementation details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "opencv-mat-source",
+        "opencv-mat-doc"
+      ]
+    },
+    {
+      "model": "Polymorphic array interface",
+      "question": "Which concrete array representations can participate in a common algorithm call?",
+      "assumptions": [
+        "InputArray and OutputArray define accepted conversion and allocation operations",
+        "Algorithms reason through the wrapper rather than a single storage class",
+        "The model does not claim all algorithms support all wrapper kinds equally"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "opencv-array-boundary-source"
+      ]
+    },
+    {
+      "model": "Parallel algorithm execution graph",
+      "question": "How does an algorithm's range of work map to an available parallel backend?",
+      "assumptions": [
+        "A range can be partitioned into stripes or worker tasks",
+        "The dispatcher chooses among compiled backends or a serial path",
+        "The view abstracts scheduling fairness and hardware-specific kernels"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "opencv-parallel-source",
+        "opencv-module-doc"
+      ]
+    },
+    {
+      "model": "Stream backend state machine",
+      "question": "How does a video stream transition from backend selection to opened, read, property, and released states?",
+      "assumptions": [
+        "A VideoCapture or VideoWriter instance delegates to one selected backend",
+        "Backend properties may be unsupported or interpreted differently",
+        "The model abstracts codec and device protocol internals"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "opencv-videoio-source",
+        "opencv-videoio-backend-source",
+        "opencv-videoio-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "mat-strided-dense-array",
+      "benefits": [
+        "Flexible dense numerical representation with views"
+      ],
+      "costs": [
+        "Aliasing, strides, and type metadata complicate correctness"
+      ]
+    },
+    {
+      "feature_id": "generic-array-boundary",
+      "benefits": [
+        "Broad algorithm interoperability"
+      ],
+      "costs": [
+        "Generic wrappers can obscure concrete allocation and support constraints"
+      ]
+    },
+    {
+      "feature_id": "modular-algorithm-and-parallel-dispatch",
+      "benefits": [
+        "Reusable modules and optional parallel speedups"
+      ],
+      "costs": [
+        "Build and runtime configuration influence performance and behavior"
+      ]
+    },
+    {
+      "feature_id": "backend-mediated-video-io",
+      "benefits": [
+        "Portable stream API over heterogeneous sources"
+      ],
+      "costs": [
+        "Backend and device variation weakens uniform guarantees"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "opencv-repository-commit",
+      "kind": "source-code",
+      "title": "OpenCV source at ce58bb1ee781",
+      "uri": "https://github.com/opencv/opencv/commit/ce58bb1ee7814766609c7dadd24720a7390e40eb",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision inspected locally for this card."
+    },
+    {
+      "id": "opencv-mat-source",
+      "kind": "source-code",
+      "title": "OpenCV Mat and array headers at fixed commit",
+      "uri": "https://github.com/opencv/opencv/blob/ce58bb1ee7814766609c7dadd24720a7390e40eb/modules/core/include/opencv2/core/mat.hpp",
+      "accessed": "2026-10-23",
+      "notes": "Source for Mat storage, dimensions, steps, views, reference counting, and InputArray/OutputArray wrappers."
+    },
+    {
+      "id": "opencv-array-boundary-source",
+      "kind": "source-code",
+      "title": "OpenCV InputArray and OutputArray boundary at fixed commit",
+      "uri": "https://github.com/opencv/opencv/blob/ce58bb1ee7814766609c7dadd24720a7390e40eb/modules/core/include/opencv2/core/mat.hpp",
+      "accessed": "2026-10-23",
+      "notes": "Source for generic array construction, kinds, and output allocation contracts."
+    },
+    {
+      "id": "opencv-parallel-source",
+      "kind": "source-code",
+      "title": "OpenCV parallel dispatch at fixed commit",
+      "uri": "https://github.com/opencv/opencv/blob/ce58bb1ee7814766609c7dadd24720a7390e40eb/modules/core/src/parallel.cpp",
+      "accessed": "2026-10-23",
+      "notes": "Source for parallel_for_ dispatch and backend selection paths."
+    },
+    {
+      "id": "opencv-videoio-source",
+      "kind": "source-code",
+      "title": "OpenCV VideoCapture and VideoWriter at fixed commit",
+      "uri": "https://github.com/opencv/opencv/blob/ce58bb1ee7814766609c7dadd24720a7390e40eb/modules/videoio/include/opencv2/videoio.hpp",
+      "accessed": "2026-10-23",
+      "notes": "Source for stream open/read/write/release and property interfaces."
+    },
+    {
+      "id": "opencv-videoio-backend-source",
+      "kind": "source-code",
+      "title": "OpenCV video backend plugin loader at fixed commit",
+      "uri": "https://github.com/opencv/opencv/blob/ce58bb1ee7814766609c7dadd24720a7390e40eb/modules/videoio/src/backend_plugin.cpp",
+      "accessed": "2026-10-23",
+      "notes": "Source for backend discovery, plugin API/ABI compatibility checks, and lazy loading."
+    },
+    {
+      "id": "opencv-mat-doc",
+      "kind": "official-doc",
+      "title": "OpenCV cv::Mat documentation",
+      "uri": "https://docs.opencv.org/4.x/d3/d63/classcv_1_1Mat.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for dense arrays, steps, views, and shared storage."
+    },
+    {
+      "id": "opencv-videoio-doc",
+      "kind": "official-doc",
+      "title": "OpenCV Video I/O documentation",
+      "uri": "https://docs.opencv.org/4.x/d0/da7/videoio_overview.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for VideoCapture, VideoWriter, and API backends."
+    },
+    {
+      "id": "opencv-module-doc",
+      "kind": "official-doc",
+      "title": "OpenCV module reference",
+      "uri": "https://docs.opencv.org/4.x/",
+      "accessed": "2026-10-23",
+      "notes": "Official module and core API documentation."
+    }
+  ],
+  "related_systems": [
+    "ffmpeg",
+    "pytorch",
+    "threejs"
+  ]
+}

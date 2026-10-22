@@ -362,10 +362,10 @@ identifiers, not claims that the projects share the same architecture.
 | --- | --- | --- |
 | `pytorch` | PyTorch | `P1` | Tensor/autograd graphs, eager execution, dispatch, and accelerator backends |
 | `tensorflow` | TensorFlow | `P1` | Tensor graphs, runtime devices, saved models, and distributed execution |
-| `jax` | JAX | `P2` | Functional transformations, tracing, XLA compilation, and sharding |
-| `scikit-learn` | scikit-learn | `P1` | Estimator protocols, pipelines, transformers, and model selection |
-| `opencv` | OpenCV | `P1` | Matrix/image data model, algorithm modules, backends, and streaming pipelines |
-| `transformers` | Hugging Face Transformers | `P1` | Model/config/tokenizer boundaries, generation loops, and weight loading |
+| `jax` | JAX | `reviewed` | Compare functional transformations, tracing, XLA compilation, and sharding using fixed-commit evidence |
+| `scikit-learn` | scikit-learn | `reviewed` | Compare estimator protocols, pipelines, transformers, and model selection using fixed-commit evidence |
+| `opencv` | OpenCV | `reviewed` | Compare Mat arrays, generic array boundaries, algorithm dispatch, and video backends using fixed-commit evidence |
+| `transformers` | Hugging Face Transformers | `reviewed` | Compare model/config/tokenizer boundaries, generation loops, and checkpoint loading using fixed-commit evidence |
 | `mlflow` | MLflow | `P2` | Run/artifact provenance, flavor-aware model packaging, registry versions, aliases, and lifecycle |
 | `ray` | Ray | `P2` | Distributed task and actor execution |
 
