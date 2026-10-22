@@ -1,0 +1,154 @@
+{
+  "id": "ripgrep",
+  "name": "ripgrep",
+  "version_context": "commit 3fce3b5bb0236da2df6d99672afb8a719642eca7",
+  "summary": "A Rust line-oriented recursive search tool that combines ignore-aware parallel traversal, configurable regex engines, adaptive file searching, and structured streaming output.",
+  "scope": [
+    "recursive code search CLI",
+    "ignore and file-type filtering",
+    "regex matching pipeline",
+    "parallel traversal and output"
+  ],
+  "features": [
+    {
+      "id": "ignore-aware-parallel-traversal",
+      "name": "Ignore-aware parallel traversal",
+      "category": "traversal-model",
+      "claim_type": "fact",
+      "description": "The official README documents a lock-free parallel recursive directory iterator and default filtering of VCS-ignored, hidden, and binary files. The fixed repository contains the ignore and search crates that implement this traversal boundary.",
+      "benefits": [
+        "Reduces unnecessary filesystem work for source-tree searches",
+        "Uses parallel directory traversal while retaining configurable ignore semantics"
+      ],
+      "costs": [
+        "Results and errors arrive from concurrent traversal work",
+        "Ignore configuration can make an apparently complete search intentionally incomplete"
+      ],
+      "evidence_ids": ["ripgrep-readme", "ripgrep-ignore-source"]
+    },
+    {
+      "id": "regex-search-engine-pipeline",
+      "name": "Regex search-engine pipeline",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "ripgrep separates matcher, regex, searcher, printer, and CLI crates. The default regex path uses Rust's finite-automata-oriented engine with Unicode support, while PCRE2 is an explicit optional or automatic-hybrid choice.",
+      "benefits": [
+        "Allows matching, file searching, and result rendering to evolve behind crate boundaries",
+        "Combines Unicode-aware matching with literal and automata optimizations"
+      ],
+      "costs": [
+        "Regex features and performance depend on the selected engine and pattern",
+        "A richer pipeline increases configuration and semantic compatibility surface"
+      ],
+      "evidence_ids": ["ripgrep-readme", "ripgrep-crate-source"]
+    },
+    {
+      "id": "adaptive-file-search-and-streaming-output",
+      "name": "Adaptive file search and streaming output",
+      "category": "I/O-model",
+      "claim_type": "fact",
+      "description": "The official README describes choosing memory maps or incremental buffered searching according to workload, and the source exposes searcher and printer components for line-oriented result delivery. Structured output modes provide a machine-readable boundary.",
+      "benefits": [
+        "Adapts file reading strategy to single-file and large-directory workloads",
+        "Supports both human-readable and downstream-processable result streams"
+      ],
+      "costs": [
+        "Output ordering, buffering, and backpressure affect observable behavior",
+        "Binary, encoding, and multiline modes add distinct processing paths"
+      ],
+      "evidence_ids": ["ripgrep-readme", "ripgrep-searcher-source", "ripgrep-printer-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Filtered parallel traversal pipeline",
+      "question": "How do roots, ignore rules, file-type filters, workers, and matching tasks determine the set of searched files?",
+      "assumptions": [
+        "Traversal produces a stream of candidate paths and filters are predicates over paths and metadata",
+        "Parallel workers may reorder internal processing while preserving the output contract selected by the CLI",
+        "The view abstracts filesystem races, permission errors, and exact work-stealing behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["ripgrep-readme", "ripgrep-ignore-source", "ripgrep-crate-source"]
+    },
+    {
+      "model": "Matcher-to-output transducer composition",
+      "question": "How does a pattern become matches, context records, and serialized output across regex, searcher, and printer stages?",
+      "assumptions": [
+        "Each stage is modeled as a transformation over bytes, lines, matches, or result records",
+        "The selected regex engine defines the matcher relation for the invocation",
+        "The view abstracts terminal coloring, buffering details, and platform-specific file access"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["ripgrep-readme", "ripgrep-searcher-source", "ripgrep-printer-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "ignore-aware-parallel-traversal",
+      "benefits": ["Concurrent search avoids irrelevant paths by default"],
+      "costs": ["Filtering policy and concurrent delivery complicate completeness and ordering"]
+    },
+    {
+      "feature_id": "regex-search-engine-pipeline",
+      "benefits": ["Composable engines and stages support fast Unicode search"],
+      "costs": ["Engine choice and pattern shape affect semantics and performance"]
+    },
+    {
+      "feature_id": "adaptive-file-search-and-streaming-output",
+      "benefits": ["I/O strategy and output form fit interactive or pipeline use"],
+      "costs": ["Buffering, encoding, and output mode choices increase behavior surface"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ripgrep-fixed-source",
+      "kind": "source-code",
+      "title": "ripgrep source tree at fixed commit 3fce3b5bb023",
+      "uri": "https://github.com/BurntSushi/ripgrep/commit/3fce3b5bb0236da2df6d99672afb8a719642eca7",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official source inspected locally at the fixed commit."
+    },
+    {
+      "id": "ripgrep-readme",
+      "kind": "official-doc",
+      "title": "ripgrep README",
+      "uri": "https://github.com/BurntSushi/ripgrep/blob/3fce3b5bb0236da2df6d99672afb8a719642eca7/README.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official README for recursive search, filtering defaults, regex engines, adaptive I/O, and parallel traversal."
+    },
+    {
+      "id": "ripgrep-ignore-source",
+      "kind": "source-code",
+      "title": "ripgrep ignore crate",
+      "uri": "https://github.com/BurntSushi/ripgrep/tree/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/ignore",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source for ignore-file matching and parallel recursive directory traversal."
+    },
+    {
+      "id": "ripgrep-crate-source",
+      "kind": "source-code",
+      "title": "ripgrep grep facade and regex crates",
+      "uri": "https://github.com/BurntSushi/ripgrep/tree/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source tree for matcher, regex, searcher, printer, and CLI crate boundaries."
+    },
+    {
+      "id": "ripgrep-searcher-source",
+      "kind": "source-code",
+      "title": "ripgrep searcher crate",
+      "uri": "https://github.com/BurntSushi/ripgrep/tree/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/searcher",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source for buffered and memory-mapped line-oriented search behavior."
+    },
+    {
+      "id": "ripgrep-printer-source",
+      "kind": "source-code",
+      "title": "ripgrep printer crate",
+      "uri": "https://github.com/BurntSushi/ripgrep/tree/3fce3b5bb0236da2df6d99672afb8a719642eca7/crates/printer",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source for text, JSON, and other result rendering boundaries."
+    }
+  ],
+  "related_systems": ["fd", "coreutils", "rust"]
+}

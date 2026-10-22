@@ -1,0 +1,146 @@
+{
+  "id": "vscode",
+  "name": "Visual Studio Code",
+  "version_context": "commit 54d565d227f05c6b4dd9e109811128394125a753",
+  "summary": "A layered TypeScript workbench that combines platform services, editor and contribution modules, environment-specific entry points, and an extension host connected through an IPC protocol.",
+  "scope": [
+    "desktop and web editor workbench",
+    "layered TypeScript core",
+    "dependency-injected services",
+    "extension host and IPC boundary"
+  ],
+  "features": [
+    {
+      "id": "layered-workbench-services",
+      "name": "Layered workbench services",
+      "category": "modular-architecture",
+      "claim_type": "fact",
+      "description": "The official source-organization guide describes base, platform, editor, workbench, code, and server layers. Platform services are identified by decorators and provided through an instantiation service, while workbench contributions expose constrained APIs.",
+      "benefits": [
+        "Makes service dependencies explicit and supports delayed or alternate implementations",
+        "Allows the workbench to assemble editor and product contributions from modular boundaries"
+      ],
+      "costs": [
+        "Layer rules and contribution APIs constrain dependency placement",
+        "Service registration and lifecycle ownership increase indirection"
+      ],
+      "evidence_ids": ["vscode-organization-doc", "vscode-instantiation-source"]
+    },
+    {
+      "id": "out-of-process-extension-host",
+      "name": "Out-of-process extension host",
+      "category": "isolation-model",
+      "claim_type": "fact",
+      "description": "The official architecture guide states that extensions run in a separate extension-host process. The fixed source establishes an IPC protocol for that process, controls selected process APIs, and includes reconnection and termination handling.",
+      "benefits": [
+        "Separates extension execution and failure handling from the workbench process",
+        "Provides a defined protocol boundary for extension API requests and events"
+      ],
+      "costs": [
+        "Serialization, reconnection, and process lifecycle add latency and failure modes",
+        "The boundary cannot eliminate resource contention or extension-level semantic errors"
+      ],
+      "evidence_ids": ["vscode-organization-doc", "vscode-extension-source"]
+    },
+    {
+      "id": "multi-environment-shared-core",
+      "name": "Multi-environment shared core",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "The official guide separates common, browser, Node, Electron, and utility-process targets and describes shared workbench entry points for desktop and web. Environment-specific implementations satisfy the same higher-level service composition where needed.",
+      "benefits": [
+        "Reuses editor and workbench logic across desktop and web deployments",
+        "Makes runtime capability constraints visible in source organization"
+      ],
+      "costs": [
+        "Shared abstractions must accommodate different platform capabilities",
+        "Environment-specific substitutions increase build and testing combinations"
+      ],
+      "evidence_ids": ["vscode-organization-doc", "vscode-entry-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Layered dependency and service graph",
+      "question": "How do platform services, workbench contributions, editor modules, and target-specific implementations depend on one another?",
+      "assumptions": [
+        "Modules and services are vertices and allowed imports or registrations are directed edges",
+        "Layer restrictions are treated as admissibility constraints on edges",
+        "The view abstracts bundler behavior, dynamic loading, and the full runtime call graph"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["vscode-organization-doc", "vscode-instantiation-source"]
+    },
+    {
+      "model": "Extension-host process protocol state machine",
+      "question": "How do workbench connection, extension-host readiness, message exchange, reconnection, and termination progress?",
+      "assumptions": [
+        "The extension host and workbench are process states connected by an IPC channel",
+        "Ready, connected, disconnected, grace-period, and terminated are abstract protocol states",
+        "The model abstracts message payload semantics and operating-system process scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["vscode-extension-source", "vscode-organization-doc"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "layered-workbench-services",
+      "benefits": ["Explicit service boundaries support modular assembly"],
+      "costs": ["Indirection and layer discipline increase integration overhead"]
+    },
+    {
+      "feature_id": "out-of-process-extension-host",
+      "benefits": ["Extension execution is separated by a process and protocol boundary"],
+      "costs": ["IPC and reconnection behavior complicate latency and failure reasoning"]
+    },
+    {
+      "feature_id": "multi-environment-shared-core",
+      "benefits": ["A shared core serves desktop and web targets"],
+      "costs": ["Platform variation expands implementation and test matrices"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "vscode-fixed-source",
+      "kind": "source-code",
+      "title": "Visual Studio Code source tree at fixed commit 54d565d227f0",
+      "uri": "https://github.com/microsoft/vscode/commit/54d565d227f05c6b4dd9e109811128394125a753",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official source inspected locally at the fixed commit."
+    },
+    {
+      "id": "vscode-organization-doc",
+      "kind": "official-doc",
+      "title": "VS Code Source Code Organization",
+      "uri": "https://github.com/microsoft/vscode/wiki/Source-Code-Organization",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official project guide for layers, extension-host separation, dependency injection, contributions, and desktop/web targets."
+    },
+    {
+      "id": "vscode-instantiation-source",
+      "kind": "source-code",
+      "title": "VS Code service instantiation source",
+      "uri": "https://github.com/microsoft/vscode/blob/54d565d227f05c6b4dd9e109811128394125a753/src/vs/platform/instantiation/common/instantiation.ts",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source for service identifiers, constructor injection, child service scopes, and disposal."
+    },
+    {
+      "id": "vscode-extension-source",
+      "kind": "source-code",
+      "title": "VS Code extension host process source",
+      "uri": "https://github.com/microsoft/vscode/blob/54d565d227f05c6b4dd9e109811128394125a753/src/vs/workbench/api/node/extensionHostProcess.ts",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source for extension-host IPC, process controls, reconnection grace periods, and termination handling."
+    },
+    {
+      "id": "vscode-entry-source",
+      "kind": "source-code",
+      "title": "VS Code workbench entry points",
+      "uri": "https://github.com/microsoft/vscode/tree/54d565d227f05c6b4dd9e109811128394125a753/src/vs/workbench",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source tree containing common, desktop, and web workbench entry points and target-specific layers."
+    }
+  ],
+  "related_systems": ["electron", "tree-sitter", "node"]
+}

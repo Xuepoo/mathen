@@ -319,10 +319,10 @@ identifiers, not claims that the projects share the same architecture.
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
-| `neovim` | Neovim | `P1` | Embedded scripting, event loop, RPC, buffer state, and plugin isolation |
-| `vscode` | Visual Studio Code | `P1` | Extension host isolation, workbench services, language servers, and IPC |
-| `ripgrep` | ripgrep | `P1` | Parallel traversal, regex engine pipeline, ignore rules, and streaming output |
-| `fd` | fd | `P2` | Filesystem traversal, filtering combinators, and concurrent output |
+| `neovim` | Neovim | `P1` | Event-driven editor state, MessagePack-RPC channels, embedded Lua, and plugin boundaries |
+| `vscode` | Visual Studio Code | `P1` | Layered workbench services, extension-host IPC, target environments, and contributions |
+| `ripgrep` | ripgrep | `P1` | Ignore-aware parallel traversal, regex/search stages, adaptive I/O, and result streams |
+| `fd` | fd | `P2` | Ignore-aware walking, path/metadata predicates, parallel jobs, and output coordination |
 | `jq` | jq | `P1` | JSON value algebra, filter composition, streaming execution, and CLI protocols |
 | `yq` | yq | `P2` | Multi-format tree transformations, expression evaluation, and stream processing |
 | `just` | Just | `P2` | Declarative recipe graph, shell execution, parameter binding, and environment propagation |
