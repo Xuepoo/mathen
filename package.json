@@ -22,7 +22,9 @@
     "db:reset:local": "cd apps/api && bun run db:reset:local",
     "db:query:local": "cd apps/api && wrangler d1 execute mathen-db --local",
     "db:migrate:remote": "cd apps/api && bun run db:migrate:remote",
+    "db:seed:remote": "cd apps/api && bun run db:seed:remote",
     "deploy:api": "cd apps/api && bun run deploy",
+    "deploy": "bun run build && bun run db:migrate:remote && bun run deploy:api",
     "mcp": "cd apps/mcp && bun run start"
   },
   "devDependencies": {
