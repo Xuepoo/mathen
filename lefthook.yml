@@ -1,0 +1,29 @@
+min_version: 1.7.0
+
+pre-commit:
+  parallel: true
+  commands:
+    python-format:
+      glob: "**/*.py"
+      run: ruff format --check {staged_files}
+    python-lint:
+      glob: "**/*.py"
+      run: ruff check {staged_files}
+    architecture-cards:
+      glob: "data/systems/*.json"
+      run: uv run mathen validate
+    typescript:
+      glob: "**/*.{ts,tsx,json,jsonc}"
+      run: bun run check
+
+commit-msg:
+  commands:
+    conventional-commit:
+      run: >-
+        sh -c 'grep -Eq "^([A-Z][A-Z0-9]*-[0-9]+ )?(feat|fix|docs|refactor|test|build|ci|chore|perf|revert)(\\([a-z0-9-]+\\))?!?: .+" "$1"
+        || { echo "Commit message must follow Conventional Commits." >&2; exit 1; }' -- {1}
+
+pre-push:
+  commands:
+    verification:
+      run: bun run check && bun run build && ruff format --check . && ruff check . && uv run python -m unittest discover -s tests -v

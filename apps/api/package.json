@@ -1,0 +1,26 @@
+{
+  "name": "@mathen/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "check": "tsc --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply mathen-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply mathen-db --remote",
+    "db:seed:local": "bun run scripts/seed.ts --local",
+    "db:reset:local": "rm -rf .wrangler/state/v3/d1 && bun run db:migrate:local && bun run db:seed:local",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "hono": "^4.13.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "@types/node": "^24.10.0",
+    "@cloudflare/workers-types": "^4.20260301.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.67.0"
+  }
+}

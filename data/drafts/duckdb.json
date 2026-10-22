@@ -1,0 +1,194 @@
+{
+  "id": "duckdb",
+  "name": "DuckDB",
+  "version_context": "commit d5a2febe24ec785199be3c71b28ecbd2ad9985f1",
+  "summary": "An embedded analytical relational engine that combines in-process deployment with columnar vectorized execution, bulk-oriented concurrency control, and extension-based data access.",
+  "scope": [
+    "embedded analytics",
+    "relational query execution",
+    "columnar processing",
+    "analytical concurrency",
+    "data-source extensions"
+  ],
+  "features": [
+    {
+      "id": "embedded-analytical-execution",
+      "name": "Embedded analytical execution",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "DuckDB is designed to run inside a host process without a separately managed database server. The embedded boundary is paired with analytical workloads and can avoid copying data between the host application and the engine in supported integrations.",
+      "benefits": [
+        "Reduces deployment and inter-process communication overhead",
+        "Fits notebooks, applications, local data workflows, and edge deployments",
+        "Allows the host process to control the engine lifecycle"
+      ],
+      "costs": [
+        "Database lifecycle and resource usage are coupled to the host process",
+        "A local embedded boundary is not by itself a multi-client service architecture",
+        "Large analytical queries compete with the host application for resources"
+      ],
+      "evidence_ids": [
+        "duckdb-why"
+      ]
+    },
+    {
+      "id": "columnar-vectorized-execution",
+      "name": "Columnar vectorized query execution",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "DuckDB targets OLAP workloads with columnar data processing and a vectorized execution engine that interprets operators over batches of values rather than one row at a time.",
+      "benefits": [
+        "Amortizes per-value interpretation overhead over vectors",
+        "Matches scans, joins, and aggregations over substantial portions of a dataset",
+        "Creates a natural unit for data-parallel execution"
+      ],
+      "costs": [
+        "The execution strategy is optimized for analytical batches rather than every transactional access pattern",
+        "Batch boundaries and columnar layout add execution and storage design constraints"
+      ],
+      "evidence_ids": [
+        "duckdb-why"
+      ]
+    },
+    {
+      "id": "bulk-optimized-mvcc",
+      "name": "Bulk-oriented MVCC transactions",
+      "category": "concurrency-model",
+      "claim_type": "fact",
+      "description": "DuckDB provides transactional guarantees through a custom MVCC design described as optimized for analytical, larger-scale changes such as appends or substantial table modifications.",
+      "benefits": [
+        "Provides transactional isolation for analytical workloads",
+        "Allows readers to reason about versions while bulk changes are processed",
+        "Aligns concurrency control with vectorized and batch-oriented execution"
+      ],
+      "costs": [
+        "Version management adds memory and coordination overhead",
+        "The workload assumptions differ from a high-contention OLTP server"
+      ],
+      "evidence_ids": [
+        "duckdb-why"
+      ]
+    },
+    {
+      "id": "extension-based-data-access",
+      "name": "Extension-based data and language integration",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "DuckDB exposes extensions for data types, functions, file formats, SQL syntax, and protocols. The official documentation identifies features such as Parquet, JSON, time zones, HTTP(S), and S3 support as extension-based capabilities.",
+      "benefits": [
+        "Extends the relational engine without placing every integration in the core",
+        "Supports heterogeneous file and object-storage workflows",
+        "Provides a reusable boundary for language and data-source integrations"
+      ],
+      "costs": [
+        "Extension compatibility and loading become part of deployment management",
+        "The semantic and performance contract may vary by extension"
+      ],
+      "evidence_ids": [
+        "duckdb-why"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Vectorized relational algebra pipeline",
+      "question": "How can relational operators be evaluated as transformations over finite columnar batches while preserving query results?",
+      "assumptions": [
+        "Each vectorized operator implements the intended relational operator semantics",
+        "Batch partitioning does not change the logical result",
+        "The view abstracts away physical memory layout and optimizer cost models"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "duckdb-why"
+      ]
+    },
+    {
+      "model": "Embedded-engine refinement boundary",
+      "question": "Which host-language and data-transfer details can be changed while preserving the SQL-facing analytical contract?",
+      "assumptions": [
+        "The host integration satisfies the engine's documented API and lifetime requirements",
+        "The observation concerns logical results and not resource isolation or performance equivalence",
+        "Zero-copy or direct foreign-data paths are treated as workload-dependent optimizations"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "duckdb-why"
+      ]
+    },
+    {
+      "model": "Extension composition algebra",
+      "question": "Under what compatibility conditions can independently implemented types, functions, formats, and protocols compose with the relational core?",
+      "assumptions": [
+        "Extensions obey the host engine's registration and execution interfaces",
+        "Composition is analyzed at the API and query-semantics level",
+        "The model does not claim that arbitrary extensions commute or preserve performance"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "duckdb-why"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "embedded-analytical-execution",
+      "benefits": [
+        "Simple deployment and low data-transfer overhead"
+      ],
+      "costs": [
+        "Host-process coupling and weaker separation from application resource usage"
+      ]
+    },
+    {
+      "feature_id": "columnar-vectorized-execution",
+      "benefits": [
+        "Efficient scans and aggregations over large batches"
+      ],
+      "costs": [
+        "Less directly aligned with tiny, highly selective, or write-heavy operations"
+      ]
+    },
+    {
+      "feature_id": "bulk-optimized-mvcc",
+      "benefits": [
+        "Transactional analytical updates and snapshot-oriented reads"
+      ],
+      "costs": [
+        "Version coordination and workload-specific concurrency assumptions"
+      ]
+    },
+    {
+      "feature_id": "extension-based-data-access",
+      "benefits": [
+        "Broad integration surface with a smaller core"
+      ],
+      "costs": [
+        "Extension lifecycle, compatibility, and trust become deployment concerns"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "duckdb-why",
+      "kind": "official-doc",
+      "title": "Why DuckDB",
+      "uri": "https://duckdb.org/why_duckdb.html",
+      "accessed": "2026-10-21",
+      "notes": "Documents embedded operation, analytical workload goals, columnar vectorized execution, MVCC, extensions, portability, and the design inspirations acknowledged by DuckDB."
+    },
+    {
+      "id": "duckdb-repository-commit",
+      "kind": "source-code",
+      "title": "DuckDB source at d5a2febe24ec",
+      "uri": "https://github.com/duckdb/duckdb/commit/d5a2febe24ec785199be3c71b28ecbd2ad9985f1",
+      "accessed": "2026-10-21",
+      "notes": "Fixed source revision used by deterministic repository analysis."
+    }
+  ],
+  "related_systems": [
+    "sqlite",
+    "postgresql",
+    "kafka"
+  ]
+}

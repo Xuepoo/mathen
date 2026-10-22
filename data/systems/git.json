@@ -1,0 +1,88 @@
+{
+  "id": "git",
+  "name": "Git",
+  "version_context": "Git object model and reference model",
+  "summary": "A distributed version-control system built around immutable content-addressed objects and mutable references over commit history.",
+  "scope": [
+    "object storage",
+    "commit history",
+    "references",
+    "working tree state"
+  ],
+  "features": [
+    {
+      "id": "content-addressed-objects",
+      "name": "Content-addressed object storage",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "Blobs, trees, commits, and annotated tags are addressed by identifiers derived from their serialized content.",
+      "benefits": ["Supports structural sharing and integrity checks"],
+      "costs": [
+        "History rewriting creates new identities rather than editing existing commits"
+      ],
+      "evidence_ids": ["git-data-model"]
+    },
+    {
+      "id": "mutable-reference-layer",
+      "name": "Mutable reference layer",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "Branches and tags provide names that point to objects while the referenced objects remain immutable.",
+      "benefits": ["Branch creation and movement are lightweight"],
+      "costs": [
+        "Reachability and retention depend on reference and reflog policy"
+      ],
+      "evidence_ids": ["git-data-model"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Merkle-style content-addressed graph",
+      "question": "How can a snapshot refer to immutable nested content and detect changes?",
+      "assumptions": [
+        "Object serialization is deterministic",
+        "Hash collisions are treated as outside the modeled failure boundary"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["git-data-model"]
+    },
+    {
+      "model": "Causal directed acyclic graph",
+      "question": "How are commit ancestry and merge relationships represented?",
+      "assumptions": [
+        "A newly created commit references existing parent commits",
+        "The model uses parent-to-child edges consistently"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["git-data-model"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "content-addressed-objects",
+      "benefits": [
+        "Immutable identity and efficient reuse of unchanged subtrees"
+      ],
+      "costs": [
+        "Changing commit metadata or parents changes the commit identity"
+      ]
+    },
+    {
+      "feature_id": "mutable-reference-layer",
+      "benefits": ["Cheap branching and explicit history navigation"],
+      "costs": [
+        "Garbage collection and reflog expiry affect recovery boundaries"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "git-data-model",
+      "kind": "official-doc",
+      "title": "Git user manual: Git objects and references",
+      "uri": "https://git-scm.com/book/en/v2/Git-Internals-Git-Objects",
+      "notes": "Primary documentation for the object model and content-addressed storage."
+    }
+  ],
+  "related_systems": ["sqlite", "kubernetes"]
+}

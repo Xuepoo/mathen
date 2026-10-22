@@ -1,0 +1,239 @@
+{
+  "contract_version": 1,
+  "system": {
+    "id": "firecracker",
+    "name": "Firecracker",
+    "category": "microvirtualization",
+    "repository": "https://github.com/firecracker-microvm/firecracker.git",
+    "documentation": "https://github.com/firecracker-microvm/firecracker/tree/main/docs",
+    "requested_ref": "main",
+    "commit": "1e5fcc27b59f24d8e9bae239cdc5d1e4b115c656",
+    "commit_url": "https://github.com/firecracker-microvm/firecracker/commit/1e5fcc27b59f24d8e9bae239cdc5d1e4b115c656",
+    "provenance": "github-archive"
+  },
+  "deterministic_observations": {
+    "analysis_version": 2,
+    "system_id": "firecracker",
+    "system_name": "Firecracker",
+    "category": "microvirtualization",
+    "priority": "seed",
+    "repository": "https://github.com/firecracker-microvm/firecracker.git",
+    "documentation": "https://github.com/firecracker-microvm/firecracker/tree/main/docs",
+    "requested_ref": "main",
+    "commit": "1e5fcc27b59f24d8e9bae239cdc5d1e4b115c656",
+    "provenance": "github-archive",
+    "commit_url": "https://github.com/firecracker-microvm/firecracker/commit/1e5fcc27b59f24d8e9bae239cdc5d1e4b115c656",
+    "analyzed_at": "2026-10-21T11:55:25+00:00",
+    "file_count": 835,
+    "top_level_entries": [
+      ".buildkite",
+      ".cargo",
+      ".dockerignore",
+      ".git-blame-ignore-revs",
+      ".github",
+      ".gitignore",
+      ".gitlint",
+      ".mailmap",
+      ".mdformat.toml",
+      ".python-version",
+      "CHANGELOG.md",
+      "CHARTER.md",
+      "CODE_OF_CONDUCT.md",
+      "CONTRIBUTING.md",
+      "CREDITS.md",
+      "Cargo.lock",
+      "Cargo.toml",
+      "DEPRECATED.md",
+      "FAQ.md",
+      "LICENSE",
+      "MAINTAINERS.md",
+      "NOTICE",
+      "PGP-KEY.asc",
+      "README.md",
+      "SECURITY.md",
+      "SPECIFICATION.md",
+      "THIRD-PARTY",
+      "deny.toml",
+      "docs",
+      "resources",
+      "rust-toolchain.toml",
+      "rustfmt.toml",
+      "src",
+      "tests",
+      "tools"
+    ],
+    "language_counts": {
+      "C": 14,
+      "C/C++ headers": 1,
+      "Go": 2,
+      "Python": 159,
+      "Rust": 365,
+      "Shell": 17,
+      "YAML": 12
+    },
+    "extension_counts": {
+      ".asc": 1,
+      ".bin": 3,
+      ".c": 14,
+      ".config": 11,
+      ".csv": 54,
+      ".drawio": 1,
+      ".go": 2,
+      ".h": 1,
+      ".ini": 1,
+      ".json": 55,
+      ".lock": 2,
+      ".md": 68,
+      ".mount": 1,
+      ".patch": 4,
+      ".png": 19,
+      ".py": 159,
+      ".rs": 365,
+      ".service": 1,
+      ".sh": 17,
+      ".start": 1,
+      ".svg": 6,
+      ".tgz": 1,
+      ".toml": 21,
+      ".txt": 1,
+      ".yaml": 1,
+      ".yml": 11
+    },
+    "build_markers": [
+      "Cargo.toml"
+    ],
+    "readme_paths": [
+      "README.md",
+      "resources/rootfs/overlay/usr/local/bin/readmem.c",
+      "src/clippy-tracing/README.md",
+      "src/firecracker/examples/README.md",
+      "src/log-instrument/README.md",
+      "tests/README.md"
+    ]
+  },
+  "existing_structural_draft": {
+    "id": "firecracker",
+    "name": "Firecracker",
+    "version_context": "commit 1e5fcc27b59f24d8e9bae239cdc5d1e4b115c656",
+    "summary": "Draft architecture card generated from Firecracker at commit 1e5fcc27b59f via github-archive. Semantic features require review.",
+    "scope": [
+      "repository structure",
+      "build surface",
+      "initial evidence"
+    ],
+    "features": [
+      {
+        "id": "repository-structure",
+        "name": "Observable repository structure",
+        "category": "repository-model",
+        "claim_type": "fact",
+        "description": "The inspected revision contains 835 files, top-level entries .buildkite, .cargo, .dockerignore, .git-blame-ignore-revs, .github, .gitignore, .gitlint, .mailmap, .mdformat.toml, .python-version, CHANGELOG.md, CHARTER.md, and source languages including C, C/C++ headers, Go, Python, Rust, Shell, YAML.",
+        "benefits": [
+          "Provides a reproducible baseline for later modeling."
+        ],
+        "costs": [
+          "Repository metrics do not by themselves explain runtime behavior."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "build-and-integration-surface",
+        "name": "Build and integration surface",
+        "category": "tooling-model",
+        "claim_type": "fact",
+        "description": "The revision exposes these root build markers: Cargo.toml.",
+        "benefits": [
+          "Identifies the first deterministic entry points for deeper analysis."
+        ],
+        "costs": [
+          "A marker is evidence of a tool, not proof of the complete build architecture."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "mathematical_views": [
+      {
+        "model": "Finite labeled repository graph",
+        "question": "What observable source and build entities are present at this revision?",
+        "assumptions": [
+          "The checkout is complete enough for structural inspection.",
+          "File paths and recognized markers are useful but incomplete proxies for architecture."
+        ],
+        "claim_type": "inference",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "trade_offs": [
+      {
+        "feature_id": "repository-structure",
+        "benefits": [
+          "Makes later analysis reproducible and comparable."
+        ],
+        "costs": [
+          "Static counts cannot establish semantic guarantees."
+        ]
+      },
+      {
+        "feature_id": "build-and-integration-surface",
+        "benefits": [
+          "Provides concrete next locations for source analysis."
+        ],
+        "costs": [
+          "Build metadata can vary by platform and configuration."
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "repository-commit",
+        "kind": "source-code",
+        "title": "Firecracker source at 1e5fcc27b59f",
+        "uri": "https://github.com/firecracker-microvm/firecracker/commit/1e5fcc27b59f24d8e9bae239cdc5d1e4b115c656",
+        "accessed": "2026-10-21T11:55:25+00:00",
+        "notes": "Generated from a github-archive checkout by the deterministic inspector."
+      },
+      {
+        "id": "official-documentation",
+        "kind": "official-doc",
+        "title": "Firecracker official documentation",
+        "uri": "https://github.com/firecracker-microvm/firecracker/tree/main/docs",
+        "accessed": "2026-10-21T11:55:25+00:00"
+      }
+    ],
+    "related_systems": []
+  },
+  "modeling_task": {
+    "objective": "Transform repository evidence into a reviewed-quality, evidence-backed architecture model.",
+    "questions": [
+      "What are the system's core abstractions and state components?",
+      "Which operations change state, and what invariants do they preserve?",
+      "Which reusable architecture features are supported by evidence?",
+      "Which mathematical views explain those features, under which assumptions?",
+      "What benefits, costs, failure modes, and counterexamples apply?"
+    ],
+    "required_claim_types": [
+      "fact",
+      "inference",
+      "hypothesis",
+      "analogy"
+    ],
+    "evidence_rules": [
+      "Do not promote a path name or file count into a semantic fact.",
+      "Every feature and mathematical view must cite evidence IDs.",
+      "Use hypothesis or analogy when the mathematical correspondence is not established.",
+      "Keep product-specific facts separate from transferable feature names."
+    ],
+    "output": {
+      "format": "Mathen Architecture Card JSON",
+      "schema": "schemas/architecture-card.schema.json",
+      "destination": "data/drafts/<system-id>.json",
+      "status": "draft; requires human review before data/systems promotion"
+    }
+  }
+}

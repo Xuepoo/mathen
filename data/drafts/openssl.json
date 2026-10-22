@@ -1,0 +1,136 @@
+{
+  "id": "openssl",
+  "name": "OpenSSL",
+  "version_context": "commit aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c",
+  "summary": "Draft architecture card generated from OpenSSL at commit aff3d3cf2550 via github-archive. Semantic features require review.",
+  "scope": [
+    "cryptography-library",
+    "repository structure",
+    "build surface",
+    "path-level architecture signals",
+    "initial evidence"
+  ],
+  "features": [
+    {
+      "id": "repository-structure",
+      "name": "Observable repository structure",
+      "category": "repository-model",
+      "claim_type": "fact",
+      "description": "The inspected revision contains 6095 files, top-level entries .ctags.d, ACKNOWLEDGEMENTS.md, AUTHORS.md, CHANGES.md, CODE-OF-CONDUCT.md, CONTRIBUTING.md, Configurations, Configure, DOCUMENTATION.md, HOWTO.md, INSTALL.md, LICENSE.txt, and source languages including C, C/C++ headers, Python, Shell, YAML.",
+      "benefits": [
+        "Provides a reproducible baseline for later modeling."
+      ],
+      "costs": [
+        "Repository metrics do not by themselves explain runtime behavior."
+      ],
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    },
+    {
+      "id": "architecture-path-signals",
+      "name": "Architecture-related path signals",
+      "category": "architecture-evidence",
+      "claim_type": "inference",
+      "description": "Path names contain these weak, non-semantic signals: concurrency, networking, storage. They identify targets for source review, not proof of runtime architecture.",
+      "benefits": [
+        "Prioritizes files for evidence-backed semantic analysis."
+      ],
+      "costs": [
+        "Names can be historical, incidental, or misleading."
+      ],
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    },
+    {
+      "id": "build-and-integration-surface",
+      "name": "Build and integration surface",
+      "category": "tooling-model",
+      "claim_type": "fact",
+      "description": "The revision exposes these root build markers: no recognized markers.",
+      "benefits": [
+        "Identifies the first deterministic entry points for deeper analysis."
+      ],
+      "costs": [
+        "A marker is evidence of a tool, not proof of the complete build architecture."
+      ],
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Finite labeled repository graph",
+      "question": "What observable source and build entities are present at this revision?",
+      "assumptions": [
+        "The checkout is complete enough for structural inspection.",
+        "File paths and recognized markers are useful but incomplete proxies for architecture."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    },
+    {
+      "model": "Evidence-prioritization signal model",
+      "question": "Which source paths should be inspected first for architecture evidence?",
+      "assumptions": [
+        "Path names are weak indicators and require source or documentation review.",
+        "Signal counts are useful for prioritization, not semantic classification."
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "repository-structure",
+      "benefits": [
+        "Makes later analysis reproducible and comparable."
+      ],
+      "costs": [
+        "Static counts cannot establish semantic guarantees."
+      ]
+    },
+    {
+      "feature_id": "build-and-integration-surface",
+      "benefits": [
+        "Provides concrete next locations for source analysis."
+      ],
+      "costs": [
+        "Build metadata can vary by platform and configuration."
+      ]
+    },
+    {
+      "feature_id": "architecture-path-signals",
+      "benefits": [
+        "Reduces the search space for later LLM-assisted review."
+      ],
+      "costs": [
+        "Heuristic signals can create false positives and false negatives."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "OpenSSL source at aff3d3cf2550",
+      "uri": "https://github.com/openssl/openssl/commit/aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c",
+      "accessed": "2026-10-22T06:07:29+00:00",
+      "notes": "Generated from a github-archive checkout by the deterministic inspector."
+    },
+    {
+      "id": "official-documentation",
+      "kind": "official-doc",
+      "title": "OpenSSL official documentation",
+      "uri": "https://docs.openssl.org/",
+      "accessed": "2026-10-22T06:07:29+00:00"
+    }
+  ],
+  "related_systems": []
+}

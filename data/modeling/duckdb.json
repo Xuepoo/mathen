@@ -1,0 +1,284 @@
+{
+  "contract_version": 1,
+  "system": {
+    "id": "duckdb",
+    "name": "DuckDB",
+    "category": "database",
+    "repository": "https://github.com/duckdb/duckdb.git",
+    "documentation": "https://duckdb.org/docs/",
+    "requested_ref": "main",
+    "commit": "d5a2febe24ec785199be3c71b28ecbd2ad9985f1",
+    "commit_url": "https://github.com/duckdb/duckdb/commit/d5a2febe24ec785199be3c71b28ecbd2ad9985f1",
+    "provenance": "github-archive"
+  },
+  "deterministic_observations": {
+    "analysis_version": 2,
+    "system_id": "duckdb",
+    "system_name": "DuckDB",
+    "category": "database",
+    "priority": "seed",
+    "repository": "https://github.com/duckdb/duckdb.git",
+    "documentation": "https://duckdb.org/docs/",
+    "requested_ref": "main",
+    "commit": "d5a2febe24ec785199be3c71b28ecbd2ad9985f1",
+    "provenance": "github-archive",
+    "commit_url": "https://github.com/duckdb/duckdb/commit/d5a2febe24ec785199be3c71b28ecbd2ad9985f1",
+    "analyzed_at": "2026-10-21T11:55:25+00:00",
+    "file_count": 17174,
+    "top_level_entries": [
+      ".clang-format",
+      ".clang-tidy",
+      ".clangd",
+      ".codecov.yml",
+      ".editorconfig",
+      ".gitattributes",
+      ".github",
+      ".gitignore",
+      ".sanitizer-leak-suppressions.txt",
+      ".sanitizer-thread-suppressions.txt",
+      "AGENTS.md",
+      "AI_POLICY.md",
+      "CITATION.cff",
+      "CLAUDE.md",
+      "CMakeLists.txt",
+      "CODE_OF_CONDUCT.md",
+      "CONTRIBUTING.md",
+      "Doxyfile",
+      "DuckDBConfig.cmake.in",
+      "DuckDBConfigVersion.cmake.in",
+      "LICENSE",
+      "Makefile",
+      "README.md",
+      "SECURITY.md",
+      "api_spec",
+      "benchmark",
+      "data",
+      "examples",
+      "extension",
+      "logo",
+      "scripts",
+      "src",
+      "test",
+      "third_party",
+      "tools"
+    ],
+    "language_counts": {
+      "C": 68,
+      "C++": 2471,
+      "C/C++ headers": 456,
+      "Python": 195,
+      "SQL": 600,
+      "Shell": 20,
+      "YAML": 120
+    },
+    "extension_counts": {
+      ".benchmark": 1217,
+      ".bin": 22,
+      ".binary": 1,
+      ".bkp": 1,
+      ".blob": 1,
+      ".c": 68,
+      ".cc": 27,
+      ".cff": 1,
+      ".cmake": 42,
+      ".cpp": 2444,
+      ".css": 1,
+      ".csv": 1819,
+      ".db": 24,
+      ".diff": 2,
+      ".disabled": 1,
+      ".duckdb": 1,
+      ".duckdb_secret": 3,
+      ".geojson": 1,
+      ".geojsonl": 6,
+      ".gram": 43,
+      ".gz": 155,
+      ".gzz": 1,
+      ".h": 456,
+      ".hpp": 1882,
+      ".html": 1,
+      ".ico": 1,
+      ".idx": 1,
+      ".in": 51,
+      ".json": 178,
+      ".jsonl": 11,
+      ".list": 9,
+      ".manifest": 1,
+      ".md": 53,
+      ".ndjson": 20,
+      ".parquet": 465,
+      ".patch": 41,
+      ".pbxproj": 1,
+      ".pem": 2,
+      ".plist": 4,
+      ".png": 4,
+      ".py": 195,
+      ".rc": 2,
+      ".sh": 20,
+      ".sha256": 1,
+      ".signature": 1,
+      ".sql": 600,
+      ".svg": 4,
+      ".swift": 45,
+      ".tcc": 1,
+      ".template": 1,
+      ".test": 5866,
+      ".test_slow": 834,
+      ".test_template": 1,
+      ".text": 1,
+      ".thrift": 1,
+      ".toml": 2,
+      ".tsv": 5,
+      ".txt": 264,
+      ".wal": 1,
+      ".xcplayground": 1,
+      ".xcscheme": 2,
+      ".xctimeline": 2,
+      ".xcworkspacedata": 3,
+      ".yaml": 80,
+      ".yml": 40,
+      ".zst": 3
+    },
+    "build_markers": [
+      "CMakeLists.txt",
+      "Makefile"
+    ],
+    "readme_paths": [
+      ".github/patches/extensions/README.md",
+      "README.md",
+      "api_spec/README.md",
+      "benchmark/README.md",
+      "benchmark/aoc24/README.md",
+      "benchmark/ldbc/README.md",
+      "benchmark/micro/parser/README.md",
+      "benchmark/recursive_cte/README.md",
+      "benchmark/recursive_cte/aoc2022/README.md",
+      "benchmark/recursive_cte/aoc2024/README.md"
+    ]
+  },
+  "existing_structural_draft": {
+    "id": "duckdb",
+    "name": "DuckDB",
+    "version_context": "commit d5a2febe24ec785199be3c71b28ecbd2ad9985f1",
+    "summary": "Draft architecture card generated from DuckDB at commit d5a2febe24ec via github-archive. Semantic features require review.",
+    "scope": [
+      "repository structure",
+      "build surface",
+      "initial evidence"
+    ],
+    "features": [
+      {
+        "id": "repository-structure",
+        "name": "Observable repository structure",
+        "category": "repository-model",
+        "claim_type": "fact",
+        "description": "The inspected revision contains 17174 files, top-level entries .clang-format, .clang-tidy, .clangd, .codecov.yml, .editorconfig, .gitattributes, .github, .gitignore, .sanitizer-leak-suppressions.txt, .sanitizer-thread-suppressions.txt, AGENTS.md, AI_POLICY.md, and source languages including C, C++, C/C++ headers, Python, SQL, Shell, YAML.",
+        "benefits": [
+          "Provides a reproducible baseline for later modeling."
+        ],
+        "costs": [
+          "Repository metrics do not by themselves explain runtime behavior."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "build-and-integration-surface",
+        "name": "Build and integration surface",
+        "category": "tooling-model",
+        "claim_type": "fact",
+        "description": "The revision exposes these root build markers: CMakeLists.txt, Makefile.",
+        "benefits": [
+          "Identifies the first deterministic entry points for deeper analysis."
+        ],
+        "costs": [
+          "A marker is evidence of a tool, not proof of the complete build architecture."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "mathematical_views": [
+      {
+        "model": "Finite labeled repository graph",
+        "question": "What observable source and build entities are present at this revision?",
+        "assumptions": [
+          "The checkout is complete enough for structural inspection.",
+          "File paths and recognized markers are useful but incomplete proxies for architecture."
+        ],
+        "claim_type": "inference",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "trade_offs": [
+      {
+        "feature_id": "repository-structure",
+        "benefits": [
+          "Makes later analysis reproducible and comparable."
+        ],
+        "costs": [
+          "Static counts cannot establish semantic guarantees."
+        ]
+      },
+      {
+        "feature_id": "build-and-integration-surface",
+        "benefits": [
+          "Provides concrete next locations for source analysis."
+        ],
+        "costs": [
+          "Build metadata can vary by platform and configuration."
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "repository-commit",
+        "kind": "source-code",
+        "title": "DuckDB source at d5a2febe24ec",
+        "uri": "https://github.com/duckdb/duckdb/commit/d5a2febe24ec785199be3c71b28ecbd2ad9985f1",
+        "accessed": "2026-10-21T11:55:25+00:00",
+        "notes": "Generated from a github-archive checkout by the deterministic inspector."
+      },
+      {
+        "id": "official-documentation",
+        "kind": "official-doc",
+        "title": "DuckDB official documentation",
+        "uri": "https://duckdb.org/docs/",
+        "accessed": "2026-10-21T11:55:25+00:00"
+      }
+    ],
+    "related_systems": []
+  },
+  "modeling_task": {
+    "objective": "Transform repository evidence into a reviewed-quality, evidence-backed architecture model.",
+    "questions": [
+      "What are the system's core abstractions and state components?",
+      "Which operations change state, and what invariants do they preserve?",
+      "Which reusable architecture features are supported by evidence?",
+      "Which mathematical views explain those features, under which assumptions?",
+      "What benefits, costs, failure modes, and counterexamples apply?"
+    ],
+    "required_claim_types": [
+      "fact",
+      "inference",
+      "hypothesis",
+      "analogy"
+    ],
+    "evidence_rules": [
+      "Do not promote a path name or file count into a semantic fact.",
+      "Every feature and mathematical view must cite evidence IDs.",
+      "Use hypothesis or analogy when the mathematical correspondence is not established.",
+      "Keep product-specific facts separate from transferable feature names."
+    ],
+    "output": {
+      "format": "Mathen Architecture Card JSON",
+      "schema": "schemas/architecture-card.schema.json",
+      "destination": "data/drafts/<system-id>.json",
+      "status": "draft; requires human review before data/systems promotion"
+    }
+  }
+}

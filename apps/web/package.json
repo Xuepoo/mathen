@@ -1,0 +1,16 @@
+{
+  "name": "@mathen/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "cytoscape": "^3.33.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

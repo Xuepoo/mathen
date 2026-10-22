@@ -1,0 +1,465 @@
+{
+  "contract_version": 1,
+  "system": {
+    "id": "elasticsearch",
+    "name": "Elasticsearch",
+    "category": "search-engine",
+    "repository": "https://github.com/elastic/elasticsearch.git",
+    "documentation": "https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html",
+    "requested_ref": "main",
+    "commit": "60af67280bba0b807306cfd7dc9ec46974ad4d49",
+    "commit_url": "https://github.com/elastic/elasticsearch/commit/60af67280bba0b807306cfd7dc9ec46974ad4d49",
+    "provenance": "github-archive"
+  },
+  "deterministic_observations": {
+    "analysis_version": 2,
+    "system_id": "elasticsearch",
+    "system_name": "Elasticsearch",
+    "category": "search-engine",
+    "priority": "core",
+    "repository": "https://github.com/elastic/elasticsearch.git",
+    "documentation": "https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html",
+    "requested_ref": "main",
+    "commit": "60af67280bba0b807306cfd7dc9ec46974ad4d49",
+    "provenance": "github-archive",
+    "commit_url": "https://github.com/elastic/elasticsearch/commit/60af67280bba0b807306cfd7dc9ec46974ad4d49",
+    "analyzed_at": "2026-10-21T12:46:24+00:00",
+    "file_count": 50891,
+    "top_level_entries": [
+      ".backportrc.json",
+      ".buildkite",
+      ".ci",
+      ".dir-locals.el",
+      ".editorconfig",
+      ".git-blame-ignore-revs",
+      ".gitattributes",
+      ".github",
+      ".gitignore",
+      ".idea",
+      ".libra",
+      "AGENTS.md",
+      "BUILDING.md",
+      "CHANGELOG.md",
+      "CLAUDE.md",
+      "CONTRIBUTING.md",
+      "LICENSE.txt",
+      "NOTICE.txt",
+      "README.asciidoc",
+      "REST_API_COMPATIBILITY.md",
+      "TESTING.asciidoc",
+      "TRACING.md",
+      "Vagrantfile",
+      "benchmarks",
+      "branches.json",
+      "build-conventions",
+      "build-tools",
+      "build-tools-internal",
+      "build.gradle",
+      "catalog-info.yaml",
+      "client",
+      "dev-tools",
+      "distribution",
+      "docs",
+      "gradle",
+      "gradle.properties",
+      "gradlew",
+      "gradlew.bat",
+      "libs",
+      "licenses",
+      "modules",
+      "muted-tests.yml",
+      "plugins",
+      "qa",
+      "renovate.json",
+      "rest-api-spec",
+      "server",
+      "settings.gradle",
+      "test",
+      "updatecli-compose.yaml",
+      "x-pack"
+    ],
+    "language_counts": {
+      "C++": 31,
+      "C/C++ headers": 8,
+      "Java": 33306,
+      "JavaScript": 2,
+      "Python": 4,
+      "SQL": 13,
+      "Shell": 83,
+      "TypeScript": 44,
+      "YAML": 3062
+    },
+    "extension_counts": {
+      ".actionloggingfieldsprovider": 2,
+      ".aff": 4,
+      ".alias": 1,
+      ".alias-shadow": 1,
+      ".allocation-estimator": 1,
+      ".allocation-estimator-conflict": 1,
+      ".allocation-estimator-missing-class": 1,
+      ".allocation-estimator-missing-method": 1,
+      ".allocation-estimator-not-long": 1,
+      ".annotation": 1,
+      ".asc": 1,
+      ".asciidoc": 41,
+      ".autoscalingextension": 1,
+      ".avro": 4,
+      ".base64": 1,
+      ".bash": 1,
+      ".bat": 25,
+      ".bcfks": 6,
+      ".binary": 11,
+      ".blockfactoryparameters": 1,
+      ".cancellation-missing-overload": 1,
+      ".cancellation-no-augmentation": 1,
+      ".cancellation-shadow": 1,
+      ".cert": 1,
+      ".cfg": 3,
+      ".chain": 1,
+      ".clitoolprovider": 11,
+      ".cnf": 2,
+      ".codec": 3,
+      ".componentversionnumber": 1,
+      ".conf": 6,
+      ".config": 1,
+      ".configurationpropertiessource": 1,
+      ".contextdataprovider": 1,
+      ".cpp": 31,
+      ".crc": 10,
+      ".cross-toolchain": 1,
+      ".crt": 268,
+      ".csr": 1,
+      ".css": 3,
+      ".csv": 882,
+      ".csv-spec": 299,
+      ".csv-spec-ignored": 1,
+      ".data": 8,
+      ".datasourceplugin": 17,
+      ".der": 2,
+      ".dic": 4,
+      ".dict": 1,
+      ".diff": 1,
+      ".disabled": 1,
+      ".doc": 1,
+      ".dockerfile": 1,
+      ".docvaluesformat": 3,
+      ".docx": 2,
+      ".downsamplingoperations": 1,
+      ".driver": 1,
+      ".dynamic": 1,
+      ".el": 1,
+      ".encrypteddatahandlerprovider": 2,
+      ".env": 1,
+      ".epub": 1,
+      ".eql": 2,
+      ".erroronunknown": 1,
+      ".esql": 1301,
+      ".ess": 1,
+      ".estimatedheapusagecollector": 2,
+      ".exe": 2,
+      ".expected": 2463,
+      ".featurespecification": 20,
+      ".frozentransitioninfoprovider": 1,
+      ".ftl": 3,
+      ".g4": 37,
+      ".geometryformatterextension": 1,
+      ".gif": 1,
+      ".gradle": 587,
+      ".graffle": 1,
+      ".groovy": 114,
+      ".gz": 88,
+      ".h": 8,
+      ".help": 2,
+      ".html": 4,
+      ".ico": 1,
+      ".iglobalextension": 1,
+      ".importorder": 1,
+      ".indexmetadatarestoretransformer": 2,
+      ".inferenceserviceextension": 1,
+      ".ini": 3,
+      ".instrumentationservice": 1,
+      ".interp": 10,
+      ".jar": 5,
+      ".java": 33306,
+      ".jks": 40,
+      ".js": 2,
+      ".json": 1664,
+      ".key": 242,
+      ".keystore": 8,
+      ".keytab": 1,
+      ".knnvectorsformat": 2,
+      ".kver": 1,
+      ".ldif": 5,
+      ".ldiff": 1,
+      ".log": 1,
+      ".loggingdataprovider": 1,
+      ".lookup": 1,
+      ".mapping": 9,
+      ".markdown": 1,
+      ".md": 3602,
+      ".mmdb": 27,
+      ".mod": 2,
+      ".mustache": 1,
+      ".namedxcontentprovider": 2,
+      ".ndjson": 13,
+      ".onlineprewarmingserviceprovider": 1,
+      ".options": 1,
+      ".p12": 42,
+      ".painless": 1,
+      ".painlessextension": 16,
+      ".parquet": 17,
+      ".password": 1,
+      ".pdf": 3,
+      ".pem": 85,
+      ".pluginsservicetests$testextensionpoint": 1,
+      ".png": 158,
+      ".policy": 3,
+      ".postingsformat": 2,
+      ".prefs": 3,
+      ".processor": 3,
+      ".projectresolverfactory": 1,
+      ".promql": 4,
+      ".properties": 54,
+      ".proto": 2,
+      ".ps1": 3,
+      ".pt": 3,
+      ".py": 4,
+      ".querymetricslistener": 1,
+      ".rbbi": 3,
+      ".remoteclustersecurityextension$provider": 1,
+      ".reservedstatehandlerprovider": 7,
+      ".scenarios": 1,
+      ".secondaryauthactions": 1,
+      ".security": 4,
+      ".securityextension": 5,
+      ".series-spec": 1,
+      ".service": 1,
+      ".sh": 83,
+      ".sha1": 30,
+      ".snap": 1,
+      ".snapshotshardcontextfactory": 1,
+      ".sortfieldprovider": 1,
+      ".sql": 13,
+      ".sql-spec": 17,
+      ".sslprofileextension": 1,
+      ".st": 44,
+      ".svg": 288,
+      ".tar": 4,
+      ".tdd": 1,
+      ".tdr": 1,
+      ".tds": 2,
+      ".template": 3,
+      ".templatedecoratorprovider": 2,
+      ".terminationhandlerprovider": 1,
+      ".test": 1,
+      ".testservice": 1,
+      ".text": 2,
+      ".tgz": 5,
+      ".this": 1,
+      ".timeserieseligiblewritewindowlocator": 1,
+      ".tokens": 15,
+      ".toml": 14,
+      ".ts": 44,
+      ".tsv": 1,
+      ".txt": 1019,
+      ".unknown": 1,
+      ".unknown_with_options": 1,
+      ".uuidsource": 1,
+      ".vm": 16,
+      ".vsdx": 1,
+      ".xcontentbuilderextension": 1,
+      ".xcontentprovider": 1,
+      ".xml": 82,
+      ".xsd": 12,
+      ".yaml": 926,
+      ".yml": 2136,
+      ".zip": 222
+    },
+    "build_markers": [],
+    "readme_paths": [
+      ".buildkite/README.md",
+      ".buildkite/scripts/flakiness-detection/README.md",
+      ".buildkite/scripts/pull-request/README.md",
+      ".buildkite/scripts/smart-retry/README.md",
+      ".ci/README.md",
+      "README.asciidoc",
+      "benchmarks/README.md",
+      "benchmarks/src/main/java/org/elasticsearch/benchmark/_nightly/esql/ReadMetrics.java",
+      "benchmarks/src/main/resources/org/elasticsearch/benchmark/xcontent/README.txt",
+      "build-tools-internal/src/main/resources/deb/README"
+    ],
+    "path_signals": {
+      "compiler": 249,
+      "concurrency": 74,
+      "media": 685,
+      "networking": 320,
+      "orchestration": 633,
+      "query-execution": 3545,
+      "storage": 151
+    }
+  },
+  "existing_structural_draft": {
+    "id": "elasticsearch",
+    "name": "Elasticsearch",
+    "version_context": "commit 60af67280bba0b807306cfd7dc9ec46974ad4d49",
+    "summary": "Draft architecture card generated from Elasticsearch at commit 60af67280bba via github-archive. Semantic features require review.",
+    "scope": [
+      "search-engine",
+      "repository structure",
+      "build surface",
+      "path-level architecture signals",
+      "initial evidence"
+    ],
+    "features": [
+      {
+        "id": "repository-structure",
+        "name": "Observable repository structure",
+        "category": "repository-model",
+        "claim_type": "fact",
+        "description": "The inspected revision contains 50891 files, top-level entries .backportrc.json, .buildkite, .ci, .dir-locals.el, .editorconfig, .git-blame-ignore-revs, .gitattributes, .github, .gitignore, .idea, .libra, AGENTS.md, and source languages including C++, C/C++ headers, Java, JavaScript, Python, SQL, Shell, TypeScript, YAML.",
+        "benefits": [
+          "Provides a reproducible baseline for later modeling."
+        ],
+        "costs": [
+          "Repository metrics do not by themselves explain runtime behavior."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "architecture-path-signals",
+        "name": "Architecture-related path signals",
+        "category": "architecture-evidence",
+        "claim_type": "inference",
+        "description": "Path names contain these weak, non-semantic signals: compiler, concurrency, media, networking, orchestration, query-execution, storage. They identify targets for source review, not proof of runtime architecture.",
+        "benefits": [
+          "Prioritizes files for evidence-backed semantic analysis."
+        ],
+        "costs": [
+          "Names can be historical, incidental, or misleading."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "build-and-integration-surface",
+        "name": "Build and integration surface",
+        "category": "tooling-model",
+        "claim_type": "fact",
+        "description": "The revision exposes these root build markers: no recognized markers.",
+        "benefits": [
+          "Identifies the first deterministic entry points for deeper analysis."
+        ],
+        "costs": [
+          "A marker is evidence of a tool, not proof of the complete build architecture."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "mathematical_views": [
+      {
+        "model": "Finite labeled repository graph",
+        "question": "What observable source and build entities are present at this revision?",
+        "assumptions": [
+          "The checkout is complete enough for structural inspection.",
+          "File paths and recognized markers are useful but incomplete proxies for architecture."
+        ],
+        "claim_type": "inference",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "model": "Evidence-prioritization signal model",
+        "question": "Which source paths should be inspected first for architecture evidence?",
+        "assumptions": [
+          "Path names are weak indicators and require source or documentation review.",
+          "Signal counts are useful for prioritization, not semantic classification."
+        ],
+        "claim_type": "hypothesis",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "trade_offs": [
+      {
+        "feature_id": "repository-structure",
+        "benefits": [
+          "Makes later analysis reproducible and comparable."
+        ],
+        "costs": [
+          "Static counts cannot establish semantic guarantees."
+        ]
+      },
+      {
+        "feature_id": "build-and-integration-surface",
+        "benefits": [
+          "Provides concrete next locations for source analysis."
+        ],
+        "costs": [
+          "Build metadata can vary by platform and configuration."
+        ]
+      },
+      {
+        "feature_id": "architecture-path-signals",
+        "benefits": [
+          "Reduces the search space for later LLM-assisted review."
+        ],
+        "costs": [
+          "Heuristic signals can create false positives and false negatives."
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "repository-commit",
+        "kind": "source-code",
+        "title": "Elasticsearch source at 60af67280bba",
+        "uri": "https://github.com/elastic/elasticsearch/commit/60af67280bba0b807306cfd7dc9ec46974ad4d49",
+        "accessed": "2026-10-21T12:46:24+00:00",
+        "notes": "Generated from a github-archive checkout by the deterministic inspector."
+      },
+      {
+        "id": "official-documentation",
+        "kind": "official-doc",
+        "title": "Elasticsearch official documentation",
+        "uri": "https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html",
+        "accessed": "2026-10-21T12:46:24+00:00"
+      }
+    ],
+    "related_systems": []
+  },
+  "modeling_task": {
+    "objective": "Transform repository evidence into a reviewed-quality, evidence-backed architecture model.",
+    "questions": [
+      "What are the system's core abstractions and state components?",
+      "Which operations change state, and what invariants do they preserve?",
+      "Which reusable architecture features are supported by evidence?",
+      "Which mathematical views explain those features, under which assumptions?",
+      "What benefits, costs, failure modes, and counterexamples apply?"
+    ],
+    "required_claim_types": [
+      "fact",
+      "inference",
+      "hypothesis",
+      "analogy"
+    ],
+    "evidence_rules": [
+      "Do not promote a path name or file count into a semantic fact.",
+      "Every feature and mathematical view must cite evidence IDs.",
+      "Use hypothesis or analogy when the mathematical correspondence is not established.",
+      "Keep product-specific facts separate from transferable feature names."
+    ],
+    "output": {
+      "format": "Mathen Architecture Card JSON",
+      "schema": "schemas/architecture-card.schema.json",
+      "destination": "data/drafts/<system-id>.json",
+      "status": "draft; requires human review before data/systems promotion"
+    }
+  }
+}

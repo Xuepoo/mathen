@@ -1,0 +1,353 @@
+{
+  "contract_version": 1,
+  "system": {
+    "id": "postgresql",
+    "name": "PostgreSQL",
+    "category": "database",
+    "repository": "https://github.com/postgres/postgres.git",
+    "documentation": "https://www.postgresql.org/docs/",
+    "requested_ref": "master",
+    "commit": "6b9f40d49ae33eb0b4a7c77666fe4971ef7ba087",
+    "commit_url": "https://github.com/postgres/postgres/commit/6b9f40d49ae33eb0b4a7c77666fe4971ef7ba087",
+    "provenance": "github-archive"
+  },
+  "deterministic_observations": {
+    "analysis_version": 2,
+    "system_id": "postgresql",
+    "system_name": "PostgreSQL",
+    "category": "database",
+    "priority": "core",
+    "repository": "https://github.com/postgres/postgres.git",
+    "documentation": "https://www.postgresql.org/docs/",
+    "requested_ref": "master",
+    "commit": "6b9f40d49ae33eb0b4a7c77666fe4971ef7ba087",
+    "provenance": "github-archive",
+    "commit_url": "https://github.com/postgres/postgres/commit/6b9f40d49ae33eb0b4a7c77666fe4971ef7ba087",
+    "analyzed_at": "2026-10-21T12:26:38+00:00",
+    "file_count": 7720,
+    "top_level_entries": [
+      ".dir-locals.el",
+      ".editorconfig",
+      ".git-blame-ignore-revs",
+      ".gitattributes",
+      ".github",
+      ".gitignore",
+      ".mailmap",
+      "COPYRIGHT",
+      "GNUmakefile.in",
+      "HISTORY",
+      "Makefile",
+      "README.md",
+      "aclocal.m4",
+      "config",
+      "configure",
+      "configure.ac",
+      "contrib",
+      "doc",
+      "meson.build",
+      "meson_options.txt",
+      "src"
+    ],
+    "language_counts": {
+      "C": 1546,
+      "C++": 5,
+      "C/C++ headers": 1014,
+      "Python": 6,
+      "SQL": 854,
+      "Shell": 6,
+      "YAML": 1
+    },
+    "extension_counts": {
+      ".0": 18,
+      ".1": 1,
+      ".ac": 1,
+      ".addons": 1,
+      ".affix": 4,
+      ".aix": 1,
+      ".bad": 2,
+      ".barrier": 1,
+      ".bin": 1,
+      ".build": 307,
+      ".c": 1546,
+      ".conf": 12,
+      ".config": 24,
+      ".control": 119,
+      ".cpp": 5,
+      ".crl": 5,
+      ".crt": 30,
+      ".css": 1,
+      ".csv": 6,
+      ".cygwin": 1,
+      ".d": 1,
+      ".darwin": 1,
+      ".dat": 26,
+      ".data": 53,
+      ".def": 1,
+      ".dependencies": 1,
+      ".dict": 3,
+      ".dynsql": 1,
+      ".el": 1,
+      ".euc_jp": 1,
+      ".example": 3,
+      ".freebsd": 1,
+      ".guess": 1,
+      ".gv": 3,
+      ".h": 1014,
+      ".header": 1,
+      ".hot": 1,
+      ".ico": 1,
+      ".in": 21,
+      ".json": 1,
+      ".key": 28,
+      ".l": 14,
+      ".ldif": 1,
+      ".license": 1,
+      ".links": 1,
+      ".linux": 1,
+      ".list": 2,
+      ".m4": 12,
+      ".man": 1,
+      ".map": 77,
+      ".mc": 1,
+      ".mcv": 1,
+      ".md": 5,
+      ".mk": 35,
+      ".netbsd": 1,
+      ".non-ascii": 1,
+      ".openbsd": 1,
+      ".out": 885,
+      ".parallel": 1,
+      ".parser": 1,
+      ".pgc": 71,
+      ".pl": 388,
+      ".plist": 1,
+      ".pm": 19,
+      ".po": 467,
+      ".pro": 8,
+      ".ps1": 1,
+      ".py": 6,
+      ".r0": 6,
+      ".rc": 2,
+      ".regress": 1,
+      ".rules": 2,
+      ".sample": 6,
+      ".samples": 2,
+      ".sed": 1,
+      ".sgml": 429,
+      ".sh": 6,
+      ".shlib": 1,
+      ".solaris": 1,
+      ".source": 5,
+      ".spec": 180,
+      ".sql": 854,
+      ".ssl": 1,
+      ".stderr": 69,
+      ".stdout": 90,
+      ".stop": 15,
+      ".sub": 1,
+      ".supp": 1,
+      ".svg": 6,
+      ".syn": 1,
+      ".te": 1,
+      ".ths": 1,
+      ".tokens": 1,
+      ".trace": 9,
+      ".trailer": 1,
+      ".tuplock": 1,
+      ".txt": 42,
+      ".type": 1,
+      ".win32": 1,
+      ".xml": 1,
+      ".xs": 2,
+      ".xsl": 10,
+      ".y": 11,
+      ".yml": 1,
+      ".zi": 1
+    },
+    "build_markers": [
+      "Makefile"
+    ],
+    "readme_paths": [
+      "README.md",
+      "contrib/README",
+      "contrib/pg_plan_advice/README",
+      "contrib/start-scripts/macos/README",
+      "doc/src/sgml/README.links",
+      "doc/src/sgml/README.non-ASCII",
+      "doc/src/sgml/images/README",
+      "src/backend/access/brin/README",
+      "src/backend/access/gin/README",
+      "src/backend/access/gist/README"
+    ],
+    "path_signals": {
+      "compiler": 61,
+      "concurrency": 8,
+      "query-execution": 94,
+      "storage": 162
+    }
+  },
+  "existing_structural_draft": {
+    "id": "postgresql",
+    "name": "PostgreSQL",
+    "version_context": "commit 6b9f40d49ae33eb0b4a7c77666fe4971ef7ba087",
+    "summary": "Draft architecture card generated from PostgreSQL at commit 6b9f40d49ae3 via github-archive. Semantic features require review.",
+    "scope": [
+      "database",
+      "repository structure",
+      "build surface",
+      "path-level architecture signals",
+      "initial evidence"
+    ],
+    "features": [
+      {
+        "id": "repository-structure",
+        "name": "Observable repository structure",
+        "category": "repository-model",
+        "claim_type": "fact",
+        "description": "The inspected revision contains 7720 files, top-level entries .dir-locals.el, .editorconfig, .git-blame-ignore-revs, .gitattributes, .github, .gitignore, .mailmap, COPYRIGHT, GNUmakefile.in, HISTORY, Makefile, README.md, and source languages including C, C++, C/C++ headers, Python, SQL, Shell, YAML.",
+        "benefits": [
+          "Provides a reproducible baseline for later modeling."
+        ],
+        "costs": [
+          "Repository metrics do not by themselves explain runtime behavior."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "architecture-path-signals",
+        "name": "Architecture-related path signals",
+        "category": "architecture-evidence",
+        "claim_type": "inference",
+        "description": "Path names contain these weak, non-semantic signals: compiler, concurrency, query-execution, storage. They identify targets for source review, not proof of runtime architecture.",
+        "benefits": [
+          "Prioritizes files for evidence-backed semantic analysis."
+        ],
+        "costs": [
+          "Names can be historical, incidental, or misleading."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "build-and-integration-surface",
+        "name": "Build and integration surface",
+        "category": "tooling-model",
+        "claim_type": "fact",
+        "description": "The revision exposes these root build markers: Makefile.",
+        "benefits": [
+          "Identifies the first deterministic entry points for deeper analysis."
+        ],
+        "costs": [
+          "A marker is evidence of a tool, not proof of the complete build architecture."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "mathematical_views": [
+      {
+        "model": "Finite labeled repository graph",
+        "question": "What observable source and build entities are present at this revision?",
+        "assumptions": [
+          "The checkout is complete enough for structural inspection.",
+          "File paths and recognized markers are useful but incomplete proxies for architecture."
+        ],
+        "claim_type": "inference",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "model": "Evidence-prioritization signal model",
+        "question": "Which source paths should be inspected first for architecture evidence?",
+        "assumptions": [
+          "Path names are weak indicators and require source or documentation review.",
+          "Signal counts are useful for prioritization, not semantic classification."
+        ],
+        "claim_type": "hypothesis",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "trade_offs": [
+      {
+        "feature_id": "repository-structure",
+        "benefits": [
+          "Makes later analysis reproducible and comparable."
+        ],
+        "costs": [
+          "Static counts cannot establish semantic guarantees."
+        ]
+      },
+      {
+        "feature_id": "build-and-integration-surface",
+        "benefits": [
+          "Provides concrete next locations for source analysis."
+        ],
+        "costs": [
+          "Build metadata can vary by platform and configuration."
+        ]
+      },
+      {
+        "feature_id": "architecture-path-signals",
+        "benefits": [
+          "Reduces the search space for later LLM-assisted review."
+        ],
+        "costs": [
+          "Heuristic signals can create false positives and false negatives."
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "repository-commit",
+        "kind": "source-code",
+        "title": "PostgreSQL source at 6b9f40d49ae3",
+        "uri": "https://github.com/postgres/postgres/commit/6b9f40d49ae33eb0b4a7c77666fe4971ef7ba087",
+        "accessed": "2026-10-21T12:26:38+00:00",
+        "notes": "Generated from a github-archive checkout by the deterministic inspector."
+      },
+      {
+        "id": "official-documentation",
+        "kind": "official-doc",
+        "title": "PostgreSQL official documentation",
+        "uri": "https://www.postgresql.org/docs/",
+        "accessed": "2026-10-21T12:26:38+00:00"
+      }
+    ],
+    "related_systems": []
+  },
+  "modeling_task": {
+    "objective": "Transform repository evidence into a reviewed-quality, evidence-backed architecture model.",
+    "questions": [
+      "What are the system's core abstractions and state components?",
+      "Which operations change state, and what invariants do they preserve?",
+      "Which reusable architecture features are supported by evidence?",
+      "Which mathematical views explain those features, under which assumptions?",
+      "What benefits, costs, failure modes, and counterexamples apply?"
+    ],
+    "required_claim_types": [
+      "fact",
+      "inference",
+      "hypothesis",
+      "analogy"
+    ],
+    "evidence_rules": [
+      "Do not promote a path name or file count into a semantic fact.",
+      "Every feature and mathematical view must cite evidence IDs.",
+      "Use hypothesis or analogy when the mathematical correspondence is not established.",
+      "Keep product-specific facts separate from transferable feature names."
+    ],
+    "output": {
+      "format": "Mathen Architecture Card JSON",
+      "schema": "schemas/architecture-card.schema.json",
+      "destination": "data/drafts/<system-id>.json",
+      "status": "draft; requires human review before data/systems promotion"
+    }
+  }
+}

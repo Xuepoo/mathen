@@ -1,0 +1,301 @@
+{
+  "contract_version": 1,
+  "system": {
+    "id": "redis",
+    "name": "Redis",
+    "category": "data-service",
+    "repository": "https://github.com/redis/redis.git",
+    "documentation": "https://redis.io/docs/latest/",
+    "requested_ref": "unstable",
+    "commit": "6ea763ceb8b417bd35973c828c93afc0d7145e56",
+    "commit_url": "https://github.com/redis/redis/commit/6ea763ceb8b417bd35973c828c93afc0d7145e56",
+    "provenance": "github-archive"
+  },
+  "deterministic_observations": {
+    "analysis_version": 2,
+    "system_id": "redis",
+    "system_name": "Redis",
+    "category": "data-service",
+    "priority": "core",
+    "repository": "https://github.com/redis/redis.git",
+    "documentation": "https://redis.io/docs/latest/",
+    "requested_ref": "unstable",
+    "commit": "6ea763ceb8b417bd35973c828c93afc0d7145e56",
+    "provenance": "github-archive",
+    "commit_url": "https://github.com/redis/redis/commit/6ea763ceb8b417bd35973c828c93afc0d7145e56",
+    "analyzed_at": "2026-10-21T12:26:38+00:00",
+    "file_count": 1938,
+    "top_level_entries": [
+      ".config",
+      ".dockerignore",
+      ".gitattributes",
+      ".github",
+      ".gitignore",
+      "00-RELEASENOTES",
+      "BUGS",
+      "CODE_OF_CONDUCT.md",
+      "CONTRIBUTING.md",
+      "INSTALL",
+      "LICENSE.txt",
+      "MANIFESTO",
+      "Makefile",
+      "README.md",
+      "REDISCONTRIBUTIONS.txt",
+      "SECURITY.md",
+      "TLS.md",
+      "codecov.yml",
+      "deps",
+      "docker",
+      "modules",
+      "redis.conf",
+      "runtest",
+      "runtest-moduleapi",
+      "runtest-sentinel",
+      "scripts",
+      "sentinel.conf",
+      "src",
+      "tests",
+      "tools",
+      "utils"
+    ],
+    "language_counts": {
+      "C": 504,
+      "C++": 7,
+      "C/C++ headers": 342,
+      "JavaScript": 1,
+      "Python": 51,
+      "Shell": 83,
+      "YAML": 22
+    },
+    "extension_counts": {
+      ".1": 2,
+      ".ac": 1,
+      ".acl": 3,
+      ".aof": 1,
+      ".bat": 1,
+      ".c": 504,
+      ".cfg": 1,
+      ".conf": 5,
+      ".cpp": 7,
+      ".css": 2,
+      ".def": 1,
+      ".filters": 4,
+      ".gif": 1,
+      ".guess": 1,
+      ".h": 342,
+      ".hpp": 1,
+      ".html": 5,
+      ".ico": 1,
+      ".in": 22,
+      ".js": 1,
+      ".json": 467,
+      ".lua": 20,
+      ".m4": 1,
+      ".make": 1,
+      ".markdown": 1,
+      ".md": 30,
+      ".mk": 2,
+      ".noble": 1,
+      ".pc": 1,
+      ".png": 1,
+      ".py": 51,
+      ".rb": 9,
+      ".rdb": 10,
+      ".service": 2,
+      ".sh": 83,
+      ".sln": 2,
+      ".sub": 1,
+      ".sup": 2,
+      ".svg": 1,
+      ".targets": 1,
+      ".tcl": 241,
+      ".toml": 1,
+      ".tpl": 1,
+      ".txt": 10,
+      ".vcxproj": 4,
+      ".xsl": 1,
+      ".yaml": 1,
+      ".yml": 21
+    },
+    "build_markers": [
+      "Makefile"
+    ],
+    "readme_paths": [
+      "README.md",
+      "deps/README.md",
+      "deps/croaring/README.md",
+      "deps/fpconv/README.md",
+      "deps/hdr_histogram/README.md",
+      "deps/hiredis/README.md",
+      "deps/jemalloc/README",
+      "deps/jemalloc/msvc/ReadMe.txt",
+      "deps/linenoise/README.markdown",
+      "deps/lua/README"
+    ],
+    "path_signals": {}
+  },
+  "existing_structural_draft": {
+    "id": "redis",
+    "name": "Redis",
+    "version_context": "commit 6ea763ceb8b417bd35973c828c93afc0d7145e56",
+    "summary": "Draft architecture card generated from Redis at commit 6ea763ceb8b4 via github-archive. Semantic features require review.",
+    "scope": [
+      "data-service",
+      "repository structure",
+      "build surface",
+      "path-level architecture signals",
+      "initial evidence"
+    ],
+    "features": [
+      {
+        "id": "repository-structure",
+        "name": "Observable repository structure",
+        "category": "repository-model",
+        "claim_type": "fact",
+        "description": "The inspected revision contains 1938 files, top-level entries .config, .dockerignore, .gitattributes, .github, .gitignore, 00-RELEASENOTES, BUGS, CODE_OF_CONDUCT.md, CONTRIBUTING.md, INSTALL, LICENSE.txt, MANIFESTO, and source languages including C, C++, C/C++ headers, JavaScript, Python, Shell, YAML.",
+        "benefits": [
+          "Provides a reproducible baseline for later modeling."
+        ],
+        "costs": [
+          "Repository metrics do not by themselves explain runtime behavior."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "architecture-path-signals",
+        "name": "Architecture-related path signals",
+        "category": "architecture-evidence",
+        "claim_type": "inference",
+        "description": "Path names contain these weak, non-semantic signals: none detected. They identify targets for source review, not proof of runtime architecture.",
+        "benefits": [
+          "Prioritizes files for evidence-backed semantic analysis."
+        ],
+        "costs": [
+          "Names can be historical, incidental, or misleading."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "id": "build-and-integration-surface",
+        "name": "Build and integration surface",
+        "category": "tooling-model",
+        "claim_type": "fact",
+        "description": "The revision exposes these root build markers: Makefile.",
+        "benefits": [
+          "Identifies the first deterministic entry points for deeper analysis."
+        ],
+        "costs": [
+          "A marker is evidence of a tool, not proof of the complete build architecture."
+        ],
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "mathematical_views": [
+      {
+        "model": "Finite labeled repository graph",
+        "question": "What observable source and build entities are present at this revision?",
+        "assumptions": [
+          "The checkout is complete enough for structural inspection.",
+          "File paths and recognized markers are useful but incomplete proxies for architecture."
+        ],
+        "claim_type": "inference",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      },
+      {
+        "model": "Evidence-prioritization signal model",
+        "question": "Which source paths should be inspected first for architecture evidence?",
+        "assumptions": [
+          "Path names are weak indicators and require source or documentation review.",
+          "Signal counts are useful for prioritization, not semantic classification."
+        ],
+        "claim_type": "hypothesis",
+        "evidence_ids": [
+          "repository-commit"
+        ]
+      }
+    ],
+    "trade_offs": [
+      {
+        "feature_id": "repository-structure",
+        "benefits": [
+          "Makes later analysis reproducible and comparable."
+        ],
+        "costs": [
+          "Static counts cannot establish semantic guarantees."
+        ]
+      },
+      {
+        "feature_id": "build-and-integration-surface",
+        "benefits": [
+          "Provides concrete next locations for source analysis."
+        ],
+        "costs": [
+          "Build metadata can vary by platform and configuration."
+        ]
+      },
+      {
+        "feature_id": "architecture-path-signals",
+        "benefits": [
+          "Reduces the search space for later LLM-assisted review."
+        ],
+        "costs": [
+          "Heuristic signals can create false positives and false negatives."
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "repository-commit",
+        "kind": "source-code",
+        "title": "Redis source at 6ea763ceb8b4",
+        "uri": "https://github.com/redis/redis/commit/6ea763ceb8b417bd35973c828c93afc0d7145e56",
+        "accessed": "2026-10-21T12:26:38+00:00",
+        "notes": "Generated from a github-archive checkout by the deterministic inspector."
+      },
+      {
+        "id": "official-documentation",
+        "kind": "official-doc",
+        "title": "Redis official documentation",
+        "uri": "https://redis.io/docs/latest/",
+        "accessed": "2026-10-21T12:26:38+00:00"
+      }
+    ],
+    "related_systems": []
+  },
+  "modeling_task": {
+    "objective": "Transform repository evidence into a reviewed-quality, evidence-backed architecture model.",
+    "questions": [
+      "What are the system's core abstractions and state components?",
+      "Which operations change state, and what invariants do they preserve?",
+      "Which reusable architecture features are supported by evidence?",
+      "Which mathematical views explain those features, under which assumptions?",
+      "What benefits, costs, failure modes, and counterexamples apply?"
+    ],
+    "required_claim_types": [
+      "fact",
+      "inference",
+      "hypothesis",
+      "analogy"
+    ],
+    "evidence_rules": [
+      "Do not promote a path name or file count into a semantic fact.",
+      "Every feature and mathematical view must cite evidence IDs.",
+      "Use hypothesis or analogy when the mathematical correspondence is not established.",
+      "Keep product-specific facts separate from transferable feature names."
+    ],
+    "output": {
+      "format": "Mathen Architecture Card JSON",
+      "schema": "schemas/architecture-card.schema.json",
+      "destination": "data/drafts/<system-id>.json",
+      "status": "draft; requires human review before data/systems promotion"
+    }
+  }
+}
