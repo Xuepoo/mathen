@@ -1,0 +1,232 @@
+{
+  "id": "foundationdb",
+  "name": "FoundationDB",
+  "version_context": "commit cda9a9ec048c28ab855965bf5a0cb5aa912f533c",
+  "summary": "A distributed ordered key-value database whose native API exposes optimistic ACID transactions, read versions, atomic mutations, and a layered implementation with independently evolving data services.",
+  "scope": [
+    "distributed key-value database",
+    "optimistic transactions",
+    "versioned reads and commits",
+    "layered storage architecture",
+    "cluster fault tolerance"
+  ],
+  "features": [
+    {
+      "id": "ordered-kv-transaction-api",
+      "name": "Ordered key-value transaction API",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "FoundationDB presents an ordered key-value store through language bindings and performs reads and writes through transactions, including range reads and atomic operations.",
+      "benefits": [
+        "Provides a small stable substrate for higher-level data models",
+        "Makes ordering and transactional boundaries available to client layers"
+      ],
+      "costs": [
+        "Applications must encode higher-level schemas and indexes",
+        "Transaction size, conflicts, and retry behavior constrain workloads"
+      ],
+      "evidence_ids": [
+        "foundationdb-readme",
+        "foundationdb-native-api"
+      ]
+    },
+    {
+      "id": "optimistic-versioned-transactions",
+      "name": "Optimistic versioned ACID transactions",
+      "category": "consistency-model",
+      "claim_type": "fact",
+      "description": "The native transaction API exposes read versions, commit, conflict-aware retries, snapshot reads, and atomic operations; the transaction model uses versions to determine read and commit boundaries.",
+      "benefits": [
+        "Provides serializable transaction semantics as a storage primitive",
+        "Allows clients to retry conflicts without implementing distributed locking"
+      ],
+      "costs": [
+        "Contention can cause retries or transaction failure",
+        "Read and write conflict ranges make transaction shape an operational concern"
+      ],
+      "evidence_ids": [
+        "foundationdb-transaction-doc",
+        "foundationdb-native-api"
+      ]
+    },
+    {
+      "id": "layered-database-services",
+      "name": "Layered database services",
+      "category": "architecture-model",
+      "claim_type": "fact",
+      "description": "FoundationDB documents a layered architecture in which a transactional key-value core is complemented by services such as data distribution, storage, transaction processing, and higher-level layers.",
+      "benefits": [
+        "Separates core correctness from specialized data-model services",
+        "Allows layers to add indexes or records without changing the transactional substrate"
+      ],
+      "costs": [
+        "Cross-layer behavior and failure recovery require explicit contracts",
+        "The core key-value interface leaves schema and query work to layers"
+      ],
+      "evidence_ids": [
+        "foundationdb-layer-concept",
+        "foundationdb-kv-architecture"
+      ]
+    },
+    {
+      "id": "distributed-replication-and-recovery",
+      "name": "Distributed replication and recovery path",
+      "category": "availability-model",
+      "claim_type": "fact",
+      "description": "The official architecture documentation describes transaction processing, storage servers, data distribution, replication, and recovery as cooperating cluster roles around the ordered key-value transaction boundary.",
+      "benefits": [
+        "Spreads storage and transaction work across commodity-server clusters",
+        "Supports recovery and re-replication as cluster membership or failures change"
+      ],
+      "costs": [
+        "Network coordination and replicated state add latency and operational complexity",
+        "Availability and performance depend on deployment topology and failure mode"
+      ],
+      "evidence_ids": [
+        "foundationdb-readme",
+        "foundationdb-kv-architecture",
+        "foundationdb-ha-write-path"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Versioned optimistic transaction system",
+      "question": "Under what read-version, conflict-range, and commit-version conditions can a transaction be committed without violating serializability?",
+      "assumptions": [
+        "Keys and ranges are the observable state space",
+        "The transaction system validates conflicts before assigning a successful commit version",
+        "Client retry is modeled as a new transaction attempt"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "foundationdb-transaction-doc",
+        "foundationdb-native-api"
+      ]
+    },
+    {
+      "model": "Layered refinement calculus",
+      "question": "Which higher-level records and indexes can refine to ordered key-value transactions while preserving their stated API invariants?",
+      "assumptions": [
+        "Each layer declares its key encoding and transaction usage",
+        "The core transaction contract is preserved across layer implementation changes",
+        "Query performance is treated separately from semantic refinement"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "foundationdb-layer-concept",
+        "foundationdb-kv-architecture"
+      ]
+    },
+    {
+      "model": "Replicated cluster transition system",
+      "question": "How do transaction processing, data distribution, storage, and recovery transitions preserve key-value state across failures?",
+      "assumptions": [
+        "Cluster roles and replication policies are explicit state variables",
+        "The model distinguishes committed versions from durable replica placement",
+        "Failure and recovery traces are bounded by the documented architecture"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "foundationdb-ha-write-path",
+        "foundationdb-kv-architecture"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "ordered-kv-transaction-api",
+      "benefits": [
+        "Stable primitive for multiple data models"
+      ],
+      "costs": [
+        "Schema, indexing, and query semantics move to clients or layers"
+      ]
+    },
+    {
+      "feature_id": "optimistic-versioned-transactions",
+      "benefits": [
+        "Strong transactional contract without application locks"
+      ],
+      "costs": [
+        "Conflict retries and transaction limits affect tail latency"
+      ]
+    },
+    {
+      "feature_id": "layered-database-services",
+      "benefits": [
+        "Composable separation between core and data models"
+      ],
+      "costs": [
+        "Layer contracts and operational dependencies add complexity"
+      ]
+    },
+    {
+      "feature_id": "distributed-replication-and-recovery",
+      "benefits": [
+        "Cluster scale and failure recovery"
+      ],
+      "costs": [
+        "Network, replica, and topology coordination costs"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "foundationdb-readme",
+      "kind": "official-doc",
+      "title": "FoundationDB README at fixed commit",
+      "uri": "https://github.com/apple/foundationdb/blob/cda9a9ec048c28ab855965bf5a0cb5aa912f533c/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Official repository description of the distributed ordered key-value database, ACID transactions, and cluster deployment."
+    },
+    {
+      "id": "foundationdb-native-api",
+      "kind": "source-code",
+      "title": "FoundationDB native transaction API at fixed commit",
+      "uri": "https://github.com/apple/foundationdb/blob/cda9a9ec048c28ab855965bf5a0cb5aa912f533c/fdbclient/include/fdbclient/NativeAPI.h",
+      "accessed": "2026-10-23",
+      "notes": "Pinned API inspection of transactions, read versions, range reads, snapshot reads, atomic operations, and commit."
+    },
+    {
+      "id": "foundationdb-transaction-doc",
+      "kind": "official-doc",
+      "title": "FoundationDB transaction processing documentation at fixed commit",
+      "uri": "https://github.com/apple/foundationdb/blob/cda9a9ec048c28ab855965bf5a0cb5aa912f533c/documentation/sphinx/source/transaction-processing.rst",
+      "accessed": "2026-10-23",
+      "notes": "Pinned official documentation used for transaction versioning and conflict/retry semantics."
+    },
+    {
+      "id": "foundationdb-layer-concept",
+      "kind": "official-doc",
+      "title": "FoundationDB layer concept at fixed commit",
+      "uri": "https://github.com/apple/foundationdb/blob/cda9a9ec048c28ab855965bf5a0cb5aa912f533c/documentation/sphinx/source/layer-concept.rst",
+      "accessed": "2026-10-23",
+      "notes": "Pinned official documentation for the layered database design."
+    },
+    {
+      "id": "foundationdb-kv-architecture",
+      "kind": "official-doc",
+      "title": "FoundationDB key-value architecture at fixed commit",
+      "uri": "https://github.com/apple/foundationdb/blob/cda9a9ec048c28ab855965bf5a0cb5aa912f533c/documentation/sphinx/source/kv-architecture.rst",
+      "accessed": "2026-10-23",
+      "notes": "Pinned architecture documentation for transactional, storage, distribution, and layer boundaries."
+    },
+    {
+      "id": "foundationdb-ha-write-path",
+      "kind": "official-doc",
+      "title": "FoundationDB high-availability write path at fixed commit",
+      "uri": "https://github.com/apple/foundationdb/blob/cda9a9ec048c28ab855965bf5a0cb5aa912f533c/documentation/sphinx/source/ha-write-path.rst",
+      "accessed": "2026-10-23",
+      "notes": "Pinned official documentation for replicated cluster write and recovery behavior."
+    },
+    {
+      "id": "foundationdb-repository-commit",
+      "kind": "source-code",
+      "title": "FoundationDB source at cda9a9ec048c",
+      "uri": "https://github.com/apple/foundationdb/commit/cda9a9ec048c28ab855965bf5a0cb5aa912f533c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision used for all source and bundled documentation evidence."
+    }
+  ]
+}

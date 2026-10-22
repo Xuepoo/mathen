@@ -369,6 +369,42 @@
     "priority": "core"
   },
   {
+    "id": "leveldb",
+    "name": "LevelDB",
+    "category": "embedded-database",
+    "repository": "https://github.com/google/leveldb.git",
+    "documentation": "https://github.com/google/leveldb/tree/main/doc",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "foundationdb",
+    "name": "FoundationDB",
+    "category": "distributed-database",
+    "repository": "https://github.com/apple/foundationdb.git",
+    "documentation": "https://apple.github.io/foundationdb/",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "mongodb",
+    "name": "MongoDB",
+    "category": "document-database",
+    "repository": "https://github.com/mongodb/mongo.git",
+    "documentation": "https://www.mongodb.com/docs/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "cassandra",
+    "name": "Apache Cassandra",
+    "category": "distributed-database",
+    "repository": "https://github.com/apache/cassandra.git",
+    "documentation": "https://cassandra.apache.org/doc/stable/",
+    "ref": "trunk",
+    "priority": "core"
+  },
+  {
     "id": "threejs",
     "name": "Three.js",
     "category": "3d-graphics-library",

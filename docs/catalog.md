@@ -48,6 +48,10 @@ These entries are already present in the repository at different review levels:
 | `rabbitmq` | RabbitMQ | message broker | `reviewed` | Compare exchange routing, durable queues, acknowledgements, confirms, and flow control using fixed-commit evidence |
 | `mysql-server` | MySQL Server | database | `reviewed` | Compare storage-engine, transaction, and recovery boundaries with PostgreSQL and SQLite |
 | `rocksdb` | RocksDB | embedded database | `reviewed` | Compare LSM, WAL, compaction, and snapshot boundaries with SQLite and Redis |
+| `leveldb` | LevelDB | embedded database | `reviewed` | Compare ordered key-value logs, memtables, leveled compaction, recovery, and snapshots with RocksDB |
+| `foundationdb` | FoundationDB | distributed database | `reviewed` | Compare ordered key-value transactions, versioning, layers, and distributed recovery with PostgreSQL and Cassandra |
+| `mongodb` | MongoDB | document database | `reviewed` | Compare document collections, storage engines, oplog replication, and shard routing with PostgreSQL and Cassandra |
+| `cassandra` | Apache Cassandra | distributed database | `reviewed` | Compare partitioned wide-column storage, replica coordination, commit-log recovery, and tunable consistency with Kafka and FoundationDB |
 | `docker` | Docker Engine | container runtime | `draft` | Compare daemon, image, namespace, and filesystem boundaries |
 | `containerd` | containerd | container runtime | `reviewed` | Compare runtime-v2 shims, typed plugins, client boundaries, and content/snapshot lifecycle using fixed-revision evidence |
 | `runc` | runc | container runtime | `reviewed` | Compare OCI bundle refinement, Linux isolation primitives, lifecycle state, and checkpoint boundaries using fixed-revision evidence |
@@ -170,10 +174,6 @@ identifiers, not claims that the projects share the same architecture.
 | `duckdb` | DuckDB | `P0` | Embedded OLAP, columnar storage, and vectorization |
 | `redis` | Redis | `P0` | In-memory structures, event loop, and persistence |
 | `rocksdb` | RocksDB | `P0` | LSM tree, compaction, write buffers, and snapshots |
-| `leveldb` | LevelDB | `P1` | Minimal LSM storage and log-structured recovery |
-| `foundationdb` | FoundationDB | `P1` | Ordered key-value transactions and layered database design |
-| `mongodb` | MongoDB | `P1` | Document model, indexes, replication, and sharding |
-| `cassandra` | Apache Cassandra | `P1` | Partitioned wide-column storage and tunable consistency |
 | `cockroachdb` | CockroachDB | `P1` | Distributed SQL, ranges, consensus, and serializability |
 | `tidb` | TiDB | `P2` | Distributed SQL, coprocessors, and separated storage |
 | `tikv` | TiKV | `P2` | Distributed transactional key-value storage and Raft |

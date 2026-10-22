@@ -1,0 +1,289 @@
+{
+  "id": "cassandra",
+  "name": "Apache Cassandra",
+  "version_context": "commit 48be0f6ca077675b853e3b42bc98025c75e89527",
+  "summary": "A distributed partitioned wide-column database that routes mutations by token ownership, persists writes through a commit log and memtables, flushes SSTables, and exposes tunable consistency levels.",
+  "scope": [
+    "distributed wide-column storage",
+    "partitioned token ownership",
+    "commit log and memtables",
+    "replication topology",
+    "tunable consistency"
+  ],
+  "features": [
+    {
+      "id": "partitioned-wide-column-model",
+      "name": "Partitioned wide-column data model",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "Cassandra represents table data as partitioned rows and routes partitions using token ownership; its storage and read/write paths operate on partition updates rather than a single globally ordered table.",
+      "benefits": [
+        "Scales partition-local workloads across nodes",
+        "Makes partition key and locality central to data placement"
+      ],
+      "costs": [
+        "Poor partition-key choices can create hotspots or oversized partitions",
+        "Cross-partition queries and transactions require additional coordination"
+      ],
+      "evidence_ids": [
+        "cassandra-partition-update",
+        "cassandra-storage-proxy"
+      ]
+    },
+    {
+      "id": "commitlog-memtable-sstable",
+      "name": "Commit log, memtable, and SSTable persistence",
+      "category": "durability-model",
+      "claim_type": "fact",
+      "description": "The source contains commit-log services, commit-log replay, memtable implementations, and ColumnFamilyStore flush paths that move in-memory partition updates into SSTables.",
+      "benefits": [
+        "Separates fast append/recovery state from sorted immutable storage",
+        "Allows flush and compaction work to be scheduled independently of request handling"
+      ],
+      "costs": [
+        "Commit-log, memory, flush, and compaction resources must be tuned together",
+        "Recovery and disk amplification depend on outstanding memtable and log state"
+      ],
+      "evidence_ids": [
+        "cassandra-commitlog",
+        "cassandra-memtable",
+        "cassandra-column-family-store"
+      ]
+    },
+    {
+      "id": "replicated-token-topology",
+      "name": "Token-based replicated topology",
+      "category": "distribution-model",
+      "claim_type": "fact",
+      "description": "NetworkTopologyStrategy and StorageProxy source coordinate token ranges, replica placement, datacenter-aware topology, and coordinator-to-replica requests.",
+      "benefits": [
+        "Distributes partitions and replicas across nodes and datacenters",
+        "Permits topology-aware placement and repair workflows"
+      ],
+      "costs": [
+        "Membership, replica movement, repair, and topology changes add operational complexity",
+        "Replica placement and coordinator locality affect latency and availability"
+      ],
+      "evidence_ids": [
+        "cassandra-network-topology",
+        "cassandra-storage-proxy"
+      ]
+    },
+    {
+      "id": "tunable-consistency-coordination",
+      "name": "Tunable consistency at request coordination",
+      "category": "consistency-model",
+      "claim_type": "fact",
+      "description": "The request path exposes consistency levels and response handlers so reads and writes can wait for configured replica acknowledgements rather than one fixed global quorum.",
+      "benefits": [
+        "Lets workloads choose latency, availability, and replica agreement points",
+        "Makes consistency a visible request-level policy"
+      ],
+      "costs": [
+        "Different levels expose different stale-read and failure behavior",
+        "Applications must select and test a level compatible with their invariants"
+      ],
+      "evidence_ids": [
+        "cassandra-consistency-level",
+        "cassandra-write-response",
+        "cassandra-storage-proxy"
+      ]
+    },
+    {
+      "id": "hinted-and-replayed-recovery",
+      "name": "Replay and hinted recovery mechanisms",
+      "category": "recovery-model",
+      "claim_type": "fact",
+      "description": "The source includes commit-log replay and failure-handling paths that preserve or reapply mutations when ordinary replica coordination cannot immediately complete.",
+      "benefits": [
+        "Supports recovery after process or node interruption",
+        "Separates temporary replica unavailability from immediate loss of the mutation path"
+      ],
+      "costs": [
+        "Hints, replay, repair, and later convergence add background work",
+        "Recovery correctness depends on timestamps, topology, and replay ordering"
+      ],
+      "evidence_ids": [
+        "cassandra-commitlog",
+        "cassandra-storage-proxy",
+        "cassandra-mutation"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Token-partition state refinement",
+      "question": "How does a logical wide-column table refine into partition keys, token ranges, replicas, memtables, and SSTables?",
+      "assumptions": [
+        "Partition keys determine the modeled placement function",
+        "Replica placement is explicit state rather than inferred from latency",
+        "Compaction preserves the partition-visible result"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "cassandra-partition-update",
+        "cassandra-network-topology",
+        "cassandra-memtable"
+      ]
+    },
+    {
+      "model": "Replica acknowledgement threshold",
+      "question": "For a configured consistency level, which replica responses are sufficient for a read or write to return?",
+      "assumptions": [
+        "The consistency level maps to a defined response threshold",
+        "Coordinator and replica failures are modeled as partial progress",
+        "Returning success is distinguished from all replicas having converged"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "cassandra-consistency-level",
+        "cassandra-write-response",
+        "cassandra-storage-proxy"
+      ]
+    },
+    {
+      "model": "Commit-log recovery transition system",
+      "question": "Which commit-log, memtable, and SSTable transitions reconstruct partition state after node restart?",
+      "assumptions": [
+        "Mutation records are replayed according to commit-log ordering and metadata",
+        "Flush boundaries and already durable SSTables are represented",
+        "Repair and hinted handoff are modeled as later convergence paths"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "cassandra-commitlog",
+        "cassandra-memtable",
+        "cassandra-column-family-store"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "partitioned-wide-column-model",
+      "benefits": [
+        "Horizontal scale for partition-local workloads"
+      ],
+      "costs": [
+        "Partition-key design and cross-partition work are application constraints"
+      ]
+    },
+    {
+      "feature_id": "commitlog-memtable-sstable",
+      "benefits": [
+        "Fast durable append plus immutable storage"
+      ],
+      "costs": [
+        "Flush, compaction, memory, and replay resource pressure"
+      ]
+    },
+    {
+      "feature_id": "replicated-token-topology",
+      "benefits": [
+        "Topology-aware scale and redundancy"
+      ],
+      "costs": [
+        "Placement, movement, repair, and membership complexity"
+      ]
+    },
+    {
+      "feature_id": "tunable-consistency-coordination",
+      "benefits": [
+        "Request-level latency and consistency choices"
+      ],
+      "costs": [
+        "Policy-dependent visibility and failure behavior"
+      ]
+    },
+    {
+      "feature_id": "hinted-and-replayed-recovery",
+      "benefits": [
+        "Resilience to temporary node interruption"
+      ],
+      "costs": [
+        "Background convergence and replay-order complexity"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "cassandra-partition-update",
+      "kind": "source-code",
+      "title": "Cassandra partition update source at fixed commit",
+      "uri": "https://github.com/apache/cassandra/blob/48be0f6ca077675b853e3b42bc98025c75e89527/src/java/org/apache/cassandra/db/partitions/PartitionUpdate.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of partition-oriented mutations and table updates."
+    },
+    {
+      "id": "cassandra-commitlog",
+      "kind": "source-code",
+      "title": "Cassandra commit log source at fixed commit",
+      "uri": "https://github.com/apache/cassandra/blob/48be0f6ca077675b853e3b42bc98025c75e89527/src/java/org/apache/cassandra/db/commitlog/CommitLog.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of commit-log writing and replay components."
+    },
+    {
+      "id": "cassandra-memtable",
+      "kind": "source-code",
+      "title": "Cassandra memtable source at fixed commit",
+      "uri": "https://github.com/apache/cassandra/blob/48be0f6ca077675b853e3b42bc98025c75e89527/src/java/org/apache/cassandra/db/memtable/Memtable.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of in-memory table state and flush interfaces."
+    },
+    {
+      "id": "cassandra-column-family-store",
+      "kind": "source-code",
+      "title": "Cassandra ColumnFamilyStore source at fixed commit",
+      "uri": "https://github.com/apache/cassandra/blob/48be0f6ca077675b853e3b42bc98025c75e89527/src/java/org/apache/cassandra/db/ColumnFamilyStore.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of table storage, memtable switching, flush, and SSTable management."
+    },
+    {
+      "id": "cassandra-network-topology",
+      "kind": "source-code",
+      "title": "Cassandra network topology strategy at fixed commit",
+      "uri": "https://github.com/apache/cassandra/blob/48be0f6ca077675b853e3b42bc98025c75e89527/src/java/org/apache/cassandra/locator/NetworkTopologyStrategy.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of datacenter-aware replica placement."
+    },
+    {
+      "id": "cassandra-storage-proxy",
+      "kind": "source-code",
+      "title": "Cassandra storage proxy at fixed commit",
+      "uri": "https://github.com/apache/cassandra/blob/48be0f6ca077675b853e3b42bc98025c75e89527/src/java/org/apache/cassandra/service/StorageProxy.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of coordinator request routing and replica coordination."
+    },
+    {
+      "id": "cassandra-consistency-level",
+      "kind": "source-code",
+      "title": "Cassandra consistency levels at fixed commit",
+      "uri": "https://github.com/apache/cassandra/blob/48be0f6ca077675b853e3b42bc98025c75e89527/src/java/org/apache/cassandra/db/ConsistencyLevel.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of request consistency policies."
+    },
+    {
+      "id": "cassandra-write-response",
+      "kind": "source-code",
+      "title": "Cassandra write response handlers at fixed commit",
+      "uri": "https://github.com/apache/cassandra/blob/48be0f6ca077675b853e3b42bc98025c75e89527/src/java/org/apache/cassandra/service/WriteResponseHandler.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of acknowledgement thresholds and write response coordination."
+    },
+    {
+      "id": "cassandra-mutation",
+      "kind": "source-code",
+      "title": "Cassandra mutation source at fixed commit",
+      "uri": "https://github.com/apache/cassandra/blob/48be0f6ca077675b853e3b42bc98025c75e89527/src/java/org/apache/cassandra/db/Mutation.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of mutation representation and failure-handling hooks."
+    },
+    {
+      "id": "cassandra-repository-commit",
+      "kind": "source-code",
+      "title": "Apache Cassandra source at 48be0f6ca077",
+      "uri": "https://github.com/apache/cassandra/commit/48be0f6ca077675b853e3b42bc98025c75e89527",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision used for all source evidence in this card."
+    }
+  ]
+}
