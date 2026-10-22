@@ -1,0 +1,177 @@
+{
+  "id": "istio",
+  "name": "Istio",
+  "version_context": "commit 31265baba4e1b84284fb0cc0dac495ec41a6ade0",
+  "summary": "A service mesh that separates a Kubernetes-oriented control plane from proxy data planes, distributes traffic and security configuration to workload proxies, and exposes policy-driven routing and telemetry behavior.",
+  "scope": [
+    "service mesh",
+    "control and data planes",
+    "workload proxies",
+    "traffic and security policy"
+  ],
+  "features": [
+    {
+      "id": "control-plane-proxy-config",
+      "name": "Control-plane distribution to workload proxies",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "Istio control-plane components translate mesh configuration and service information into proxy configuration distributed to data-plane proxies.",
+      "benefits": "Centralizes mesh policy while keeping request forwarding near workloads",
+      "costs": "Configuration propagation, proxy compatibility, and stale views add operational coordination cost",
+      "evidence_ids": [
+        "istio-architecture-doc",
+        "istio-xds-source",
+        "istio-model-source"
+      ]
+    },
+    {
+      "id": "proxy-mediated-traffic-policy",
+      "name": "Proxy-mediated traffic management",
+      "category": "data-plane-model",
+      "claim_type": "fact",
+      "description": "Istio workload proxies intercept and forward application traffic, applying routing, load balancing, retries, and other policy configured through mesh APIs.",
+      "benefits": "Adds consistent traffic behavior without changing each application",
+      "costs": "Sidecar resource overhead and policy interactions expand the request path",
+      "evidence_ids": [
+        "istio-architecture-doc",
+        "istio-traffic-doc"
+      ]
+    },
+    {
+      "id": "workload-identity-security-telemetry",
+      "name": "Identity, security, and telemetry at mesh boundaries",
+      "category": "security-observability",
+      "claim_type": "fact",
+      "description": "Istio associates workload identity with mutual TLS and authorization policy, while proxies emit telemetry that can be configured and collected across mesh traffic.",
+      "benefits": "Provides uniform identity-aware controls and mesh-level observability",
+      "costs": "Certificate lifecycle, policy misconfiguration, and telemetry volume affect reliability and cost",
+      "evidence_ids": [
+        "istio-security-doc",
+        "istio-architecture-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Control-plane/data-plane propagation graph",
+      "question": "How do service registry observations and mesh configuration reach proxy-local forwarding state?",
+      "assumptions": [
+        "Control-plane objects and discovery responses are modeled as control edges",
+        "Each proxy has a local data-plane state that may lag updates",
+        "The view does not infer propagation latency or universal consistency"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "istio-architecture-doc",
+        "istio-xds-source"
+      ]
+    },
+    {
+      "model": "Policy-constrained traffic graph",
+      "question": "How do services, workloads, proxies, and routing rules determine request paths?",
+      "assumptions": [
+        "Proxies are graph vertices on modeled traffic paths",
+        "Traffic policies constrain admissible edges and forwarding choices",
+        "The view abstracts Envoy implementation details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "istio-traffic-doc",
+        "istio-architecture-doc"
+      ]
+    },
+    {
+      "model": "Identity and authorization relation model",
+      "question": "Which workload identities and authorization rules permit or deny mesh communication?",
+      "assumptions": [
+        "Workload identity is represented independently from network location",
+        "Authorization decisions use configured policy and authenticated peer identity",
+        "The view is a candidate correspondence, not a proof of security policy completeness"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "istio-security-doc",
+        "istio-model-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "control-plane-proxy-config",
+      "benefits": [
+        "Centralized policy with distributed forwarding"
+      ],
+      "costs": [
+        "Control-plane health and config freshness affect data-plane behavior"
+      ]
+    },
+    {
+      "feature_id": "proxy-mediated-traffic-policy",
+      "benefits": [
+        "Consistent routing and resilience controls"
+      ],
+      "costs": [
+        "Proxy hops consume CPU/memory and increase debugging complexity"
+      ]
+    },
+    {
+      "feature_id": "workload-identity-security-telemetry",
+      "benefits": [
+        "Uniform security and observability primitives"
+      ],
+      "costs": [
+        "Certificate, policy, and telemetry systems add lifecycle and operational load"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "istio-repository-commit",
+      "kind": "source-code",
+      "title": "Istio source at 31265baba4e1",
+      "uri": "https://github.com/istio/istio/commit/31265baba4e1b84284fb0cc0dac495ec41a6ade0",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision; source claims in this card are pinned to this commit."
+    },
+    {
+      "id": "istio-architecture-doc",
+      "kind": "official-doc",
+      "title": "Istio architecture",
+      "uri": "https://istio.io/latest/docs/ops/deployment/architecture/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for control plane, data plane, sidecars, proxies, and configuration distribution."
+    },
+    {
+      "id": "istio-traffic-doc",
+      "kind": "official-doc",
+      "title": "Istio traffic management concepts",
+      "uri": "https://istio.io/latest/docs/concepts/traffic-management/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for traffic rules, routing, forwarding, and proxy behavior."
+    },
+    {
+      "id": "istio-security-doc",
+      "kind": "official-doc",
+      "title": "Istio security concepts",
+      "uri": "https://istio.io/latest/docs/concepts/security/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for workload identity, mutual TLS, and authorization policy."
+    },
+    {
+      "id": "istio-xds-source",
+      "kind": "source-code",
+      "title": "Istio xDS discovery at 31265baba4e1",
+      "uri": "https://github.com/istio/istio/blob/31265baba4e1b84284fb0cc0dac495ec41a6ade0/pilot/pkg/xds/discovery.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for control-plane discovery and proxy configuration distribution."
+    },
+    {
+      "id": "istio-model-source",
+      "kind": "source-code",
+      "title": "Istio proxy model at 31265baba4e1",
+      "uri": "https://github.com/istio/istio/blob/31265baba4e1b84284fb0cc0dac495ec41a6ade0/pilot/pkg/model/context.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for configuration and proxy model boundaries."
+    }
+  ]
+}

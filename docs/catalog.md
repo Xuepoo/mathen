@@ -332,10 +332,10 @@ identifiers, not claims that the projects share the same architecture.
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
-| `helm` | Helm | `P1` | Chart composition, values rendering, release state, and Kubernetes integration |
-| `argo-cd` | Argo CD | `P1` | Desired/observed state reconciliation, GitOps sync, health assessment, and rollback |
-| `istio` | Istio | `P1` | Sidecar proxy mesh, traffic policy, control/data plane, and telemetry propagation |
-| `cilium` | Cilium | `P1` | eBPF datapath, identity policy, service routing, and observability |
+| `helm` | Helm | `reviewed` | Chart composition, values rendering, release state, and Kubernetes integration using fixed-commit evidence |
+| `argo-cd` | Argo CD | `reviewed` | Desired/observed state reconciliation, GitOps sync, health assessment, and rollback using fixed-commit evidence |
+| `istio` | Istio | `reviewed` | Sidecar proxy mesh, traffic policy, control/data plane, and telemetry propagation using fixed-commit evidence |
+| `cilium` | Cilium | `reviewed` | eBPF datapath, identity policy, service routing, and observability using fixed-commit evidence |
 | `traefik` | Traefik | `P2` | Dynamic provider configuration, routers, middleware chains, and certificates |
 | `crossplane` | Crossplane | `P2` | Kubernetes-native composition, provider controllers, and managed resource reconciliation |
 

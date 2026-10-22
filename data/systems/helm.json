@@ -1,0 +1,169 @@
+{
+  "id": "helm",
+  "name": "Helm",
+  "version_context": "commit 2fe5d209e61162bd4b268ba0319c0782b9f49ca1",
+  "summary": "A Kubernetes package manager that renders chart templates from values, applies the resulting resource set through the Kubernetes API, and records versioned release state for upgrades and rollback.",
+  "scope": [
+    "Kubernetes package management",
+    "chart templates and values",
+    "release lifecycle",
+    "Kubernetes API integration"
+  ],
+  "features": [
+    {
+      "id": "chart-template-composition",
+      "name": "Chart template and values composition",
+      "category": "configuration-model",
+      "claim_type": "fact",
+      "description": "Helm combines chart templates, chart metadata, dependencies, and layered values into rendered Kubernetes manifests.",
+      "benefits": "Reusable packaging across environments",
+      "costs": "Template scope, value precedence, and dependency interactions can make rendered output difficult to reason about",
+      "evidence_ids": [
+        "helm-introduction-doc",
+        "helm-chart-template-doc",
+        "helm-action-source"
+      ]
+    },
+    {
+      "id": "release-state-history",
+      "name": "Versioned release state and history",
+      "category": "state-management",
+      "claim_type": "fact",
+      "description": "Helm treats an installed chart as a named release and stores release revisions through a configurable storage driver, enabling upgrade history and rollback operations.",
+      "benefits": "Provides an inspectable revision trail and recovery point",
+      "costs": "Release storage consumes cluster state and rollback correctness depends on compatible manifests and live resources",
+      "evidence_ids": [
+        "helm-introduction-doc",
+        "helm-storage-source"
+      ]
+    },
+    {
+      "id": "client-library-kubernetes-boundary",
+      "name": "Client and library boundary over Kubernetes API",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "The Helm client handles user-facing chart and repository workflows while the Helm library performs install, upgrade, and uninstall operations through Kubernetes API clients.",
+      "benefits": "Allows other callers to reuse Helm operation logic",
+      "costs": "Kubernetes API availability, permissions, and server-side behavior remain deployment dependencies",
+      "evidence_ids": [
+        "helm-introduction-doc",
+        "helm-action-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Layered chart evaluation graph",
+      "question": "How do chart dependencies, templates, values, and rendered resources compose into an installable manifest set?",
+      "assumptions": [
+        "Chart dependencies form an acyclic or otherwise resolvable composition graph",
+        "Values are scoped inputs and template evaluation is modeled as a deterministic transformation for a fixed environment",
+        "The view does not infer semantic validity of every rendered Kubernetes resource"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "helm-chart-template-doc",
+        "helm-action-source"
+      ]
+    },
+    {
+      "model": "Release revision state machine",
+      "question": "How does a named release move through install, upgrade, history, and rollback states?",
+      "assumptions": [
+        "Each operation produces or selects a release revision",
+        "Stored release records are treated as the history observed by Helm",
+        "The model does not claim rollback restores arbitrary external side effects"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "helm-introduction-doc",
+        "helm-storage-source"
+      ]
+    },
+    {
+      "model": "Kubernetes application boundary graph",
+      "question": "Which Helm client/library operations cross into Kubernetes API resource management?",
+      "assumptions": [
+        "Rendered manifests are the boundary objects sent to Kubernetes",
+        "The API server is modeled as an external stateful vertex",
+        "The view abstracts individual Kubernetes controllers"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "helm-introduction-doc",
+        "helm-action-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "chart-template-composition",
+      "benefits": [
+        "Reusable, parameterized application packaging"
+      ],
+      "costs": [
+        "Template indirection and value precedence increase review burden"
+      ]
+    },
+    {
+      "feature_id": "release-state-history",
+      "benefits": [
+        "Upgrade inspection and rollback affordances"
+      ],
+      "costs": [
+        "History storage and resource drift complicate recovery"
+      ]
+    },
+    {
+      "feature_id": "client-library-kubernetes-boundary",
+      "benefits": [
+        "Reusable library operations over a standard API"
+      ],
+      "costs": [
+        "Cluster permissions and API availability constrain operations"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "helm-repository-commit",
+      "kind": "source-code",
+      "title": "Helm source at 2fe5d209e611",
+      "uri": "https://github.com/helm/helm/commit/2fe5d209e61162bd4b268ba0319c0782b9f49ca1",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision; source claims in this card are pinned to this commit."
+    },
+    {
+      "id": "helm-introduction-doc",
+      "kind": "official-doc",
+      "title": "Helm introduction and architecture",
+      "uri": "https://helm.sh/docs/intro/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for charts, repositories, releases, client/library architecture, Kubernetes API integration, and release storage."
+    },
+    {
+      "id": "helm-chart-template-doc",
+      "kind": "official-doc",
+      "title": "Helm chart template guide",
+      "uri": "https://helm.sh/docs/chart_template_guide/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for values, templates, built-in objects, and chart rendering."
+    },
+    {
+      "id": "helm-action-source",
+      "kind": "source-code",
+      "title": "Helm install and upgrade actions at 2fe5d209e611",
+      "uri": "https://github.com/helm/helm/blob/2fe5d209e61162bd4b268ba0319c0782b9f49ca1/pkg/action/install.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for chart rendering, release creation, and Kubernetes application operations."
+    },
+    {
+      "id": "helm-storage-source",
+      "kind": "source-code",
+      "title": "Helm release storage at 2fe5d209e611",
+      "uri": "https://github.com/helm/helm/blob/2fe5d209e61162bd4b268ba0319c0782b9f49ca1/pkg/storage/storage.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for release persistence, history, and storage driver boundaries."
+    }
+  ]
+}
