@@ -352,6 +352,13 @@ The Hono Worker uses the `/api` base path. Successful responses use a
 The current API is read-only. It does not expose draft cards or provide review,
 promotion, or synthesis writes.
 
+The browser client presents this graph as an exploration workspace. Search and
+relation filters narrow the visible graph, layout controls switch between
+network, concentric, circle, and grid views, and selecting a node highlights
+its neighborhood. Typed edges expose their claim status and evidence IDs in
+the inspector. A legacy `related` edge is retained when an older card has a
+valid `related_systems` target but no typed relation metadata.
+
 ## 11. MCP interface
 
 The stdio MCP server provides the same read boundary to agents:
