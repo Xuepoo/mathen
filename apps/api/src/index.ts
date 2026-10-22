@@ -42,6 +42,11 @@ type GraphSystem = Pick<
   "id" | "name" | "related_systems_json" | "relations_json"
 >;
 
+type CompositionSystem = Pick<
+  SystemRow,
+  "id" | "name" | "version_context" | "composition_json"
+>;
+
 export type GraphEdge = {
   source: string;
   target: string;
@@ -182,6 +187,22 @@ app.get("/features", async (c) => {
   });
 });
 
+app.get("/compositions", async (c) => {
+  const inputSystem = c.req.query("input_system")?.trim() ?? "";
+  const claimStatus = c.req.query("claim_status")?.trim() ?? "";
+  const limit = boundedInteger(c.req.query("limit"), 100, 1, 200);
+  const result = await c.env.DB.prepare(
+    `SELECT id, name, version_context, composition_json
+     FROM systems
+     WHERE composition_json IS NOT NULL
+     ORDER BY name, id`,
+  ).all<CompositionSystem>();
+
+  return c.json({
+    data: buildCompositions(result.results, inputSystem, claimStatus, limit),
+  });
+});
+
 app.get("/modeling/:id", async (c) => {
   const row = await c.env.DB.prepare(
     `SELECT id, commit_sha, provenance, bundle_json, source_path
@@ -227,6 +248,46 @@ export function buildGraph(systems: GraphSystem[]): Graph {
   ]);
 
   return { nodes, edges };
+}
+
+export type CompositionResult = {
+  system_id: string;
+  system_name: string;
+  version_context: string | null;
+  composition: Record<string, unknown>;
+};
+
+export function buildCompositions(
+  systems: CompositionSystem[],
+  inputSystem = "",
+  claimStatus = "",
+  limit = 100,
+): CompositionResult[] {
+  return systems
+    .flatMap((system) => {
+      const composition = parseJson<Record<string, unknown> | null>(
+        system.composition_json,
+        null,
+      );
+      if (!isCompositionRecord(composition)) return [];
+      if (
+        inputSystem &&
+        !composition.inputs.some((input) => input.system_id === inputSystem)
+      ) {
+        return [];
+      }
+      if (claimStatus && composition.claim_status !== claimStatus) return [];
+
+      return [
+        {
+          system_id: system.id,
+          system_name: system.name,
+          version_context: system.version_context,
+          composition,
+        },
+      ];
+    })
+    .slice(0, limit);
 }
 
 function typedRelationEdges(
@@ -320,6 +381,35 @@ function parseJsonArray<T>(value: string | null): T[] {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isCompositionRecord(
+  value: Record<string, unknown> | null,
+): value is Record<string, unknown> & {
+  inputs: Array<Record<string, unknown> & { system_id: string }>;
+  claim_status: string;
+  constraints: unknown[];
+  preserved_properties: unknown[];
+  conflicts: unknown[];
+  evidence_ids: string[];
+} {
+  if (!value || !stringValue(value.claim_status)) return false;
+  if (!Array.isArray(value.inputs) || value.inputs.length === 0) return false;
+  if (!Array.isArray(value.constraints)) return false;
+  if (!Array.isArray(value.preserved_properties)) return false;
+  if (!Array.isArray(value.conflicts)) return false;
+  if (
+    !Array.isArray(value.evidence_ids) ||
+    value.evidence_ids.length === 0 ||
+    !value.evidence_ids.every(
+      (item) => typeof item === "string" && item.length > 0,
+    )
+  ) {
+    return false;
+  }
+  return value.inputs.every(
+    (input) => isRecord(input) && Boolean(stringValue(input.system_id)),
+  );
 }
 
 function stringValue(value: unknown): string | undefined {

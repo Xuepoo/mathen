@@ -26,7 +26,7 @@ api-test:
     bun run test:api
 
 mcp-test:
-    bun test apps/mcp/src/backend.test.ts
+    bun test apps/mcp/src/*.test.ts
 
 test: python-test api-test mcp-test
 

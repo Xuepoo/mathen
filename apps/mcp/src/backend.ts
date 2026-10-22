@@ -49,6 +49,13 @@ export type FeatureSearchResult = {
   feature: Feature;
 };
 
+export type CompositionSearchResult = {
+  system_id: string;
+  system_name: string;
+  version_context: string | null;
+  composition: Record<string, unknown>;
+};
+
 export interface Backend {
   listSystems(includeDrafts: boolean): Promise<SystemSummary[]>;
   getSystem(systemId: string, includeDrafts: boolean): Promise<ArchitectureCard | undefined>;
@@ -59,6 +66,12 @@ export interface Backend {
     includeDrafts: boolean,
     limit: number,
   ): Promise<FeatureSearchResult[]>;
+  listCompositions(
+    inputSystem: string | undefined,
+    claimStatus: string | undefined,
+    includeDrafts: boolean,
+    limit: number,
+  ): Promise<CompositionSearchResult[]>;
   getModelingBundle(systemId: string): Promise<unknown>;
 }
 
@@ -132,6 +145,33 @@ export class FilesystemBackend implements Backend {
     } catch {
       throw new BackendError(`modeling bundle not found: ${systemId}`);
     }
+  }
+
+  async listCompositions(
+    inputSystem: string | undefined,
+    claimStatus: string | undefined,
+    includeDrafts: boolean,
+    limit: number,
+  ): Promise<CompositionSearchResult[]> {
+    const cards = await this.loadAllCards(includeDrafts);
+    return cards
+      .flatMap((card) => {
+        const composition = card.composition;
+        if (!isCompositionRecord(composition)) return [];
+        if (
+          inputSystem &&
+          !composition.inputs.some((input) => input.system_id === inputSystem)
+        ) {
+          return [];
+        }
+        if (claimStatus && composition.claim_status !== claimStatus) return [];
+        return [toCompositionResult(card, composition)];
+      })
+      .sort((left, right) =>
+        left.system_name.localeCompare(right.system_name) ||
+        left.system_id.localeCompare(right.system_id),
+      )
+      .slice(0, limit);
   }
 
   private async loadAllCards(includeDrafts: boolean): Promise<ArchitectureCard[]> {
@@ -229,6 +269,22 @@ export class ApiBackend implements Backend {
       }
       throw error;
     }
+  }
+
+  async listCompositions(
+    inputSystem: string | undefined,
+    claimStatus: string | undefined,
+    includeDrafts: boolean,
+    limit: number,
+  ): Promise<CompositionSearchResult[]> {
+    this.rejectDrafts(includeDrafts);
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (inputSystem) params.set("input_system", inputSystem);
+    if (claimStatus) params.set("claim_status", claimStatus);
+    const data = await this.request<unknown[]>(`/compositions?${params}`);
+    if (!Array.isArray(data))
+      throw new BackendError("API response for GET /api/compositions has invalid data");
+    return data.map(normalizeCompositionResult);
   }
 
   private rejectDrafts(includeDrafts: boolean): void {
@@ -339,6 +395,16 @@ function normalizeFeature(value: unknown): Feature {
   };
 }
 
+function normalizeCompositionResult(value: unknown): CompositionSearchResult {
+  const result = asRecord(value);
+  return {
+    system_id: requiredString(result.system_id, "system_id", "/api/compositions"),
+    system_name: requiredString(result.system_name, "system_name", "/api/compositions"),
+    version_context: optionalString(result.version_context) ?? null,
+    composition: asRecord(result.composition),
+  };
+}
+
 function normalizeEvidence(value: unknown): Evidence {
   const evidence = asRecord(value);
   const notes = optionalString(evidence.notes);
@@ -384,6 +450,55 @@ function recordArray(value: unknown): Array<Record<string, unknown>> {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isCompositionRecord(
+  value: Record<string, unknown> | undefined,
+): value is Record<string, unknown> & {
+  inputs: Array<Record<string, unknown> & { system_id: string }>;
+  claim_status: string;
+  constraints: unknown[];
+  preserved_properties: unknown[];
+  conflicts: unknown[];
+  evidence_ids: string[];
+} {
+  if (!value || !optionalString(value.claim_status)) return false;
+  if (!Array.isArray(value.inputs) || value.inputs.length === 0) return false;
+  if (!Array.isArray(value.constraints)) return false;
+  if (!Array.isArray(value.preserved_properties)) return false;
+  if (!Array.isArray(value.conflicts)) return false;
+  if (
+    !Array.isArray(value.evidence_ids) ||
+    value.evidence_ids.length === 0 ||
+    !value.evidence_ids.every((item) => typeof item === "string" && item.length > 0)
+  ) {
+    return false;
+  }
+  return value.inputs.every(
+    (input) =>
+      isRecord(input) &&
+      typeof input.system_id === "string" &&
+      input.system_id.length > 0,
+  );
+}
+
+function toCompositionResult(
+  card: ArchitectureCard,
+  composition: Record<string, unknown> & {
+    inputs: Array<Record<string, unknown> & { system_id: string }>;
+    claim_status: string;
+    constraints: unknown[];
+    preserved_properties: unknown[];
+    conflicts: unknown[];
+    evidence_ids: string[];
+  },
+): CompositionSearchResult {
+  return {
+    system_id: card.id,
+    system_name: card.name,
+    version_context: card.version_context ?? null,
+    composition,
+  };
 }
 
 function isAbortError(error: unknown): boolean {

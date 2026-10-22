@@ -85,6 +85,36 @@ server.registerTool(
 );
 
 server.registerTool(
+  "list_compositions",
+  {
+    description:
+      "List reviewed composition proposals, optionally filtered by input system or claim status.",
+    inputSchema: {
+      input_system: z.string().regex(/^[a-z0-9-]+$/).optional(),
+      claim_status: z
+        .enum(["proposed", "under-review", "accepted", "rejected", "deprecated"])
+        .optional(),
+      include_drafts: z.boolean().optional(),
+      limit: z.number().int().min(1).max(50).optional(),
+    },
+  },
+  async ({ input_system, claim_status, include_drafts, limit }) => {
+    try {
+      return jsonResult(
+        await backend.listCompositions(
+          input_system,
+          claim_status,
+          include_drafts ?? false,
+          limit ?? 20,
+        ),
+      );
+    } catch (error) {
+      return errorResult(error);
+    }
+  },
+);
+
+server.registerTool(
   "get_modeling_bundle",
   {
     description: "Get a fixed-commit evidence bundle for LLM-assisted modeling.",
