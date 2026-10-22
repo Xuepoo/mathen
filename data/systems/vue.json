@@ -1,0 +1,75 @@
+{
+  "id": "vue",
+  "name": "Vue",
+  "version_context": "tag v3.5.22, commit 5a8aa0b2ba575e098cbb63b396e9bcb751eb3a0f",
+  "summary": "A component framework that combines proxy/ref-based runtime reactivity with compiler-informed component rendering and a renderer that patches host output from reactive component effects.",
+  "scope": ["reactivity", "component runtime", "compiler-informed rendering", "host renderer"],
+  "features": [
+    {
+      "id": "proxy-and-ref-reactivity",
+      "name": "Proxy and ref reactivity",
+      "category": "reactivity-model",
+      "claim_type": "fact",
+      "description": "Vue creates reactive objects through proxy traps and tracks ref access through getter/setter behavior, associating reactive reads with effects and triggering subscribers on writes.",
+      "benefits": ["Makes dependency tracking implicit for component state", "Supports object and scalar reactive primitives"],
+      "costs": ["Proxy identity and destructuring semantics can surprise users", "Dependency graphs add runtime bookkeeping"]
+      ,"evidence_ids": ["vue-reactivity-source", "vue-reactivity-doc"]
+    },
+    {
+      "id": "component-render-effect",
+      "name": "Component render effect",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "Vue component instances use reactive effects around rendering, so tracked state changes schedule component updates that flow through the runtime renderer.",
+      "benefits": ["Connects state dependencies to view updates", "Localizes update scheduling to component render effects"],
+      "costs": ["Effect scheduling and invalidation affect update timing", "Deep reactive conversion may add work for large state graphs"],
+      "evidence_ids": ["vue-renderer-source", "vue-reactivity-doc"]
+    },
+    {
+      "id": "compiler-informed-host-patching",
+      "name": "Compiler-informed host patching",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "Vue's runtime renderer creates component and element renderers and patches host output; compiler-generated vnode shape information can inform which parts require dynamic updates.",
+      "benefits": ["Retains a flexible virtual-node model", "Uses compilation knowledge to reduce some runtime work"],
+      "costs": ["Compiler and runtime contracts must remain compatible", "Virtual-node identity and patch rules add framework semantics"],
+      "evidence_ids": ["vue-renderer-source", "vue-rendering-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Reactive dependency graph",
+      "question": "Which effects are reachable from a reactive property read and therefore eligible for re-execution after mutation?",
+      "assumptions": ["Reactive targets and keys are graph nodes", "Reads create dependency edges to active effects", "Scheduler batching is abstracted as an execution policy"],
+      "claim_type": "inference",
+      "evidence_ids": ["vue-reactivity-source", "vue-reactivity-doc"]
+    },
+    {
+      "model": "Component render-to-patch transition system",
+      "question": "How does invalidated component state transition from a render effect to host-node patches?",
+      "assumptions": ["A component render produces a vnode relation", "The renderer compares old and new vnode structures", "DOM and platform operations are abstracted behind host operations"],
+      "claim_type": "inference",
+      "evidence_ids": ["vue-renderer-source", "vue-rendering-doc"]
+    },
+    {
+      "model": "Compiler/runtime contract graph",
+      "question": "Which compiler annotations can constrain runtime patch work without changing the component state graph?",
+      "assumptions": ["Compiler output and runtime renderer share a vnode contract", "Optimization hints describe dynamic regions rather than proving performance", "Template compilation is modeled as a transformation boundary"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["vue-renderer-source", "vue-rendering-doc"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "proxy-and-ref-reactivity", "benefits": ["Ergonomic automatic dependency tracking"], "costs": ["Runtime graph maintenance and proxy edge cases remain visible"]},
+    {"feature_id": "component-render-effect", "benefits": ["Direct state-to-view update path"], "costs": ["Effect invalidation and batching complicate timing"]},
+    {"feature_id": "compiler-informed-host-patching", "benefits": ["Compiler knowledge can reduce runtime work"], "costs": ["Build-time and runtime versions must preserve shared contracts"]}
+  ],
+  "evidence": [
+    {"id": "vue-repository-commit", "kind": "source-code", "title": "Vue core source at v3.5.22 commit 5a8aa0b2ba57", "uri": "https://github.com/vuejs/core/commit/5a8aa0b2ba575e098cbb63b396e9bcb751eb3a0f", "accessed": "2026-10-23", "notes": "Fixed official repository revision for this reviewed card."},
+    {"id": "vue-reactivity-source", "kind": "source-code", "title": "Vue reactivity implementation at fixed commit", "uri": "https://github.com/vuejs/core/blob/5a8aa0b2ba575e098cbb63b396e9bcb751eb3a0f/packages/reactivity/src/reactive.ts", "accessed": "2026-10-23", "notes": "Pinned source for proxy-based reactive objects."},
+    {"id": "vue-renderer-source", "kind": "source-code", "title": "Vue runtime renderer at fixed commit", "uri": "https://github.com/vuejs/core/blob/5a8aa0b2ba575e098cbb63b396e9bcb751eb3a0f/packages/runtime-core/src/renderer.ts", "accessed": "2026-10-23", "notes": "Pinned source for component rendering and host patching."},
+    {"id": "vue-reactivity-doc", "kind": "official-doc", "title": "Vue reactivity in depth", "uri": "https://vuejs.org/guide/extras/reactivity-in-depth.html", "accessed": "2026-10-23", "notes": "Official documentation for tracking, triggering, refs, effects, and runtime versus compile-time trade-offs."},
+    {"id": "vue-rendering-doc", "kind": "official-doc", "title": "Vue rendering mechanism", "uri": "https://vuejs.org/guide/extras/rendering-mechanism.html", "accessed": "2026-10-23", "notes": "Official documentation for compiler-informed virtual DOM rendering."}
+  ],
+  "related_systems": []
+}

@@ -265,9 +265,9 @@ identifiers, not claims that the projects share the same architecture.
 | `opengl` | OpenGL | `reviewed` | Compare context state, object bindings, programmable pipeline, and platform integration using fixed-commit evidence |
 | `sdl` | SDL | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
 | `godot` | Godot | `P1` | Scene tree, nodes, resources, and game runtime |
-| `react` | React | `P1` | Component tree, declarative rendering, and reconciliation |
-| `vue` | Vue | `P2` | Reactive state, component graph, and compiler/runtime split |
-| `svelte` | Svelte | `P2` | Compile-time UI transformation and reactive updates |
+| `react` | React | `reviewed` | Compare component trees, hooks, reconciliation, and host commit boundaries using fixed-commit evidence |
+| `vue` | Vue | `reviewed` | Compare proxy/ref reactivity, component effects, compiler-informed rendering, and host patching using fixed-commit evidence |
+| `svelte` | Svelte | `reviewed` | Compare component-file compilation, generated DOM updates, and reactive dependency analysis using fixed-commit evidence |
 | `d3` | D3.js | `P1` | Data joins, declarative visualization, and DOM composition |
 | `ffmpeg` | FFmpeg | `P0` | Codec, filter, demuxer, muxer, and stream pipelines |
 | `gstreamer` | GStreamer | `P1` | Typed media elements, pads, and pipeline negotiation |
@@ -289,10 +289,10 @@ identifiers, not claims that the projects share the same architecture.
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
-| `react` | React | `P1` | Component trees, declarative rendering, hooks, and reconciliation |
-| `vue` | Vue | `P1` | Reactive state, component graphs, compiler/runtime boundaries, and rendering |
-| `svelte` | Svelte | `P1` | Compile-time component transformation and reactive updates |
-| `angular` | Angular | `P1` | Dependency injection, component lifecycle, templates, and reactive change detection |
+| `react` | React | `reviewed` | Compare component trees, hooks, reconciliation, and host commit boundaries using fixed-commit evidence |
+| `vue` | Vue | `reviewed` | Compare proxy/ref reactivity, component effects, compiler-informed rendering, and host patching using fixed-commit evidence |
+| `svelte` | Svelte | `reviewed` | Compare component-file compilation, generated DOM updates, and reactive dependency analysis using fixed-commit evidence |
+| `angular` | Angular | `reviewed` | Compare compiled templates, hierarchical dependency injection, change detection, and signals using fixed-commit evidence |
 | `nextjs` | Next.js | `P1` | Server/client component boundaries, routing, data fetching, and deployment output |
 | `express` | Express | `P1` | Middleware composition, request lifecycle, routing, and adapter boundaries |
 | `fastapi` | FastAPI | `P1` | Typed request validation, dependency injection, async handlers, and OpenAPI generation |
