@@ -1,0 +1,161 @@
+{
+  "id": "react-native",
+  "name": "React Native",
+  "version_context": "commit 9d7447ab0d4a352ee667b3e9c7fe9f1561b0db20",
+  "summary": "A cross-platform UI framework that transforms JavaScript React element trees through a C++ shadow tree and layout pipeline into native host views on platform UI threads.",
+  "scope": [
+    "JavaScript and native integration",
+    "React element trees",
+    "Fabric shadow trees",
+    "layout and mounting",
+    "platform host views"
+  ],
+  "features": [
+    {
+      "id": "element-to-shadow-tree-rendering",
+      "name": "Element-to-shadow-tree rendering",
+      "category": "ui-representation",
+      "claim_type": "fact",
+      "description": "React Native reduces JavaScript React elements to host components and creates corresponding C++ shadow nodes. Parent-child relationships in the element tree are represented in the React Shadow Tree, while composite JavaScript components do not become native views themselves.",
+      "benefits": [
+        "Separates declarative JavaScript composition from platform view creation",
+        "Provides a common intermediate representation for multiple host platforms",
+        "Allows immutable shadow-tree updates and cloning for concurrent renderer work"
+      ],
+      "costs": [
+        "The intermediate representation adds memory and transformation work",
+        "Component behavior must respect the distinction between composite and host components",
+        "Platform-specific measurements remain visible at the host boundary"
+      ],
+      "evidence_ids": ["react-native-render-pipeline", "react-native-shadow-node-source", "react-native-renderer-source"]
+    },
+    {
+      "id": "render-commit-mount-pipeline",
+      "name": "Render, commit, and mount pipeline",
+      "category": "rendering-lifecycle",
+      "claim_type": "fact",
+      "description": "The renderer separates rendering the element and shadow trees, committing layout and promoting the next tree, and mounting a diff as native host-view mutations. Yoga participates in layout calculation and the mounting layer turns the resulting tree into platform view operations.",
+      "benefits": [
+        "Makes layout and native mutation stages explicit",
+        "Allows tree diffing to minimize host-view mutations",
+        "Supports asynchronous work between JavaScript, background, and UI execution contexts"
+      ],
+      "costs": [
+        "State can exist at several pipeline stages before pixels are visible",
+        "Scheduling and interruption behavior complicate debugging and latency reasoning",
+        "Layout and mount correctness depend on platform host-view constraints"
+      ],
+      "evidence_ids": ["react-native-render-pipeline", "react-native-threading-model", "react-native-mounting-source"]
+    },
+    {
+      "id": "thread-safe-platform-renderer-boundary",
+      "name": "Thread-safe platform renderer boundary",
+      "category": "platform-integration",
+      "claim_type": "fact",
+      "description": "React Native distributes renderer work across JavaScript and UI threads while restricting host-view manipulation to the UI thread. Immutable C++ data structures and JSI-backed references provide the thread-safe boundary between JavaScript logic and native rendering internals.",
+      "benefits": [
+        "Keeps platform view mutation on the thread required by native UI toolkits",
+        "Permits render work and state preparation to be scheduled separately from mounting",
+        "Provides a shared integration model for Android and iOS host views"
+      ],
+      "costs": [
+        "Cross-thread scheduling and synchronization affect responsiveness",
+        "Native modules and views must obey platform thread rules",
+        "The abstraction does not remove differences between platform view capabilities"
+      ],
+      "evidence_ids": ["react-native-threading-model", "react-native-renderer-source", "react-native-jsi-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Immutable staged UI tree transformation",
+      "question": "How does a JavaScript React element tree become a laid-out and mounted native host-view tree?",
+      "assumptions": [
+        "Element, shadow, and host-view trees are distinct representations",
+        "Render, commit, and mount are modeled as ordered stages with possible asynchronous execution",
+        "The view abstracts React scheduling details and native drawing implementation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["react-native-render-pipeline", "react-native-shadow-node-source", "react-native-mounting-source"]
+    },
+    {
+      "model": "Thread-constrained render state machine",
+      "question": "Which renderer transitions may occur on JavaScript, background, and UI threads while preserving host-view safety?",
+      "assumptions": [
+        "Only the UI thread mutates platform host views",
+        "Immutable shadow-tree snapshots can be shared across renderer stages",
+        "The model treats interruption and priority as transition scheduling constraints, not guarantees of frame timing"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["react-native-threading-model", "react-native-render-pipeline", "react-native-renderer-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "element-to-shadow-tree-rendering",
+      "benefits": ["A portable declarative representation can feed multiple native platforms"],
+      "costs": ["Intermediate trees and cloning add representation and lifecycle overhead"]
+    },
+    {
+      "feature_id": "render-commit-mount-pipeline",
+      "benefits": ["Explicit stages enable layout calculation and native mutation diffing"],
+      "costs": ["Pipeline staging introduces latency and more states to observe"]
+    },
+    {
+      "feature_id": "thread-safe-platform-renderer-boundary",
+      "benefits": ["Native UI thread rules are isolated behind a common renderer contract"],
+      "costs": ["Thread scheduling and platform-specific host behavior remain integration costs"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "react-native-render-pipeline",
+      "kind": "official-doc",
+      "title": "React Native render, commit, and mount",
+      "uri": "https://reactnative.dev/architecture/render-pipeline",
+      "accessed": "2026-10-23",
+      "notes": "Official architecture documentation for element trees, shadow trees, Yoga layout, tree promotion, diffing, and host-view mounting."
+    },
+    {
+      "id": "react-native-threading-model",
+      "kind": "official-doc",
+      "title": "React Native threading model",
+      "uri": "https://reactnative.dev/architecture/threading-model",
+      "accessed": "2026-10-23",
+      "notes": "Official architecture documentation for JavaScript/UI thread roles, immutable data, interruption, and renderer scheduling."
+    },
+    {
+      "id": "react-native-shadow-node-source",
+      "kind": "source-code",
+      "title": "React Native shadow node source at fixed commit",
+      "uri": "https://github.com/facebook/react-native/blob/9d7447ab0d4a352ee667b3e9c7fe9f1561b0db20/packages/react-native/ReactCommon/react/renderer/core/ShadowNode.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision C++ source for shadow-node identity, parent/child structure, props, state, and immutable renderer representation."
+    },
+    {
+      "id": "react-native-renderer-source",
+      "kind": "source-code",
+      "title": "React Native renderer source at fixed commit",
+      "uri": "https://github.com/facebook/react-native/tree/9d7447ab0d4a352ee667b3e9c7fe9f1561b0db20/packages/react-native/ReactCommon/react/renderer",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision source tree for core, mounting, scheduler, and UI-manager renderer boundaries."
+    },
+    {
+      "id": "react-native-mounting-source",
+      "kind": "source-code",
+      "title": "React Native mounting source at fixed commit",
+      "uri": "https://github.com/facebook/react-native/tree/9d7447ab0d4a352ee667b3e9c7fe9f1561b0db20/packages/react-native/ReactCommon/react/renderer/mounting",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision source tree for mounting coordinators, mutation lists, and host-view update preparation."
+    },
+    {
+      "id": "react-native-jsi-source",
+      "kind": "source-code",
+      "title": "React Native JSI integration source at fixed commit",
+      "uri": "https://github.com/facebook/react-native/tree/9d7447ab0d4a352ee667b3e9c7fe9f1561b0db20/packages/react-native/ReactCommon/jsi",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision source tree for the JavaScript interface used by native renderer integration."
+    }
+  ],
+  "related_systems": ["react", "threejs"]
+}

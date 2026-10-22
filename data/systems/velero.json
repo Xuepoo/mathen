@@ -1,0 +1,153 @@
+{
+  "id": "velero",
+  "name": "Velero",
+  "version_context": "commit e1a6c324b3c8155d993c4f53fcd9042cc6ba40c6",
+  "summary": "A Kubernetes backup and restore system that turns selected cluster resources and persistent-volume data into object-storage-backed backups and reconstructs them through ordered, plugin-mediated restore workflows.",
+  "scope": [
+    "Kubernetes resource backup",
+    "object storage",
+    "persistent-volume snapshots",
+    "restore ordering",
+    "backup and restore controllers"
+  ],
+  "features": [
+    {
+      "id": "controller-driven-backup-restore-workflows",
+      "name": "Controller-driven backup and restore workflows",
+      "category": "control-loop",
+      "claim_type": "fact",
+      "description": "Velero exposes Backup and Restore custom resources and uses controllers to observe them, execute work, and record phases and errors. The server therefore coordinates backup and restore as asynchronous Kubernetes workflows rather than as one blocking client operation.",
+      "benefits": [
+        "Makes long-running backup and restore state inspectable through Kubernetes resources",
+        "Allows retries and progress reporting to be separated from the CLI client",
+        "Supports scheduled backups through the same resource-oriented control path"
+      ],
+      "costs": [
+        "Completion is asynchronous and callers must observe resource status",
+        "Retries and partial failures require reconciliation and operational cleanup",
+        "Kubernetes API availability becomes part of the workflow control path"
+      ],
+      "evidence_ids": ["velero-overview", "velero-backup-controller", "velero-restore-controller"]
+    },
+    {
+      "id": "object-storage-backed-resource-archives",
+      "name": "Object-storage-backed resource archives",
+      "category": "backup-storage",
+      "claim_type": "fact",
+      "description": "Velero writes backup metadata and Kubernetes resource data through a BackupStorageLocation abstraction to object storage. The backup controller selects resources and records the backup contents separately from the Kubernetes API server's live state.",
+      "benefits": [
+        "Keeps recovery artifacts outside the source cluster's control-plane storage",
+        "Supports cloud-provider and on-premises object-storage implementations through a location boundary",
+        "Makes backup contents portable for migration and disaster recovery"
+      ],
+      "costs": [
+        "Recovery depends on credentials, availability, and compatibility of the object store",
+        "Backup retention and artifact lifecycle require separate storage policy",
+        "A successful archive does not by itself guarantee application-consistent data"
+      ],
+      "evidence_ids": ["velero-backup-reference", "velero-backup-controller", "velero-overview"]
+    },
+    {
+      "id": "ordered-plugin-mediated-data-restore",
+      "name": "Ordered plugin-mediated data restore",
+      "category": "restore-model",
+      "claim_type": "fact",
+      "description": "The restore controller reconstructs Kubernetes resources in a defined order and delegates provider-specific operations such as volume snapshots and item actions to plugins. Restore ordering and plugin results form explicit boundaries around the generic restore workflow.",
+      "benefits": [
+        "Allows dependent Kubernetes resources to be recreated in a predictable sequence",
+        "Supports provider-specific persistent-volume and resource handling without hard-coding every backend",
+        "Makes extension behavior observable as restore item results and warnings"
+      ],
+      "costs": [
+        "Ordering cannot encode every application-level dependency",
+        "Plugin availability and version compatibility constrain recoverability",
+        "Partial restores can leave a cluster in a mixed state requiring reconciliation"
+      ],
+      "evidence_ids": ["velero-restore-reference", "velero-restore-controller", "velero-overview"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Asynchronous backup and restore state machine",
+      "question": "How do Kubernetes backup and restore resources move from requested intent through processing, completion, or failure?",
+      "assumptions": [
+        "Backup and Restore custom resources are the modeled workflow intents",
+        "Controller phases summarize progress but do not represent every internal operation",
+        "The model treats object storage and plugins as external transition participants"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["velero-overview", "velero-backup-controller", "velero-restore-controller"]
+    },
+    {
+      "model": "Typed resource dependency graph with archival boundary",
+      "question": "Which selected resources, archive objects, volume data, and restore operations must be connected for recovery?",
+      "assumptions": [
+        "Kubernetes resources and persistent-volume data are distinct node classes",
+        "BackupStorageLocation and provider plugins are boundary nodes rather than interchangeable storage",
+        "Edges express workflow dependency or data transfer and do not prove application consistency"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["velero-backup-reference", "velero-restore-reference", "velero-backup-controller", "velero-restore-controller"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "controller-driven-backup-restore-workflows",
+      "benefits": ["Inspectable, retryable orchestration for long-running recovery work"],
+      "costs": ["Eventual completion and reconciliation require status-aware operators"]
+    },
+    {
+      "feature_id": "object-storage-backed-resource-archives",
+      "benefits": ["Artifacts survive loss of the source cluster and can support migration"],
+      "costs": ["External storage credentials, retention, and availability become recovery dependencies"]
+    },
+    {
+      "feature_id": "ordered-plugin-mediated-data-restore",
+      "benefits": ["Provider-specific recovery integrates with a common ordered restore pipeline"],
+      "costs": ["Plugin and ordering boundaries cannot guarantee complete application-level recovery"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "velero-overview",
+      "kind": "official-doc",
+      "title": "Velero documentation overview",
+      "uri": "https://velero.io/docs/v1.17/",
+      "accessed": "2026-10-23",
+      "notes": "Official overview describes Velero's server and CLI, Kubernetes resource backup and restore, migration, and persistent-volume support."
+    },
+    {
+      "id": "velero-backup-reference",
+      "kind": "official-doc",
+      "title": "Velero backup reference",
+      "uri": "https://velero.io/docs/v1.17/backup-reference/",
+      "accessed": "2026-10-23",
+      "notes": "Official reference for backup resource selection, schedules, storage locations, and backup contents."
+    },
+    {
+      "id": "velero-restore-reference",
+      "kind": "official-doc",
+      "title": "Velero restore reference",
+      "uri": "https://velero.io/docs/v1.17/restore-reference/",
+      "accessed": "2026-10-23",
+      "notes": "Official reference for restore behavior, resource ordering, conflict handling, and restore results."
+    },
+    {
+      "id": "velero-backup-controller",
+      "kind": "source-code",
+      "title": "Velero backup controller at fixed commit",
+      "uri": "https://github.com/vmware-tanzu/velero/blob/e1a6c324b3c8155d993c4f53fcd9042cc6ba40c6/pkg/controller/backup_controller.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision controller source for observing Backup resources, selecting data, invoking backup operations, and recording status."
+    },
+    {
+      "id": "velero-restore-controller",
+      "kind": "source-code",
+      "title": "Velero restore controller at fixed commit",
+      "uri": "https://github.com/vmware-tanzu/velero/blob/e1a6c324b3c8155d993c4f53fcd9042cc6ba40c6/pkg/controller/restore_controller.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision controller source for restore processing, resource ordering, plugin actions, and status reporting."
+    }
+  ],
+  "related_systems": ["kubernetes"]
+}

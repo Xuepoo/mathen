@@ -1,0 +1,161 @@
+{
+  "id": "expo",
+  "name": "Expo",
+  "version_context": "commit e43db4f777a5f1edbcda07230743c57e436d610d",
+  "summary": "A React Native application platform that supplies native modules, generates and configures native projects, and distributes JavaScript and asset updates within a compatible native binary boundary.",
+  "scope": [
+    "native modules",
+    "config plugins",
+    "continuous native generation",
+    "over-the-air JavaScript updates",
+    "mobile build boundary"
+  ],
+  "features": [
+    {
+      "id": "cross-platform-native-module-api",
+      "name": "Cross-platform native module API",
+      "category": "native-integration",
+      "claim_type": "fact",
+      "description": "The Expo Modules API lets applications and libraries define native capabilities and views in Swift and Kotlin behind a JavaScript-facing module surface. Expo documents comparable behavior across Android and iOS and integration with React Native's modern architecture.",
+      "benefits": [
+        "Reduces boilerplate for exposing platform capabilities to JavaScript",
+        "Provides a consistent module and view lifecycle across mobile platforms",
+        "Allows reusable native functionality to be packaged independently of an app"
+      ],
+      "costs": [
+        "Native platform behavior and permissions remain part of module design",
+        "The abstraction adds a dependency on Expo's module runtime and conventions",
+        "Lower-level C++ integrations may still require a different React Native boundary"
+      ],
+      "evidence_ids": ["expo-modules-overview", "expo-modules-source"]
+    },
+    {
+      "id": "config-plugin-native-project-generation",
+      "name": "Config-plugin native project generation",
+      "category": "build-configuration",
+      "claim_type": "fact",
+      "description": "Expo config plugins transform app configuration and apply platform-specific mods during prebuild. In continuous native generation projects, this makes native project changes reproducible from configuration instead of requiring direct edits to generated iOS and Android files.",
+      "benefits": [
+        "Reapplies native configuration during regeneration and CI builds",
+        "Keeps library-specific native setup close to the library configuration contract",
+        "Separates app intent from platform file-editing details"
+      ],
+      "costs": [
+        "Plugin ordering and platform-specific mods can affect generated output",
+        "Unsupported native customizations may require manual projects or custom plugins",
+        "Generated files are an output and should not be treated as the sole source of intent"
+      ],
+      "evidence_ids": ["expo-config-plugins", "expo-config-plugin-source"]
+    },
+    {
+      "id": "binary-compatible-over-the-air-updates",
+      "name": "Binary-compatible over-the-air updates",
+      "category": "release-model",
+      "claim_type": "fact",
+      "description": "EAS Update serves JavaScript, styling, and image changes through expo-updates to an installed app. The documented boundary excludes native code, native dependencies, permissions, and SDK changes, which require a new app binary.",
+      "benefits": [
+        "Delivers compatible JavaScript and asset fixes between store submissions",
+        "Allows channels, rollouts, and republishing of a known update",
+        "Makes the native binary a stable execution boundary for supported updates"
+      ],
+      "costs": [
+        "Updates must remain compatible with the installed native binary",
+        "Native changes still require build, signing, and store distribution workflows",
+        "Update selection, rollback, and adoption add release-state operational concerns"
+      ],
+      "evidence_ids": ["expo-eas-update", "expo-updates-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Configuration-to-native-project transformation",
+      "question": "How do app configuration, plugin functions, platform mods, and generated native projects compose into a build input?",
+      "assumptions": [
+        "App configuration is the source node and generated native files are derived nodes",
+        "Plugin and mod edges are ordered transformations with platform-specific effects",
+        "The view abstracts Xcode, Gradle, and compiler behavior after generation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["expo-config-plugins", "expo-config-plugin-source"]
+    },
+    {
+      "model": "Binary/update compatibility state machine",
+      "question": "Which application changes can transition through an OTA update, and which require a new native binary?",
+      "assumptions": [
+        "A binary declares the native capabilities and runtime compatibility available to an update",
+        "JavaScript and asset changes are modeled as update payloads",
+        "Native code, permissions, and SDK changes transition to a new-build path rather than being proven safe by the model"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["expo-eas-update", "expo-updates-source", "expo-modules-overview"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "cross-platform-native-module-api",
+      "benefits": ["Reusable native capabilities with a consistent JavaScript-facing contract"],
+      "costs": ["Platform permissions, lifecycle details, and runtime dependency remain visible"]
+    },
+    {
+      "feature_id": "config-plugin-native-project-generation",
+      "benefits": ["Repeatable native setup from declarative app and library configuration"],
+      "costs": ["Plugin composition and generated-output debugging add build-system complexity"]
+    },
+    {
+      "feature_id": "binary-compatible-over-the-air-updates",
+      "benefits": ["Fast delivery of compatible JavaScript and asset changes"],
+      "costs": ["Compatibility limits prevent OTA delivery of native capability changes"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "expo-modules-overview",
+      "kind": "official-doc",
+      "title": "Expo Modules API overview",
+      "uri": "https://docs.expo.dev/modules/overview/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for Swift/Kotlin native modules and views, React Native architecture integration, and platform support."
+    },
+    {
+      "id": "expo-config-plugins",
+      "kind": "official-doc",
+      "title": "Expo config plugins introduction",
+      "uri": "https://docs.expo.dev/config-plugins/introduction/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for CNG, plugin functions, mods, prebuild, and reproducible native project configuration."
+    },
+    {
+      "id": "expo-eas-update",
+      "kind": "official-doc",
+      "title": "Expo EAS Update introduction",
+      "uri": "https://docs.expo.dev/eas-update/introduction/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for serving JavaScript/assets, channels and rollouts, republishing, and changes requiring a new binary."
+    },
+    {
+      "id": "expo-modules-source",
+      "kind": "source-code",
+      "title": "Expo Modules Core at fixed commit",
+      "uri": "https://github.com/expo/expo/tree/e43db4f777a5f1edbcda07230743c57e436d610d/packages/expo-modules-core",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision source tree for the Expo native module runtime and platform module/view integration."
+    },
+    {
+      "id": "expo-config-plugin-source",
+      "kind": "source-code",
+      "title": "Expo config plugins at fixed commit",
+      "uri": "https://github.com/expo/expo/tree/e43db4f777a5f1edbcda07230743c57e436d610d/packages/@expo/config-plugins",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision source tree for plugin and mod implementations used during native project configuration."
+    },
+    {
+      "id": "expo-updates-source",
+      "kind": "source-code",
+      "title": "Expo Updates at fixed commit",
+      "uri": "https://github.com/expo/expo/tree/e43db4f777a5f1edbcda07230743c57e436d610d/packages/expo-updates",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision source tree for update runtime integration, update selection, and native-binary compatibility boundaries."
+    }
+  ],
+  "related_systems": ["react-native", "capacitor"]
+}

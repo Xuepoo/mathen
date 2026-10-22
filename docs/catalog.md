@@ -376,15 +376,15 @@ identifiers, not claims that the projects share the same architecture.
 | `vault` | HashiCorp Vault | `P1` | Secret engines, leases, authentication backends, and seal/unseal state |
 | `openbao` | OpenBao | `P2` | Secret storage, auth methods, leases, plugins, and compatibility boundary |
 | `clickhouse-operator` | ClickHouse Operator | `P2` | Kubernetes reconciliation, database lifecycle, and backup/scale operations |
-| `velero` | Velero | `P2` | Kubernetes resource backup, object storage, restore ordering, and schedules |
+| `velero` | Velero | `reviewed` | Compare Kubernetes resource backup, object-storage archives, restore ordering, and plugin boundaries using fixed-commit evidence |
 
 ### Frontend, mobile, build, and testing ecosystems
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- |
-| `react-native` | React Native | `P1` | JavaScript/native bridge, component tree, layout, and platform renderers |
-| `expo` | Expo | `P2` | Mobile module runtime, OTA updates, config plugins, and native build boundary |
-| `capacitor` | Capacitor | `P2` | Web/native bridge, plugin lifecycle, and platform capability access |
+| `react-native` | React Native | `reviewed` | Compare JavaScript/native representation, render-commit-mount stages, layout, threading, and platform renderers using fixed-commit evidence |
+| `expo` | Expo | `reviewed` | Compare native modules, config-plugin generation, OTA compatibility, and native build boundaries using fixed-commit evidence |
+| `capacitor` | Capacitor | `reviewed` | Compare web/native bridge, plugin lifecycle, asset synchronization, and platform capability access using fixed-commit evidence |
 | `ionic` | Ionic | `P2` | Web component UI, platform adapters, navigation, and build tooling |
 | `vite` | Vite | `P1` | Dependency graph scanning, dev server transforms, HMR, and production bundling |
 | `webpack` | webpack | `P1` | Module graph compilation, loaders, plugins, chunks, and caching |

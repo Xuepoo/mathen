@@ -1,0 +1,161 @@
+{
+  "id": "capacitor",
+  "name": "Capacitor",
+  "version_context": "commit 19d2a40b920120ac97a118ec56105b202ee99d0a",
+  "summary": "A web-native runtime that packages a built web application inside iOS and Android projects, synchronizes web assets and native dependencies, and exposes platform APIs through JavaScript plugins.",
+  "scope": [
+    "web application packaging",
+    "iOS and Android native shells",
+    "JavaScript/native plugins",
+    "asset synchronization",
+    "native project lifecycle"
+  ],
+  "features": [
+    {
+      "id": "built-web-bundle-native-shell",
+      "name": "Built web bundle in a native shell",
+      "category": "runtime-boundary",
+      "claim_type": "fact",
+      "description": "Capacitor takes the output of a web build and places it into native iOS and Android projects. The native shell hosts the web application while the project remains open to platform IDEs and native code.",
+      "benefits": [
+        "Reuses web application code while producing installable mobile binaries",
+        "Keeps native project ownership available for platform-specific work",
+        "Makes the web asset directory an explicit input to the mobile runtime"
+      ],
+      "costs": [
+        "The web build must be complete and correctly configured before synchronization",
+        "Web and native lifecycle differences require integration testing",
+        "Native project and signing concerns remain outside the web toolchain"
+      ],
+      "evidence_ids": ["capacitor-workflow", "capacitor-core-source", "capacitor-cli-source"]
+    },
+    {
+      "id": "javascript-native-plugin-bridge",
+      "name": "JavaScript-native plugin bridge",
+      "category": "platform-capability",
+      "claim_type": "fact",
+      "description": "Capacitor plugins provide a JavaScript-facing interface to native APIs. The bridge dispatches plugin calls and events into platform implementations, while plugin guidance emphasizes small, unified, and idiomatic contracts across iOS and Android.",
+      "benefits": [
+        "Exposes device capabilities through a web-oriented programming model",
+        "Allows native implementations to be packaged and shared as plugins",
+        "Creates an explicit boundary for platform value normalization and lifecycle"
+      ],
+      "costs": [
+        "Plugin APIs must reconcile differences in native platform behavior",
+        "Each plugin adds native code, permissions, and compatibility surface",
+        "Bridge calls and asynchronous events introduce lifecycle and failure modes"
+      ],
+      "evidence_ids": ["capacitor-plugins", "capacitor-ios-bridge-source", "capacitor-android-bridge-source"]
+    },
+    {
+      "id": "sync-driven-native-dependency-lifecycle",
+      "name": "Sync-driven native dependency lifecycle",
+      "category": "build-lifecycle",
+      "claim_type": "fact",
+      "description": "The Capacitor CLI sync operation copies built web assets into both native projects and installs or updates the native dependencies required by Capacitor. Subsequent run, open, and build operations use the synchronized native projects.",
+      "benefits": [
+        "Makes web asset and native dependency propagation a repeatable command",
+        "Supports both IDE-driven and terminal/CI-driven native builds",
+        "Provides a checkpoint between web development and native compilation"
+      ],
+      "costs": [
+        "A stale or incorrect sync can produce a native binary that does not match web source",
+        "Dependency updates can trigger platform-specific build and compatibility failures",
+        "The lifecycle spans package management, native IDEs, and signing environments"
+      ],
+      "evidence_ids": ["capacitor-workflow", "capacitor-cli-source", "capacitor-core-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Bipartite web/native capability graph",
+      "question": "How do web application modules, bridge calls, plugin implementations, and host-platform APIs connect?",
+      "assumptions": [
+        "Web modules and native implementations are distinct node classes",
+        "Plugin methods and events are typed bridge edges between the classes",
+        "The view abstracts WebView internals and platform API implementation details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["capacitor-plugins", "capacitor-ios-bridge-source", "capacitor-android-bridge-source"]
+    },
+    {
+      "model": "Web-build to native-binary state machine",
+      "question": "How does a web source change progress through build, synchronization, native execution, and distributable binary states?",
+      "assumptions": [
+        "A built web asset directory is the input to synchronization",
+        "Sync copies assets and updates native dependencies before run or build",
+        "The model does not infer that a successful sync proves platform behavior or store acceptance"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["capacitor-workflow", "capacitor-cli-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "built-web-bundle-native-shell",
+      "benefits": ["Web code can be distributed through platform-native application shells"],
+      "costs": ["Web/native lifecycle and platform build constraints remain coupled at release time"]
+    },
+    {
+      "feature_id": "javascript-native-plugin-bridge",
+      "benefits": ["A web-facing API can reach device capabilities through replaceable plugins"],
+      "costs": ["Cross-platform normalization, permissions, and bridge failure handling add maintenance work"]
+    },
+    {
+      "feature_id": "sync-driven-native-dependency-lifecycle",
+      "benefits": ["Asset and dependency propagation is explicit and repeatable"],
+      "costs": ["Native dependency and toolchain failures become part of every synchronized release"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "capacitor-workflow",
+      "kind": "official-doc",
+      "title": "Capacitor development workflow",
+      "uri": "https://capacitorjs.com/docs/basics/workflow",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for building web code, cap sync, native run/open/build, and IDE-based project control."
+    },
+    {
+      "id": "capacitor-plugins",
+      "kind": "official-doc",
+      "title": "Creating Capacitor plugins",
+      "uri": "https://capacitorjs.com/docs/plugins/creating-plugins",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for JavaScript/native plugin purpose and the small, unified, idiomatic plugin contract."
+    },
+    {
+      "id": "capacitor-core-source",
+      "kind": "source-code",
+      "title": "Capacitor core definitions at fixed commit",
+      "uri": "https://github.com/ionic-team/capacitor/blob/19d2a40b920120ac97a118ec56105b202ee99d0a/core/src/definitions.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision TypeScript definitions for Capacitor plugin, event, and bridge-facing contracts."
+    },
+    {
+      "id": "capacitor-ios-bridge-source",
+      "kind": "source-code",
+      "title": "Capacitor iOS bridge at fixed commit",
+      "uri": "https://github.com/ionic-team/capacitor/blob/19d2a40b920120ac97a118ec56105b202ee99d0a/ios/Capacitor/CapacitorBridge.swift",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision Swift bridge source for iOS web/native plugin dispatch and lifecycle integration."
+    },
+    {
+      "id": "capacitor-android-bridge-source",
+      "kind": "source-code",
+      "title": "Capacitor Android bridge at fixed commit",
+      "uri": "https://github.com/ionic-team/capacitor/blob/19d2a40b920120ac97a118ec56105b202ee99d0a/android/capacitor/src/main/java/com/getcapacitor/Bridge.java",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision Java bridge source for Android WebView, plugin dispatch, and native lifecycle integration."
+    },
+    {
+      "id": "capacitor-cli-source",
+      "kind": "source-code",
+      "title": "Capacitor CLI sync source at fixed commit",
+      "uri": "https://github.com/ionic-team/capacitor/tree/19d2a40b920120ac97a118ec56105b202ee99d0a/cli/src",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision CLI source tree for project synchronization, native dependency updates, and platform build workflow."
+    }
+  ],
+  "related_systems": ["expo", "react-native", "electron"]
+}
