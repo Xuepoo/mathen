@@ -10,18 +10,19 @@ type SystemSummary = {
   related_systems: string[];
 };
 
-type GraphPayload = {
-  nodes: Array<{ id: string; name: string; type: "system" }>;
-  edges: Array<{
-    source: string;
-    target: string;
-    type: string;
-    claim_type?: string;
-    claim_status?: string;
-    evidence_ids?: string[];
-    notes?: string;
-  }>;
+type GraphNode = { id: string; name: string; type: "system" };
+
+type GraphEdge = {
+  source: string;
+  target: string;
+  type: string;
+  claim_type?: string;
+  claim_status?: string;
+  evidence_ids?: string[];
+  notes?: string;
 };
+
+type GraphPayload = { nodes: GraphNode[]; edges: GraphEdge[] };
 
 type Feature = {
   id: string;
@@ -31,6 +32,7 @@ type Feature = {
   description: string;
   benefits: string[];
   costs: string[];
+  evidence_ids: string[];
 };
 
 type SystemDetail = SystemSummary & {
@@ -40,89 +42,94 @@ type SystemDetail = SystemSummary & {
     question: string;
     assumptions: string[];
     claim_type: string;
+    evidence_ids: string[];
   }>;
-  evidence: Array<{ title: string; uri: string; kind: string }>;
+  evidence: Array<{ id: string; title: string; uri: string; kind: string }>;
 };
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root is missing");
 
 app.innerHTML = `
-  <header class="site-header">
-    <div>
-      <p class="eyebrow">Architecture knowledge graph</p>
-      <h1>Mathen</h1>
-      <p class="subtitle">Translate software systems into reusable structures, mathematical views, and evidence-backed trade-offs.</p>
-    </div>
-    <a class="github-link" href="https://github.com/Xuepoo/mathen" target="_blank" rel="noreferrer">GitHub ↗</a>
+  <header class="site-header shell">
+    <a class="brand" href="/" aria-label="Mathen home">
+      <span class="brand-mark">M</span>
+      <span><strong>Mathen</strong><small>Architecture intelligence</small></span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="#explore">Explore</a>
+      <a href="#catalog">Catalog</a>
+      <a href="https://github.com/Xuepoo/mathen" target="_blank" rel="noreferrer">Source ↗</a>
+    </nav>
   </header>
-  <section class="graph-workspace" aria-labelledby="graph-title">
-    <div class="graph-heading">
-      <div><p class="eyebrow">Relational map</p><h2 id="graph-title">Architecture graph</h2><p class="graph-intro">Explore systems as connected architecture cards. Drag nodes, pan the canvas, or scroll to zoom.</p></div>
-      <div class="graph-actions">
-        <label for="relation-filter">Show relations</label>
-        <select id="relation-filter" class="relation-filter"><option value="all">All relation types</option></select>
-        <button id="graph-reset" class="graph-button" type="button">Reset view</button>
+  <main>
+    <section class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="live-dot"></span> Evidence-backed architecture graph</p>
+        <h1>See how software<br /><em>takes shape.</em></h1>
+        <p class="hero-lead">Explore the structures, boundaries, and trade-offs behind the systems we build. Every connection is grounded in a reviewed Architecture Card.</p>
+        <div class="hero-actions"><a class="primary-button" href="#explore">Open the graph <span>↓</span></a><a class="text-link" href="#catalog">Browse systems →</a></div>
       </div>
-    </div>
-    <div class="graph-layout">
-      <div id="graph-canvas" class="graph-canvas" role="img" aria-label="Interactive architecture graph"></div>
-      <aside id="graph-inspector" class="graph-inspector"><p class="eyebrow">Graph guide</p><h3>Select a node or edge</h3><p>Nodes represent reviewed systems. Edges retain their relation type and claim metadata.</p><div class="graph-legend"><span><i class="legend-dot"></i> System</span><span><i class="legend-line"></i> Relation</span></div></aside>
-    </div>
-  </section>
-  <main class="layout">
-    <section class="catalog-panel">
-      <div class="panel-heading">
-        <div><p class="eyebrow">Catalog</p><h2>Systems</h2></div>
-        <span id="system-count" class="count-badge">—</span>
+      <div class="hero-orbit" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit-core">M</div><span class="orbit-node orbit-node-one">D</span><span class="orbit-node orbit-node-two">G</span><span class="orbit-node orbit-node-three">S</span></div>
+    </section>
+    <section class="stats-bar shell" aria-label="Knowledge base statistics">
+      <div><strong id="system-count">—</strong><span>reviewed systems</span></div>
+      <div><strong id="edge-count">—</strong><span>architecture relations</span></div>
+      <div><strong id="feature-count">—</strong><span>reusable features</span></div>
+      <div><strong id="evidence-count">—</strong><span>evidence sources</span></div>
+    </section>
+    <section id="explore" class="explore-section shell">
+      <div class="section-heading"><div><p class="eyebrow">01 / Relational map</p><h2>Architecture graph</h2></div><p class="section-note">Trace patterns across reviewed systems.<br />Select a node to reveal its neighborhood.</p></div>
+      <div class="graph-workspace">
+        <div class="graph-toolbar">
+          <label class="toolbar-search"><span>⌕</span><input id="graph-search" type="search" placeholder="Find a system…" /></label>
+          <div class="toolbar-controls"><label for="relation-filter">Relations</label><select id="relation-filter"><option value="all">All types</option></select><label for="layout-select">Layout</label><select id="layout-select"><option value="cose">Network</option><option value="concentric">Concentric</option><option value="circle">Circle</option><option value="grid">Grid</option></select><button id="graph-focus" class="toolbar-button" type="button" disabled>Focus selected</button><button id="graph-reset" class="toolbar-button icon-button" type="button" aria-label="Reset graph view">↺</button></div>
+        </div>
+        <div class="graph-body"><div id="graph-canvas" class="graph-canvas" role="img" aria-label="Interactive architecture graph"></div><aside id="graph-inspector" class="graph-inspector"><div class="inspector-empty"><span class="inspector-icon">⌁</span><p class="eyebrow">Graph inspector</p><h3>Choose a system or relation</h3><p>Click a node to see its connected architecture patterns. Click an edge to inspect the claim behind it.</p></div></aside></div>
+        <div class="graph-footer"><span><i class="legend-dot"></i> System</span><span><i class="legend-line"></i> Evidence-backed relation</span><span id="graph-hint">Scroll to zoom · drag to pan</span></div>
       </div>
-      <label class="search-label" for="system-search">Search systems and architecture claims</label>
-      <input id="system-search" class="search-input" type="search" placeholder="Try embedded, vectorized, KVM..." />
-      <div id="system-list" class="system-list" aria-live="polite"></div>
     </section>
-    <section id="detail-panel" class="detail-panel" aria-live="polite">
-      <div class="empty-state"><p class="eyebrow">Start exploring</p><h2>Select a system</h2><p>Browse the catalog to inspect architecture features, mathematical views, trade-offs, and evidence.</p></div>
+    <section id="catalog" class="catalog-section shell">
+      <div class="section-heading"><div><p class="eyebrow">02 / Reviewed catalog</p><h2>Systems worth studying</h2></div><p class="section-note">Search by system, workload, or architectural boundary.</p></div>
+      <div class="catalog-layout"><aside class="catalog-sidebar"><label class="search-label" for="system-search">Search the knowledge base</label><label class="catalog-search"><span>⌕</span><input id="system-search" type="search" placeholder="embedded, isolation, storage…" /></label><div class="catalog-filter-label">Domains</div><div id="scope-filters" class="scope-filters"><button class="scope-chip active" data-scope="all" type="button">All systems</button></div></aside><div id="system-list" class="system-list" aria-live="polite"></div></div>
     </section>
+    <section id="detail-panel" class="detail-section shell" aria-live="polite"><div class="empty-state"><p class="eyebrow">03 / Architecture card</p><h2>Select a system to inspect it.</h2><p>Features, mathematical views, trade-offs, and primary evidence will appear here.</p></div></section>
   </main>
-  <footer><span>Mathen is a research prototype.</span><span>D1-backed structured knowledge · Vector search ready</span></footer>
+  <footer class="site-footer shell"><span>Mathen · a research prototype for software architecture</span><span>D1-backed reviewed knowledge · <a href="https://github.com/Xuepoo/mathen" target="_blank" rel="noreferrer">Open source ↗</a></span></footer>
 `;
 
-const searchInputElement = document.querySelector<HTMLInputElement>("#system-search");
-const systemListElement = document.querySelector<HTMLDivElement>("#system-list");
-const systemCountElement = document.querySelector<HTMLSpanElement>("#system-count");
-const detailPanelElement = document.querySelector<HTMLElement>("#detail-panel");
-const graphCanvasElement = document.querySelector<HTMLDivElement>("#graph-canvas");
-const graphInspectorElement = document.querySelector<HTMLElement>("#graph-inspector");
-const relationFilterElement = document.querySelector<HTMLSelectElement>("#relation-filter");
-const graphResetElement = document.querySelector<HTMLButtonElement>("#graph-reset");
-if (
-  !searchInputElement ||
-  !systemListElement ||
-  !systemCountElement ||
-  !detailPanelElement ||
-  !graphCanvasElement ||
-  !graphInspectorElement ||
-  !relationFilterElement ||
-  !graphResetElement
-) {
-  throw new Error("Required UI elements are missing");
-}
-const searchInput = searchInputElement;
-const systemList = systemListElement;
-const systemCount = systemCountElement;
-const detailPanel = detailPanelElement;
-const graphCanvas = graphCanvasElement;
-const graphInspector = graphInspectorElement;
-const relationFilter = relationFilterElement;
-const graphReset = graphResetElement;
+const systemList = required<HTMLDivElement>("system-list");
+const systemCount = required<HTMLElement>("system-count");
+const edgeCount = required<HTMLElement>("edge-count");
+const featureCount = required<HTMLElement>("feature-count");
+const evidenceCount = required<HTMLElement>("evidence-count");
+const detailPanel = required<HTMLElement>("detail-panel");
+const graphCanvas = required<HTMLDivElement>("graph-canvas");
+const graphInspector = required<HTMLElement>("graph-inspector");
+const graphSearch = required<HTMLInputElement>("graph-search");
+const systemSearch = required<HTMLInputElement>("system-search");
+const relationFilter = required<HTMLSelectElement>("relation-filter");
+const layoutSelect = required<HTMLSelectElement>("layout-select");
+const graphFocus = required<HTMLButtonElement>("graph-focus");
+const graphReset = required<HTMLButtonElement>("graph-reset");
+const scopeFilters = required<HTMLDivElement>("scope-filters");
 
 let systems: SystemSummary[] = [];
+let graphData: GraphPayload = { nodes: [], edges: [] };
 let graph: Core | undefined;
+let selectedNodeId: string | undefined;
+let activeScope = "all";
+let detailRequest = 0;
+
 await loadSystems();
+await loadFeatureStats();
 await loadGraph();
-searchInput.addEventListener("input", () => renderSystems(searchInput.value));
-relationFilter.addEventListener("change", () => filterGraph(relationFilter.value));
-graphReset.addEventListener("click", () => graph?.fit(undefined, 42));
+systemSearch.addEventListener("input", () => renderSystems(systemSearch.value));
+graphSearch.addEventListener("input", () => searchGraph(graphSearch.value));
+relationFilter.addEventListener("change", () => applyGraphVisibility());
+layoutSelect.addEventListener("change", () => runLayout(layoutSelect.value));
+graphFocus.addEventListener("click", () => focusSelectedNode());
+graphReset.addEventListener("click", () => resetGraph());
 
 async function loadSystems() {
   try {
@@ -131,9 +138,10 @@ async function loadSystems() {
     const payload = (await response.json()) as { data: SystemSummary[] };
     systems = payload.data;
     systemCount.textContent = String(systems.length);
+    buildScopeFilters();
     renderSystems("");
   } catch (error) {
-    systemList.innerHTML = `<p class="error-message">Unable to load the local API. Start it with <code>bun run dev</code>.</p>`;
+    systemList.innerHTML = `<p class="error-message">Unable to load reviewed systems.</p>`;
     console.error(error);
   }
 }
@@ -143,23 +151,45 @@ async function loadGraph() {
     const response = await fetch("/api/graph");
     if (!response.ok) throw new Error(`API returned ${response.status}`);
     const payload = (await response.json()) as GraphPayload | { data: GraphPayload };
-    const data = "data" in payload ? payload.data : payload;
-    renderGraph(data);
+    graphData = "data" in payload ? payload.data : payload;
+    edgeCount.textContent = String(graphData.edges.length);
+    renderGraph();
   } catch (error) {
     graphCanvas.innerHTML = `<p class="graph-error">Unable to load the architecture graph.</p>`;
     console.error(error);
   }
 }
 
-function renderGraph(data: GraphPayload) {
-  const relationTypes = [...new Set(data.edges.map((edge) => edge.type))].sort();
-  relationFilter.innerHTML = `<option value="all">All relation types</option>${relationTypes.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("")}`;
+async function loadFeatureStats() {
+  try {
+    const response = await fetch("/api/features?limit=200");
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+    const payload = (await response.json()) as {
+      data: Array<{ evidence_ids?: string[] }>;
+    };
+    const evidenceIds = new Set(payload.data.flatMap((feature) => feature.evidence_ids ?? []));
+    featureCount.textContent = String(payload.data.length);
+    evidenceCount.textContent = String(evidenceIds.size);
+  } catch (error) {
+    featureCount.textContent = "—";
+    evidenceCount.textContent = "—";
+    console.error(error);
+  }
+}
+
+function renderGraph() {
+  const relationTypes = [...new Set(graphData.edges.map((edge) => edge.type))].sort();
+  relationFilter.innerHTML = `<option value="all">All types</option>${relationTypes.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("")}`;
   const elements: ElementDefinition[] = [
-    ...data.nodes.map((node) => ({
+    ...graphData.nodes.map((node) => ({
       group: "nodes" as const,
-      data: { id: node.id, label: node.name, type: node.type },
+      data: {
+        id: node.id,
+        label: node.name,
+        scope: systems.find((system) => system.id === node.id)?.scope[0] ?? "system",
+      },
     })),
-    ...data.edges.map((edge, index) => ({
+    ...graphData.edges.map((edge, index) => ({
       group: "edges" as const,
       data: {
         id: `edge-${index}-${edge.source}-${edge.target}`,
@@ -173,51 +203,58 @@ function renderGraph(data: GraphPayload) {
       },
     })),
   ];
+  graph?.destroy();
   graph = cytoscape({
     container: graphCanvas,
     elements,
-    minZoom: 0.35,
-    maxZoom: 3,
-    wheelSensitivity: 0.25,
+    minZoom: 0.25,
+    maxZoom: 4,
+    wheelSensitivity: 0.22,
     style: [
       {
         selector: "node",
         style: {
-          "background-color": "#38bdf8",
-          "border-color": "#b9ecff",
+          "background-color": "#d5f35f",
+          "border-color": "#f2ffb2",
           "border-width": 2,
-          color: "#e8ecf4",
+          color: "#f5f7ed",
           label: "data(label)",
           "font-size": 11,
+          "font-weight": 600,
           "text-wrap": "wrap",
-          "text-max-width": "120px",
+          "text-max-width": "130px",
           "text-valign": "bottom",
-          "text-margin-y": 9,
+          "text-margin-y": 10,
           "overlay-opacity": 0,
+          width: 28,
+          height: 28,
         },
       },
       {
         selector: "node:selected",
         style: {
-          "background-color": "#fbbf24",
-          "border-color": "#fff7cc",
-          "border-width": 3,
+          "background-color": "#ffb86b",
+          "border-color": "#fff1d5",
+          "border-width": 4,
+          width: 36,
+          height: 36,
         },
       },
+      { selector: "node.dimmed", style: { opacity: 0.18 } },
       {
         selector: "edge",
         style: {
           width: 2,
-          "line-color": "#49647f",
-          "target-arrow-color": "#7dd3fc",
+          "line-color": "#5e7081",
+          "target-arrow-color": "#a6bac8",
           "target-arrow-shape": "triangle",
           "curve-style": "bezier",
           label: "data(type)",
-          color: "#93a4ba",
+          color: "#b5c4cc",
           "font-size": 9,
-          "text-background-color": "#0d1117",
-          "text-background-opacity": 0.85,
-          "text-background-padding": "3px",
+          "text-background-color": "#121b24",
+          "text-background-opacity": 0.9,
+          "text-background-padding": "4px",
           "text-rotation": "autorotate",
           "overlay-opacity": 0,
         },
@@ -226,93 +263,235 @@ function renderGraph(data: GraphPayload) {
         selector: "edge:selected",
         style: {
           width: 4,
-          "line-color": "#fbbf24",
-          "target-arrow-color": "#fbbf24",
-          color: "#fff7cc",
+          "line-color": "#ffb86b",
+          "target-arrow-color": "#ffb86b",
+          color: "#fff1d5",
         },
       },
+      { selector: "edge.dimmed", style: { opacity: 0.08 } },
     ],
-    layout: {
-      name: "cose",
-      animate: false,
-      padding: 42,
-      idealEdgeLength: 150,
-      nodeRepulsion: 7000,
-      edgeElasticity: 100,
-    },
+    layout: layoutOptions("cose"),
   });
-  graph.on("tap", "node", (event) => {
-    const nodeId = event.target.id();
-    showGraphNode(
-      nodeId,
-      data.nodes.find((node) => node.id === nodeId),
-    );
-    void loadDetail(nodeId);
-  });
+  graph.on("tap", "node", (event) => selectGraphNode(event.target.id()));
   graph.on("tap", "edge", (event) => showGraphEdge(event.target.data()));
   graph.on("tap", (event) => {
     if (event.target === graph) showGraphGuide();
   });
+  applyGraphVisibility();
+  updateGraphHint();
 }
 
-function filterGraph(type: string) {
+function selectGraphNode(id: string) {
   if (!graph) return;
+  selectedNodeId = id;
+  graphFocus.disabled = false;
+  const node = graphData.nodes.find((item) => item.id === id);
+  graph.elements().removeClass("dimmed");
+  graph
+    .nodes()
+    .not(`#${escapeSelector(id)}`)
+    .addClass("dimmed");
   graph.edges().forEach((edge) => {
-    edge.style("display", type === "all" || edge.data("type") === type ? "element" : "none");
+    if (edge.source().id() !== id && edge.target().id() !== id) edge.addClass("dimmed");
   });
+  showGraphNode(id, node);
+  void loadDetail(id);
 }
 
-function showGraphNode(id: string, node?: GraphPayload["nodes"][number]) {
-  graphInspector.innerHTML = `<p class="eyebrow">Selected system</p><h3>${escapeHtml(node?.name ?? id)}</h3><p>${escapeHtml(systems.find((system) => system.id === id)?.summary ?? "Open the architecture card below for features, views, and evidence.")}</p><button class="inspector-link" data-system-id="${escapeHtml(id)}" type="button">Open architecture card ↓</button>`;
+function showGraphNode(id: string, node?: GraphNode) {
+  const system = systems.find((item) => item.id === id);
+  const degree = graph?.getElementById(id).connectedEdges().length ?? 0;
+  graphInspector.innerHTML = `<div class="inspector-label"><span class="inspector-node-dot"></span><p class="eyebrow">Selected system</p></div><h3>${escapeHtml(node?.name ?? id)}</h3><p>${escapeHtml(system?.summary ?? "Open the architecture card below for the complete evidence trail.")}</p><div class="inspector-metrics"><span><strong>${degree}</strong> relations</span><span><strong>${system?.scope.length ?? 0}</strong> domains</span></div><button class="inspector-link" data-system-id="${escapeHtml(id)}" type="button">Open architecture card <span>↓</span></button>`;
   graphInspector.querySelector("button")?.addEventListener("click", () => void loadDetail(id));
 }
 
 function showGraphEdge(edge: Record<string, unknown>) {
+  graph?.elements().removeClass("dimmed");
   const metadata = [edge.claimType, edge.claimStatus].filter(
     (value): value is string => typeof value === "string",
   );
-  graphInspector.innerHTML = `<p class="eyebrow">Selected relation</p><h3>${escapeHtml(String(edge.type ?? "relation"))}</h3><p>${escapeHtml(`${String(edge.source)} → ${String(edge.target)}`)}</p>${metadata.length ? `<div class="tag-row">${metadata.map((item) => `<span class="tag">${escapeHtml(item)}</span>`).join("")}</div>` : ""}${typeof edge.notes === "string" ? `<p class="graph-note">${escapeHtml(edge.notes)}</p>` : ""}`;
+  const evidenceIds = Array.isArray(edge.evidenceIds)
+    ? edge.evidenceIds.filter((value): value is string => typeof value === "string")
+    : [];
+  graphInspector.innerHTML = `<div class="inspector-label"><span class="inspector-edge-line"></span><p class="eyebrow">Selected relation</p></div><h3>${escapeHtml(String(edge.type ?? "relation"))}</h3><p class="relation-path">${escapeHtml(`${String(edge.source)} → ${String(edge.target)}`)}</p>${metadata.length ? `<div class="tag-row">${metadata.map((item) => `<span class="tag">${escapeHtml(item)}</span>`).join("")}</div>` : ""}${typeof edge.notes === "string" ? `<p class="graph-note">${escapeHtml(edge.notes)}</p>` : ""}${evidenceIds.length ? `<div class="evidence-pills"><span class="eyebrow">Evidence</span>${evidenceIds.map((id) => `<span class="evidence-pill">${escapeHtml(id)}</span>`).join("")}</div>` : `<p class="muted-message">Legacy relation without typed evidence metadata.</p>`}`;
 }
 
 function showGraphGuide() {
-  graphInspector.innerHTML = `<p class="eyebrow">Graph guide</p><h3>Select a node or edge</h3><p>Nodes represent reviewed systems. Edges retain their relation type and claim metadata.</p><div class="graph-legend"><span><i class="legend-dot"></i> System</span><span><i class="legend-line"></i> Relation</span></div>`;
+  selectedNodeId = undefined;
+  graphFocus.disabled = true;
+  graph?.elements().removeClass("dimmed");
+  graphInspector.innerHTML = `<div class="inspector-empty"><span class="inspector-icon">⌁</span><p class="eyebrow">Graph inspector</p><h3>Choose a system or relation</h3><p>Click a node to see its connected architecture patterns. Click an edge to inspect the claim behind it.</p></div>`;
+}
+
+function applyGraphVisibility() {
+  if (!graph) return;
+  const type = relationFilter.value;
+  graph.edges().forEach((edge) => {
+    edge.style("display", type === "all" || edge.data("type") === type ? "element" : "none");
+  });
+  updateGraphHint();
+}
+
+function searchGraph(query: string) {
+  if (!graph) return;
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) {
+    graph.elements().removeClass("dimmed");
+    return;
+  }
+  const matches = graph
+    .nodes()
+    .filter((node) => String(node.data("label")).toLowerCase().includes(normalized));
+  graph.nodes().forEach((node) => {
+    node.toggleClass("dimmed", !matches.contains(node));
+  });
+  graph.edges().forEach((edge) => {
+    edge.toggleClass(
+      "dimmed",
+      !matches.contains(edge.source()) && !matches.contains(edge.target()),
+    );
+  });
+}
+
+function runLayout(name: string) {
+  graph?.layout(layoutOptions(name)).run();
+}
+
+function focusSelectedNode() {
+  if (!graph || !selectedNodeId) return;
+  const node = graph.getElementById(selectedNodeId);
+  graph.animate({
+    fit: { eles: node.closedNeighborhood(), padding: 70 },
+    duration: 450,
+  });
+}
+
+function resetGraph() {
+  graphSearch.value = "";
+  relationFilter.value = "all";
+  selectedNodeId = undefined;
+  graphFocus.disabled = true;
+  graph?.elements().removeClass("dimmed");
+  graph?.edges().forEach((edge) => {
+    edge.style("display", "element");
+  });
+  runLayout(layoutSelect.value);
+  showGraphGuide();
+}
+
+function layoutOptions(name: string) {
+  const base = {
+    name: name as "cose" | "circle" | "grid" | "concentric",
+    animate: false,
+    padding: 54,
+  };
+  return name === "cose"
+    ? {
+        ...base,
+        idealEdgeLength: 160,
+        nodeRepulsion: 8000,
+        edgeElasticity: 100,
+      }
+    : base;
+}
+
+function updateGraphHint() {
+  const visibleEdges = graphData.edges.filter(
+    (edge) => relationFilter.value === "all" || edge.type === relationFilter.value,
+  ).length;
+  const message = graphData.edges.length
+    ? `${visibleEdges} relation${visibleEdges === 1 ? "" : "s"} shown · scroll to zoom`
+    : "No typed relations yet · browse the catalog below";
+  const hint = document.querySelector<HTMLElement>("#graph-hint");
+  if (hint) hint.textContent = message;
+}
+
+function buildScopeFilters() {
+  const scopes = [...new Set(systems.flatMap((system) => system.scope))].sort();
+  scopeFilters.innerHTML = `<button class="scope-chip active" data-scope="all" type="button">All systems</button>${scopes
+    .slice(0, 8)
+    .map(
+      (scope) =>
+        `<button class="scope-chip" data-scope="${escapeHtml(scope)}" type="button">${escapeHtml(scope)}</button>`,
+    )
+    .join("")}`;
+  scopeFilters.querySelectorAll<HTMLButtonElement>("button").forEach((button) =>
+    button.addEventListener("click", () => {
+      activeScope = button.dataset.scope ?? "all";
+      scopeFilters
+        .querySelectorAll("button")
+        .forEach((item) => item.classList.toggle("active", item === button));
+      renderSystems(systemSearch.value);
+    }),
+  );
 }
 
 function renderSystems(query: string) {
   const normalized = query.trim().toLowerCase();
   const visible = systems.filter((system) => {
+    const matchesScope = activeScope === "all" || system.scope.includes(activeScope);
     const searchable = [system.name, system.summary, ...system.scope].join(" ").toLowerCase();
-    return searchable.includes(normalized);
+    return matchesScope && searchable.includes(normalized);
   });
   systemList.innerHTML = visible.length
     ? visible.map(systemCard).join("")
-    : `<p class="muted-message">No matching systems.</p>`;
-  systemList.querySelectorAll<HTMLButtonElement>("button[data-system-id]").forEach((button) => {
-    button.addEventListener("click", () => loadDetail(button.dataset.systemId ?? ""));
-  });
+    : `<p class="muted-message">No reviewed systems match this view.</p>`;
+  systemList
+    .querySelectorAll<HTMLButtonElement>("button[data-system-id]")
+    .forEach((button) =>
+      button.addEventListener("click", () => void loadDetail(button.dataset.systemId ?? "")),
+    );
 }
 
 function systemCard(system: SystemSummary) {
-  return `<button class="system-card" data-system-id="${escapeHtml(system.id)}"><span class="card-kicker">${escapeHtml(system.scope[0] ?? "system")}</span><strong>${escapeHtml(system.name)}</strong><span>${escapeHtml(system.summary)}</span></button>`;
+  const relationCount = graphData.edges.filter(
+    (edge) => edge.source === system.id || edge.target === system.id,
+  ).length;
+  return `<button class="system-card" data-system-id="${escapeHtml(system.id)}"><span class="system-card-top"><span class="card-kicker">${escapeHtml(system.scope[0] ?? "system")}</span><span class="system-degree">${relationCount} relation${relationCount === 1 ? "" : "s"}</span></span><strong>${escapeHtml(system.name)}</strong><span>${escapeHtml(system.summary)}</span><span class="card-arrow">↗</span></button>`;
 }
 
 async function loadDetail(id: string) {
-  detailPanel.innerHTML = `<div class="loading-state">Loading architecture card…</div>`;
-  const response = await fetch(`/api/systems/${encodeURIComponent(id)}`);
-  if (!response.ok) {
-    detailPanel.innerHTML = `<div class="error-message">Unable to load this system.</div>`;
-    return;
+  const requestId = ++detailRequest;
+  detailPanel.innerHTML = `<div class="loading-state"><span class="spinner"></span> Loading architecture card…</div>`;
+  try {
+    const response = await fetch(`/api/systems/${encodeURIComponent(id)}`);
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+    const payload = (await response.json()) as { data: SystemDetail };
+    if (requestId === detailRequest) detailPanel.innerHTML = renderDetail(payload.data);
+  } catch (error) {
+    if (requestId === detailRequest)
+      detailPanel.innerHTML = `<div class="error-message">Unable to load this architecture card.</div>`;
+    console.error(error);
   }
-  const payload = (await response.json()) as { data: SystemDetail };
-  detailPanel.innerHTML = renderDetail(payload.data);
 }
 
 function renderDetail(system: SystemDetail) {
-  return `<article><p class="eyebrow">Architecture card</p><h2>${escapeHtml(system.name)}</h2><p class="lead">${escapeHtml(system.summary)}</p><div class="tag-row">${system.scope.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div><section class="detail-section"><h3>Reusable features</h3><div class="feature-grid">${system.features.map(renderFeature).join("")}</div></section><section class="detail-section"><h3>Mathematical views</h3>${system.mathematical_views.map((view) => `<div class="view-card"><div class="card-kicker">${escapeHtml(view.claim_type)}</div><h4>${escapeHtml(view.model)}</h4><p>${escapeHtml(view.question)}</p><details><summary>Assumptions</summary><ul>${view.assumptions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></details></div>`).join("")}</section><section class="detail-section"><h3>Evidence</h3><ul class="evidence-list">${system.evidence.map((item) => `<li><span>${escapeHtml(item.kind)}</span><a href="${escapeHtml(item.uri)}" target="_blank" rel="noreferrer">${escapeHtml(item.title)} ↗</a></li>`).join("")}</ul></section></article>`;
+  const evidenceById = new Map(system.evidence.map((item) => [item.id, item]));
+  return `<article class="architecture-card"><div class="detail-header"><div><p class="eyebrow">03 / Architecture card</p><h2>${escapeHtml(system.name)}</h2><p class="lead">${escapeHtml(system.summary)}</p></div><span class="review-badge"><i></i> Reviewed</span></div><div class="tag-row">${system.scope.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div><div class="detail-metrics"><span><strong>${system.features.length}</strong> features</span><span><strong>${system.mathematical_views.length}</strong> mathematical views</span><span><strong>${system.evidence.length}</strong> evidence sources</span></div><section class="detail-block"><div class="block-heading"><p class="eyebrow">Transferable structure</p><h3>Reusable features</h3></div><div class="feature-grid">${system.features.map((feature) => renderFeature(feature, evidenceById)).join("")}</div></section><section class="detail-block"><div class="block-heading"><p class="eyebrow">Formal lenses</p><h3>Mathematical views</h3></div><div class="view-list">${system.mathematical_views.map((view) => `<div class="view-card"><div class="feature-meta"><span class="card-kicker">${escapeHtml(view.claim_type)}</span><span class="evidence-count">${view.evidence_ids.length} evidence</span></div><h4>${escapeHtml(view.model)}</h4><p>${escapeHtml(view.question)}</p><details><summary>Assumptions (${view.assumptions.length})</summary><ul>${view.assumptions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></details><div class="evidence-pills">${view.evidence_ids.map((id) => evidencePill(id, evidenceById)).join("")}</div></div>`).join("")}</div></section><section class="detail-block evidence-block"><div class="block-heading"><p class="eyebrow">Primary sources</p><h3>Evidence trail</h3></div><ul class="evidence-list">${system.evidence.map((item) => `<li><span class="evidence-kind">${escapeHtml(item.kind)}</span><div><a href="${escapeHtml(item.uri)}" target="_blank" rel="noreferrer">${escapeHtml(item.title)} ↗</a><small>${escapeHtml(item.id)}</small></div></li>`).join("")}</ul></section></article>`;
 }
 
-function renderFeature(feature: Feature) {
-  return `<div class="feature-card"><div class="feature-meta"><span class="card-kicker">${escapeHtml(feature.category)}</span><span class="claim-type">${escapeHtml(feature.claim_type)}</span></div><h4>${escapeHtml(feature.name)}</h4><p>${escapeHtml(feature.description)}</p><details><summary>Benefits and costs</summary><p><strong>Benefits:</strong> ${escapeHtml(feature.benefits.join("; "))}</p><p><strong>Costs:</strong> ${escapeHtml(feature.costs.join("; "))}</p></details></div>`;
+function renderFeature(
+  feature: Feature,
+  evidenceById: Map<string, SystemDetail["evidence"][number]>,
+) {
+  return `<div class="feature-card"><div class="feature-meta"><span class="card-kicker">${escapeHtml(feature.category)}</span><span class="claim-type">${escapeHtml(feature.claim_type)}</span></div><h4>${escapeHtml(feature.name)}</h4><p>${escapeHtml(feature.description)}</p><details><summary>Benefits and costs</summary><p><strong>Benefits:</strong> ${escapeHtml(feature.benefits.join("; "))}</p><p><strong>Costs:</strong> ${escapeHtml(feature.costs.join("; "))}</p></details><div class="evidence-pills">${feature.evidence_ids.map((id) => evidencePill(id, evidenceById)).join("")}</div></div>`;
+}
+
+function evidencePill(id: string, evidenceById: Map<string, SystemDetail["evidence"][number]>) {
+  const evidence = evidenceById.get(id);
+  return evidence
+    ? `<a class="evidence-pill" href="${escapeHtml(evidence.uri)}" target="_blank" rel="noreferrer">${escapeHtml(id)} ↗</a>`
+    : `<span class="evidence-pill">${escapeHtml(id)}</span>`;
+}
+
+function required<T extends Element>(id: string): T {
+  const element = document.querySelector<T>(`#${id}`);
+  if (!element) throw new Error(`Required UI element is missing: ${id}`);
+  return element;
+}
+
+function escapeSelector(value: string) {
+  return value.replace(/([!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, "\\$1");
 }
 
 function escapeHtml(value: string) {
