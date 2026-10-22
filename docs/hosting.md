@@ -2,14 +2,15 @@
 
 ## Current deployment target
 
-The first production target is Cloudflare:
+The first production target is a single Cloudflare Worker. It serves the Vite
+client and Hono API from the future `mathen.xuepoo.xyz` custom domain:
 
 ```text
 Vite client
     │
-    ├── static deployment target (Cloudflare Pages or a future Worker asset binding)
+    ├── Workers Static Assets
     │
-Hono Worker API
+    Hono Worker API (`/api/*`)
     ├── D1: canonical relational source of truth
     └── Vectorize: optional semantic retrieval index
 ```
@@ -33,6 +34,24 @@ The deployment workflow expects the repository secrets
 `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_KEY`. The latter must contain a
 Cloudflare API token with the required D1 and Workers permissions; the secret
 name is retained for compatibility with the planned repository configuration.
+
+The deployment command builds the Vite client, applies remote D1 migrations,
+and deploys the Worker:
+
+```bash
+just deploy
+```
+
+Reviewed cards and modeling bundles are seeded separately because seeding
+replaces the structured contents of the target database:
+
+```bash
+just db-seed-remote
+```
+
+After deployment, attach the Worker custom domain `mathen.xuepoo.xyz` in
+Cloudflare. The repository does not configure the custom domain until the DNS
+binding is confirmed.
 
 ## Future graph stores
 

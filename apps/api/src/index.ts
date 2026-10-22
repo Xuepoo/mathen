@@ -3,6 +3,7 @@ import { Hono } from "hono";
 type Bindings = {
   DB: D1Database;
   APP_ENV: string;
+  ASSETS: Fetcher;
 };
 
 type SystemRow = {
@@ -130,6 +131,7 @@ app.get("/systems/:id", async (c) => {
         question: string;
         assumptions_json: string;
         claim_type: string;
+        evidence_ids_json: string;
       }>(),
     c.env.DB.prepare(
       `SELECT id, feature_id, benefits_json, costs_json
@@ -160,6 +162,7 @@ app.get("/systems/:id", async (c) => {
         question: view.question,
         assumptions: parseJson<string[]>(view.assumptions_json, []),
         claim_type: view.claim_type,
+        evidence_ids: parseJsonArray<string>(view.evidence_ids_json),
       })),
       trade_offs: tradeOffs.results.map((tradeOff) => ({
         id: tradeOff.id,
@@ -179,7 +182,13 @@ app.get("/features", async (c) => {
   const limit = boundedInteger(c.req.query("limit"), 100, 1, 200);
   const result = await c.env.DB.prepare(
     `SELECT f.id, f.system_id, s.name AS system_name, f.name, f.category,
-            f.claim_type, f.description, f.benefits_json, f.costs_json
+            f.claim_type, f.description, f.benefits_json, f.costs_json,
+            COALESCE((
+              SELECT json_group_array(fe.evidence_id)
+              FROM feature_evidence fe
+              WHERE fe.system_id = f.system_id AND fe.feature_id = f.id
+              ORDER BY fe.evidence_id
+            ), '[]') AS evidence_ids_json
      FROM features f
      JOIN systems s ON s.id = f.system_id
      WHERE (?1 = '' OR f.id LIKE ?2 OR f.name LIKE ?2 OR f.description LIKE ?2)
@@ -467,4 +476,14 @@ function boundedInteger(
   return Math.min(Math.max(parsed, min), max);
 }
 
-export default app;
+const worker = {
+  fetch(request: Request, env: Bindings, ctx: ExecutionContext) {
+    const pathname = new URL(request.url).pathname;
+    if (pathname === "/api" || pathname.startsWith("/api/")) {
+      return app.fetch(request, env, ctx);
+    }
+    return env.ASSETS.fetch(request);
+  },
+};
+
+export default worker;

@@ -3,11 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --local",
+    "dev": "wrangler dev --local --var APP_ENV:local",
     "check": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply mathen-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply mathen-db --remote",
     "db:seed:local": "bun run scripts/seed.ts --local",
+    "db:seed:remote": "bun run scripts/seed.ts --remote",
     "db:reset:local": "rm -rf .wrangler/state/v3/d1 && bun run db:migrate:local && bun run db:seed:local",
     "deploy": "wrangler deploy"
   },

@@ -43,6 +43,12 @@ db-migrate:
 db-seed:
     bun run db:seed:local
 
+db-seed-remote:
+    bun run db:seed:remote
+
+deploy:
+    bun run deploy
+
 db-query:
     bun run db:query:local
 
