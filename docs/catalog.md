@@ -61,6 +61,10 @@ These entries are already present in the repository at different review levels:
 | `cpython` | CPython | language runtime | `reviewed` | Compare interpreter state, object lifetime, and extension boundaries |
 | `rust` | Rust | language toolchain | `reviewed` | Compare ownership, compiler IR, and incremental query boundaries |
 | `wasmtime` | Wasmtime | WebAssembly runtime | `reviewed` | Compare Engine/Store isolation and JIT compilation boundaries |
+| `lua` | Lua | language runtime | `reviewed` | Compare embeddable VM state, coroutines, and extension boundaries |
+| `node` | Node.js | JavaScript runtime | `reviewed` | Compare event-loop scheduling, module loading, and native extension boundaries |
+| `deno` | Deno | JavaScript runtime | `reviewed` | Compare permission-scoped execution and module graph boundaries |
+| `v8` | V8 | JavaScript engine | `reviewed` | Compare isolate/context state, handles, and managed heap boundaries |
 
 The operational manifest now contains 44 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
@@ -70,12 +74,8 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | --- | --- | --- | --- |
 | `cpython` | CPython | language runtime | `P1` |
 | `rust` | Rust | language toolchain | `P1` |
-| `lua` | Lua | language runtime | `P1` |
 | `go` | Go | language toolchain | `P2` |
 | `ruby` | Ruby | language runtime | `P2` |
-| `node` | Node.js | JavaScript runtime | `P1` |
-| `deno` | Deno | JavaScript runtime | `P2` |
-| `v8` | V8 | JavaScript engine | `P2` |
 | `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
 | `freebsd` | FreeBSD | operating system | `P2` |
 | `systemd` | systemd | init system | `P1` |

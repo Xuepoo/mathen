@@ -1,0 +1,122 @@
+{
+  "id": "v8",
+  "name": "V8",
+  "version_context": "commit 6f8cd3cd5844f1061958d909656cc446e7e9a353",
+  "summary": "An embeddable JavaScript engine organized around isolate-owned heaps, context-specific execution environments, scoped handles, and garbage collection of unreachable heap objects.",
+  "scope": [
+    "javascript engine",
+    "embedding API",
+    "heap and garbage collection",
+    "execution contexts"
+  ],
+  "features": [
+    {
+      "id": "isolate-context-boundary",
+      "name": "Isolate and context execution boundary",
+      "category": "runtime-state",
+      "claim_type": "fact",
+      "description": "V8 exposes an Isolate as a VM instance with its own heap and a Context as an execution environment for separate JavaScript applications within that isolate. Context creation is implemented through the embedding API and can use snapshots.",
+      "benefits": [
+        "Separates heap ownership from JavaScript global environments",
+        "Allows multiple unrelated contexts to share one engine isolate"
+      ],
+      "costs": [
+        "Embedding code must manage isolate lifecycle and context entry",
+        "Context creation and global-object separation add state-management work"
+      ],
+      "evidence_ids": ["v8-embedding", "v8-fixed-source"]
+    },
+    {
+      "id": "scoped-moving-heap-handles",
+      "name": "Scoped handles over a moving managed heap",
+      "category": "memory-model",
+      "claim_type": "fact",
+      "description": "V8's embedding guide describes handles as references to heap objects that remain valid when garbage collection moves objects. Local handles are grouped by HandleScope, while persistent handles can outlive a function scope.",
+      "benefits": [
+        "Provides a stable embedding reference model despite object relocation",
+        "Allows short-lived and long-lived references to use different lifetime controls"
+      ],
+      "costs": [
+        "Embedders must obey handle-scope lifetime rules",
+        "Persistent handles require explicit lifecycle management"
+      ],
+      "evidence_ids": ["v8-embedding", "v8-fixed-source"]
+    },
+    {
+      "id": "unreachable-object-collection",
+      "name": "Reachability-based garbage collection",
+      "category": "memory-management",
+      "claim_type": "fact",
+      "description": "V8's embedding documentation states that the collector reclaims heap objects inaccessible from JavaScript and without handles, and that collection may move objects while updating handles. The fixed source exposes heap-level collector selection and collection stages.",
+      "benefits": [
+        "Reclaims unreachable managed objects automatically",
+        "Supports compaction and relocation while preserving handle references"
+      ],
+      "costs": [
+        "Collection and relocation impose runtime coordination costs",
+        "Native embedders must maintain correct handle references"
+      ],
+      "evidence_ids": ["v8-embedding", "v8-fixed-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Partitioned managed-runtime state machine",
+      "question": "How do isolate, context, and handle-scope transitions constrain embedded JavaScript execution?",
+      "assumptions": [
+        "Isolates own heap state and contexts own execution-global state",
+        "Handle scopes define nested reference-lifetime regions",
+        "The view abstracts scheduling, compiler tiers, and embedder-specific callbacks"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["v8-embedding", "v8-fixed-source"]
+    },
+    {
+      "model": "Reachability-preserving heap transition system",
+      "question": "How can garbage collection reclaim or relocate heap objects while preserving the validity of embedder references?",
+      "assumptions": [
+        "Heap objects form a reachability graph from JavaScript roots and handles",
+        "Unreachable objects are eligible for collection",
+        "The collector updates managed handles when objects move, while native raw pointers are outside this abstraction"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["v8-embedding", "v8-fixed-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "isolate-context-boundary",
+      "benefits": ["Reusable engine heap with separate execution environments"],
+      "costs": ["Embedder lifecycle and entry rules add complexity"]
+    },
+    {
+      "feature_id": "scoped-moving-heap-handles",
+      "benefits": ["Stable references across object movement"],
+      "costs": ["Handle discipline is required"]
+    },
+    {
+      "feature_id": "unreachable-object-collection",
+      "benefits": ["Automatic reclamation and compaction opportunities"],
+      "costs": ["Collection introduces coordination and latency costs"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "v8-fixed-source",
+      "kind": "source-code",
+      "title": "V8 source tree at fixed commit 6f8cd3cd5844",
+      "uri": "https://github.com/v8/v8/commit/6f8cd3cd5844f1061958d909656cc446e7e9a353",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance for src/api/api.cc and src/heap/heap.cc."
+    },
+    {
+      "id": "v8-embedding",
+      "kind": "official-doc",
+      "title": "Getting started with embedding V8",
+      "uri": "https://v8.dev/docs/embed",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official embedding guide for isolates, contexts, handles, and garbage collection."
+    }
+  ],
+  "related_systems": ["node", "deno", "wasmtime"]
+}
