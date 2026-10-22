@@ -1,0 +1,294 @@
+{
+  "id": "ionic",
+  "name": "Ionic",
+  "version_context": "commit cc5b3964e043accb72460ae7f60b0dcc80272b27",
+  "summary": "A cross-platform UI toolkit that publishes web components for mobile-oriented interfaces, adds framework adapters and navigation primitives, and detects browser or native platform capabilities at runtime.",
+  "scope": [
+    "web component UI primitives",
+    "framework adapter packages",
+    "navigation and overlay lifecycle",
+    "browser and native platform boundary"
+  ],
+  "features": [
+    {
+      "id": "web-component-ui-primitives",
+      "name": "Web component UI primitives",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "The fixed core package defines Ionic elements such as ion-toolbar through Stencil component metadata and exports shared lifecycle, gesture, animation, configuration, and overlay utilities. The component package is therefore a browser custom-element surface rather than a framework-specific widget tree.",
+      "benefits": [
+        "Keeps the primary component contract usable from plain web applications",
+        "Makes component lifecycle and DOM integration explicit"
+      ],
+      "costs": [
+        "DOM lifecycle and browser capabilities constrain portability",
+        "Component state crosses the custom-element and application-framework boundaries"
+      ],
+      "evidence_ids": [
+        "ionic-component-source",
+        "ionic-core-source",
+        "ionic-docs"
+      ]
+    },
+    {
+      "id": "framework-adapter-packages",
+      "name": "Framework adapter packages",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "The repository contains separate Angular, React, Vue, and corresponding router packages that wrap or integrate the core Ionic components with framework conventions. These packages are distinct published surfaces, so framework integration is layered over the shared web-component core.",
+      "benefits": [
+        "Allows framework applications to retain framework-native composition patterns",
+        "Keeps the core component implementation reusable across adapters"
+      ],
+      "costs": [
+        "Adapter behavior and release compatibility must track the core package",
+        "Multiple framework packages multiply integration and testing paths"
+      ],
+      "evidence_ids": [
+        "ionic-angular-package",
+        "ionic-react-package",
+        "ionic-vue-package",
+        "ionic-docs"
+      ]
+    },
+    {
+      "id": "navigation-and-overlay-lifecycle",
+      "name": "Navigation and overlay lifecycle",
+      "category": "application-state-model",
+      "claim_type": "fact",
+      "description": "The fixed source includes ion-nav stack operations and controller-managed overlays such as modal, alert, popover, loading, and toast. These APIs maintain application-visible lifecycle transitions around page views and transient UI elements.",
+      "benefits": [
+        "Provides reusable page-stack and transient-overlay state transitions",
+        "Centralizes presentation and dismissal behavior across adapters"
+      ],
+      "costs": [
+        "Stack and overlay transitions introduce ordering and cleanup obligations",
+        "Application routing policy remains distinct from component lifecycle management"
+      ],
+      "evidence_ids": [
+        "ionic-nav-source",
+        "ionic-overlay-source",
+        "ionic-navigation-docs"
+      ]
+    },
+    {
+      "id": "platform-and-native-capability-boundary",
+      "name": "Platform and native capability boundary",
+      "category": "platform-model",
+      "claim_type": "fact",
+      "description": "Ionic detects browser, mobile, PWA, Electron, Cordova, and Capacitor conditions through configurable platform predicates, while native utilities expose capability-dependent behavior. The fixed source keeps platform detection and native integration behind shared web APIs.",
+      "benefits": [
+        "Lets UI behavior adapt to browser and host capabilities",
+        "Provides one application-facing platform predicate surface"
+      ],
+      "costs": [
+        "User-agent, media-query, and host globals can misrepresent capabilities",
+        "Native bridge availability and platform-specific behavior remain conditional"
+      ],
+      "evidence_ids": [
+        "ionic-platform-source",
+        "ionic-native-source",
+        "ionic-platform-docs"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Custom-element lifecycle graph",
+      "question": "How do component registration, DOM lifecycle callbacks, shared utilities, and framework adapter edges determine a UI element's observable state?",
+      "assumptions": [
+        "Custom elements are modeled as nodes with lifecycle transitions",
+        "Adapter packages are integration edges to the same core component nodes",
+        "Browser rendering and framework scheduler internals are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "ionic-component-source",
+        "ionic-core-source",
+        "ionic-framework-docs"
+      ]
+    },
+    {
+      "model": "Navigation and overlay transition system",
+      "question": "Which page-stack and overlay transitions are reachable through Ionic navigation and controller APIs?",
+      "assumptions": [
+        "Pages and overlays are stateful resources with push, present, dismiss, and lifecycle transitions",
+        "The view abstracts animation timing and framework router internals",
+        "An API transition is not evidence that all application routes are mutually compatible"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "ionic-nav-source",
+        "ionic-overlay-source",
+        "ionic-navigation-docs"
+      ]
+    },
+    {
+      "model": "Host-capability classification relation",
+      "question": "How does Ionic classify the current host and select platform-sensitive behavior?",
+      "assumptions": [
+        "Platform predicates observe host/browser signals and optional custom methods",
+        "Cordova and Capacitor are modeled as optional native capability edges",
+        "The relation describes runtime classification, not guaranteed device support"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "ionic-platform-source",
+        "ionic-native-source",
+        "ionic-platform-docs"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "web-component-ui-primitives",
+      "benefits": [
+        "One DOM-facing component contract across framework choices"
+      ],
+      "costs": [
+        "DOM lifecycle and browser constraints remain part of application correctness"
+      ]
+    },
+    {
+      "feature_id": "framework-adapter-packages",
+      "benefits": [
+        "Framework-specific ergonomics over shared primitives"
+      ],
+      "costs": [
+        "Adapters add compatibility and release coordination cost"
+      ]
+    },
+    {
+      "feature_id": "navigation-and-overlay-lifecycle",
+      "benefits": [
+        "Reusable transitions for page stacks and transient UI"
+      ],
+      "costs": [
+        "Ordering, animation, and cleanup make state transitions nontrivial"
+      ]
+    },
+    {
+      "feature_id": "platform-and-native-capability-boundary",
+      "benefits": [
+        "Portable capability detection with native escape hatches"
+      ],
+      "costs": [
+        "Host signals and native bridges produce conditional behavior"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Ionic source at fixed commit cc5b3964e043accb72460ae7f60b0dcc80272b27",
+      "uri": "https://github.com/ionic-team/ionic-framework/commit/cc5b3964e043accb72460ae7f60b0dcc80272b27",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "ionic-component-source",
+      "kind": "source-code",
+      "title": "Ionic core component source at fixed commit",
+      "uri": "https://github.com/ionic-team/ionic-framework/blob/cc5b3964e043accb72460ae7f60b0dcc80272b27/core/src/components/toolbar/toolbar.tsx",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for Stencil component metadata and the web-component UI surface."
+    },
+    {
+      "id": "ionic-core-source",
+      "kind": "source-code",
+      "title": "Ionic core exports and utilities at fixed commit",
+      "uri": "https://github.com/ionic-team/ionic-framework/blob/cc5b3964e043accb72460ae7f60b0dcc80272b27/core/src/index.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for shared lifecycle, gesture, animation, configuration, and controller exports."
+    },
+    {
+      "id": "ionic-angular-package",
+      "kind": "source-code",
+      "title": "Ionic Angular adapter package at fixed commit",
+      "uri": "https://github.com/ionic-team/ionic-framework/tree/cc5b3964e043accb72460ae7f60b0dcc80272b27/packages/angular",
+      "accessed": "2026-10-23",
+      "notes": "Fixed package boundary for Angular integration."
+    },
+    {
+      "id": "ionic-react-package",
+      "kind": "source-code",
+      "title": "Ionic React adapter package at fixed commit",
+      "uri": "https://github.com/ionic-team/ionic-framework/tree/cc5b3964e043accb72460ae7f60b0dcc80272b27/packages/react",
+      "accessed": "2026-10-23",
+      "notes": "Fixed package boundary for React integration."
+    },
+    {
+      "id": "ionic-vue-package",
+      "kind": "source-code",
+      "title": "Ionic Vue adapter package at fixed commit",
+      "uri": "https://github.com/ionic-team/ionic-framework/tree/cc5b3964e043accb72460ae7f60b0dcc80272b27/packages/vue",
+      "accessed": "2026-10-23",
+      "notes": "Fixed package boundary for Vue integration."
+    },
+    {
+      "id": "ionic-nav-source",
+      "kind": "source-code",
+      "title": "Ionic navigation source at fixed commit",
+      "uri": "https://github.com/ionic-team/ionic-framework/tree/cc5b3964e043accb72460ae7f60b0dcc80272b27/core/src/components/nav",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for ion-nav stack and lifecycle behavior."
+    },
+    {
+      "id": "ionic-overlay-source",
+      "kind": "source-code",
+      "title": "Ionic overlay controllers at fixed commit",
+      "uri": "https://github.com/ionic-team/ionic-framework/blob/cc5b3964e043accb72460ae7f60b0dcc80272b27/core/src/utils/overlays.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for modal, alert, popover, loading, and toast controller boundaries."
+    },
+    {
+      "id": "ionic-platform-source",
+      "kind": "source-code",
+      "title": "Ionic platform detection at fixed commit",
+      "uri": "https://github.com/ionic-team/ionic-framework/blob/cc5b3964e043accb72460ae7f60b0dcc80272b27/core/src/utils/platform.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for browser, mobile, PWA, Electron, Cordova, and Capacitor classification."
+    },
+    {
+      "id": "ionic-native-source",
+      "kind": "source-code",
+      "title": "Ionic native interface at fixed commit",
+      "uri": "https://github.com/ionic-team/ionic-framework/blob/cc5b3964e043accb72460ae7f60b0dcc80272b27/core/src/utils/native/native-interface.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for capability-dependent native integration contracts."
+    },
+    {
+      "id": "ionic-docs",
+      "kind": "official-doc",
+      "title": "Ionic official documentation",
+      "uri": "https://ionicframework.com/docs",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation inventory for components, framework integrations, and application APIs."
+    },
+    {
+      "id": "ionic-framework-docs",
+      "kind": "official-doc",
+      "title": "Ionic UI components documentation",
+      "uri": "https://ionicframework.com/docs/components",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for the component-oriented UI surface."
+    },
+    {
+      "id": "ionic-navigation-docs",
+      "kind": "official-doc",
+      "title": "Ionic navigation documentation",
+      "uri": "https://ionicframework.com/docs/angular/navigation",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for navigation concepts and router integration."
+    },
+    {
+      "id": "ionic-platform-docs",
+      "kind": "official-doc",
+      "title": "Ionic platform documentation",
+      "uri": "https://ionicframework.com/docs/core-concepts/cross-platform",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for browser/native cross-platform behavior."
+    }
+  ]
+}

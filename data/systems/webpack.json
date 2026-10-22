@@ -1,0 +1,278 @@
+{
+  "id": "webpack",
+  "name": "webpack",
+  "version_context": "commit c47cf0a42a639715da71738749fb426a60e8e9d4",
+  "summary": "A configurable JavaScript module compiler that builds a module graph through loaders and plugins, derives chunk graphs during compilation, and emits runtime-specific assets with caching and watch support.",
+  "scope": [
+    "compiler and compilation lifecycle",
+    "module and chunk graph compilation",
+    "loader and plugin extension points",
+    "asset emission and cache boundary"
+  ],
+  "features": [
+    {
+      "id": "compiler-compilation-lifecycle",
+      "name": "Compiler and compilation lifecycle",
+      "category": "build-model",
+      "claim_type": "fact",
+      "description": "The fixed source separates Compiler orchestration from Compilation state and exposes lifecycle hooks for module building, optimization, asset processing, sealing, and emission. Plugins attach to these hooks through the compiler and compilation objects.",
+      "benefits": [
+        "Makes build phases and extension points observable",
+        "Allows plugins to coordinate work around a shared compilation state"
+      ],
+      "costs": [
+        "Phase ordering and hook timing constrain plugin correctness",
+        "Large compilation state increases memory and lifecycle management cost"
+      ],
+      "evidence_ids": [
+        "webpack-compiler-source",
+        "webpack-compilation-source",
+        "webpack-plugin-doc"
+      ]
+    },
+    {
+      "id": "module-and-chunk-graph",
+      "name": "Module and chunk graph compilation",
+      "category": "graph-model",
+      "claim_type": "fact",
+      "description": "Compilation owns ModuleGraph and ChunkGraph structures that relate module dependencies, chunks, chunk groups, runtimes, and entrypoints. The compiler can therefore derive output groupings from a dependency graph rather than treating each input file as an isolated asset.",
+      "benefits": [
+        "Supports code splitting, shared chunks, and runtime-aware output",
+        "Makes dependency and chunk relationships available to optimization passes"
+      ],
+      "costs": [
+        "Graph optimization and chunk assignment add build-time computation",
+        "Dynamic loading and runtime targets create multiple output constraints"
+      ],
+      "evidence_ids": [
+        "webpack-module-graph-source",
+        "webpack-chunk-graph-source",
+        "webpack-code-splitting-doc"
+      ]
+    },
+    {
+      "id": "loader-plugin-extension",
+      "name": "Loader and plugin extension surface",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Webpack resolves module requests through configured loaders and applies plugins through Tapable compiler and compilation hooks. Loaders transform resource content while plugins can observe or change broad compilation phases.",
+      "benefits": [
+        "Accommodates non-JavaScript resources and framework-specific transforms",
+        "Enables optimization, reporting, and output customization without editing the compiler core"
+      ],
+      "costs": [
+        "Configuration and hook ordering become part of the effective architecture",
+        "A loader or plugin can alter graph semantics and complicate debugging"
+      ],
+      "evidence_ids": [
+        "webpack-loader-source",
+        "webpack-plugin-source",
+        "webpack-loader-doc",
+        "webpack-plugin-doc"
+      ]
+    },
+    {
+      "id": "asset-cache-emission-boundary",
+      "name": "Asset, cache, and emission boundary",
+      "category": "artifact-model",
+      "claim_type": "fact",
+      "description": "The fixed compiler and compilation sources include asset processing hooks and filesystem/cache support around build results. Webpack can retain build information for later runs while emitting target-specific assets and runtime code.",
+      "benefits": [
+        "Improves repeat-build performance and supports deployment-specific assets",
+        "Separates intermediate compilation state from emitted files"
+      ],
+      "costs": [
+        "Cache invalidation and serialization must reflect loader, plugin, and filesystem changes",
+        "Runtime-specific output and asset processing increase configuration surface"
+      ],
+      "evidence_ids": [
+        "webpack-cache-source",
+        "webpack-compilation-source",
+        "webpack-caching-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Phased compiler state machine",
+      "question": "How does a webpack compilation transition from configured inputs through graph construction, optimization, asset processing, and emission?",
+      "assumptions": [
+        "Compiler hooks define ordered lifecycle phases",
+        "Compilation state is the subject of phase transitions",
+        "The view abstracts individual loader implementations and filesystem scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "webpack-compiler-source",
+        "webpack-compilation-source",
+        "webpack-plugin-doc"
+      ]
+    },
+    {
+      "model": "Dependency-to-chunk graph relation",
+      "question": "How are module dependency edges transformed into chunks, chunk groups, entrypoints, and runtime-aware outputs?",
+      "assumptions": [
+        "Modules and chunks are graph nodes with explicit dependency and membership edges",
+        "Chunk assignment is a compilation transformation rather than a claim about runtime network behavior",
+        "Dynamic import semantics and target runtime code are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "webpack-module-graph-source",
+        "webpack-chunk-graph-source",
+        "webpack-code-splitting-doc"
+      ]
+    },
+    {
+      "model": "Extensible transformation algebra",
+      "question": "Which loader and plugin transformations preserve enough module and asset metadata for later compiler phases?",
+      "assumptions": [
+        "Loaders produce transformed module inputs and plugins observe phase hooks",
+        "Hook composition is modeled as a candidate algebra over compilation state",
+        "Arbitrary third-party plugin compatibility remains an empirical validation question"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "webpack-loader-source",
+        "webpack-plugin-source",
+        "webpack-loader-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "compiler-compilation-lifecycle",
+      "benefits": [
+        "Explicit phases support broad build customization"
+      ],
+      "costs": [
+        "Hook timing and shared mutable state raise coordination cost"
+      ]
+    },
+    {
+      "feature_id": "module-and-chunk-graph",
+      "benefits": [
+        "Powerful code splitting and runtime-aware optimization"
+      ],
+      "costs": [
+        "Graph construction and optimization increase build complexity"
+      ]
+    },
+    {
+      "feature_id": "loader-plugin-extension",
+      "benefits": [
+        "Broad resource and lifecycle extensibility"
+      ],
+      "costs": [
+        "Configuration and extension interactions can obscure failure causes"
+      ]
+    },
+    {
+      "feature_id": "asset-cache-emission-boundary",
+      "benefits": [
+        "Repeat-build acceleration and target-specific artifacts"
+      ],
+      "costs": [
+        "Cache invalidation and serialized state require careful provenance"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "webpack source at fixed commit c47cf0a42a639715da71738749fb426a60e8e9d4",
+      "uri": "https://github.com/webpack/webpack/commit/c47cf0a42a639715da71738749fb426a60e8e9d4",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "webpack-compiler-source",
+      "kind": "source-code",
+      "title": "webpack Compiler at fixed commit",
+      "uri": "https://github.com/webpack/webpack/blob/c47cf0a42a639715da71738749fb426a60e8e9d4/lib/Compiler.js",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for compiler lifecycle and Tapable hooks."
+    },
+    {
+      "id": "webpack-compilation-source",
+      "kind": "source-code",
+      "title": "webpack Compilation at fixed commit",
+      "uri": "https://github.com/webpack/webpack/blob/c47cf0a42a639715da71738749fb426a60e8e9d4/lib/Compilation.js",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for compilation state, phase hooks, asset processing, and emission."
+    },
+    {
+      "id": "webpack-module-graph-source",
+      "kind": "source-code",
+      "title": "webpack ModuleGraph at fixed commit",
+      "uri": "https://github.com/webpack/webpack/blob/c47cf0a42a639715da71738749fb426a60e8e9d4/lib/graph/ModuleGraph.js",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for module dependency graph state."
+    },
+    {
+      "id": "webpack-chunk-graph-source",
+      "kind": "source-code",
+      "title": "webpack ChunkGraph at fixed commit",
+      "uri": "https://github.com/webpack/webpack/blob/c47cf0a42a639715da71738749fb426a60e8e9d4/lib/graph/ChunkGraph.js",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for chunk membership, runtimes, and graph relationships."
+    },
+    {
+      "id": "webpack-loader-source",
+      "kind": "source-code",
+      "title": "webpack loader integration at fixed commit",
+      "uri": "https://github.com/webpack/webpack/tree/c47cf0a42a639715da71738749fb426a60e8e9d4/lib",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source tree containing loader resolution and module transformation integration."
+    },
+    {
+      "id": "webpack-plugin-source",
+      "kind": "source-code",
+      "title": "webpack plugin application at fixed commit",
+      "uri": "https://github.com/webpack/webpack/blob/c47cf0a42a639715da71738749fb426a60e8e9d4/lib/webpack.js",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for plugin application to compiler instances."
+    },
+    {
+      "id": "webpack-cache-source",
+      "kind": "source-code",
+      "title": "webpack cache implementation at fixed commit",
+      "uri": "https://github.com/webpack/webpack/tree/c47cf0a42a639715da71738749fb426a60e8e9d4/lib/cache",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for cache interfaces used by compilation and rebuilds."
+    },
+    {
+      "id": "webpack-plugin-doc",
+      "kind": "official-doc",
+      "title": "webpack plugin documentation",
+      "uri": "https://webpack.js.org/contribute/writing-a-plugin/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for compiler and compilation plugin hooks."
+    },
+    {
+      "id": "webpack-loader-doc",
+      "kind": "official-doc",
+      "title": "webpack loader documentation",
+      "uri": "https://webpack.js.org/contribute/writing-a-loader/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for loader transformation contracts."
+    },
+    {
+      "id": "webpack-code-splitting-doc",
+      "kind": "official-doc",
+      "title": "webpack code splitting guide",
+      "uri": "https://webpack.js.org/guides/code-splitting/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for chunks, dynamic imports, and code splitting."
+    },
+    {
+      "id": "webpack-caching-doc",
+      "kind": "official-doc",
+      "title": "webpack caching guide",
+      "uri": "https://webpack.js.org/guides/caching/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for build and filesystem caching."
+    }
+  ]
+}

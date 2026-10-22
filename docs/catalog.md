@@ -385,10 +385,10 @@ identifiers, not claims that the projects share the same architecture.
 | `react-native` | React Native | `reviewed` | Compare JavaScript/native representation, render-commit-mount stages, layout, threading, and platform renderers using fixed-commit evidence |
 | `expo` | Expo | `reviewed` | Compare native modules, config-plugin generation, OTA compatibility, and native build boundaries using fixed-commit evidence |
 | `capacitor` | Capacitor | `reviewed` | Compare web/native bridge, plugin lifecycle, asset synchronization, and platform capability access using fixed-commit evidence |
-| `ionic` | Ionic | `P2` | Web component UI, platform adapters, navigation, and build tooling |
-| `vite` | Vite | `P1` | Dependency graph scanning, dev server transforms, HMR, and production bundling |
-| `webpack` | webpack | `P1` | Module graph compilation, loaders, plugins, chunks, and caching |
-| `rollup` | Rollup | `P2` | Module graph tree-shaking, plugin hooks, output chunks, and code splitting |
+| `ionic` | Ionic | `reviewed` | Compare web component primitives, framework adapters, navigation lifecycle, and platform capability boundaries using fixed-commit evidence |
+| `vite` | Vite | `reviewed` | Compare environment module graphs, on-demand transforms, HMR, dependency pre-bundling, and production output using fixed-commit evidence |
+| `webpack` | webpack | `reviewed` | Compare compiler phases, module/chunk graphs, loader and plugin hooks, and cache/emission boundaries using fixed-commit evidence |
+| `rollup` | Rollup | `reviewed` | Compare plugin-driven module graphs, tree-shaking, chunk generation, and multi-host package boundaries using fixed-commit evidence |
 | `esbuild` | esbuild | `P1` | Parallel parsing, incremental graph build, bundling, and transform pipeline |
 | `playwright` | Playwright | `P1` | Browser contexts, page isolation, protocol control, fixtures, and tracing |
 | `storybook` | Storybook | `P2` | Component isolation, stories, addons, controls, and visual test workflows |
