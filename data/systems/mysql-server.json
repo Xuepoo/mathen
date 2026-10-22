@@ -1,0 +1,246 @@
+{
+  "id": "mysql-server",
+  "name": "MySQL Server",
+  "version_context": "commit 561753af986c3c006c4b6c7caa8359748fb55b22",
+  "summary": "A client/server relational database whose pluggable storage-engine interface delegates table and transaction behavior while InnoDB supplies the default transactional engine.",
+  "scope": [
+    "relational database server",
+    "storage-engine boundary",
+    "transaction coordination",
+    "InnoDB default engine",
+    "server/plugin architecture"
+  ],
+  "features": [
+    {
+      "id": "pluggable-storage-engine-boundary",
+      "name": "Pluggable storage-engine boundary",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "MySQL separates the server SQL layer from storage engines, which implement engine-specific table access and transaction operations through the handler/handlerton interface. The Reference Manual describes storage engines as pluggable components.",
+      "benefits": [
+        "Allows different table-storage implementations behind a common SQL server",
+        "Makes engine-specific capabilities and transaction callbacks explicit"
+      ],
+      "costs": [
+        "SQL behavior and physical guarantees vary with the selected engine",
+        "Engine plugins expand compatibility, operational, and testing surfaces"
+      ],
+      "evidence_ids": [
+        "mysql-storage-engines-doc",
+        "mysql-handler-source",
+        "mysql-repository-commit"
+      ]
+    },
+    {
+      "id": "engine-transaction-callback-contract",
+      "name": "Engine transaction callback contract",
+      "category": "transaction-model",
+      "claim_type": "fact",
+      "description": "The fixed handler interface defines commit, rollback, prepare, recovery, savepoint, consistent-snapshot, and log-flush callbacks for storage engines, including XA-related operations.",
+      "benefits": [
+        "Gives the server a common coordination vocabulary across engines",
+        "Provides explicit boundaries for local and externally coordinated transactions"
+      ],
+      "costs": [
+        "The server must handle engines with different capability sets",
+        "Distributed or prepared transaction recovery adds lifecycle states and failure cases"
+      ],
+      "evidence_ids": [
+        "mysql-handler-source",
+        "mysql-innodb-source"
+      ]
+    },
+    {
+      "id": "innodb-default-transactional-engine",
+      "name": "InnoDB as default transactional engine",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "The official manual identifies InnoDB as MySQL's default storage engine and describes it as a transactional engine with ACID behavior, row-level locking, and foreign-key support.",
+      "benefits": [
+        "Provides a general-purpose transactional default for relational tables",
+        "Offers concurrency and integrity features without requiring engine selection for common deployments"
+      ],
+      "costs": [
+        "InnoDB's memory, logging, and recovery machinery define the default operational profile",
+        "Workloads needing different storage properties may require another engine and its semantics"
+      ],
+      "evidence_ids": [
+        "mysql-storage-engines-doc",
+        "mysql-innodb-doc",
+        "mysql-innodb-source"
+      ]
+    },
+    {
+      "id": "innodb-multiversion-concurrency",
+      "name": "InnoDB multiversion concurrency",
+      "category": "concurrency-model",
+      "claim_type": "fact",
+      "description": "The InnoDB documentation describes consistent nonlocking reads through multi-versioning, allowing a transaction to read a snapshot of committed data while other transactions modify rows.",
+      "benefits": [
+        "Allows consistent reads without turning every read into a blocking lock",
+        "Makes transaction visibility a storage-engine responsibility"
+      ],
+      "costs": [
+        "Old versions and purge work add storage and maintenance overhead",
+        "Applications must reason about isolation and locking behavior"
+      ],
+      "evidence_ids": [
+        "mysql-mvcc-doc",
+        "mysql-innodb-source"
+      ]
+    },
+    {
+      "id": "server-engine-commit-coordination",
+      "name": "Server and engine commit coordination",
+      "category": "commit-model",
+      "claim_type": "fact",
+      "description": "The server handler contract distinguishes statement-end from real transaction commit and exposes engine log flushing during commit coordination; InnoDB implements corresponding commit, rollback, prepare, and flush hooks.",
+      "benefits": [
+        "Separates SQL statement boundaries from durable transaction completion",
+        "Allows the server and engine to coordinate binlog and engine logging stages"
+      ],
+      "costs": [
+        "Commit ordering and crash recovery span multiple subsystems",
+        "Two-phase and group-commit paths add coordination latency and state"
+      ],
+      "evidence_ids": [
+        "mysql-handler-source",
+        "mysql-innodb-source",
+        "mysql-redo-log-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Relational server to storage-engine refinement",
+      "question": "How does a server-level table or transaction operation refine into an engine-specific handler operation?",
+      "assumptions": [
+        "The handler interface is modeled as an abstract capability contract",
+        "Each engine may implement only a subset of optional capabilities",
+        "The view compares observable SQL and transaction behavior rather than physical data structures"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mysql-storage-engines-doc",
+        "mysql-handler-source"
+      ]
+    },
+    {
+      "model": "Transaction lifecycle state machine",
+      "question": "How do statement completion, commit, rollback, prepare, and recovery transitions cross the server and storage-engine boundary?",
+      "assumptions": [
+        "Statement and transaction scopes are distinct states",
+        "Prepare and recovery transitions include externally coordinated transactions",
+        "The model treats engine callbacks as synchronization boundaries and omits lock implementation details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mysql-handler-source",
+        "mysql-innodb-source"
+      ]
+    },
+    {
+      "model": "MVCC visibility relation",
+      "question": "Which committed row versions are visible to an InnoDB transaction's consistent read?",
+      "assumptions": [
+        "A transaction snapshot defines a visibility predicate over row versions",
+        "The view abstracts undo records and purge implementation details",
+        "Locking reads and nonlocking consistent reads are modeled as different operations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mysql-mvcc-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "pluggable-storage-engine-boundary",
+      "benefits": ["Engine diversity behind a common SQL server"],
+      "costs": ["Capability and semantic differences across engines"]
+    },
+    {
+      "feature_id": "engine-transaction-callback-contract",
+      "benefits": ["Explicit coordination hooks for commit and recovery"],
+      "costs": ["Optional capabilities and distributed transaction state"]
+    },
+    {
+      "feature_id": "innodb-default-transactional-engine",
+      "benefits": ["Strong general-purpose transactional default"],
+      "costs": ["Engine-specific resource and recovery overhead"]
+    },
+    {
+      "feature_id": "innodb-multiversion-concurrency",
+      "benefits": ["Consistent reads concurrent with writes"],
+      "costs": ["Version maintenance and isolation complexity"]
+    },
+    {
+      "feature_id": "server-engine-commit-coordination",
+      "benefits": ["Coordinated transaction and log boundaries"],
+      "costs": ["Cross-subsystem commit ordering and recovery complexity"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "mysql-storage-engines-doc",
+      "kind": "official-doc",
+      "title": "MySQL storage engines",
+      "uri": "https://dev.mysql.com/doc/refman/8.4/en/storage-engines.html",
+      "accessed": "2026-10-23",
+      "notes": "Official Reference Manual page describing pluggable storage engines and the default-engine context."
+    },
+    {
+      "id": "mysql-innodb-doc",
+      "kind": "official-doc",
+      "title": "InnoDB storage engine",
+      "uri": "https://dev.mysql.com/doc/refman/8.4/en/innodb-introduction.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for InnoDB's transactional, ACID, locking, and integrity properties."
+    },
+    {
+      "id": "mysql-mvcc-doc",
+      "kind": "official-doc",
+      "title": "InnoDB multi-versioning",
+      "uri": "https://dev.mysql.com/doc/refman/8.4/en/innodb-multi-versioning.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for consistent nonlocking reads and multi-version concurrency."
+    },
+    {
+      "id": "mysql-redo-log-doc",
+      "kind": "official-doc",
+      "title": "InnoDB redo log",
+      "uri": "https://dev.mysql.com/doc/refman/8.4/en/innodb-redo-log.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for redo logging and durable recovery boundaries."
+    },
+    {
+      "id": "mysql-handler-source",
+      "kind": "source-code",
+      "title": "MySQL handler and handlerton interface at fixed commit",
+      "uri": "https://github.com/mysql/mysql-server/blob/561753af986c3c006c4b6c7caa8359748fb55b22/sql/handler.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of storage-engine creation, commit, rollback, prepare, recovery, snapshot, and log-flush callbacks."
+    },
+    {
+      "id": "mysql-innodb-source",
+      "kind": "source-code",
+      "title": "MySQL InnoDB handler implementation at fixed commit",
+      "uri": "https://github.com/mysql/mysql-server/blob/561753af986c3c006c4b6c7caa8359748fb55b22/storage/innobase/handler/ha_innodb.cc",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of InnoDB handlerton registration and transaction callback implementations."
+    },
+    {
+      "id": "mysql-repository-commit",
+      "kind": "source-code",
+      "title": "MySQL Server source at 561753af986c",
+      "uri": "https://github.com/mysql/mysql-server/commit/561753af986c3c006c4b6c7caa8359748fb55b22",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision resolved from the repository manifest; github-archive provenance boundary for this card."
+    }
+  ],
+  "related_systems": [
+    "postgresql",
+    "sqlite",
+    "rocksdb"
+  ]
+}

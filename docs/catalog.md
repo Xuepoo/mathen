@@ -42,8 +42,8 @@ These entries are already present in the repository at different review levels:
 | `redis` | Redis | in-memory data service | `reviewed` | Compare native structures, RESP, and persistence representations |
 | `elasticsearch` | Elasticsearch | search engine | `reviewed` | Compare shard partitioning, scatter-gather search, replication, and near-real-time visibility |
 | `kafka` | Apache Kafka | distributed log | `reviewed` | Compare partitioned logs, replay, replication, and stream processing |
-| `mysql-server` | MySQL Server | database | `draft` | Pin documentation and inspect fixed source for storage-engine, transaction, and recovery claims |
-| `rocksdb` | RocksDB | embedded database | `draft` | Pin documentation and inspect fixed source for LSM, WAL, compaction, and snapshot claims |
+| `mysql-server` | MySQL Server | database | `reviewed` | Compare storage-engine, transaction, and recovery boundaries with PostgreSQL and SQLite |
+| `rocksdb` | RocksDB | embedded database | `reviewed` | Compare LSM, WAL, compaction, and snapshot boundaries with SQLite and Redis |
 | `docker` | Docker Engine | container runtime | `draft` | Compare daemon, image, namespace, and filesystem boundaries |
 | `qemu` | QEMU | virtualization | `reviewed` | Compare complete machine emulation with Firecracker |
 | `kubernetes` | Kubernetes | orchestration | `reviewed` | Analyze reconciliation, API resources, and etcd state |
@@ -82,12 +82,12 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | `boost` | Boost | C++ library | `P2` |
 | `libuv` | libuv | asynchronous I/O library | `P1` |
 | `curl` | curl | network library | `P1` |
-| `openssl` | OpenSSL | cryptography library | `P2` |
+| `openssl` | OpenSSL | cryptography library | `reviewed` |
 | `protobuf` | Protocol Buffers | serialization protocol | `P1` |
 | `grpc` | gRPC | RPC framework | `P1` |
-| `mosquitto` | Eclipse Mosquitto | messaging protocol | `P2` |
-| `mysql-server` | MySQL Server | database | `P2` |
-| `rocksdb` | RocksDB | embedded database | `P1` |
+| `mosquitto` | Eclipse Mosquitto | messaging protocol | `reviewed` |
+| `mysql-server` | MySQL Server | database | `reviewed` |
+| `rocksdb` | RocksDB | embedded database | `reviewed` |
 | `threejs` | Three.js | 3D graphics library | `P1` |
 | `blender` | Blender | 3D graphics application | `P2` |
 | `sdl` | SDL | multimedia library | `P2` |

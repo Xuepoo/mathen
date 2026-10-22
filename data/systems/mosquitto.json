@@ -1,0 +1,214 @@
+{
+  "id": "mosquitto",
+  "name": "Eclipse Mosquitto",
+  "version_context": "commit 83f2620f0b955b89aadce32cceb96a8e81950f5e",
+  "summary": "An MQTT broker and client toolkit that routes topic-based messages through listener and client session state, with optional persistence and plugin boundaries.",
+  "scope": [
+    "MQTT broker",
+    "publish/subscribe routing",
+    "client sessions",
+    "event loop",
+    "optional persistence"
+  ],
+  "features": [
+    {
+      "id": "mqtt-broker-client-toolkit",
+      "name": "Broker and client toolkit",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "Mosquitto implements MQTT 5.0, 3.1.1, and 3.1 server behavior and also ships a C/C++ client library and command-line publishing and subscribing tools.",
+      "benefits": [
+        "Provides compatible broker and client integration surfaces",
+        "Supports both embedded library users and command-line workflows"
+      ],
+      "costs": [
+        "Protocol version and client capability differences remain interoperability concerns",
+        "A broker deployment has different operational requirements from a client library"
+      ],
+      "evidence_ids": [
+        "mosquitto-overview",
+        "mqtt-v5-spec",
+        "mosquitto-repository-commit"
+      ]
+    },
+    {
+      "id": "listener-client-session-boundary",
+      "name": "Listener and client-session boundaries",
+      "category": "network-model",
+      "claim_type": "fact",
+      "description": "The broker source represents configured listeners and accepted client contexts separately, with connection, packet, subscription, authentication, and disconnect handlers attached to client lifecycle state.",
+      "benefits": [
+        "Separates network admission from per-client protocol state",
+        "Provides clear lifecycle hooks for authentication, subscriptions, and disconnect handling"
+      ],
+      "costs": [
+        "Listener configuration and client state must remain consistent under reload and failure",
+        "Per-client state consumes broker memory and scheduling resources"
+      ],
+      "evidence_ids": [
+        "mosquitto-broker-source",
+        "mosquitto-repository-commit"
+      ]
+    },
+    {
+      "id": "topic-routed-message-queue",
+      "name": "Topic-routed message queue",
+      "category": "messaging-model",
+      "claim_type": "fact",
+      "description": "Mosquitto stores broker messages and queues outgoing and incoming client messages around topic publish, subscribe, retain, expiry, QoS, and in-flight state operations.",
+      "benefits": [
+        "Decouples publication from delivery to each subscribed client",
+        "Makes expiry, QoS, retained messages, and in-flight work explicit state"
+      ],
+      "costs": [
+        "Queue memory and delivery behavior depend on client connectivity and QoS",
+        "Expiry and retry state complicate the otherwise simple publish path"
+      ],
+      "evidence_ids": [
+        "mosquitto-broker-source",
+        "mosquitto-overview",
+        "mqtt-v5-spec"
+      ]
+    },
+    {
+      "id": "event-driven-broker-loop",
+      "name": "Event-driven broker loop",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The broker main loop repeatedly performs expiry, queued-plugin message, client cleanup, keepalive, session, bridge, and plugin work before dispatching multiplexed network activity.",
+      "benefits": [
+        "Combines network readiness with periodic protocol and maintenance work",
+        "Allows many client sessions to share a broker process"
+      ],
+      "costs": [
+        "A slow handler or overloaded queue can affect other sessions",
+        "Timer, socket, and protocol state interact in one scheduling boundary"
+      ],
+      "evidence_ids": [
+        "mosquitto-loop-source"
+      ]
+    },
+    {
+      "id": "optional-broker-persistence",
+      "name": "Optional SQLite-backed broker persistence",
+      "category": "durability-model",
+      "claim_type": "fact",
+      "description": "The official build documentation identifies SQLite as an optional dependency for broker persistence, so deployments can compile persistence support separately from the core broker loop.",
+      "benefits": [
+        "Allows deployments to choose a persistence footprint",
+        "Separates durable session/message state from transient broker execution"
+      ],
+      "costs": [
+        "Non-persistent builds have different restart and delivery behavior",
+        "Durability introduces database configuration and I/O costs"
+      ],
+      "evidence_ids": [
+        "mosquitto-overview"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Topic-subscription routing relation",
+      "question": "Which client queues receive a published message under the broker's topic and subscription state?",
+      "assumptions": [
+        "Clients and subscriptions are modeled as finite broker state",
+        "Topic matching, QoS, retain, and expiry are explicit routing parameters",
+        "The view abstracts packet encoding and network timing"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mosquitto-broker-source",
+        "mosquitto-overview"
+      ]
+    },
+    {
+      "model": "Event-driven broker transition system",
+      "question": "How do socket readiness, client protocol events, timers, and queued maintenance work advance broker state?",
+      "assumptions": [
+        "The broker loop is modeled as repeated transitions over shared listener, client, and queue state",
+        "Multiplexed I/O and periodic checks are distinct transition causes",
+        "The model does not infer fairness or delivery guarantees beyond the protocol and configuration"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mosquitto-loop-source",
+        "mosquitto-broker-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "mqtt-broker-client-toolkit",
+      "benefits": ["A complete protocol ecosystem around MQTT"],
+      "costs": ["Broker, client, and protocol-version concerns must be coordinated"]
+    },
+    {
+      "feature_id": "listener-client-session-boundary",
+      "benefits": ["Explicit admission and session lifecycle boundaries"],
+      "costs": ["Per-session resources and reload coordination"]
+    },
+    {
+      "feature_id": "topic-routed-message-queue",
+      "benefits": ["Decoupled publish and subscriber delivery"],
+      "costs": ["Queue growth, retry, expiry, and QoS state"]
+    },
+    {
+      "feature_id": "event-driven-broker-loop",
+      "benefits": ["Shared process scheduling for network and maintenance work"],
+      "costs": ["Handler and queue load can couple session latency"]
+    },
+    {
+      "feature_id": "optional-broker-persistence",
+      "benefits": ["Configurable restart and delivery durability"],
+      "costs": ["Persistence adds I/O and deployment variability"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "mosquitto-overview",
+      "kind": "official-doc",
+      "title": "Eclipse Mosquitto project overview and build documentation",
+      "uri": "https://github.com/eclipse-mosquitto/mosquitto/blob/83f2620f0b955b89aadce32cceb96a8e81950f5e/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Official project documentation at the fixed source revision; describes MQTT versions, broker/client tools, listeners, and optional SQLite persistence."
+    },
+    {
+      "id": "mqtt-v5-spec",
+      "kind": "official-doc",
+      "title": "MQTT Version 5.0 specification",
+      "uri": "https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html",
+      "accessed": "2026-10-23",
+      "notes": "OASIS standard linked by the Mosquitto project README; protocol evidence for MQTT publish/subscribe semantics and session behavior."
+    },
+    {
+      "id": "mosquitto-broker-source",
+      "kind": "source-code",
+      "title": "Mosquitto broker state and handler declarations",
+      "uri": "https://github.com/eclipse-mosquitto/mosquitto/blob/83f2620f0b955b89aadce32cceb96a8e81950f5e/src/mosquitto_broker_internal.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of listeners, client contexts, message queues, packet handlers, subscription operations, and persistence hooks."
+    },
+    {
+      "id": "mosquitto-loop-source",
+      "kind": "source-code",
+      "title": "Mosquitto broker main loop",
+      "uri": "https://github.com/eclipse-mosquitto/mosquitto/blob/83f2620f0b955b89aadce32cceb96a8e81950f5e/src/loop.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of the broker main loop and its timer, queue, session, plugin, and multiplexed-I/O work."
+    },
+    {
+      "id": "mosquitto-repository-commit",
+      "kind": "source-code",
+      "title": "Eclipse Mosquitto source at 83f2620f0b95",
+      "uri": "https://github.com/eclipse-mosquitto/mosquitto/commit/83f2620f0b955b89aadce32cceb96a8e81950f5e",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision resolved from the repository manifest; github-archive provenance boundary for this card."
+    }
+  ],
+  "related_systems": [
+    "kafka",
+    "protobuf",
+    "openssl"
+  ]
+}

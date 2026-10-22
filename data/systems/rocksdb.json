@@ -1,0 +1,247 @@
+{
+  "id": "rocksdb",
+  "name": "RocksDB",
+  "version_context": "commit 553b52b4a709820fac1dbadc7796506740517582",
+  "summary": "An embedded persistent key-value engine that uses an LSM design, write-ahead logging, column families, background compaction, and snapshot read boundaries.",
+  "scope": [
+    "embedded key-value database",
+    "LSM storage",
+    "write-ahead logging",
+    "column families",
+    "compaction and snapshots"
+  ],
+  "features": [
+    {
+      "id": "lsm-key-value-storage",
+      "name": "Log-structured merge key-value storage",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "RocksDB is a persistent key-value store with a Log-Structured-Merge design, exposing a library API for embedded use and tuning trade-offs among write, read, and space amplification.",
+      "benefits": [
+        "Supports high write throughput through sequential and batched updates",
+        "Makes storage amplification trade-offs explicit for workload tuning"
+      ],
+      "costs": [
+        "Reads may consult multiple levels or structures",
+        "Compaction consumes background I/O, CPU, and write bandwidth"
+      ],
+      "evidence_ids": [
+        "rocksdb-overview",
+        "rocksdb-repository-commit"
+      ]
+    },
+    {
+      "id": "column-family-state-boundary",
+      "name": "Column-family state partitioning",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "The public DB API exposes named column-family descriptors and handles, and write, read, flush, and snapshot operations can be associated with a column family.",
+      "benefits": [
+        "Partitions key-value state and configuration within one database",
+        "Provides handles that make the target state explicit at API boundaries"
+      ],
+      "costs": [
+        "Multiple families add lifecycle and recovery coordination",
+        "Compaction and flush behavior must be reasoned about per family and across shared logs"
+      ],
+      "evidence_ids": [
+        "rocksdb-db-api",
+        "rocksdb-db-source"
+      ]
+    },
+    {
+      "id": "wal-backed-write-path",
+      "name": "Write-ahead-log-backed write path",
+      "category": "durability-model",
+      "claim_type": "fact",
+      "description": "The public API exposes WriteBatch and WriteOptions, documents WAL synchronization boundaries, and the DB implementation contains WAL management and recovery paths before memtable flush and compaction work.",
+      "benefits": [
+        "Provides a sequential recovery representation for recent writes",
+        "Allows write acknowledgement and WAL synchronization to be configured separately"
+      ],
+      "costs": [
+        "WAL retention and recovery add storage and startup work",
+        "Unsynchronized or indeterminate writes require explicit failure handling"
+      ],
+      "evidence_ids": [
+        "rocksdb-wal-doc",
+        "rocksdb-db-api",
+        "rocksdb-db-source"
+      ]
+    },
+    {
+      "id": "background-compaction",
+      "name": "Background flush and compaction",
+      "category": "maintenance-model",
+      "claim_type": "fact",
+      "description": "The RocksDB implementation schedules flush and compaction work in the background, moving mutable write state toward persistent sorted files and managing the resulting WAL and manifest boundaries.",
+      "benefits": [
+        "Keeps foreground writes separate from much of the storage reorganization work",
+        "Controls read and space amplification through configurable compaction policy"
+      ],
+      "costs": [
+        "Background work competes with foreground reads and writes for resources",
+        "Compaction debt can increase latency and storage pressure"
+      ],
+      "evidence_ids": [
+        "rocksdb-compaction-doc",
+        "rocksdb-db-source"
+      ]
+    },
+    {
+      "id": "consistent-snapshot-reads",
+      "name": "Sequence-bounded snapshot reads",
+      "category": "consistency-model",
+      "claim_type": "fact",
+      "description": "RocksDB exposes snapshots as read views tied to a database sequence boundary, allowing a reader to observe a consistent view while later writes proceed.",
+      "benefits": [
+        "Provides stable read boundaries for concurrent readers",
+        "Separates reader visibility from the current mutable write position"
+      ],
+      "costs": [
+        "Long-lived snapshots can retain versions and delay cleanup",
+        "Snapshot consistency does not by itself provide a multi-process transaction protocol"
+      ],
+      "evidence_ids": [
+        "rocksdb-snapshot-doc",
+        "rocksdb-db-api"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "LSM state refinement",
+      "question": "How does a logical key-value map refine into mutable write state, WAL records, sorted files, and compaction generations?",
+      "assumptions": [
+        "The logical map is compared at explicit sequence or recovery boundaries",
+        "Flush and compaction preserve the modeled key-value observations",
+        "Amplification and physical file layout are separate cost dimensions"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rocksdb-overview",
+        "rocksdb-wal-doc",
+        "rocksdb-compaction-doc"
+      ]
+    },
+    {
+      "model": "WAL recovery transition system",
+      "question": "Which durable write sequence and database-file state reconstruct a valid logical database after restart?",
+      "assumptions": [
+        "WAL records are replayed according to the configured recovery boundary",
+        "Manifest, column-family, and file transitions are represented explicitly",
+        "The model does not equate a successful write call with an fsynced record unless the options require it"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rocksdb-wal-doc",
+        "rocksdb-db-api",
+        "rocksdb-db-source"
+      ]
+    },
+    {
+      "model": "Snapshot visibility relation",
+      "question": "Which versions of keys are visible to a reader holding a snapshot sequence number?",
+      "assumptions": [
+        "Writes have monotonically ordered database sequence numbers",
+        "A snapshot fixes the reader boundary while later writes remain outside it",
+        "Compaction is modeled as representation change that preserves required visible versions"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rocksdb-snapshot-doc",
+        "rocksdb-db-api"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "lsm-key-value-storage",
+      "benefits": ["Write-oriented persistent storage with tunable amplification"],
+      "costs": ["Read and compaction amplification require workload-aware tuning"]
+    },
+    {
+      "feature_id": "column-family-state-boundary",
+      "benefits": ["Named state partitions within one embedded database"],
+      "costs": ["Cross-family lifecycle and maintenance coordination"]
+    },
+    {
+      "feature_id": "wal-backed-write-path",
+      "benefits": ["Recoverable recent writes and configurable sync behavior"],
+      "costs": ["WAL storage, replay, and failure-boundary complexity"]
+    },
+    {
+      "feature_id": "background-compaction",
+      "benefits": ["Online organization of LSM state"],
+      "costs": ["Background resource pressure and compaction debt"]
+    },
+    {
+      "feature_id": "consistent-snapshot-reads",
+      "benefits": ["Stable concurrent read view"],
+      "costs": ["Pinned versions and cleanup pressure for long-lived readers"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "rocksdb-overview",
+      "kind": "official-doc",
+      "title": "RocksDB project overview",
+      "uri": "https://github.com/facebook/rocksdb/wiki/Overview",
+      "accessed": "2026-10-23",
+      "notes": "Official RocksDB documentation describing the persistent key-value and LSM design."
+    },
+    {
+      "id": "rocksdb-wal-doc",
+      "kind": "official-doc",
+      "title": "RocksDB write-ahead log documentation",
+      "uri": "https://github.com/facebook/rocksdb/wiki/Write-Ahead-Log",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for WAL behavior and durability configuration."
+    },
+    {
+      "id": "rocksdb-compaction-doc",
+      "kind": "official-doc",
+      "title": "RocksDB compaction documentation",
+      "uri": "https://github.com/facebook/rocksdb/wiki/Compaction",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for compaction and LSM maintenance trade-offs."
+    },
+    {
+      "id": "rocksdb-snapshot-doc",
+      "kind": "official-doc",
+      "title": "RocksDB snapshots documentation",
+      "uri": "https://github.com/facebook/rocksdb/wiki/Snapshots",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for consistent snapshot read views."
+    },
+    {
+      "id": "rocksdb-db-api",
+      "kind": "source-code",
+      "title": "RocksDB public DB API at fixed commit",
+      "uri": "https://github.com/facebook/rocksdb/blob/553b52b4a709820fac1dbadc7796506740517582/include/rocksdb/db.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of column families, writes, WAL synchronization, and snapshots."
+    },
+    {
+      "id": "rocksdb-db-source",
+      "kind": "source-code",
+      "title": "RocksDB DB implementation at fixed commit",
+      "uri": "https://github.com/facebook/rocksdb/blob/553b52b4a709820fac1dbadc7796506740517582/db/db_impl/db_impl.cc",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of WAL management, recovery, flush scheduling, and compaction scheduling."
+    },
+    {
+      "id": "rocksdb-repository-commit",
+      "kind": "source-code",
+      "title": "RocksDB source at 553b52b4a709",
+      "uri": "https://github.com/facebook/rocksdb/commit/553b52b4a709820fac1dbadc7796506740517582",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision resolved from the repository manifest; github-archive provenance boundary for this card."
+    }
+  ],
+  "related_systems": [
+    "sqlite",
+    "redis",
+    "postgresql"
+  ]
+}

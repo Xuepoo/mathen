@@ -1,0 +1,190 @@
+{
+  "id": "openssl",
+  "name": "OpenSSL",
+  "version_context": "commit aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c",
+  "summary": "A cryptographic and secure-protocol toolkit that separates protocol use, cryptographic operations, and provider-supplied algorithm implementations.",
+  "scope": [
+    "cryptographic library",
+    "TLS and QUIC protocol library",
+    "provider boundary",
+    "algorithm selection",
+    "operation lifecycle"
+  ],
+  "features": [
+    {
+      "id": "libssl-libcrypto-separation",
+      "name": "Protocol and cryptography library separation",
+      "category": "library-model",
+      "claim_type": "fact",
+      "description": "OpenSSL provides libssl for TLS, DTLS, and QUIC protocol implementations and libcrypto as a general-purpose cryptographic library that can also be used independently.",
+      "benefits": [
+        "Allows protocol implementations and independent cryptographic consumers to share primitives",
+        "Makes protocol and primitive APIs distinct integration boundaries"
+      ],
+      "costs": [
+        "Applications must understand more than one library boundary",
+        "Protocol behavior and cryptographic implementation selection can fail at different layers"
+      ],
+      "evidence_ids": [
+        "openssl-overview",
+        "openssl-repository-commit"
+      ]
+    },
+    {
+      "id": "provider-algorithm-boundary",
+      "name": "Provider-supplied algorithm implementations",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "OpenSSL providers supply implementations for operations such as digests, ciphers, MACs, KDFs, key management, signatures, encoding, and decoding through dispatch and algorithm-query interfaces. Providers may be built in or dynamically loadable.",
+      "benefits": [
+        "Permits multiple implementations of an algorithm behind stable library APIs",
+        "Supports default, FIPS, legacy, and third-party implementation domains"
+      ],
+      "costs": [
+        "Provider loading and compatibility become part of application configuration",
+        "Unqualified naming collisions can leave implementation selection unspecified"
+      ],
+      "evidence_ids": [
+        "openssl-provider-doc",
+        "openssl-provider-source",
+        "openssl-repository-commit"
+      ]
+    },
+    {
+      "id": "property-directed-algorithm-fetch",
+      "name": "Property-directed algorithm fetching",
+      "category": "selection-model",
+      "claim_type": "fact",
+      "description": "An algorithm use can explicitly fetch an implementation from providers using a library context, algorithm identifier, and property query. OpenSSL also supports implicit fetching for compatibility APIs.",
+      "benefits": [
+        "Makes implementation selection explicit when policy or provider identity matters",
+        "Allows one application to maintain separate library contexts"
+      ],
+      "costs": [
+        "Property queries and provider activation add configuration complexity",
+        "Implicit fetching can obscure which implementation is selected"
+      ],
+      "evidence_ids": [
+        "openssl-libcrypto-doc",
+        "openssl-provider-source"
+      ]
+    },
+    {
+      "id": "contextual-cryptographic-operation",
+      "name": "Contextual cryptographic operation lifecycle",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The documented libcrypto operation pattern creates an operation context, initializes it with an algorithm and parameters, accepts one or more updates, finalizes output, and releases the context and fetched objects.",
+      "benefits": [
+        "Supports streaming input and operation-specific state",
+        "Provides a common lifecycle for digest, cipher, signature, and related operations"
+      ],
+      "costs": [
+        "Call ordering and resource cleanup are part of application correctness",
+        "Operation contexts do not by themselves specify protocol-level safety"
+      ],
+      "evidence_ids": [
+        "openssl-libcrypto-doc",
+        "openssl-repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Provider-indexed implementation selection relation",
+      "question": "Which provider implementation is selected for an algorithm operation under a library context and property query?",
+      "assumptions": [
+        "Providers expose finite named implementation sets for each operation",
+        "The library context determines the provider set considered by fetching",
+        "The view models selection and does not claim equivalence between implementations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "openssl-libcrypto-doc",
+        "openssl-provider-doc"
+      ]
+    },
+    {
+      "model": "Cryptographic operation state machine",
+      "question": "How does a streaming cryptographic operation move from allocation through initialization, updates, finalization, and cleanup?",
+      "assumptions": [
+        "Operation contexts are modeled as stateful objects with ordered transitions",
+        "Initialization and finalization may reject invalid inputs",
+        "Provider-specific implementation details are abstracted behind the operation API"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "openssl-libcrypto-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "libssl-libcrypto-separation",
+      "benefits": ["Reusable cryptographic primitives across protocol and non-protocol consumers"],
+      "costs": ["Multiple APIs and failure boundaries must be integrated by applications"]
+    },
+    {
+      "feature_id": "provider-algorithm-boundary",
+      "benefits": ["Pluggable and policy-specific algorithm implementations"],
+      "costs": ["Provider lifecycle and selection policy increase operational surface"]
+    },
+    {
+      "feature_id": "property-directed-algorithm-fetch",
+      "benefits": ["Explicit algorithm implementation selection"],
+      "costs": ["Queries, contexts, and fallback behavior complicate reasoning"]
+    },
+    {
+      "feature_id": "contextual-cryptographic-operation",
+      "benefits": ["Uniform streaming operation lifecycle"],
+      "costs": ["State ordering and cleanup are required for correct use"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "openssl-overview",
+      "kind": "official-doc",
+      "title": "OpenSSL project overview",
+      "uri": "https://github.com/openssl/openssl/blob/aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Official project README at the fixed source revision; describes libssl, libcrypto, and the command-line toolkit."
+    },
+    {
+      "id": "openssl-libcrypto-doc",
+      "kind": "official-doc",
+      "title": "OpenSSL libcrypto introduction",
+      "uri": "https://docs.openssl.org/master/man7/ossl-guide-libcrypto-introduction/",
+      "accessed": "2026-10-23",
+      "notes": "Official guide for algorithm operations, provider-backed implementations, fetching, library contexts, and operation lifecycles."
+    },
+    {
+      "id": "openssl-provider-doc",
+      "kind": "official-doc",
+      "title": "OpenSSL provider interface",
+      "uri": "https://docs.openssl.org/master/man7/provider/",
+      "accessed": "2026-10-23",
+      "notes": "Official provider documentation for dispatch, operation queries, algorithm implementations, and provider loading."
+    },
+    {
+      "id": "openssl-provider-source",
+      "kind": "source-code",
+      "title": "OpenSSL provider loading and query source",
+      "uri": "https://github.com/openssl/openssl/blob/aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c/crypto/provider.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of OSSL_PROVIDER_load, unload, and query-operation entry points."
+    },
+    {
+      "id": "openssl-repository-commit",
+      "kind": "source-code",
+      "title": "OpenSSL source at aff3d3cf2550",
+      "uri": "https://github.com/openssl/openssl/commit/aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision resolved from the repository manifest; github-archive provenance boundary for this card."
+    }
+  ],
+  "related_systems": [
+    "curl",
+    "grpc",
+    "nginx"
+  ]
+}
