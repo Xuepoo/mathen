@@ -1,0 +1,211 @@
+{
+  "id": "linux",
+  "name": "Linux Kernel",
+  "version_context": "commit 4403278e4ea2f654f8130a5c03eb8b4516a0f201",
+  "summary": "A configurable monolithic kernel that exposes process and file abstractions, schedules runnable work, manages memory and devices, and extends the running kernel through modules.",
+  "scope": [
+    "operating-system kernel",
+    "process execution",
+    "virtual filesystem",
+    "scheduling",
+    "loadable modules"
+  ],
+  "features": [
+    {
+      "id": "virtual-filesystem-abstraction",
+      "name": "Virtual filesystem abstraction",
+      "category": "resource-abstraction",
+      "claim_type": "fact",
+      "description": "Linux VFS provides a common filesystem interface to userspace and an in-kernel abstraction that allows different filesystem implementations to coexist through objects such as dentries, inodes, files, and superblocks.",
+      "benefits": [
+        "Presents a stable file-oriented interface across filesystem implementations",
+        "Allows caching and filesystem-specific operations behind common objects"
+      ],
+      "costs": [
+        "Indirection and cache coherence add implementation complexity",
+        "Filesystem implementations must satisfy VFS locking and lifecycle contracts"
+      ],
+      "evidence_ids": ["linux-vfs-doc", "linux-vfs-source"]
+    },
+    {
+      "id": "preemptive-scheduler-classes",
+      "name": "Scheduler classes and runnable work",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The kernel scheduler maintains runnable tasks and selects execution according to scheduler policy and task attributes, with scheduler classes providing policy-specific behavior.",
+      "benefits": [
+        "Supports multiple workload policies including fair, real-time, and deadline scheduling",
+        "Separates common scheduling mechanics from policy-specific selection"
+      ],
+      "costs": [
+        "Latency, fairness, throughput, and energy goals can conflict",
+        "Scheduler behavior depends on topology, workload, and configuration"
+      ],
+      "evidence_ids": ["linux-scheduler-doc", "linux-scheduler-source"]
+    },
+    {
+      "id": "kbuild-and-loadable-modules",
+      "name": "Kbuild and loadable modules",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Linux uses kbuild to build in-tree and external modules, and module versioning can check exported symbol interfaces before a module is loaded into a kernel build.",
+      "benefits": [
+        "Extends kernel functionality without requiring every feature to be built into the base image",
+        "Shares build and symbol compatibility machinery across in-tree and external modules"
+      ],
+      "costs": [
+        "Module compatibility depends on kernel configuration, headers, and exported symbols",
+        "Loading code into the kernel retains the kernel's privilege and failure boundary"
+      ],
+      "evidence_ids": ["linux-kbuild-doc", "linux-module-source"]
+    },
+    {
+      "id": "process-and-memory-resource-model",
+      "name": "Process and memory resource model",
+      "category": "kernel-resource-model",
+      "claim_type": "fact",
+      "description": "Linux coordinates user processes, address spaces, file descriptors, and kernel-managed resources through shared kernel objects and system-call boundaries.",
+      "benefits": [
+        "Provides composable process, file, and memory abstractions for applications",
+        "Centralizes protection and resource accounting in the kernel"
+      ],
+      "costs": [
+        "Cross-subsystem synchronization and resource accounting are difficult to reason about",
+        "A kernel-wide fault can affect many unrelated processes"
+      ],
+      "evidence_ids": ["linux-vfs-doc", "linux-process-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Layered resource object graph",
+      "question": "How do system calls map process-visible names to shared kernel objects and filesystem-specific operations?",
+      "assumptions": [
+        "Processes, file descriptors, files, dentries, inodes, and superblocks are modeled as typed nodes",
+        "Operations traverse object links and dispatch to subsystem implementations",
+        "The graph abstracts synchronization details while retaining ownership and lifecycle boundaries"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["linux-vfs-doc", "linux-vfs-source", "linux-process-source"]
+    },
+    {
+      "model": "Priority-aware scheduling state machine",
+      "question": "How does runnable work move through scheduling decisions under different scheduler policies?",
+      "assumptions": [
+        "Tasks have runnable, running, blocked, and exited states",
+        "Scheduler classes provide policy-dependent selection transitions",
+        "The model does not assume a fixed fairness or latency guarantee across configurations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["linux-scheduler-doc", "linux-scheduler-source"]
+    },
+    {
+      "model": "Configurable extension graph",
+      "question": "How do kernel configuration, kbuild targets, exported symbols, and modules define an extensible runtime boundary?",
+      "assumptions": [
+        "Build configuration determines which code and interfaces exist",
+        "A module's imported symbols must satisfy the selected kernel ABI checks",
+        "The graph describes extension capability and compatibility constraints, not module safety"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["linux-kbuild-doc", "linux-module-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "virtual-filesystem-abstraction",
+      "benefits": [
+        "Uniform file API with interchangeable filesystem implementations"
+      ],
+      "costs": [
+        "Common object and locking contracts increase subsystem complexity"
+      ]
+    },
+    {
+      "feature_id": "preemptive-scheduler-classes",
+      "benefits": [
+        "Policy flexibility across diverse workloads"
+      ],
+      "costs": [
+        "Policy interactions make performance and latency less predictable"
+      ]
+    },
+    {
+      "feature_id": "kbuild-and-loadable-modules",
+      "benefits": [
+        "Configurable images and post-build extension points"
+      ],
+      "costs": [
+        "Version, configuration, and symbol compatibility must be maintained"
+      ]
+    },
+    {
+      "feature_id": "process-and-memory-resource-model",
+      "benefits": [
+        "Strong central protection boundary and reusable process abstractions"
+      ],
+      "costs": [
+        "Kernel-wide coupling raises the impact of subsystem defects"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "linux-vfs-doc",
+      "kind": "official-doc",
+      "title": "Linux Virtual File System documentation",
+      "uri": "https://docs.kernel.org/filesystems/vfs.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official kernel documentation for VFS objects, filesystem operations, and page-cache interaction."
+    },
+    {
+      "id": "linux-scheduler-doc",
+      "kind": "official-doc",
+      "title": "Linux scheduler documentation",
+      "uri": "https://docs.kernel.org/scheduler/index.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official kernel documentation index for scheduler policy and implementation topics."
+    },
+    {
+      "id": "linux-kbuild-doc",
+      "kind": "official-doc",
+      "title": "Linux building external modules",
+      "uri": "https://docs.kernel.org/kbuild/modules.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official kbuild and module documentation, including external modules and symbol versioning."
+    },
+    {
+      "id": "linux-vfs-source",
+      "kind": "source-code",
+      "title": "Linux VFS source at 4403278e4ea2",
+      "uri": "https://github.com/torvalds/linux/blob/4403278e4ea2f654f8130a5c03eb8b4516a0f201/fs/namei.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for pathname and VFS operation paths."
+    },
+    {
+      "id": "linux-scheduler-source",
+      "kind": "source-code",
+      "title": "Linux scheduler source at 4403278e4ea2",
+      "uri": "https://github.com/torvalds/linux/blob/4403278e4ea2f654f8130a5c03eb8b4516a0f201/kernel/sched/core.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for scheduler core state and transitions."
+    },
+    {
+      "id": "linux-module-source",
+      "kind": "source-code",
+      "title": "Linux module loader source at 4403278e4ea2",
+      "uri": "https://github.com/torvalds/linux/blob/4403278e4ea2f654f8130a5c03eb8b4516a0f201/kernel/module/main.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for module loading and symbol resolution."
+    },
+    {
+      "id": "linux-process-source",
+      "kind": "source-code",
+      "title": "Linux process creation source at 4403278e4ea2",
+      "uri": "https://github.com/torvalds/linux/blob/4403278e4ea2f654f8130a5c03eb8b4516a0f201/kernel/fork.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for process and address-space setup."
+    }
+  ],
+  "related_systems": ["kubernetes"]
+}

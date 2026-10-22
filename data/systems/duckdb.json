@@ -86,5 +86,15 @@
       "notes": "Primary documentation for embedded operation and vectorized analytical execution."
     }
   ],
-  "related_systems": ["sqlite", "postgresql"]
+  "related_systems": ["sqlite", "postgresql"],
+  "relations": [
+    {
+      "type": "resembles",
+      "target": "postgresql",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": ["duckdb-why"],
+      "notes": "Both are relational query engines with composable query execution, while DuckDB is embedded and analytical and PostgreSQL is client/server and extensible; this is a structural comparison, not historical influence or equivalence."
+    }
+  ]
 }

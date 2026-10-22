@@ -1,0 +1,160 @@
+{
+  "id": "rust",
+  "name": "Rust",
+  "version_context": "commit 1a2c4797ef2570bd76ca5dee34449169bc7dc457",
+  "summary": "A systems language and toolchain whose compiler lowers source through several typed intermediate representations, performs ownership-aware analyses, and uses a query system to support incremental compilation.",
+  "scope": [
+    "language safety model",
+    "compiler intermediate representations",
+    "borrow checking",
+    "incremental compilation"
+  ],
+  "features": [
+    {
+      "id": "ownership-and-borrowing",
+      "name": "Ownership and borrowing",
+      "category": "memory-safety-model",
+      "claim_type": "fact",
+      "description": "Rust's ownership model assigns each value an owner and uses borrowing rules to govern references, enabling memory-safety guarantees without a garbage collector when the program satisfies the language rules.",
+      "benefits": [
+        "Moves important memory-safety checks into compilation",
+        "Avoids requiring a tracing garbage collector for the ownership model"
+      ],
+      "costs": [
+        "Programs must satisfy ownership and lifetime constraints at compile time",
+        "The model can require redesign of APIs that would be straightforward with shared mutable state"
+      ],
+      "evidence_ids": [
+        "rust-ownership",
+        "rust-fixed-source"
+      ]
+    },
+    {
+      "id": "multi-stage-compiler-ir",
+      "name": "Multi-stage compiler intermediate representations",
+      "category": "compiler-pipeline",
+      "claim_type": "fact",
+      "description": "The Rust compiler uses a sequence of representations including tokens, AST, HIR, THIR, MIR, and LLVM IR. MIR is a control-flow-oriented representation used for borrow checking, dataflow checks, optimization, and constant evaluation.",
+      "benefits": [
+        "Matches each analysis to a representation with suitable abstraction and detail",
+        "Provides explicit boundaries for lowering, checking, optimization, and code generation"
+      ],
+      "costs": [
+        "Maintaining multiple representations and lowering steps increases compiler complexity",
+        "Information and source correspondence must be preserved across transformations"
+      ],
+      "evidence_ids": [
+        "rustc-overview",
+        "rust-fixed-source"
+      ]
+    },
+    {
+      "id": "query-driven-incremental-compilation",
+      "name": "Query-driven incremental compilation",
+      "category": "build-and-analysis-model",
+      "claim_type": "fact",
+      "description": "Rust organizes many compiler steps as queries that call one another and cache results, including on disk, so recompilation can reuse work whose inputs have not changed.",
+      "benefits": [
+        "Reduces redundant work after localized source changes",
+        "Makes dependencies between compiler computations explicit enough to cache"
+      ],
+      "costs": [
+        "Cache invalidation and query dependency tracking add implementation complexity",
+        "Not every compiler step is query-driven or cacheable, so the abstraction is not complete"
+      ],
+      "evidence_ids": [
+        "rustc-overview",
+        "rust-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed representation refinement chain",
+      "question": "How does a Rust program move from source syntax to representations suitable for type checking, borrow checking, and code generation?",
+      "assumptions": [
+        "Each representation is modeled as a typed relation to the preceding representation",
+        "Lowering preserves the relevant language semantics while making implicit operations explicit",
+        "The view abstracts diagnostics, macro implementation details, and target-specific code generation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rustc-overview",
+        "rust-fixed-source"
+      ]
+    },
+    {
+      "model": "Incremental query dependency graph",
+      "question": "Which compiler computations can be reused when source inputs change?",
+      "assumptions": [
+        "Queries are vertices and calls or input dependencies are directed edges",
+        "A cached result is reusable only when the query system considers its relevant inputs unchanged",
+        "The model does not claim that every compiler operation is cached or that cache reuse preserves a particular wall-clock cost"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rustc-overview",
+        "rust-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "ownership-and-borrowing",
+      "benefits": [
+        "Compile-time memory-safety boundary without a tracing collector"
+      ],
+      "costs": [
+        "Ownership and lifetime constraints increase API and program-design burden"
+      ]
+    },
+    {
+      "feature_id": "multi-stage-compiler-ir",
+      "benefits": [
+        "Specialized analyses over representations with appropriate abstraction"
+      ],
+      "costs": [
+        "Multiple lowering boundaries increase maintenance and source-mapping cost"
+      ]
+    },
+    {
+      "feature_id": "query-driven-incremental-compilation",
+      "benefits": [
+        "Potentially avoids recompiling unaffected computations"
+      ],
+      "costs": [
+        "Dependency tracking, cache storage, and invalidation complicate the compiler"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "rust-fixed-source",
+      "kind": "source-code",
+      "title": "Rust source tree at fixed commit 1a2c4797ef25",
+      "uri": "https://github.com/rust-lang/rust/commit/1a2c4797ef2570bd76ca5dee34449169bc7dc457",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance requested for this review; the commit page identifies the inspected Rust revision. It is not used as a substitute for compiler design documentation."
+    },
+    {
+      "id": "rust-ownership",
+      "kind": "official-doc",
+      "title": "The Rust Programming Language: Understanding Ownership",
+      "uri": "https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Primary language documentation for ownership, borrowing, and memory-safety goals."
+    },
+    {
+      "id": "rustc-overview",
+      "kind": "official-doc",
+      "title": "Rust Compiler Development Guide: Overview of the compiler",
+      "uri": "https://rustc-dev-guide.rust-lang.org/overview.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Primary compiler documentation for intermediate representations, MIR use, queries, and incremental compilation."
+    }
+  ],
+  "related_systems": [
+    "llvm",
+    "cpython"
+  ]
+}

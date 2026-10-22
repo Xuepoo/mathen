@@ -1,0 +1,336 @@
+{
+  "id": "elasticsearch",
+  "name": "Elasticsearch",
+  "version_context": "commit 60af67280bba0b807306cfd7dc9ec46974ad4d49",
+  "summary": "A distributed search engine that partitions Lucene indexes into shards, coordinates scatter-gather searches, replicates shard copies with a primary-backup model, and exposes near-real-time visibility through refreshes.",
+  "scope": [
+    "distributed search",
+    "shard-partitioned indexes",
+    "Lucene segment storage",
+    "primary-replica replication",
+    "near-real-time search",
+    "query and fetch execution"
+  ],
+  "features": [
+    {
+      "id": "shard-partitioned-lucene-index",
+      "name": "Shard-partitioned Lucene index",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "An Elasticsearch index is divided into physical shards, each shard is a self-contained Lucene index containing a subset of documents, and shards are distributed across nodes. Lucene indexes are organized into immutable segments that are periodically merged.",
+      "benefits": [
+        "Provides a unit for distributing document storage and query work across nodes",
+        "Allows each shard to use Lucene's segment-based indexing and search machinery",
+        "Makes shard placement an explicit boundary for capacity and recovery"
+      ],
+      "costs": [
+        "A search spanning multiple shards requires distributed coordination and result reduction",
+        "Primary shard count is fixed when an index is created",
+        "Segment merging consumes disk and other resources and can be throttled"
+      ],
+      "evidence_ids": [
+        "elasticsearch-cluster-shards",
+        "elasticsearch-merge"
+      ]
+    },
+    {
+      "id": "coordinating-scatter-gather-search",
+      "name": "Coordinating scatter-gather search",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The node receiving a request acts as its coordinating node. For a distributed search, it resolves relevant shards, sends shard-level requests to active shard copies, and combines the returned results; the node-role documentation describes this as scatter followed by gather.",
+      "benefits": [
+        "Distributes searches over the shards containing the relevant data",
+        "Presents a single client response despite multi-shard execution",
+        "Allows request coordination to be performed by any node"
+      ],
+      "costs": [
+        "The coordinating node must have enough resources for routing and result reduction",
+        "Network, queueing, and shard-failure behavior affect end-to-end requests",
+        "A search can return partial results when shard failures occur"
+      ],
+      "evidence_ids": [
+        "elasticsearch-node-roles",
+        "elasticsearch-read-write"
+      ]
+    },
+    {
+      "id": "primary-replica-shard-replication",
+      "name": "Primary-replica shard replication",
+      "category": "replication-model",
+      "claim_type": "fact",
+      "description": "Each shard has a replication group with one primary shard and zero or more replica shards. The primary is the entry point for indexing, forwards accepted operations to in-sync replicas, and a replica can be promoted when the primary fails.",
+      "benefits": [
+        "Provides redundant shard copies across cluster nodes",
+        "Allows an active primary or replica copy to serve reads",
+        "Defines a recovery boundary at the shard replication group"
+      ],
+      "costs": [
+        "Replica copies consume storage and network bandwidth",
+        "Acknowledged writes depend on the in-sync replica set and its failures",
+        "Replica promotion and recovery add coordination and operational state"
+      ],
+      "evidence_ids": [
+        "elasticsearch-cluster-shards",
+        "elasticsearch-read-write"
+      ]
+    },
+    {
+      "id": "segment-refresh-near-real-time",
+      "name": "Refresh-based near-real-time visibility",
+      "category": "consistency-model",
+      "claim_type": "fact",
+      "description": "Elasticsearch makes indexed changes searchable through refreshes that write and open new Lucene segments without requiring a full commit. Changes are therefore not necessarily visible immediately; the documented default refresh behavior makes them visible on a near-real-time schedule for active indices.",
+      "benefits": [
+        "Separates search visibility from the more expensive full commit operation",
+        "Supports frequent publication of newly indexed segments",
+        "Makes visibility timing an explicit refresh and API configuration concern"
+      ],
+      "costs": [
+        "A successful indexing response does not by itself mean immediate search visibility",
+        "Frequent forced refreshes can harm indexing and search behavior",
+        "Search visibility and durable commit state are distinct boundaries"
+      ],
+      "evidence_ids": [
+        "elasticsearch-near-real-time",
+        "elasticsearch-refresh"
+      ]
+    },
+    {
+      "id": "translog-backed-shard-recovery",
+      "name": "Translog-backed shard recovery",
+      "category": "durability-model",
+      "claim_type": "fact",
+      "description": "Each shard copy writes index and delete operations to a transaction log after processing them in Lucene and before acknowledgement. Operations not included in the last Lucene commit can be replayed from the translog during shard recovery, subject to the configured durability and fsync boundary.",
+      "benefits": [
+        "Avoids requiring a full Lucene commit for every individual operation",
+        "Provides a recovery representation for recent operations",
+        "Exposes a configurable boundary between acknowledgement, fsync, and commit"
+      ],
+      "costs": [
+        "Async durability can lose acknowledged operations since the last automatic commit after failure",
+        "Recovery must replay operations that are not in the last Lucene commit",
+        "Flushes and translog growth consume background resources"
+      ],
+      "evidence_ids": [
+        "elasticsearch-translog"
+      ]
+    },
+    {
+      "id": "query-fetch-search-phases",
+      "name": "Shard-local query and fetch phases",
+      "category": "query-execution",
+      "claim_type": "fact",
+      "description": "Elasticsearch's search profile exposes shard-level query, collector, aggregation, and fetch phases. The query phase evaluates and collects matching documents and the fetch phase loads fields or source for selected hits; the profile is diagnostic and does not establish a fixed execution cost.",
+      "benefits": [
+        "Separates matching and scoring work from retrieval of returned document data",
+        "Makes shard-local query and fetch behavior inspectable for diagnosis",
+        "Provides an evidence boundary for reasoning about distributed search execution"
+      ],
+      "costs": [
+        "Query, aggregation, and fetch work can vary with the request and shard contents",
+        "The coordinating node must reduce shard-level results in addition to shard-local work",
+        "Profile timings are diagnostic and should not be treated as general performance guarantees"
+      ],
+      "evidence_ids": [
+        "elasticsearch-search-profile",
+        "elasticsearch-read-write"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Sharded scatter-gather transition system",
+      "question": "How does a search request become a single result from independently executed shard-level requests?",
+      "assumptions": [
+        "An index is modeled as a finite set of shard partitions, each with a local search transition",
+        "The coordinating node resolves relevant shards and reduces their responses according to the request semantics",
+        "Network failures and partial results are modeled explicitly rather than assumed away"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "elasticsearch-node-roles",
+        "elasticsearch-read-write",
+        "elasticsearch-search-profile"
+      ]
+    },
+    {
+      "model": "Primary-backup replication transition system",
+      "question": "Which shard-copy states and transitions preserve an acknowledged operation across primary and in-sync replica copies?",
+      "assumptions": [
+        "A replication group consists of one primary and zero or more replica copies",
+        "The in-sync copies invariant and primary promotion are included in the state model",
+        "The view abstracts transport timing while retaining failure, demotion, and recovery transitions"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "elasticsearch-read-write",
+        "elasticsearch-cluster-shards"
+      ]
+    },
+    {
+      "model": "Refresh and recovery visibility state machine",
+      "question": "How do indexed operations move from in-memory and translog state to searchable segments and recoverable committed state?",
+      "assumptions": [
+        "Search visibility is modeled separately from Lucene commit durability",
+        "Refresh, flush, translog fsync, crash, and recovery are distinct transitions",
+        "The configured translog durability mode and failure boundary are explicit parameters"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "elasticsearch-near-real-time",
+        "elasticsearch-translog",
+        "elasticsearch-refresh"
+      ]
+    },
+    {
+      "model": "Shard-local query algebra with global reduction",
+      "question": "Which query, collector, aggregation, and fetch operations are evaluated locally and which results must be reduced at the coordinating node?",
+      "assumptions": [
+        "Shard-local execution is represented as a partial result-producing operation",
+        "The coordinating reduction is request-specific and is not assumed to preserve every local metric directly",
+        "Profile output is treated as an execution observation, not as a performance law"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "elasticsearch-search-profile",
+        "elasticsearch-node-roles"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "shard-partitioned-lucene-index",
+      "benefits": [
+        "Distributed storage and query capacity at shard boundaries"
+      ],
+      "costs": [
+        "Shard sizing, fixed primary count, and merge resource pressure"
+      ]
+    },
+    {
+      "feature_id": "coordinating-scatter-gather-search",
+      "benefits": [
+        "One client-facing search over distributed shard-local work"
+      ],
+      "costs": [
+        "Coordination resources, network dependence, and partial-result behavior"
+      ]
+    },
+    {
+      "feature_id": "primary-replica-shard-replication",
+      "benefits": [
+        "Redundant data and read-serving shard copies"
+      ],
+      "costs": [
+        "Replica storage, write coordination, and recovery state"
+      ]
+    },
+    {
+      "feature_id": "segment-refresh-near-real-time",
+      "benefits": [
+        "Frequent search visibility without a full commit per operation"
+      ],
+      "costs": [
+        "Visibility delay and refresh resource trade-offs"
+      ]
+    },
+    {
+      "feature_id": "translog-backed-shard-recovery",
+      "benefits": [
+        "Recoverable recent operations without committing every change to Lucene"
+      ],
+      "costs": [
+        "Replay work and policy-dependent failure loss windows"
+      ]
+    },
+    {
+      "feature_id": "query-fetch-search-phases",
+      "benefits": [
+        "A separable and inspectable search execution pipeline"
+      ],
+      "costs": [
+        "Request- and shard-dependent execution complexity"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "elasticsearch-cluster-shards",
+      "kind": "official-doc",
+      "title": "Clusters, nodes, and shards in Elasticsearch",
+      "uri": "https://www.elastic.co/docs/deploy-manage/distributed-architecture/clusters-nodes-shards",
+      "accessed": "2026-10-23",
+      "notes": "Documents nodes, shard-partitioned Lucene indexes, primary and replica shards, distribution, and shard capacity boundaries."
+    },
+    {
+      "id": "elasticsearch-node-roles",
+      "kind": "official-doc",
+      "title": "Node roles in Elasticsearch",
+      "uri": "https://www.elastic.co/docs/deploy-manage/distributed-architecture/clusters-nodes-shards/node-roles",
+      "accessed": "2026-10-23",
+      "notes": "Documents coordinating nodes and the scatter and gather phases of distributed search."
+    },
+    {
+      "id": "elasticsearch-read-write",
+      "kind": "official-doc",
+      "title": "Reading and writing documents",
+      "uri": "https://www.elastic.co/docs/deploy-manage/distributed-architecture/reading-and-writing-documents",
+      "accessed": "2026-10-23",
+      "notes": "Documents the primary-backup replication model, in-sync copies, shard-level reads, result collation, and failure handling."
+    },
+    {
+      "id": "elasticsearch-merge",
+      "kind": "official-doc",
+      "title": "Merge settings",
+      "uri": "https://www.elastic.co/docs/reference/elasticsearch/index-settings/merge",
+      "accessed": "2026-10-23",
+      "notes": "Documents shards as Lucene indexes, immutable segments, segment merging, and merge resource throttling."
+    },
+    {
+      "id": "elasticsearch-near-real-time",
+      "kind": "official-doc",
+      "title": "Near real-time search",
+      "uri": "https://www.elastic.co/docs/manage-data/data-store/near-real-time-search",
+      "accessed": "2026-10-23",
+      "notes": "Documents refreshes, segment visibility, and the distinction between near-real-time search visibility and full commits."
+    },
+    {
+      "id": "elasticsearch-refresh",
+      "kind": "official-doc",
+      "title": "Refresh parameter",
+      "uri": "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/refresh-parameter",
+      "accessed": "2026-10-23",
+      "notes": "Documents refresh=true, refresh=wait_for, and the default refresh=false visibility behavior."
+    },
+    {
+      "id": "elasticsearch-translog",
+      "kind": "official-doc",
+      "title": "Translog settings",
+      "uri": "https://www.elastic.co/docs/reference/elasticsearch/index-settings/translog",
+      "accessed": "2026-10-23",
+      "notes": "Documents translog recovery, Lucene commits, fsync boundaries, request durability, and async durability loss windows."
+    },
+    {
+      "id": "elasticsearch-search-profile",
+      "kind": "official-doc",
+      "title": "Profile API",
+      "uri": "https://www.elastic.co/docs/reference/elasticsearch/rest-apis/search-profile",
+      "accessed": "2026-10-23",
+      "notes": "Documents shard-level query, collector, aggregation, and fetch profiling; profile timings are diagnostic rather than performance guarantees."
+    },
+    {
+      "id": "elasticsearch-repository-commit",
+      "kind": "source-code",
+      "title": "Elasticsearch source at 60af67280bba",
+      "uri": "https://github.com/elastic/elasticsearch/commit/60af67280bba0b807306cfd7dc9ec46974ad4d49",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision used by the deterministic repository analysis; github-archive is the recorded provenance boundary for this card. Semantic architecture claims are cited to the official documentation above."
+    }
+  ],
+  "related_systems": [
+    "kafka",
+    "redis",
+    "postgresql"
+  ]
+}

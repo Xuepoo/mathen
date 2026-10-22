@@ -1,0 +1,70 @@
+{
+  "id": "ffmpeg",
+  "name": "FFmpeg",
+  "version_context": "commit 23918b32004a517278ba441b9d0cb5307ced0cdb",
+  "summary": "A media-processing framework organized around format contexts, packet/frame codec APIs, and linked filter graphs that transform streams between input and output representations.",
+  "scope": ["media demuxing and muxing", "audio and video codecs", "filter graphs", "packet and frame flow", "format negotiation"],
+  "features": [
+    {
+      "id": "format-context-stream-boundary",
+      "name": "Format-context stream boundary",
+      "category": "media-container-model",
+      "claim_type": "fact",
+      "description": "libavformat uses AVFormatContext as the main context for muxing and demuxing. The fixed header describes an input or output format, an I/O context, and an array of AVStreams; demuxing creates streams while muxing creates them before writing the header, then packets are read or written through the context.",
+      "benefits": ["Separates container I/O and stream metadata from codec processing", "Supports multiple elementary streams", "Provides explicit input and output lifecycle operations"],
+      "costs": ["Container behavior and timing must be coordinated across packets", "Input discovery and output setup have different ownership rules", "Format-specific options widen the integration surface"],
+      "evidence_ids": ["ffmpeg-all-documentation", "ffmpeg-source-avformat"]
+    },
+    {
+      "id": "decoupled-codec-send-receive",
+      "name": "Decoupled codec send/receive pipeline",
+      "category": "codec-execution-model",
+      "claim_type": "fact",
+      "description": "libavcodec exposes separate send and receive functions for decoding and encoding. The fixed header documents input submission, output polling, internal buffering, draining with NULL input, and a strict state-machine constraint preventing simultaneous EAGAIN from both sides.",
+      "benefits": ["Decouples input submission from output production", "Accommodates internally buffered codecs", "Uses one API shape for audio/video encoding and decoding"],
+      "costs": ["Callers must implement polling, draining, and EAGAIN handling", "Buffering adds latency and memory considerations", "The API is stateful and misuse can stall progress"],
+      "evidence_ids": ["ffmpeg-all-documentation", "ffmpeg-source-avcodec"]
+    },
+    {
+      "id": "linked-filter-graph-negotiation",
+      "name": "Linked filter graph with negotiated media formats",
+      "category": "media-transformation-model",
+      "claim_type": "fact",
+      "description": "libavfilter represents filters with input and output pads connected by AVFilterLink objects. The fixed header records source and destination contexts, media type, and current audio/video fields on links, and documents format lists used to negotiate the format actually used.",
+      "benefits": ["Composes media transformations as graph nodes", "Supports explicit pad and link topology", "Makes media-type and format compatibility part of graph construction"],
+      "costs": ["Graph construction must satisfy pad and format constraints", "Negotiation can require conversion or reject a topology", "Dynamic and hardware-frame contexts increase lifecycle complexity"],
+      "evidence_ids": ["ffmpeg-filters-documentation", "ffmpeg-source-avfilter"]
+    },
+    {
+      "id": "codec-parameter-validation",
+      "name": "Codec initialization parameter validation",
+      "category": "boundary-validation",
+      "claim_type": "fact",
+      "description": "The fixed revision's Nellymoser decoder rejects a non-positive sample rate during initialization before allocating and configuring decoder state. This is a local example of validating caller-supplied codec parameters at a codec boundary.",
+      "benefits": ["Rejects invalid state before decode processing", "Makes codec preconditions visible at initialization", "Prevents processing from relying on an invalid sample-rate assumption"],
+      "costs": ["Validation is codec-specific", "Callers must handle initialization errors", "Boundary validation adds a failure mode to setup"],
+      "evidence_ids": ["ffmpeg-source-nellymoser", "ffmpeg-repository-commit"]
+    }
+  ],
+  "mathematical_views": [
+    {"model": "Typed media pipeline graph", "question": "How do container streams, codec packet/frame transformations, filters, and output streams compose into a media workflow?", "assumptions": ["Nodes expose media-type-specific inputs and outputs", "Edges carry packets, frames, or negotiated stream data", "Codec algorithms and bitstream details are abstracted"], "claim_type": "inference", "evidence_ids": ["ffmpeg-source-avformat", "ffmpeg-source-avcodec", "ffmpeg-source-avfilter"]},
+    {"model": "Codec send/receive transition system", "question": "Which input and output operations are valid while a codec buffers, drains, or reports lack of progress?", "assumptions": ["Input and output operations are separate", "EAGAIN and EOF are state-dependent outcomes", "NULL input enters draining mode"], "claim_type": "inference", "evidence_ids": ["ffmpeg-source-avcodec"]},
+    {"model": "Filter graph constraint satisfaction", "question": "Can a proposed filter topology be linked while satisfying media type and format constraints at every edge?", "assumptions": ["Each edge has one source and destination pad", "Endpoint format lists define negotiation candidates", "Hardware-frame context is an additional edge property"], "claim_type": "hypothesis", "evidence_ids": ["ffmpeg-filters-documentation", "ffmpeg-source-avfilter"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "format-context-stream-boundary", "benefits": ["Separates container and elementary-stream responsibilities"], "costs": ["Demux/mux lifecycle and timestamp interleaving add state"]},
+    {"feature_id": "decoupled-codec-send-receive", "benefits": ["Supports buffered codecs with a uniform polling interface"], "costs": ["Callers must reason about backpressure and draining"]},
+    {"feature_id": "linked-filter-graph-negotiation", "benefits": ["Composable graph-based media transformation"], "costs": ["Negotiation and pad compatibility constrain graphs"]},
+    {"feature_id": "codec-parameter-validation", "benefits": ["Fails early at a codec precondition boundary"], "costs": ["Failure contracts vary across codecs"]}
+  ],
+  "evidence": [
+    {"id": "ffmpeg-repository-commit", "kind": "source-code", "title": "FFmpeg source at 23918b32004a", "uri": "https://github.com/FFmpeg/FFmpeg/commit/23918b32004a517278ba441b9d0cb5307ced0cdb", "accessed": "2026-10-23", "notes": "Fixed source revision resolved from the repository manifest."},
+    {"id": "ffmpeg-source-avformat", "kind": "source-code", "title": "FFmpeg libavformat public API", "uri": "https://github.com/FFmpeg/FFmpeg/blob/23918b32004a517278ba441b9d0cb5307ced0cdb/libavformat/avformat.h", "accessed": "2026-10-23", "notes": "Fixed revision lines 32-75 describe demux/mux; lines 1402-1470 define format, I/O, and stream ownership; lines 2395-2531 and 2750-2918 expose read/write lifecycle."},
+    {"id": "ffmpeg-source-avcodec", "kind": "source-code", "title": "FFmpeg libavcodec public API", "uri": "https://github.com/FFmpeg/FFmpeg/blob/23918b32004a517278ba441b9d0cb5307ced0cdb/libavcodec/avcodec.h", "accessed": "2026-10-23", "notes": "Fixed revision lines 92-178 define send/receive, draining, buffering, EAGAIN, and state-machine progress rules."},
+    {"id": "ffmpeg-source-avfilter", "kind": "source-code", "title": "FFmpeg libavfilter public API", "uri": "https://github.com/FFmpeg/FFmpeg/blob/23918b32004a517278ba441b9d0cb5307ced0cdb/libavfilter/avfilter.h", "accessed": "2026-10-23", "notes": "Fixed revision lines 71-118 define pads and format configuration; lines 238-250 define pad arrays; lines 373-400 define linked contexts and media fields."},
+    {"id": "ffmpeg-source-nellymoser", "kind": "source-code", "title": "FFmpeg Nellymoser decoder initialization", "uri": "https://github.com/FFmpeg/FFmpeg/blob/23918b32004a517278ba441b9d0cb5307ced0cdb/libavcodec/nellymoserdec.c", "accessed": "2026-10-23", "notes": "Fixed revision lines 118-127 reject non-positive sample rates before decoder setup."},
+    {"id": "ffmpeg-all-documentation", "kind": "official-doc", "title": "FFmpeg all components documentation", "uri": "https://ffmpeg.org/ffmpeg-all.html", "accessed": "2026-10-23", "notes": "Official generated documentation for stream selection, transcoding, filtering, codecs, formats, and protocols."},
+    {"id": "ffmpeg-filters-documentation", "kind": "official-doc", "title": "FFmpeg filter documentation", "uri": "https://ffmpeg.org/ffmpeg-filters.html", "accessed": "2026-10-23", "notes": "Official filtergraph and media-filter documentation."}
+  ],
+  "related_systems": []
+}

@@ -2,7 +2,7 @@
   "id": "mysql-server",
   "name": "MySQL Server",
   "version_context": "commit 561753af986c3c006c4b6c7caa8359748fb55b22",
-  "summary": "Draft architecture card generated from MySQL Server at commit 561753af986c via github-archive. Semantic features require review.",
+  "summary": "Structural draft for MySQL Server at fixed commit 561753af986c. Current official documentation describes a pluggable storage-engine boundary and InnoDB structures, but this card does not promote those claims because the documentation is not pinned to the analyzed source revision and the fixed source evidence has not yet been inspected semantically.",
   "scope": [
     "database",
     "repository structure",
@@ -128,8 +128,9 @@
       "id": "official-documentation",
       "kind": "official-doc",
       "title": "MySQL Server official documentation",
-      "uri": "https://dev.mysql.com/doc/",
-      "accessed": "2026-10-22T06:07:31+00:00"
+      "uri": "https://dev.mysql.com/doc/refman/8.4/en/storage-engines.html",
+      "accessed": "2026-10-23",
+      "notes": "The official Reference Manual documents a pluggable storage-engine architecture and InnoDB as the default engine. These are candidate semantic claims only; the documentation is not pinned to commit 561753af986c and the fixed source revision needs targeted inspection before promotion."
     }
   ],
   "related_systems": []

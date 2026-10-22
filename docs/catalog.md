@@ -39,17 +39,24 @@ These entries are already present in the repository at different review levels:
 | `supabase` | Supabase | backend platform | `reviewed` | Model platform composition and lineage |
 | `sqlite` | SQLite | embedded database | `reviewed` | Compare with DuckDB and columnar engines |
 | `postgresql` | PostgreSQL | relational database | `reviewed` | Compare PostgreSQL MVCC and extension boundaries with SQLite and Supabase using fixed-commit evidence |
-| `redis` | Redis | in-memory data service | `draft` | Review event loop, data structures, and persistence |
-| `elasticsearch` | Elasticsearch | search engine | `draft` | Review inverted indexes, shards, and query execution |
-| `kafka` | Apache Kafka | distributed log | `draft` | Review append-only log, partitions, and replay |
+| `redis` | Redis | in-memory data service | `reviewed` | Compare native structures, RESP, and persistence representations |
+| `elasticsearch` | Elasticsearch | search engine | `reviewed` | Compare shard partitioning, scatter-gather search, replication, and near-real-time visibility |
+| `kafka` | Apache Kafka | distributed log | `reviewed` | Compare partitioned logs, replay, replication, and stream processing |
+| `mysql-server` | MySQL Server | database | `draft` | Pin documentation and inspect fixed source for storage-engine, transaction, and recovery claims |
+| `rocksdb` | RocksDB | embedded database | `draft` | Pin documentation and inspect fixed source for LSM, WAL, compaction, and snapshot claims |
 | `docker` | Docker Engine | container runtime | `draft` | Compare daemon, image, namespace, and filesystem boundaries |
-| `qemu` | QEMU | virtualization | `draft` | Compare complete machine emulation with Firecracker |
-| `kubernetes` | Kubernetes | orchestration | `cataloged` | Analyze reconciliation, API resources, and etcd state |
-| `linux` | Linux Kernel | operating system | `cataloged` | Analyze system calls, scheduling, memory, and modules |
+| `qemu` | QEMU | virtualization | `reviewed` | Compare complete machine emulation with Firecracker |
+| `kubernetes` | Kubernetes | orchestration | `reviewed` | Analyze reconciliation, API resources, and etcd state |
+| `linux` | Linux Kernel | operating system | `reviewed` | Analyze system calls, scheduling, memory, and modules |
 | `hadoop` | Apache Hadoop | distributed storage and compute | `cataloged` | Analyze HDFS, YARN, and batch computation |
-| `nginx` | NGINX | network server | `cataloged` | Analyze event-driven I/O and worker processes |
-| `llvm` | LLVM | compiler infrastructure | `cataloged` | Analyze IR, passes, and target-independent compilation |
-| `ffmpeg` | FFmpeg | media processing | `cataloged` | Analyze codec, filter, and stream pipelines |
+| `nginx` | NGINX | network server | `reviewed` | Analyze event-driven I/O and worker processes |
+| `llvm` | LLVM | compiler infrastructure | `reviewed` | Add temporal IR and pass-pipeline relations |
+| `ffmpeg` | FFmpeg | media processing | `reviewed` | Compare format contexts, codec state machines, and filter graphs using fixed-commit evidence |
+| `protobuf` | Protocol Buffers | serialization protocol | `reviewed` | Compare numbered schema evolution and generated interfaces with gRPC using fixed-commit evidence |
+| `grpc` | gRPC | RPC framework | `reviewed` | Compare generated service boundaries and streaming lifecycle with Protocol Buffers using fixed-commit evidence |
+| `cpython` | CPython | language runtime | `reviewed` | Compare interpreter state, object lifetime, and extension boundaries |
+| `rust` | Rust | language toolchain | `reviewed` | Compare ownership, compiler IR, and incremental query boundaries |
+| `wasmtime` | Wasmtime | WebAssembly runtime | `reviewed` | Compare Engine/Store isolation and JIT compilation boundaries |
 
 The operational manifest now contains 44 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded

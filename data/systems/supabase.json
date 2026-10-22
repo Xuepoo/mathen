@@ -85,5 +85,15 @@
       "notes": "Primary documentation listing the platform components and their relationships."
     }
   ],
-  "related_systems": ["postgresql", "firebase"]
+  "related_systems": ["postgresql", "firebase"],
+  "relations": [
+    {
+      "type": "composes",
+      "target": "postgresql",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["supabase-architecture"],
+      "notes": "Supabase assembles APIs, authentication, realtime, storage, and management services around PostgreSQL as its core system; this records documented composition, not historical influence or implementation equivalence."
+    }
+  ]
 }

@@ -2,7 +2,7 @@
   "id": "rocksdb",
   "name": "RocksDB",
   "version_context": "commit 553b52b4a709820fac1dbadc7796506740517582",
-  "summary": "Draft architecture card generated from RocksDB at commit 553b52b4a709 via github-archive. Semantic features require review.",
+  "summary": "Structural draft for RocksDB at fixed commit 553b52b4a709. Official documentation identifies a key/value storage engine and log-structured design, but this card does not promote those claims because the cited documentation is not pinned to the analyzed source revision and the fixed source evidence has not yet been inspected semantically.",
   "scope": [
     "embedded-database",
     "repository structure",
@@ -128,8 +128,9 @@
       "id": "official-documentation",
       "kind": "official-doc",
       "title": "RocksDB official documentation",
-      "uri": "https://github.com/facebook/rocksdb/wiki",
-      "accessed": "2026-10-22T06:07:31+00:00"
+      "uri": "https://github.com/facebook/rocksdb/wiki/Home",
+      "accessed": "2026-10-23",
+      "notes": "The current official wiki describes RocksDB as a C++ key/value storage engine using a log-structured database design. These are candidate semantic claims only; the documentation is not pinned to commit 553b52b4a709 and the fixed source revision needs targeted inspection before promotion."
     }
   ],
   "related_systems": []

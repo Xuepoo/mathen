@@ -1,0 +1,86 @@
+{
+  "id": "protobuf",
+  "name": "Protocol Buffers",
+  "version_context": "commit a140e9453a894ce44e08c4c5a40b588d1ba4bcb0",
+  "summary": "A schema-driven serialization system whose numbered, typed wire records support generated APIs, unknown-field handling, and constrained schema evolution.",
+  "scope": ["schema language", "binary serialization", "generated code", "schema evolution"],
+  "features": [
+    {
+      "id": "tagged-self-delimiting-wire-format",
+      "name": "Tagged self-delimiting wire format",
+      "category": "serialization-model",
+      "claim_type": "fact",
+      "description": "Protocol Buffers encodes messages as field tags and values. The tag combines a field number with a wire type, and the wire type determines how the decoder consumes the value. The fixed source implements skipping for varints, fixed-width values, length-delimited values, groups, and invalid field numbers.",
+      "benefits": ["Decoders can consume fields without knowing every field definition", "Common scalar encodings remain compact", "Embedded values have explicit boundaries"],
+      "costs": ["Field numbers and wire types become compatibility-critical", "The wire format does not carry field names or declared types", "Recursive and length-delimited parsing needs resource controls"],
+      "evidence_ids": ["protobuf-encoding", "protobuf-source-wire-format"]
+    },
+    {
+      "id": "unknown-field-preservation",
+      "name": "Unknown-field skipping and preservation",
+      "category": "compatibility-model",
+      "claim_type": "fact",
+      "description": "The wire-format implementation can skip fields it does not interpret and copy skipped field bytes to an unknown-field output. The official guide describes unknown fields as newer fields encountered by older binaries and documents their retention in binary parsing and serialization.",
+      "benefits": ["Older readers can survive additive fields", "Binary relays can preserve forward data", "Wire compatibility is separated from generated API knowledge"],
+      "costs": ["Unknown data can be lost across JSON, text, or field-by-field transformations", "Applications must still coordinate semantic meaning", "Opaque bytes add memory and serialization work"],
+      "evidence_ids": ["protobuf-language-guide", "protobuf-source-wire-format"]
+    },
+    {
+      "id": "descriptor-driven-code-generation",
+      "name": "Descriptor-driven generated code",
+      "category": "toolchain-model",
+      "claim_type": "fact",
+      "description": "The compiler plugin builds descriptors for requested proto files, checks that requested files have descriptors, creates a response context, and exposes generated output files through the plugin response. Official documentation describes protoc as generating language-specific message and serialization APIs.",
+      "benefits": ["One schema contract can serve supported languages", "Repetitive serialization and API glue is generated", "Descriptors provide a compiler-plugin boundary"],
+      "costs": ["Generated APIs vary by language and runtime", "Schema changes require compiler and artifact coordination", "Generated output increases build coupling"],
+      "evidence_ids": ["protobuf-language-guide", "protobuf-source-plugin"]
+    },
+    {
+      "id": "numbered-schema-evolution",
+      "name": "Numbered schema evolution contract",
+      "category": "schema-model",
+      "claim_type": "fact",
+      "description": "Protocol Buffers treats field numbers as stable wire identifiers. The official guide documents additive fields and removal as binary wire-safe when numbers are not reused, while changing existing numbers is wire-unsafe and deleted numbers should be reserved.",
+      "benefits": ["Supports incremental binary protocol rollout", "Compatibility constraints are reviewable at the schema boundary", "Old and new generated code can exchange a shared binary format"],
+      "costs": ["Schema history must retain reserved identifiers", "Wire-compatible changes can still break application code", "JSON and text mappings have different compatibility rules"],
+      "evidence_ids": ["protobuf-language-guide", "protobuf-encoding"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Tagged message stream with partial schema interpretation",
+      "question": "How can a reader decode known fields while safely advancing over fields outside its schema?",
+      "assumptions": ["Each tag identifies a valid field number and wire type", "Wire types provide enough information to consume a record without its source-level name", "Unknown retention is modeled as an opaque side channel"],
+      "claim_type": "inference",
+      "evidence_ids": ["protobuf-encoding", "protobuf-source-wire-format"]
+    },
+    {
+      "model": "Schema evolution as a constrained refinement relation",
+      "question": "Which schema edits preserve binary parsing behavior across old and new readers?",
+      "assumptions": ["Field numbers remain stable and deleted identifiers are not reused", "The question is limited to documented binary wire behavior", "Application validation and generated-language exhaustiveness are separate"],
+      "claim_type": "inference",
+      "evidence_ids": ["protobuf-language-guide"]
+    },
+    {
+      "model": "Descriptor-to-artifact compilation graph",
+      "question": "How does a proto schema become language-specific generated artifacts through compiler plugins?",
+      "assumptions": ["Parsed descriptors are generator input", "A plugin response identifies output files and contents", "Language-specific generator details are abstracted"],
+      "claim_type": "inference",
+      "evidence_ids": ["protobuf-source-plugin", "protobuf-language-guide"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "tagged-self-delimiting-wire-format", "benefits": ["Compact common-field representation", "Unknown values can be skipped by type"], "costs": ["Schema identifiers are long-lived commitments", "Parsing is stateful for recursive values"]},
+    {"feature_id": "unknown-field-preservation", "benefits": ["Improves forward compatibility of binary relays"], "costs": ["Opaque data handling is format-boundary sensitive"]},
+    {"feature_id": "descriptor-driven-code-generation", "benefits": ["Reduces handwritten serialization glue"], "costs": ["Builds depend on plugin and generated-artifact freshness"]},
+    {"feature_id": "numbered-schema-evolution", "benefits": ["Enables incremental binary rollout"], "costs": ["Identifier reservation is permanent maintenance work"]}
+  ],
+  "evidence": [
+    {"id": "protobuf-repository-commit", "kind": "source-code", "title": "Protocol Buffers source at a140e9453a89", "uri": "https://github.com/protocolbuffers/protobuf/commit/a140e9453a894ce44e08c4c5a40b588d1ba4bcb0", "accessed": "2026-10-23", "notes": "Fixed source revision resolved from the repository manifest."},
+    {"id": "protobuf-source-wire-format", "kind": "source-code", "title": "Protocol Buffers wire-format implementation", "uri": "https://github.com/protocolbuffers/protobuf/blob/a140e9453a894ce44e08c4c5a40b588d1ba4bcb0/src/google/protobuf/wire_format_lite.cc", "accessed": "2026-10-23", "notes": "Fixed revision lines 116-218 implement field skipping and copying; lines 221-286 process messages and unknown fields."},
+    {"id": "protobuf-source-plugin", "kind": "source-code", "title": "Protocol Buffers compiler plugin implementation", "uri": "https://github.com/protocolbuffers/protobuf/blob/a140e9453a894ce44e08c4c5a40b588d1ba4bcb0/src/google/protobuf/compiler/plugin.cc", "accessed": "2026-10-23", "notes": "Fixed revision lines 47-97 expose generated response files; lines 99-140 build descriptors and validate requested files."},
+    {"id": "protobuf-encoding", "kind": "official-doc", "title": "Protocol Buffers Encoding", "uri": "https://protobuf.dev/programming-guides/encoding/", "accessed": "2026-10-23", "notes": "Documents tags, wire types, unknown fields, merge behavior, and non-canonical serialization order."},
+    {"id": "protobuf-language-guide", "kind": "official-doc", "title": "Protocol Buffers Language Guide (proto3)", "uri": "https://protobuf.dev/programming-guides/proto3/", "accessed": "2026-10-23", "notes": "Documents generated code, field-number stability, reserved identifiers, wire-safe changes, and unknown fields."}
+  ],
+  "related_systems": ["grpc"]
+}
