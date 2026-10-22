@@ -1,0 +1,240 @@
+{
+  "id": "esbuild",
+  "name": "esbuild",
+  "version_context": "commit f6058f8364fe7ab91ca57a83e02577ed74c9cae4",
+  "summary": "A fast JavaScript and CSS build system that parses source files into typed representations, resolves an import graph, and links reachable modules into bundled or transformed outputs.",
+  "scope": [
+    "JavaScript and CSS parsing",
+    "module graph resolution",
+    "parallel bundle scanning",
+    "linking and output transformation"
+  ],
+  "features": [
+    {
+      "id": "typed-source-ast-representation",
+      "name": "Typed source AST representation",
+      "category": "parse-model",
+      "claim_type": "fact",
+      "description": "The fixed source exposes JavaScript AST and import-record structures, and its parser returns an AST for a source file. The representation carries syntax, symbols, imports, exports, and source metadata into later build stages.",
+      "benefits": [
+        "Separates parsing from resolution and output generation",
+        "Carries source-level structure into optimization and linking"
+      ],
+      "costs": [
+        "AST and import metadata consume memory for large graphs",
+        "Language-specific syntax and lowering rules increase parser complexity"
+      ],
+      "evidence_ids": [
+        "esbuild-source-js-ast",
+        "esbuild-source-parser",
+        "esbuild-repository-commit"
+      ]
+    },
+    {
+      "id": "parallel-module-graph-scan",
+      "name": "Parallel module graph scanning",
+      "category": "build-graph",
+      "claim_type": "fact",
+      "description": "The fixed bundler source implements ScanBundle as a graph-scanning phase, adds entry points, parses discovered files, and uses concurrent work while resolving reachable imports. The graph records input files, entry points, and import relationships before linking.",
+      "benefits": [
+        "Makes independent file parsing and resolution work concurrent",
+        "Provides a reusable reachable-module graph for output decisions"
+      ],
+      "costs": [
+        "Concurrency requires synchronization and deterministic result handling",
+        "Graph construction scales memory with reachable inputs and import records"
+      ],
+      "evidence_ids": [
+        "esbuild-source-bundler",
+        "esbuild-source-graph",
+        "esbuild-repository-commit"
+      ]
+    },
+    {
+      "id": "linker-output-boundary",
+      "name": "Linker and output boundary",
+      "category": "output-model",
+      "claim_type": "fact",
+      "description": "After scanning, the fixed bundler invokes a linker over reachable files and entry points. The linker is the boundary where module relationships, code splitting, and output serialization are turned into generated files, while the API exposes bundling and transformation as distinct operations.",
+      "benefits": [
+        "Keeps graph discovery separate from output-specific serialization",
+        "Supports multiple entry points and output grouping"
+      ],
+      "costs": [
+        "Output format and code-splitting choices constrain graph transformations",
+        "Generated output must preserve module semantics across target environments"
+      ],
+      "evidence_ids": [
+        "esbuild-source-bundler",
+        "esbuild-source-linker",
+        "esbuild-api-doc",
+        "esbuild-repository-commit"
+      ]
+    },
+    {
+      "id": "incremental-rebuild-state",
+      "name": "Incremental rebuild state",
+      "category": "incremental-computation",
+      "claim_type": "fact",
+      "description": "The official API documents a context API for retaining build state across rebuilds and watch operations. This gives repeated builds a persistent context rather than requiring every request to recreate all build configuration and graph state.",
+      "benefits": [
+        "Supports watch and repeated rebuild workflows",
+        "Allows retained build state to amortize setup work"
+      ],
+      "costs": [
+        "Retained state requires explicit disposal and lifecycle ownership",
+        "Invalidation rules must keep changed inputs consistent with cached state"
+      ],
+      "evidence_ids": [
+        "esbuild-api-doc",
+        "esbuild-repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed module dependency graph",
+      "question": "How do parsed source modules and import records define the reachable graph from one or more entry points?",
+      "assumptions": [
+        "Modules are vertices and resolved imports are directed edges",
+        "Entry points identify graph roots",
+        "Parser and resolver implementation details are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "esbuild-source-js-ast",
+        "esbuild-source-graph",
+        "esbuild-source-bundler"
+      ]
+    },
+    {
+      "model": "Build pipeline composition",
+      "question": "Which transformations map source text through parsing, graph scanning, linking, and generated output?",
+      "assumptions": [
+        "Each phase consumes a typed intermediate representation",
+        "The scan phase establishes reachable inputs before linking",
+        "Output serialization and target lowering are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "esbuild-source-parser",
+        "esbuild-source-bundler",
+        "esbuild-source-linker",
+        "esbuild-api-doc"
+      ]
+    },
+    {
+      "model": "Incremental invalidation relation",
+      "question": "What retained build state can be reused when an input or build request changes?",
+      "assumptions": [
+        "A context represents retained state across rebuild requests",
+        "Changed inputs induce a bounded invalidation relation",
+        "The public API does not by itself prove the exact invalidation algorithm"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "esbuild-api-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "typed-source-ast-representation",
+      "benefits": [
+        "Structured parsing enables later graph and output phases"
+      ],
+      "costs": [
+        "Intermediate representations add memory and language-specific complexity"
+      ]
+    },
+    {
+      "feature_id": "parallel-module-graph-scan",
+      "benefits": [
+        "Independent graph work can proceed concurrently"
+      ],
+      "costs": [
+        "Synchronization and graph memory become build-system concerns"
+      ]
+    },
+    {
+      "feature_id": "linker-output-boundary",
+      "benefits": [
+        "One graph can feed target-specific output strategies"
+      ],
+      "costs": [
+        "Linking must preserve semantics while applying output constraints"
+      ]
+    },
+    {
+      "feature_id": "incremental-rebuild-state",
+      "benefits": [
+        "Repeated builds can reuse retained context"
+      ],
+      "costs": [
+        "Lifecycle and invalidation correctness become caller-visible obligations"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "esbuild-repository-commit",
+      "kind": "source-code",
+      "title": "esbuild source at f6058f8364fe",
+      "uri": "https://github.com/evanw/esbuild/commit/f6058f8364fe7ab91ca57a83e02577ed74c9cae4",
+      "accessed": "2026-10-23",
+      "notes": "Fixed official repository revision; local shallow checkout resolved the same commit."
+    },
+    {
+      "id": "esbuild-source-js-ast",
+      "kind": "source-code",
+      "title": "esbuild JavaScript AST definitions",
+      "uri": "https://github.com/evanw/esbuild/blob/f6058f8364fe7ab91ca57a83e02577ed74c9cae4/internal/js_ast/js_ast.go",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: internal/js_ast/js_ast.go defines AST, import-record, symbol, and module representation types."
+    },
+    {
+      "id": "esbuild-source-parser",
+      "kind": "source-code",
+      "title": "esbuild JavaScript parser",
+      "uri": "https://github.com/evanw/esbuild/blob/f6058f8364fe7ab91ca57a83e02577ed74c9cae4/internal/js_parser/js_parser.go",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: internal/js_parser/js_parser.go exposes Parse returning a typed AST."
+    },
+    {
+      "id": "esbuild-source-bundler",
+      "kind": "source-code",
+      "title": "esbuild bundler scan and link phases",
+      "uri": "https://github.com/evanw/esbuild/blob/f6058f8364fe7ab91ca57a83e02577ed74c9cae4/internal/bundler/bundler.go",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: internal/bundler/bundler.go defines ScanBundle, entry-point scanning, concurrent parsing, and linker invocation."
+    },
+    {
+      "id": "esbuild-source-graph",
+      "kind": "source-code",
+      "title": "esbuild linker graph",
+      "uri": "https://github.com/evanw/esbuild/blob/f6058f8364fe7ab91ca57a83e02577ed74c9cae4/internal/graph/graph.go",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: internal/graph/graph.go defines LinkerGraph, entry points, reachable files, and import-record graph state."
+    },
+    {
+      "id": "esbuild-source-linker",
+      "kind": "source-code",
+      "title": "esbuild linker implementation",
+      "uri": "https://github.com/evanw/esbuild/blob/f6058f8364fe7ab91ca57a83e02577ed74c9cae4/internal/linker/linker.go",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: internal/linker/linker.go implements graph-to-output linking."
+    },
+    {
+      "id": "esbuild-api-doc",
+      "kind": "official-doc",
+      "title": "esbuild API documentation",
+      "uri": "https://esbuild.github.io/api/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for transform, build, context, rebuild, watch, and incremental workflows."
+    }
+  ],
+  "related_systems": [
+    "vite",
+    "rollup"
+  ]
+}

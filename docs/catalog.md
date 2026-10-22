@@ -274,7 +274,7 @@ identifiers, not claims that the projects share the same architecture.
 | `svelte` | Svelte | `reviewed` | Compare component-file compilation, generated DOM updates, and reactive dependency analysis using fixed-commit evidence |
 | `d3` | D3.js | `P1` | Data joins, declarative visualization, and DOM composition |
 | `ffmpeg` | FFmpeg | `P0` | Codec, filter, demuxer, muxer, and stream pipelines |
-| `gstreamer` | GStreamer | `P1` | Typed media elements, pads, and pipeline negotiation |
+| `gstreamer` | GStreamer | `reviewed` | Compare typed media elements, pad links, caps negotiation, bins, and pipeline state using fixed-commit evidence |
 | `imagemagick` | ImageMagick | `reviewed` | Compare image state, ordered operators, coder dispatch, and format conversion pipelines using fixed-commit evidence |
 
 ### Observability, platform, and infrastructure tools
@@ -393,9 +393,9 @@ identifiers, not claims that the projects share the same architecture.
 | `vite` | Vite | `reviewed` | Compare environment module graphs, on-demand transforms, HMR, dependency pre-bundling, and production output using fixed-commit evidence |
 | `webpack` | webpack | `reviewed` | Compare compiler phases, module/chunk graphs, loader and plugin hooks, and cache/emission boundaries using fixed-commit evidence |
 | `rollup` | Rollup | `reviewed` | Compare plugin-driven module graphs, tree-shaking, chunk generation, and multi-host package boundaries using fixed-commit evidence |
-| `esbuild` | esbuild | `P1` | Parallel parsing, incremental graph build, bundling, and transform pipeline |
-| `playwright` | Playwright | `P1` | Browser contexts, page isolation, protocol control, fixtures, and tracing |
-| `storybook` | Storybook | `P2` | Component isolation, stories, addons, controls, and visual test workflows |
+| `esbuild` | esbuild | `reviewed` | Compare parallel parsing, incremental module graphs, linking, bundling, and transform boundaries using fixed-commit evidence |
+| `playwright` | Playwright | `reviewed` | Compare browser/context isolation, page protocol control, fixture scopes, and tracing using fixed-commit evidence |
+| `storybook` | Storybook | `reviewed` | Compare story indexing, manager/preview isolation, addon channels, and component test workflows using fixed-commit evidence |
 
 ## Modeling order
 

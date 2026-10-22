@@ -1,0 +1,265 @@
+{
+  "id": "storybook",
+  "name": "Storybook",
+  "version_context": "commit 40d47bf739fc8d97fdddaa2d22d8dc79fb2f0bd6",
+  "summary": "A component workshop that indexes component stories, renders them in an isolated preview, and extends the manager/preview boundary with addons, controls, documentation, and test integrations.",
+  "scope": [
+    "component story format",
+    "story indexing and preview rendering",
+    "manager and preview boundary",
+    "addons and component testing"
+  ],
+  "features": [
+    {
+      "id": "story-definition-contract",
+      "name": "Story definition contract",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "The fixed source contains CSF and story-shape tooling for discovering metadata and named story exports. Official documentation defines stories as component examples with args, parameters, decorators, and play functions that describe states and interactions.",
+      "benefits": [
+        "Turns component states into named, reviewable artifacts",
+        "Provides metadata for rendering, documentation, and testing"
+      ],
+      "costs": [
+        "Story metadata and component contracts must remain compatible",
+        "A large story corpus increases indexing and maintenance work"
+      ],
+      "evidence_ids": [
+        "storybook-source-csf",
+        "storybook-source-indexer",
+        "storybook-stories-doc",
+        "storybook-repository-commit"
+      ]
+    },
+    {
+      "id": "manager-preview-separation",
+      "name": "Manager and preview separation",
+      "category": "runtime-boundary",
+      "claim_type": "fact",
+      "description": "The fixed repository separates core-server, preview-api, manager-api, and rendering modules. The official architecture documentation describes the manager UI and preview iframe as distinct surfaces connected through Storybook's channel and configuration mechanisms.",
+      "benefits": [
+        "Keeps authoring and navigation UI separate from component rendering",
+        "Allows preview rendering to run with framework-specific runtime configuration"
+      ],
+      "costs": [
+        "Cross-surface communication adds serialization and lifecycle contracts",
+        "Debugging requires reasoning about manager and preview state separately"
+      ],
+      "evidence_ids": [
+        "storybook-source-core-server",
+        "storybook-source-preview",
+        "storybook-architecture-doc",
+        "storybook-repository-commit"
+      ]
+    },
+    {
+      "id": "addon-channel-extension",
+      "name": "Addon channel extension",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "The fixed type definitions expose addon APIs and manager/preview module boundaries, while the official addon documentation defines addons as extensions that can add panels, decorators, toolbars, and behavior through Storybook APIs and channels.",
+      "benefits": [
+        "Adds capabilities without changing every renderer or story definition",
+        "Supports both manager UI and preview-side behavior"
+      ],
+      "costs": [
+        "Addon compatibility depends on public APIs and event contracts",
+        "Multiple addons can interact through shared manager and preview state"
+      ],
+      "evidence_ids": [
+        "storybook-source-addons",
+        "storybook-addons-doc",
+        "storybook-repository-commit"
+      ]
+    },
+    {
+      "id": "indexed-render-test-workflow",
+      "name": "Indexed render and test workflow",
+      "category": "verification-model",
+      "claim_type": "fact",
+      "description": "Storybook's fixed core-server source includes story-index generation and the repository contains preview rendering and test integrations. Official documentation presents stories as inputs for interaction, visual, accessibility, and component tests through the Storybook test ecosystem.",
+      "benefits": [
+        "Reuses one component-state artifact across development and verification",
+        "Makes rendered story identity available to tools and automation"
+      ],
+      "costs": [
+        "Test results depend on environment, renderer, and story setup fidelity",
+        "Indexing and rendering add build and runtime steps to component workflows"
+      ],
+      "evidence_ids": [
+        "storybook-source-indexer",
+        "storybook-testing-doc",
+        "storybook-repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Story-state labeled graph",
+      "question": "How do component metadata, named stories, args, and decorators form a graph of renderable component states?",
+      "assumptions": [
+        "A story is a labeled state-producing node",
+        "Metadata and decorators provide configuration edges",
+        "Framework rendering semantics are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "storybook-source-csf",
+        "storybook-stories-doc"
+      ]
+    },
+    {
+      "model": "Manager-preview channel relation",
+      "question": "Which state and commands cross the manager/preview boundary while a story is selected and rendered?",
+      "assumptions": [
+        "Manager and preview are distinct runtime surfaces",
+        "Channel messages represent coordination edges",
+        "Transport details and UI scheduling are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "storybook-source-core-server",
+        "storybook-source-preview",
+        "storybook-architecture-doc"
+      ]
+    },
+    {
+      "model": "Addon extension graph",
+      "question": "Where can addon nodes attach to the manager, preview, story, and test surfaces?",
+      "assumptions": [
+        "Addon APIs define extension points rather than arbitrary internal access",
+        "Edges represent documented integration contracts",
+        "The graph does not assert historical influence among addons"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "storybook-source-addons",
+        "storybook-addons-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "story-definition-contract",
+      "benefits": [
+        "Component states become reusable named artifacts"
+      ],
+      "costs": [
+        "Story metadata and component APIs must stay aligned"
+      ]
+    },
+    {
+      "feature_id": "manager-preview-separation",
+      "benefits": [
+        "UI and rendering concerns can evolve independently"
+      ],
+      "costs": [
+        "Cross-runtime messages add coordination complexity"
+      ]
+    },
+    {
+      "feature_id": "addon-channel-extension",
+      "benefits": [
+        "Optional capabilities can attach through public extension points"
+      ],
+      "costs": [
+        "Addon ordering and compatibility remain integration work"
+      ]
+    },
+    {
+      "feature_id": "indexed-render-test-workflow",
+      "benefits": [
+        "The same indexed story can support development and verification"
+      ],
+      "costs": [
+        "Indexing and environment fidelity affect test cost and confidence"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "storybook-repository-commit",
+      "kind": "source-code",
+      "title": "Storybook source at 40d47bf739fc",
+      "uri": "https://github.com/storybookjs/storybook/commit/40d47bf739fc8d97fdddaa2d22d8dc79fb2f0bd6",
+      "accessed": "2026-10-23",
+      "notes": "Fixed official repository revision resolved through the GitHub API tree; source paths are pinned to this commit."
+    },
+    {
+      "id": "storybook-source-csf",
+      "kind": "source-code",
+      "title": "Storybook CSF and story tooling",
+      "uri": "https://github.com/storybookjs/storybook/tree/40d47bf739fc8d97fdddaa2d22d8dc79fb2f0bd6/code/core/src/csf",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source tree for CSF story definitions, normalization, and story preparation."
+    },
+    {
+      "id": "storybook-source-indexer",
+      "kind": "source-code",
+      "title": "Storybook story index generator",
+      "uri": "https://github.com/storybookjs/storybook/blob/40d47bf739fc8d97fdddaa2d22d8dc79fb2f0bd6/code/core/src/core-server/utils/StoryIndexGenerator.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for indexing story files into a story index."
+    },
+    {
+      "id": "storybook-source-core-server",
+      "kind": "source-code",
+      "title": "Storybook core server",
+      "uri": "https://github.com/storybookjs/storybook/tree/40d47bf739fc8d97fdddaa2d22d8dc79fb2f0bd6/code/core/src/core-server",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for core-server loading, development server, and manager/preview coordination."
+    },
+    {
+      "id": "storybook-source-preview",
+      "kind": "source-code",
+      "title": "Storybook preview API",
+      "uri": "https://github.com/storybookjs/storybook/tree/40d47bf739fc8d97fdddaa2d22d8dc79fb2f0bd6/code/core/src/preview-api",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for preview-side story composition, rendering, and addon APIs."
+    },
+    {
+      "id": "storybook-source-addons",
+      "kind": "source-code",
+      "title": "Storybook addon type modules",
+      "uri": "https://github.com/storybookjs/storybook/blob/40d47bf739fc8d97fdddaa2d22d8dc79fb2f0bd6/code/core/src/types/modules/addons.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for typed addon module contracts."
+    },
+    {
+      "id": "storybook-stories-doc",
+      "kind": "official-doc",
+      "title": "Storybook writing stories documentation",
+      "uri": "https://storybook.js.org/docs/writing-stories",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for component stories, args, decorators, and story states."
+    },
+    {
+      "id": "storybook-architecture-doc",
+      "kind": "official-doc",
+      "title": "Storybook architecture overview",
+      "uri": "https://storybook.js.org/docs/get-started/why-storybook",
+      "accessed": "2026-10-23",
+      "notes": "Official overview of isolated component development and the Storybook runtime model."
+    },
+    {
+      "id": "storybook-addons-doc",
+      "kind": "official-doc",
+      "title": "Storybook writing addons documentation",
+      "uri": "https://storybook.js.org/docs/addons/writing-addons",
+      "accessed": "2026-10-23",
+      "notes": "Official addon extension and manager/preview integration documentation."
+    },
+    {
+      "id": "storybook-testing-doc",
+      "kind": "official-doc",
+      "title": "Storybook testing documentation",
+      "uri": "https://storybook.js.org/docs/writing-tests",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for interaction, visual, accessibility, and component test workflows."
+    }
+  ],
+  "related_systems": [
+    "react",
+    "vite"
+  ]
+}

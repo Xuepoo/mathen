@@ -1,0 +1,229 @@
+{
+  "id": "playwright",
+  "name": "Playwright",
+  "version_context": "commit 20a2087ea43412b90c172c88faef80786ee18b8b",
+  "summary": "A browser automation and testing system that separates browser processes, isolated browser contexts, pages, protocol dispatch, and test-runner fixtures while exposing tracing and network control APIs.",
+  "scope": [
+    "browser process control",
+    "isolated browser contexts",
+    "page and protocol automation",
+    "fixtures and tracing"
+  ],
+  "features": [
+    {
+      "id": "browser-context-isolation",
+      "name": "Browser context isolation",
+      "category": "isolation-model",
+      "claim_type": "fact",
+      "description": "The fixed server source models BrowserContext as a browser-owned object with its own pages, request context, options, and tracing state. Official documentation describes contexts as isolated, incognito-like environments that can be created independently within a browser.",
+      "benefits": [
+        "Separates cookies, storage, pages, and permissions between test sessions",
+        "Allows multiple isolated sessions to share a browser process"
+      ],
+      "costs": [
+        "Context creation and browser resources add lifecycle overhead",
+        "Isolation does not remove host and browser process resource limits"
+      ],
+      "evidence_ids": [
+        "playwright-source-context",
+        "playwright-browser-contexts-doc",
+        "playwright-repository-commit"
+      ]
+    },
+    {
+      "id": "page-protocol-object-model",
+      "name": "Page and protocol object model",
+      "category": "automation-model",
+      "claim_type": "fact",
+      "description": "The fixed source defines Page as a server-side SDK object and routes browser-context page creation through the page object lifecycle. Playwright's protocol and dispatcher layers expose browser, context, page, network, and tracing operations across language clients.",
+      "benefits": [
+        "Gives tests a stable page-level automation boundary",
+        "Centralizes browser-specific protocol handling behind common objects"
+      ],
+      "costs": [
+        "Protocol capabilities and browser differences remain observable",
+        "Asynchronous page lifecycle requires explicit waiting and cleanup"
+      ],
+      "evidence_ids": [
+        "playwright-source-page",
+        "playwright-source-context",
+        "playwright-repository-commit"
+      ]
+    },
+    {
+      "id": "fixture-scoped-test-composition",
+      "name": "Fixture-scoped test composition",
+      "category": "test-execution-model",
+      "claim_type": "fact",
+      "description": "The official test-runner documentation defines fixtures as reusable setup and teardown resources with scopes and dependencies. Test projects compose these fixtures with browser and context creation to make isolation and shared setup explicit at the runner boundary.",
+      "benefits": [
+        "Makes setup, teardown, and resource scope reusable",
+        "Supports project-specific browser configuration and parallel test organization"
+      ],
+      "costs": [
+        "Fixture dependency graphs can obscure setup order and ownership",
+        "Incorrect scope choices can leak state or increase startup cost"
+      ],
+      "evidence_ids": [
+        "playwright-fixtures-doc",
+        "playwright-repository-commit"
+      ]
+    },
+    {
+      "id": "context-tracing-boundary",
+      "name": "Context tracing boundary",
+      "category": "observability-model",
+      "claim_type": "fact",
+      "description": "BrowserContext owns a Tracing object in the fixed source, and the official tracing documentation exposes start, stop, and trace-viewer workflows for recording browser actions, snapshots, screenshots, and network information.",
+      "benefits": [
+        "Associates diagnostic artifacts with an isolated test context",
+        "Provides post-failure inspection beyond assertion output"
+      ],
+      "costs": [
+        "Tracing consumes storage and may add runtime overhead",
+        "Trace capture must be coordinated with context lifecycle and sensitive data policy"
+      ],
+      "evidence_ids": [
+        "playwright-source-context",
+        "playwright-tracing-doc",
+        "playwright-repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Nested browser isolation graph",
+      "question": "How do browser processes, contexts, pages, and request resources compose while preserving session boundaries?",
+      "assumptions": [
+        "A browser contains one or more contexts",
+        "A context owns pages and context-scoped resources",
+        "Browser engine implementation details are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "playwright-source-context",
+        "playwright-source-page",
+        "playwright-browser-contexts-doc"
+      ]
+    },
+    {
+      "model": "Fixture dependency transition system",
+      "question": "Which setup and teardown transitions are induced by fixture scopes and dependencies around a test?",
+      "assumptions": [
+        "Fixtures are resources with setup and teardown phases",
+        "Dependencies induce an ordering relation",
+        "Runner scheduling and worker implementation are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "playwright-fixtures-doc"
+      ]
+    },
+    {
+      "model": "Trace event projection",
+      "question": "Which page, context, and network events can be projected into a replayable diagnostic artifact?",
+      "assumptions": [
+        "A trace is a projection of context-scoped events",
+        "Trace capture has explicit start and stop boundaries",
+        "The model does not claim complete replay equivalence"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "playwright-source-context",
+        "playwright-tracing-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "browser-context-isolation",
+      "benefits": [
+        "Independent sessions can share a browser executable"
+      ],
+      "costs": [
+        "Isolation and context lifecycle consume resources"
+      ]
+    },
+    {
+      "feature_id": "page-protocol-object-model",
+      "benefits": [
+        "Common page objects hide protocol transport details"
+      ],
+      "costs": [
+        "Async lifecycle and browser-specific behavior remain test concerns"
+      ]
+    },
+    {
+      "feature_id": "fixture-scoped-test-composition",
+      "benefits": [
+        "Reusable setup makes test resource ownership explicit"
+      ],
+      "costs": [
+        "Scope errors can cause leaks or unnecessary startup work"
+      ]
+    },
+    {
+      "feature_id": "context-tracing-boundary",
+      "benefits": [
+        "Context-scoped traces improve failure diagnosis"
+      ],
+      "costs": [
+        "Capture overhead and artifact handling require policy"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "playwright-repository-commit",
+      "kind": "source-code",
+      "title": "Playwright source at 20a2087ea434",
+      "uri": "https://github.com/microsoft/playwright/commit/20a2087ea43412b90c172c88faef80786ee18b8b",
+      "accessed": "2026-10-23",
+      "notes": "Fixed official repository revision; local shallow checkout resolved the same commit."
+    },
+    {
+      "id": "playwright-source-context",
+      "kind": "source-code",
+      "title": "Playwright BrowserContext implementation",
+      "uri": "https://github.com/microsoft/playwright/blob/20a2087ea43412b90c172c88faef80786ee18b8b/packages/playwright-core/src/server/browserContext.ts",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: BrowserContext owns pages, request context, options, lifecycle, and tracing."
+    },
+    {
+      "id": "playwright-source-page",
+      "kind": "source-code",
+      "title": "Playwright Page implementation",
+      "uri": "https://github.com/microsoft/playwright/blob/20a2087ea43412b90c172c88faef80786ee18b8b/packages/playwright-core/src/server/page.ts",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: Page is a server SDK object used by the protocol dispatcher and browser-specific implementations."
+    },
+    {
+      "id": "playwright-browser-contexts-doc",
+      "kind": "official-doc",
+      "title": "Playwright browser contexts",
+      "uri": "https://playwright.dev/docs/browser-contexts",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for isolated browser contexts and context lifecycle."
+    },
+    {
+      "id": "playwright-fixtures-doc",
+      "kind": "official-doc",
+      "title": "Playwright test fixtures",
+      "uri": "https://playwright.dev/docs/test-fixtures",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for reusable fixture setup, teardown, scope, and dependencies."
+    },
+    {
+      "id": "playwright-tracing-doc",
+      "kind": "official-doc",
+      "title": "Playwright trace viewer",
+      "uri": "https://playwright.dev/docs/trace-viewer",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for recording and inspecting traces."
+    }
+  ],
+  "related_systems": [
+    "v8",
+    "node"
+  ]
+}

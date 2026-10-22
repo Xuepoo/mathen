@@ -1,0 +1,259 @@
+{
+  "id": "gstreamer",
+  "name": "GStreamer",
+  "version_context": "commit 91b7b62c43c91449c63773ae947827eda5429d6e",
+  "summary": "A multimedia framework that composes typed elements through pads into bins and pipelines, negotiates media capabilities across links, and drives processing through explicit element state transitions.",
+  "scope": [
+    "elements and pad topology",
+    "caps negotiation",
+    "bins and pipelines",
+    "stateful media execution"
+  ],
+  "features": [
+    {
+      "id": "element-pad-media-topology",
+      "name": "Element and pad media topology",
+      "category": "media-graph",
+      "claim_type": "fact",
+      "description": "The fixed source models GstElement as the processing unit and GstPad as its directional connection point. Official documentation describes pads as the ports through which elements expose data flow and are linked into a pipeline topology.",
+      "benefits": [
+        "Makes media flow and connection direction explicit",
+        "Allows elements to expose compatible source and sink interfaces"
+      ],
+      "costs": [
+        "Pad availability and link direction constrain graph construction",
+        "Dynamic pads require application handling of topology changes"
+      ],
+      "evidence_ids": [
+        "gstreamer-source-element",
+        "gstreamer-source-pad",
+        "gstreamer-pads-doc",
+        "gstreamer-repository-commit"
+      ]
+    },
+    {
+      "id": "caps-negotiation-boundary",
+      "name": "Caps negotiation boundary",
+      "category": "type-negotiation",
+      "claim_type": "fact",
+      "description": "GStreamer pads carry negotiated capabilities describing media types and formats. The official application-development documentation makes caps negotiation part of linking and data-flow setup, allowing adjacent elements to agree on a compatible representation.",
+      "benefits": [
+        "Makes media compatibility a checked graph boundary",
+        "Supports pipelines that adapt formats between specialized elements"
+      ],
+      "costs": [
+        "Negotiation can reject an otherwise topologically valid link",
+        "Converters and fixated caps add setup and runtime complexity"
+      ],
+      "evidence_ids": [
+        "gstreamer-source-pad",
+        "gstreamer-caps-doc",
+        "gstreamer-repository-commit"
+      ]
+    },
+    {
+      "id": "bin-pipeline-composition",
+      "name": "Bin and pipeline composition",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "The fixed GstBin implementation contains child elements, intercepts child messages, and propagates state. GstPipeline extends the bin composition boundary with clock, bus, and top-level media execution behavior, as described by the official pipeline documentation.",
+      "benefits": [
+        "Groups elements into reusable and manageable subgraphs",
+        "Provides a top-level lifecycle and message boundary for an application"
+      ],
+      "costs": [
+        "Nested ownership and message propagation add lifecycle rules",
+        "Pipeline behavior depends on child state and scheduling readiness"
+      ],
+      "evidence_ids": [
+        "gstreamer-source-bin",
+        "gstreamer-source-pipeline",
+        "gstreamer-pipeline-doc",
+        "gstreamer-repository-commit"
+      ]
+    },
+    {
+      "id": "element-state-transition-model",
+      "name": "Element state transition model",
+      "category": "lifecycle-model",
+      "claim_type": "fact",
+      "description": "The fixed GstElement source exposes current and pending states, state-change transitions, and asynchronous state-change results. Official documentation defines the NULL, READY, PAUSED, and PLAYING states and the transition contract used by pipelines and elements.",
+      "benefits": [
+        "Makes resource activation and media execution phases explicit",
+        "Lets bins coordinate child state changes through a common lifecycle"
+      ],
+      "costs": [
+        "Async transitions require applications to observe pending and failure states",
+        "Element-specific state behavior can make pipeline startup ordering-sensitive"
+      ],
+      "evidence_ids": [
+        "gstreamer-source-element",
+        "gstreamer-states-doc",
+        "gstreamer-repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed media-flow graph",
+      "question": "Which element and pad graph topologies can carry compatible media from source to sink?",
+      "assumptions": [
+        "Elements are nodes and linked pads are directed edges",
+        "Edges carry media constrained by caps",
+        "Plugin algorithms and buffer scheduling are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "gstreamer-source-element",
+        "gstreamer-source-pad",
+        "gstreamer-caps-doc"
+      ]
+    },
+    {
+      "model": "Hierarchical pipeline composition",
+      "question": "How do bins and pipelines compose child elements while propagating messages, clocks, and lifecycle state?",
+      "assumptions": [
+        "A bin is a container node with child element nodes",
+        "A pipeline is a top-level bin with application-facing execution services",
+        "Message and clock internals are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "gstreamer-source-bin",
+        "gstreamer-source-pipeline",
+        "gstreamer-pipeline-doc"
+      ]
+    },
+    {
+      "model": "State-transition reachability",
+      "question": "Which element and pipeline states are reachable through coordinated state changes and asynchronous completion?",
+      "assumptions": [
+        "States form a transition system with pending transitions",
+        "Child state changes constrain parent progress",
+        "The model does not claim every plugin has identical transition behavior"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "gstreamer-source-element",
+        "gstreamer-source-bin",
+        "gstreamer-states-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "element-pad-media-topology",
+      "benefits": [
+        "Explicit pads make media flow composable"
+      ],
+      "costs": [
+        "Dynamic topology and link direction increase graph-management work"
+      ]
+    },
+    {
+      "feature_id": "caps-negotiation-boundary",
+      "benefits": [
+        "Format compatibility is negotiated at connections"
+      ],
+      "costs": [
+        "Negotiation failures and conversion elements complicate setup"
+      ]
+    },
+    {
+      "feature_id": "bin-pipeline-composition",
+      "benefits": [
+        "Subgraphs gain reusable ownership and lifecycle boundaries"
+      ],
+      "costs": [
+        "Nested message, clock, and state propagation add coordination"
+      ]
+    },
+    {
+      "feature_id": "element-state-transition-model",
+      "benefits": [
+        "Common states coordinate activation and playback"
+      ],
+      "costs": [
+        "Asynchronous and plugin-specific transitions complicate startup"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "gstreamer-repository-commit",
+      "kind": "source-code",
+      "title": "GStreamer source at 91b7b62c43c9",
+      "uri": "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/commit/91b7b62c43c91449c63773ae947827eda5429d6e",
+      "accessed": "2026-10-23",
+      "notes": "Fixed official repository revision; local source retrieval used the same commit for core GstElement, GstPad, GstBin, and GstPipeline files."
+    },
+    {
+      "id": "gstreamer-source-element",
+      "kind": "source-code",
+      "title": "GStreamer GstElement implementation",
+      "uri": "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/91b7b62c43c91449c63773ae947827eda5429d6e/subprojects/gstreamer/gst/gstelement.c",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: gstelement.c defines element linking documentation, state fields, and state-change operations."
+    },
+    {
+      "id": "gstreamer-source-pad",
+      "kind": "source-code",
+      "title": "GStreamer GstPad implementation",
+      "uri": "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/91b7b62c43c91449c63773ae947827eda5429d6e/subprojects/gstreamer/gst/gstpad.c",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: gstpad.c defines pad direction, linking, activation, probes, and data/event flow boundaries."
+    },
+    {
+      "id": "gstreamer-source-bin",
+      "kind": "source-code",
+      "title": "GStreamer GstBin implementation",
+      "uri": "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/91b7b62c43c91449c63773ae947827eda5429d6e/subprojects/gstreamer/gst/gstbin.c",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: gstbin.c defines child ownership, message interception, iteration, and state propagation."
+    },
+    {
+      "id": "gstreamer-source-pipeline",
+      "kind": "source-code",
+      "title": "GStreamer GstPipeline implementation",
+      "uri": "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/91b7b62c43c91449c63773ae947827eda5429d6e/subprojects/gstreamer/gst/gstpipeline.c",
+      "accessed": "2026-10-23",
+      "notes": "Local evidence: gstpipeline.c defines pipeline-specific clock, bus, and top-level bin behavior."
+    },
+    {
+      "id": "gstreamer-pads-doc",
+      "kind": "official-doc",
+      "title": "GStreamer pads and capabilities",
+      "uri": "https://gstreamer.freedesktop.org/documentation/application-development/basics/pads.html",
+      "accessed": "2026-10-23",
+      "notes": "Official application-development documentation for pads, linking, and caps."
+    },
+    {
+      "id": "gstreamer-caps-doc",
+      "kind": "official-doc",
+      "title": "GStreamer capabilities documentation",
+      "uri": "https://gstreamer.freedesktop.org/documentation/application-development/basics/caps.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for media capabilities and negotiation."
+    },
+    {
+      "id": "gstreamer-pipeline-doc",
+      "kind": "official-doc",
+      "title": "GStreamer pipeline basics",
+      "uri": "https://gstreamer.freedesktop.org/documentation/application-development/basics/pipeline-manipulation.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for constructing and manipulating pipelines."
+    },
+    {
+      "id": "gstreamer-states-doc",
+      "kind": "official-doc",
+      "title": "GStreamer states documentation",
+      "uri": "https://gstreamer.freedesktop.org/documentation/additional/design/states.html",
+      "accessed": "2026-10-23",
+      "notes": "Official design documentation for element states and asynchronous state changes."
+    }
+  ],
+  "related_systems": [
+    "ffmpeg",
+    "sdl"
+  ]
+}
