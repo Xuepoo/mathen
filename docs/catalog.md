@@ -106,13 +106,7 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | `go` | Go | language toolchain | `reviewed` | Compare goroutine/channel ordering, package interfaces, and toolchain integration using fixed-commit evidence |
 | `ruby` | Ruby | language runtime | `reviewed` | Compare dynamic object dispatch, VM frames, GC, and the C extension boundary using fixed-commit evidence |
 | `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
-<<<<<<< HEAD
-| `xv6-public` | xv6 | educational operating system | `P1` |
-=======
-| `freebsd` | FreeBSD | operating system | `P2` |
-| `systemd` | systemd | init system | `P1` |
 | `xv6-public` | xv6 | educational operating system | `reviewed` | Compare process scheduling, paging, descriptor I/O, and logged filesystems using fixed-commit evidence |
->>>>>>> 99ae486 (feat(data): promote operating system architecture cards)
 | `libuv` | libuv | asynchronous I/O library | `reviewed` | Compare event-loop, handle/request, cross-platform, and thread-pool boundaries using fixed-commit evidence |
 | `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
 | `openssl` | OpenSSL | cryptography library | `reviewed` |
@@ -136,21 +130,12 @@ identifiers, not claims that the projects share the same architecture.
 | --- | --- | --- | --- |
 | `unix` | Unix history and interfaces | `P0` | Process, file, pipe, and permission abstractions |
 | `linux` | Linux Kernel | `P0` | Kernel resource model, syscalls, scheduling, and modules |
-<<<<<<< HEAD
 | `freebsd` | FreeBSD | `reviewed` | Compare kernel subsystems, jails, networking, and GEOM storage using fixed-commit evidence |
-| `openbsd` | OpenBSD | `P2` | Security-oriented defaults and audited system design |
-| `plan9` | Plan 9 | `P1` | Uniform namespace, distributed resources, and 9P |
-| `minix` | MINIX 3 | `P2` | Microkernel services and fault isolation |
-| `systemd` | systemd | `reviewed` | Compare typed units, dependency transactions, service supervision, and activation using fixed-commit evidence |
-| `busybox` | BusyBox | `reviewed` | Compare multi-call dispatch, configurable applet sets, and shared userland support using fixed-commit evidence |
-=======
-| `freebsd` | FreeBSD | `P1` | Unix kernel, networking, jails, and ports |
 | `openbsd` | OpenBSD | `reviewed` | Compare process/thread boundaries, pledge/unveil restrictions, and stateful packet filtering using fixed-commit evidence |
 | `plan9` | Plan 9 | `reviewed` | Compare local namespace composition, 9P file services, and selective process resource sharing using fixed-commit evidence |
 | `minix` | MINIX 3 | `reviewed` | Compare microkernel IPC, user-mode service isolation, reincarnation recovery, and server-mediated resources using fixed-commit evidence |
-| `systemd` | systemd | `P1` | Service supervision, dependency graph, and lifecycle state |
-| `busybox` | BusyBox | `P2` | Multi-call binary and minimal userland composition |
->>>>>>> 99ae486 (feat(data): promote operating system architecture cards)
+| `systemd` | systemd | `reviewed` | Compare typed units, dependency transactions, service supervision, and activation using fixed-commit evidence |
+| `busybox` | BusyBox | `reviewed` | Compare multi-call dispatch, configurable applet sets, and shared userland support using fixed-commit evidence |
 | `coreutils` | GNU Coreutils | `P2` | Unix command algebra and composable process interfaces |
 | `musl` | musl libc | `reviewed` | Compare portable interfaces, static/dynamic linking, and thread-local runtime boundaries using fixed-commit evidence |
 | `glibc` | GNU C Library | `reviewed` | Compare ABI versioning, dynamic loading, and process/thread runtime boundaries using fixed-commit evidence |
@@ -295,6 +280,114 @@ identifiers, not claims that the projects share the same architecture.
 | `pulumi` | Pulumi | `P2` | General-purpose language plus declarative resource state |
 | `supabase` | Supabase | `P0` | Database-centered backend platform composition |
 | `openresty` | OpenResty | `P2` | NGINX event core plus programmable request processing |
+
+### Web applications and full-stack frameworks
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- | --- |
+| `react` | React | `P1` | Component trees, declarative rendering, hooks, and reconciliation |
+| `vue` | Vue | `P1` | Reactive state, component graphs, compiler/runtime boundaries, and rendering |
+| `svelte` | Svelte | `P1` | Compile-time component transformation and reactive updates |
+| `angular` | Angular | `P1` | Dependency injection, component lifecycle, templates, and reactive change detection |
+| `nextjs` | Next.js | `P1` | Server/client component boundaries, routing, data fetching, and deployment output |
+| `express` | Express | `P1` | Middleware composition, request lifecycle, routing, and adapter boundaries |
+| `fastapi` | FastAPI | `P1` | Typed request validation, dependency injection, async handlers, and OpenAPI generation |
+| `django` | Django | `P1` | Model/view/template boundaries, middleware, ORM, and application configuration |
+| `rails` | Ruby on Rails | `P2` | Convention-driven MVC, Active Record, routing, and background jobs |
+| `laravel` | Laravel | `P2` | Service container, middleware pipeline, ORM, queues, and application lifecycle |
+| `spring-boot` | Spring Boot | `P1` | Dependency injection, auto-configuration, web filters, and actuator boundaries |
+| `nestjs` | NestJS | `P2` | Module graph, decorators, dependency injection, and transport adapters |
+
+### Desktop and cross-platform application frameworks
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- | --- |
+| `electron` | Electron | `P1` | Main/renderer process isolation, IPC, preload capabilities, and packaging |
+| `tauri` | Tauri | `P1` | Native shell/webview boundary, command IPC, capabilities, and asset packaging |
+| `qt` | Qt | `P1` | Object ownership, event loop, signals/slots, widgets, and platform abstraction |
+| `gtk` | GTK | `P2` | Object system, event dispatch, widget tree, and platform backend boundaries |
+| `wxwidgets` | wxWidgets | `P2` | Native widget adapters, event routing, and cross-platform resource ownership |
+| `javafx` | JavaFX | `P2` | Scene graph, observable properties, event dispatch, and rendering pulse |
+| `flutter` | Flutter | `P1` | Widget tree, reactive rebuilds, engine/embedder boundary, and rendering pipeline |
+| `wails` | Wails | `P2` | Go/native backend, webview frontend, generated bindings, and IPC |
+
+### CLI and developer tools
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- | --- |
+| `neovim` | Neovim | `P1` | Embedded scripting, event loop, RPC, buffer state, and plugin isolation |
+| `vscode` | Visual Studio Code | `P1` | Extension host isolation, workbench services, language servers, and IPC |
+| `ripgrep` | ripgrep | `P1` | Parallel traversal, regex engine pipeline, ignore rules, and streaming output |
+| `fd` | fd | `P2` | Filesystem traversal, filtering combinators, and concurrent output |
+| `jq` | jq | `P1` | JSON value algebra, filter composition, streaming execution, and CLI protocols |
+| `yq` | yq | `P2` | Multi-format tree transformations, expression evaluation, and stream processing |
+| `just` | Just | `P2` | Declarative recipe graph, shell execution, parameter binding, and environment propagation |
+| `bazel` | Bazel | `P1` | Hermetic action graph, sandboxed execution, caching, and incremental builds |
+
+### Cloud-native and platform infrastructure
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- | --- |
+| `helm` | Helm | `P1` | Chart composition, values rendering, release state, and Kubernetes integration |
+| `argo-cd` | Argo CD | `P1` | Desired/observed state reconciliation, GitOps sync, health assessment, and rollback |
+| `istio` | Istio | `P1` | Sidecar proxy mesh, traffic policy, control/data plane, and telemetry propagation |
+| `cilium` | Cilium | `P1` | eBPF datapath, identity policy, service routing, and observability |
+| `traefik` | Traefik | `P2` | Dynamic provider configuration, routers, middleware chains, and certificates |
+| `crossplane` | Crossplane | `P2` | Kubernetes-native composition, provider controllers, and managed resource reconciliation |
+
+### Identity, API, workflow, and application services
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- |
+| `keycloak` | Keycloak | `P1` | Realm/tenant boundaries, identity flows, token issuance, and adapters |
+| `kong` | Kong Gateway | `P1` | Plugin pipeline, route/service abstraction, control/data plane, and credentials |
+| `apisix` | Apache APISIX | `P2` | Dynamic routing, plugin execution, etcd-backed configuration, and hot reload |
+| `temporal` | Temporal | `P1` | Durable workflow history, task queues, replay, retries, and worker execution |
+| `airflow` | Apache Airflow | `P1` | DAG scheduling, task instances, executor boundaries, and metadata state |
+| `celery` | Celery | `P1` | Task/message protocol, broker/backend separation, workers, retries, and routing |
+| `oauth2-proxy` | OAuth2 Proxy | `P2` | Reverse-proxy authentication, session cookies, upstream forwarding, and provider adapters |
+| `authentik` | authentik | `P2` | Identity flows, policy evaluation, provider/application boundaries, and outposts |
+
+### Machine learning and computer vision
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- |
+| `pytorch` | PyTorch | `P1` | Tensor/autograd graphs, eager execution, dispatch, and accelerator backends |
+| `tensorflow` | TensorFlow | `P1` | Tensor graphs, runtime devices, saved models, and distributed execution |
+| `jax` | JAX | `P2` | Functional transformations, tracing, XLA compilation, and sharding |
+| `scikit-learn` | scikit-learn | `P1` | Estimator protocols, pipelines, transformers, and model selection |
+| `opencv` | OpenCV | `P1` | Matrix/image data model, algorithm modules, backends, and streaming pipelines |
+| `transformers` | Hugging Face Transformers | `P1` | Model/config/tokenizer boundaries, generation loops, and weight loading |
+| `mlflow` | MLflow | `P2` | Experiment tracking, model registry, artifact stores, and deployment flavors |
+| `ray` | Ray | `P2` | Distributed task and actor execution |
+
+### Storage, data platforms, and infrastructure services
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- |
+| `dbt` | dbt Core | `P1` | Declarative SQL graph, model materialization, adapters, and lineage |
+| `dagster` | Dagster | `P1` | Software-defined assets, orchestration graphs, sensors, and run storage |
+| `minio` | MinIO | `P1` | S3-compatible object storage, erasure coding, namespace, and healing |
+| `seaweedfs` | SeaweedFS | `P2` | Volume/filer/master separation, object API, replication, and topology |
+| `vault` | HashiCorp Vault | `P1` | Secret engines, leases, authentication backends, and seal/unseal state |
+| `openbao` | OpenBao | `P2` | Secret storage, auth methods, leases, plugins, and compatibility boundary |
+| `clickhouse-operator` | ClickHouse Operator | `P2` | Kubernetes reconciliation, database lifecycle, and backup/scale operations |
+| `velero` | Velero | `P2` | Kubernetes resource backup, object storage, restore ordering, and schedules |
+
+### Frontend, mobile, build, and testing ecosystems
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- |
+| `react-native` | React Native | `P1` | JavaScript/native bridge, component tree, layout, and platform renderers |
+| `expo` | Expo | `P2` | Mobile module runtime, OTA updates, config plugins, and native build boundary |
+| `capacitor` | Capacitor | `P2` | Web/native bridge, plugin lifecycle, and platform capability access |
+| `ionic` | Ionic | `P2` | Web component UI, platform adapters, navigation, and build tooling |
+| `vite` | Vite | `P1` | Dependency graph scanning, dev server transforms, HMR, and production bundling |
+| `webpack` | webpack | `P1` | Module graph compilation, loaders, plugins, chunks, and caching |
+| `rollup` | Rollup | `P2` | Module graph tree-shaking, plugin hooks, output chunks, and code splitting |
+| `esbuild` | esbuild | `P1` | Parallel parsing, incremental graph build, bundling, and transform pipeline |
+| `playwright` | Playwright | `P1` | Browser contexts, page isolation, protocol control, fixtures, and tracing |
+| `storybook` | Storybook | `P2` | Component isolation, stories, addons, controls, and visual test workflows |
 
 ## Modeling order
 
