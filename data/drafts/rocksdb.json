@@ -1,0 +1,136 @@
+{
+  "id": "rocksdb",
+  "name": "RocksDB",
+  "version_context": "commit 553b52b4a709820fac1dbadc7796506740517582",
+  "summary": "Draft architecture card generated from RocksDB at commit 553b52b4a709 via github-archive. Semantic features require review.",
+  "scope": [
+    "embedded-database",
+    "repository structure",
+    "build surface",
+    "path-level architecture signals",
+    "initial evidence"
+  ],
+  "features": [
+    {
+      "id": "repository-structure",
+      "name": "Observable repository structure",
+      "category": "repository-model",
+      "claim_type": "fact",
+      "description": "The inspected revision contains 2357 files, top-level entries .clang-format, .clang-tidy, .github, .gitignore, .lgtm.yml, .watchmanconfig, AGENTS.md, AUTHORS, BUCK, CLAUDE.md, CMakeLists.txt, CODE_OF_CONDUCT.md, and source languages including C, C++, C/C++ headers, Java, JavaScript, Python, Shell, YAML.",
+      "benefits": [
+        "Provides a reproducible baseline for later modeling."
+      ],
+      "costs": [
+        "Repository metrics do not by themselves explain runtime behavior."
+      ],
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    },
+    {
+      "id": "architecture-path-signals",
+      "name": "Architecture-related path signals",
+      "category": "architecture-evidence",
+      "claim_type": "inference",
+      "description": "Path names contain these weak, non-semantic signals: storage. They identify targets for source review, not proof of runtime architecture.",
+      "benefits": [
+        "Prioritizes files for evidence-backed semantic analysis."
+      ],
+      "costs": [
+        "Names can be historical, incidental, or misleading."
+      ],
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    },
+    {
+      "id": "build-and-integration-surface",
+      "name": "Build and integration surface",
+      "category": "tooling-model",
+      "claim_type": "fact",
+      "description": "The revision exposes these root build markers: CMakeLists.txt, Makefile.",
+      "benefits": [
+        "Identifies the first deterministic entry points for deeper analysis."
+      ],
+      "costs": [
+        "A marker is evidence of a tool, not proof of the complete build architecture."
+      ],
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Finite labeled repository graph",
+      "question": "What observable source and build entities are present at this revision?",
+      "assumptions": [
+        "The checkout is complete enough for structural inspection.",
+        "File paths and recognized markers are useful but incomplete proxies for architecture."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    },
+    {
+      "model": "Evidence-prioritization signal model",
+      "question": "Which source paths should be inspected first for architecture evidence?",
+      "assumptions": [
+        "Path names are weak indicators and require source or documentation review.",
+        "Signal counts are useful for prioritization, not semantic classification."
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "repository-commit"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "repository-structure",
+      "benefits": [
+        "Makes later analysis reproducible and comparable."
+      ],
+      "costs": [
+        "Static counts cannot establish semantic guarantees."
+      ]
+    },
+    {
+      "feature_id": "build-and-integration-surface",
+      "benefits": [
+        "Provides concrete next locations for source analysis."
+      ],
+      "costs": [
+        "Build metadata can vary by platform and configuration."
+      ]
+    },
+    {
+      "feature_id": "architecture-path-signals",
+      "benefits": [
+        "Reduces the search space for later LLM-assisted review."
+      ],
+      "costs": [
+        "Heuristic signals can create false positives and false negatives."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "RocksDB source at 553b52b4a709",
+      "uri": "https://github.com/facebook/rocksdb/commit/553b52b4a709820fac1dbadc7796506740517582",
+      "accessed": "2026-10-22T03:51:15+00:00",
+      "notes": "Generated from a github-archive checkout by the deterministic inspector."
+    },
+    {
+      "id": "official-documentation",
+      "kind": "official-doc",
+      "title": "RocksDB official documentation",
+      "uri": "https://github.com/facebook/rocksdb/wiki",
+      "accessed": "2026-10-22T03:51:15+00:00"
+    }
+  ],
+  "related_systems": []
+}
