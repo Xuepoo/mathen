@@ -1,0 +1,171 @@
+{
+    "id": "pulsar",
+    "name": "Apache Pulsar",
+    "version_context": "commit a1f5b45666a3791f315d1608e2ae68ee83518e8c",
+    "summary": "A distributed messaging and streaming platform that separates stateless broker serving and dispatch from BookKeeper message storage and metadata-store coordination.",
+    "scope": [
+        "distributed messaging",
+        "stateless brokers",
+        "topic ownership",
+        "segmented persistent logs",
+        "metadata and storage separation"
+    ],
+    "features": [
+        {
+            "id": "stateless-broker-dispatch",
+            "name": "Stateless broker serving and dispatch",
+            "category": "serving-model",
+            "claim_type": "fact",
+            "description": "Pulsar brokers expose administrative and topic-lookup HTTP APIs, accept producer and consumer connections, and dispatch data over the binary protocol. The official architecture describes brokers as stateless and assigns each topic to one broker at a time.",
+            "benefits": [
+                "Separates client serving and dispatch from persistent message storage",
+                "Allows broker capacity and ownership to be managed independently of stored ledgers",
+                "Supports service discovery and redirection to the topic owner"
+            ],
+            "costs": [
+                "Topic ownership and load balancing require coordination",
+                "Broker failure can interrupt serving even when storage remains available",
+                "A stateless serving layer does not remove network and metadata dependencies"
+            ],
+            "evidence_ids": [
+                "pulsar-architecture",
+                "pulsar-broker-source",
+                "pulsar-topic-source"
+            ]
+        },
+        {
+            "id": "managed-ledger-cursors",
+            "name": "Managed ledgers with independent cursors",
+            "category": "storage-model",
+            "claim_type": "fact",
+            "description": "Pulsar models a topic's storage as a managed ledger built from multiple BookKeeper ledgers. The managed-ledger abstraction has a single appending writer and multiple consuming cursors, each with its own position; rollover permits failed ledgers to be replaced and consumed ledgers to be deleted.",
+            "benefits": [
+                "Provides sequential append behavior with independent subscription progress",
+                "Allows ledger rollover after failures or consumption progress",
+                "Scales topic storage across multiple bookies and ledgers"
+            ],
+            "costs": [
+                "Cursor and ledger lifecycle add metadata and recovery state",
+                "A single-writer abstraction constrains append ownership",
+                "Deleting old ledgers depends on all relevant cursors progressing"
+            ],
+            "evidence_ids": ["pulsar-architecture", "pulsar-managed-ledger-source"]
+        },
+        {
+            "id": "bookkeeper-replicated-persistence",
+            "name": "Replicated BookKeeper persistence",
+            "category": "durability-model",
+            "claim_type": "fact",
+            "description": "Pulsar uses Apache BookKeeper bookies for persistent message storage. BookKeeper ledgers replicate entries across bookies, recover the last committed entry after failure, and provide consistent reads of a recovered ledger.",
+            "benefits": [
+                "Distributes capacity and I/O across storage nodes",
+                "Retains replicated entries across bookie failures",
+                "Provides a clear recovery boundary for an append log"
+            ],
+            "costs": [
+                "Replication adds storage and network cost",
+                "Recovery and ledger fencing complicate the write lifecycle",
+                "Durability depends on deployment and ensemble configuration"
+            ],
+            "evidence_ids": ["pulsar-architecture", "pulsar-managed-ledger-source"]
+        },
+        {
+            "id": "metadata-storage-separation",
+            "name": "Metadata-store and message-store separation",
+            "category": "coordination-model",
+            "claim_type": "fact",
+            "description": "Pulsar separates message data in BookKeeper from cluster and instance metadata in a metadata store. The official architecture assigns topic metadata, ownership, configuration, and coordination responsibilities to these metadata-store layers.",
+            "benefits": [
+                "Separates control-plane metadata from the message data path",
+                "Permits supported metadata backends to be selected for deployment needs",
+                "Makes cluster-level and instance-wide coordination explicit"
+            ],
+            "costs": [
+                "Operations require both metadata and storage services",
+                "Metadata-store availability affects ownership and coordination",
+                "Multiple scopes of metadata increase deployment complexity"
+            ],
+            "evidence_ids": ["pulsar-architecture", "pulsar-broker-source"]
+        }
+    ],
+    "mathematical_views": [
+        {
+            "model": "Broker-owner and ledger bipartite graph",
+            "question": "How are topic-serving brokers related to the persistent ledgers and metadata that back them?",
+            "assumptions": [
+                "A topic has one active serving broker in the modeled interval",
+                "A managed ledger is represented by an ordered family of BookKeeper ledgers",
+                "Metadata edges describe coordination and ownership rather than message payload flow"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": ["pulsar-architecture", "pulsar-topic-source"]
+        },
+        {
+            "model": "Cursor-indexed segmented log",
+            "question": "When can a topic's segmented log advance, recover, and reclaim storage while preserving subscription positions?",
+            "assumptions": [
+                "Each segment has one writer until it is closed or fenced",
+                "Cursors identify the positions required by subscriptions",
+                "Ledger recovery establishes a committed prefix before readers resume"
+            ],
+            "claim_type": "hypothesis",
+            "evidence_ids": ["pulsar-architecture", "pulsar-managed-ledger-source"]
+        }
+    ],
+    "trade_offs": [
+        {
+            "feature_id": "stateless-broker-dispatch",
+            "benefits": ["Independent serving scale and storage placement"],
+            "costs": ["Ownership, lookup, and redirection require coordination"]
+        },
+        {
+            "feature_id": "managed-ledger-cursors",
+            "benefits": ["Efficient append with independent subscription progress"],
+            "costs": ["Segment and cursor cleanup requires lifecycle tracking"]
+        },
+        {
+            "feature_id": "bookkeeper-replicated-persistence",
+            "benefits": ["Distributed durable storage and recovery"],
+            "costs": ["Replica coordination and storage overhead"]
+        },
+        {
+            "feature_id": "metadata-storage-separation",
+            "benefits": ["Explicit control-plane and data-plane boundaries"],
+            "costs": ["Additional services and failure modes"]
+        }
+    ],
+    "evidence": [
+        {
+            "id": "pulsar-architecture",
+            "kind": "official-doc",
+            "title": "Apache Pulsar architecture overview",
+            "uri": "https://pulsar.apache.org/docs/next/concepts-architecture-overview/",
+            "accessed": "2026-10-23",
+            "notes": "Official documentation for brokers, clusters, metadata stores, BookKeeper persistence, ledgers, managed ledgers, cursors, and topic ownership."
+        },
+        {
+            "id": "pulsar-broker-source",
+            "kind": "source-code",
+            "title": "Apache Pulsar BrokerService at a1f5b45666a3",
+            "uri": "https://github.com/apache/pulsar/blob/a1f5b45666a3791f315d1608e2ae68ee83518e8c/pulsar-broker/src/main/java/org/apache/pulsar/broker/service/BrokerService.java",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for broker service responsibilities and integration with topic and storage services."
+        },
+        {
+            "id": "pulsar-topic-source",
+            "kind": "source-code",
+            "title": "Apache Pulsar PersistentTopic at a1f5b45666a3",
+            "uri": "https://github.com/apache/pulsar/blob/a1f5b45666a3791f315d1608e2ae68ee83518e8c/pulsar-broker/src/main/java/org/apache/pulsar/broker/service/persistent/PersistentTopic.java",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for persistent topic ownership, producers, consumers, dispatch, and managed-ledger integration."
+        },
+        {
+            "id": "pulsar-managed-ledger-source",
+            "kind": "source-code",
+            "title": "Apache BookKeeper ManagedLedgerImpl at a1f5b45666a3",
+            "uri": "https://github.com/apache/pulsar/blob/a1f5b45666a3791f315d1608e2ae68ee83518e8c/managed-ledger/src/main/java/org/apache/bookkeeper/mledger/impl/ManagedLedgerImpl.java",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source bundled with Pulsar for managed-ledger segment, cursor, append, and recovery behavior."
+        }
+    ]
+}

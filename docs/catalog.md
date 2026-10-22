@@ -46,6 +46,10 @@ These entries are already present in the repository at different review levels:
 | `etcd` | etcd | distributed key-value store | `reviewed` | Compare Raft-backed revisions, transactions, watches, and leases using fixed-commit evidence |
 | `consul` | Consul | service networking | `reviewed` | Compare service catalog, health-aware discovery, datacenter topology, and distributed KV using fixed-commit evidence |
 | `rabbitmq` | RabbitMQ | message broker | `reviewed` | Compare exchange routing, durable queues, acknowledgements, confirms, and flow control using fixed-commit evidence |
+| `nats` | NATS | distributed messaging | `reviewed` | Compare subject routing, JetStream streams, consumer cursors, and replicated storage using fixed-commit evidence |
+| `pulsar` | Apache Pulsar | distributed messaging | `reviewed` | Compare stateless brokers, managed ledgers, BookKeeper persistence, and metadata separation using fixed-commit evidence |
+| `flink` | Apache Flink | stream processing | `reviewed` | Compare stateful dataflows, event-time watermarks, checkpoints, and JobManager/TaskManager execution using fixed-commit evidence |
+| `spark` | Apache Spark | distributed dataflow | `reviewed` | Compare RDD lineage, DAG stages, driver/executor boundaries, and application scheduling using fixed-commit evidence |
 | `mysql-server` | MySQL Server | database | `reviewed` | Compare storage-engine, transaction, and recovery boundaries with PostgreSQL and SQLite |
 | `rocksdb` | RocksDB | embedded database | `reviewed` | Compare LSM, WAL, compaction, and snapshot boundaries with SQLite and Redis |
 | `leveldb` | LevelDB | embedded database | `reviewed` | Compare ordered key-value logs, memtables, leveled compaction, recovery, and snapshots with RocksDB |
@@ -202,6 +206,15 @@ identifiers, not claims that the projects share the same architecture.
 | `pulsar` | Apache Pulsar | `P2` | Segmented logs, brokers, and separated storage |
 | `flink` | Apache Flink | `P1` | Stateful stream processing and event-time semantics |
 | `spark` | Apache Spark | `P1` | Distributed dataflow, DAG scheduling, and resilient datasets |
+| `hadoop` | Apache Hadoop | `P1` | Distributed filesystem and batch resource scheduling |
+| `zookeeper` | Apache ZooKeeper | `P0` | Coordination tree, sessions, and consensus-adjacent state |
+| `etcd` | etcd | `P0` | Raft-backed consistent key-value store and watch stream |
+| `consul` | Consul | `P1` | Service discovery, health state, and distributed KV |
+| `rabbitmq` | RabbitMQ | `P1` | Broker queues, routing, acknowledgements, and flow control |
+| `nats` | NATS | `reviewed` | Compare subject routing, JetStream streams, consumer cursors, and replicated storage using fixed-commit evidence |
+| `pulsar` | Apache Pulsar | `reviewed` | Compare stateless brokers, managed ledgers, BookKeeper persistence, and metadata separation using fixed-commit evidence |
+| `flink` | Apache Flink | `reviewed` | Compare stateful dataflows, event-time watermarks, checkpoints, and JobManager/TaskManager execution using fixed-commit evidence |
+| `spark` | Apache Spark | `reviewed` | Compare RDD lineage, DAG stages, driver/executor boundaries, and application scheduling using fixed-commit evidence |
 | `ray` | Ray | `P2` | Distributed task and actor execution |
 
 ### Containers, virtualization, and orchestration
