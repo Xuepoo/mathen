@@ -1,0 +1,201 @@
+{
+  "id": "plan9",
+  "name": "Plan 9",
+  "version_context": "commit ed1a9c21e3297d7497a48053d33683375c75fbb4",
+  "summary": "A distributed operating system organized around per-process hierarchical namespaces, a uniform 9P file-service protocol, file-oriented resource servers, and selectively shared process resources.",
+  "scope": [
+    "distributed operating system",
+    "per-process namespaces",
+    "9P resource protocol",
+    "file-oriented services",
+    "selective process resource sharing"
+  ],
+  "features": [
+    {
+      "id": "per-process-local-namespace",
+      "name": "Per-process local hierarchical namespace",
+      "category": "resource-abstraction",
+      "claim_type": "fact",
+      "description": "Plan 9 processes assemble private name spaces with bind, mount, and unmount; union directories combine trees while retaining local lookup order and creation rules.",
+      "benefits": [
+        "Lets each process or window construct a tailored view of local and remote services using ordinary path operations."
+      ],
+      "costs": [
+        "Local composition and union lookup add ordering and lifecycle rules; a namespace view is contextual rather than a single global filesystem."
+      ],
+      "evidence_ids": [
+        "plan9-overview",
+        "plan9-namespace",
+        "plan9-chan-source",
+        "plan9-sysfile-source"
+      ]
+    },
+    {
+      "id": "9p-file-service-protocol",
+      "name": "9P file-service protocol",
+      "category": "distributed-interface",
+      "claim_type": "fact",
+      "description": "Plan 9 uses 9P transactions to authenticate, attach, walk, clone, open, read, write, and clunk file identifiers over local or network connections.",
+      "benefits": [
+        "Gives files, devices, processes, and remote services a common byte-oriented protocol boundary."
+      ],
+      "costs": [
+        "Protocol state and server-side fid lifecycle must be maintained, and file semantics may be less specialized than a dedicated service API."
+      ],
+      "evidence_ids": ["plan9-overview", "plan9-9p-source"]
+    },
+    {
+      "id": "file-oriented-resource-services",
+      "name": "File-oriented resource services",
+      "category": "resource-abstraction",
+      "claim_type": "fact",
+      "description": "Plan 9 exposes resources such as devices, processes, network interfaces, and windows through file hierarchies served by kernel or user-level servers.",
+      "benefits": [
+        "Allows clients to use common naming, protection, and I/O operations across heterogeneous resources."
+      ],
+      "costs": [
+        "Services must preserve file-like semantics and may require user-level servers, caching, or translation layers."
+      ],
+      "evidence_ids": ["plan9-overview", "plan9-namespace", "plan9-chan-source"]
+    },
+    {
+      "id": "rfork-resource-sharing",
+      "name": "Selective rfork resource sharing",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The rfork model creates or modifies process resources according to flags controlling name space, environment, file descriptors, memory segments, and notes; rendezvous supplies a synchronization primitive.",
+      "benefits": [
+        "Supports a single process class with configurable sharing and copying boundaries."
+      ],
+      "costs": [
+        "Fine-grained sharing flags increase composition flexibility and make ownership and synchronization reasoning more demanding."
+      ],
+      "evidence_ids": ["plan9-overview", "plan9-process-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Namespace composition graph",
+      "question": "How do bind, mount, union, and unmount operations compose a process-local path hierarchy?",
+      "assumptions": [
+        "Directories and mounted services are typed tree nodes.",
+        "Lookup order and creation permissions are modeled explicitly while filesystem implementation details are abstracted."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["plan9-overview", "plan9-namespace", "plan9-sysfile-source"]
+    },
+    {
+      "model": "9P fid protocol state machine",
+      "question": "How does a client turn a connection into navigable, opened, and released remote file objects?",
+      "assumptions": [
+        "Fids represent server-side object references.",
+        "The model abstracts authentication details and byte transport while retaining request lifecycle."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["plan9-overview", "plan9-9p-source"]
+    },
+    {
+      "model": "Resource-sharing transition system",
+      "question": "Which process resources are shared, copied, or detached across rfork and synchronization operations?",
+      "assumptions": [
+        "Rfork flags define resource transition choices.",
+        "The view separates kernel process creation from user-level language/runtime conventions."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["plan9-overview", "plan9-process-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "per-process-local-namespace",
+      "benefits": [
+        "Lets each process or window construct a tailored view of local and remote services using ordinary path operations."
+      ],
+      "costs": [
+        "Local composition and union lookup add ordering and lifecycle rules; a namespace view is contextual rather than a single global filesystem."
+      ]
+    },
+    {
+      "feature_id": "9p-file-service-protocol",
+      "benefits": [
+        "Gives files, devices, processes, and remote services a common byte-oriented protocol boundary."
+      ],
+      "costs": [
+        "Protocol state and server-side fid lifecycle must be maintained, and file semantics may be less specialized than a dedicated service API."
+      ]
+    },
+    {
+      "feature_id": "file-oriented-resource-services",
+      "benefits": [
+        "Allows clients to use common naming, protection, and I/O operations across heterogeneous resources."
+      ],
+      "costs": [
+        "Services must preserve file-like semantics and may require user-level servers, caching, or translation layers."
+      ]
+    },
+    {
+      "feature_id": "rfork-resource-sharing",
+      "benefits": [
+        "Supports a single process class with configurable sharing and copying boundaries."
+      ],
+      "costs": [
+        "Fine-grained sharing flags increase composition flexibility and make ownership and synchronization reasoning more demanding."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Plan 9 source at ed1a9c21e329",
+      "uri": "https://github.com/plan9foundation/plan9/commit/ed1a9c21e3297d7497a48053d33683375c75fbb4",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed official Plan 9 Foundation repository revision used for source claims."
+    },
+    {
+      "id": "plan9-overview",
+      "kind": "official-doc",
+      "title": "Plan 9 from Bell Labs overview",
+      "uri": "https://9p.io/sys/doc/9.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official Plan 9 paper describing file-oriented resources, local namespaces, 9P, distributed services, and rfork."
+    },
+    {
+      "id": "plan9-namespace",
+      "kind": "official-doc",
+      "title": "Plan 9 namespace manual",
+      "uri": "https://9p.io/sys/man/4/namespace",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official manual describing conventional and mounted name spaces, union directories, and service mount points."
+    },
+    {
+      "id": "plan9-9p-source",
+      "kind": "source-code",
+      "title": "Plan 9 9P interface source at ed1a9c21e329",
+      "uri": "https://github.com/plan9foundation/plan9/blob/ed1a9c21e3297d7497a48053d33683375c75fbb4/sys/include/9p.h",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "plan9-process-source",
+      "kind": "source-code",
+      "title": "Plan 9 process source at ed1a9c21e329",
+      "uri": "https://github.com/plan9foundation/plan9/blob/ed1a9c21e3297d7497a48053d33683375c75fbb4/sys/src/9/port/proc.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "plan9-chan-source",
+      "kind": "source-code",
+      "title": "Plan 9 channel and namespace source at ed1a9c21e329",
+      "uri": "https://github.com/plan9foundation/plan9/blob/ed1a9c21e3297d7497a48053d33683375c75fbb4/sys/src/9/port/chan.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "plan9-sysfile-source",
+      "kind": "source-code",
+      "title": "Plan 9 file and namespace syscalls at ed1a9c21e329",
+      "uri": "https://github.com/plan9foundation/plan9/blob/ed1a9c21e3297d7497a48053d33683375c75fbb4/sys/src/9/port/sysfile.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    }
+  ],
+  "related_systems": ["minix", "linux"]
+}

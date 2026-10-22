@@ -1,0 +1,173 @@
+{
+  "id": "keycloak",
+  "name": "Keycloak",
+  "version_context": "commit f7532e18737e6288bc139acf2bc7373e81af6404",
+  "summary": "An identity and access management server that isolates users and credentials in realms, executes configurable authentication flows, and issues protocol tokens for clients and services.",
+  "scope": [
+    "identity provider",
+    "realms",
+    "authentication flows",
+    "OIDC and SAML",
+    "sessions and tokens"
+  ],
+  "features": [
+    {
+      "id": "realm-isolated-identity-model",
+      "name": "Realm-isolated identity model",
+      "category": "tenant-model",
+      "claim_type": "fact",
+      "description": "A realm manages its own users, credentials, roles, groups, clients, and sessions; users belong to and authenticate within a realm boundary.",
+      "benefits": [
+        "Provides a tenant and administration boundary for identity state"
+      ],
+      "costs": [
+        "Cross-realm administration and shared deployment concerns remain separate from realm data"
+      ],
+      "evidence_ids": [
+        "keycloak-admin-doc",
+        "keycloak-auth-source"
+      ]
+    },
+    {
+      "id": "configurable-authentication-flows",
+      "name": "Configurable authentication and brokering flows",
+      "category": "authentication-model",
+      "claim_type": "fact",
+      "description": "Keycloak represents login as configurable flows with authenticators, required actions, identity-provider brokering, and federation providers.",
+      "benefits": [
+        "Supports password, passkey, OTP, external IdP, and federation strategies"
+      ],
+      "costs": [
+        "Flow ordering and provider failures create many authentication states"
+      ],
+      "evidence_ids": [
+        "keycloak-admin-doc",
+        "keycloak-auth-source"
+      ]
+    },
+    {
+      "id": "client-scoped-token-issuance",
+      "name": "Client-scoped token and assertion issuance",
+      "category": "protocol-model",
+      "claim_type": "fact",
+      "description": "Clients request authentication and tokens; protocol mappers, client scopes, roles, and sessions shape signed OIDC tokens or SAML assertions.",
+      "benefits": [
+        "Separates application integration from user credential handling"
+      ],
+      "costs": [
+        "Token contents and authorization meaning depend on client and mapper configuration"
+      ],
+      "evidence_ids": [
+        "keycloak-admin-doc",
+        "keycloak-token-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Realm and client identity graph",
+      "question": "How are users, groups, roles, clients, sessions, and identity providers connected within isolated realms?",
+      "assumptions": [
+        "Realm membership is a boundary on user and client management",
+        "Role and group mappings are typed edges",
+        "The graph abstracts persistence and administrative authorization details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "keycloak-admin-doc",
+        "keycloak-auth-source"
+      ]
+    },
+    {
+      "model": "Authentication flow state machine",
+      "question": "Which authenticator, required action, broker, or federation transition leads a login session to success or failure?",
+      "assumptions": [
+        "A flow is an ordered conditional sequence",
+        "External identity or credential checks may fail or require additional actions",
+        "The view does not infer security strength from flow topology alone"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "keycloak-admin-doc",
+        "keycloak-auth-source"
+      ]
+    },
+    {
+      "model": "Client token projection",
+      "question": "How do session identity, roles, scopes, and protocol mappers project into a client-specific token or assertion?",
+      "assumptions": [
+        "Token claims are selected by client and protocol configuration",
+        "Tokens are signed outputs of an authenticated session",
+        "The model abstracts cryptographic algorithm and key rotation details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "keycloak-admin-doc",
+        "keycloak-token-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "realm-isolated-identity-model",
+      "benefits": [
+        "Clear tenant and administrative boundaries"
+      ],
+      "costs": [
+        "Realm proliferation and cross-realm administration increase configuration overhead"
+      ]
+    },
+    {
+      "feature_id": "configurable-authentication-flows",
+      "benefits": [
+        "Extensible authentication and federation choices"
+      ],
+      "costs": [
+        "Flexible flow graphs enlarge the failure and review surface"
+      ]
+    },
+    {
+      "feature_id": "client-scoped-token-issuance",
+      "benefits": [
+        "Protocol-aware, application-specific claims"
+      ],
+      "costs": [
+        "Mappers and scopes can make authorization behavior difficult to inspect globally"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "keycloak-repository-commit",
+      "kind": "source-code",
+      "title": "Keycloak source at f7532e18737e",
+      "uri": "https://github.com/keycloak/keycloak/commit/f7532e18737e6288bc139acf2bc7373e81af6404",
+      "accessed": "2026-10-23",
+      "notes": "Fixed upstream revision used for all source evidence in this card."
+    },
+    {
+      "id": "keycloak-admin-doc",
+      "kind": "official-doc",
+      "title": "Keycloak Server Administration Guide",
+      "uri": "https://www.keycloak.org/docs/latest/server_admin/index.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for realms, clients, authentication flows, federation, sessions, roles, and tokens."
+    },
+    {
+      "id": "keycloak-auth-source",
+      "kind": "source-code",
+      "title": "Keycloak AuthenticationManager at pinned commit",
+      "uri": "https://github.com/keycloak/keycloak/blob/f7532e18737e6288bc139acf2bc7373e81af6404/services/src/main/java/org/keycloak/services/managers/AuthenticationManager.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for authentication session and flow management."
+    },
+    {
+      "id": "keycloak-token-source",
+      "kind": "source-code",
+      "title": "Keycloak TokenManager at pinned commit",
+      "uri": "https://github.com/keycloak/keycloak/blob/f7532e18737e6288bc139acf2bc7373e81af6404/services/src/main/java/org/keycloak/protocol/oidc/TokenManager.java",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for OIDC token processing and claim projection."
+    }
+  ]
+}

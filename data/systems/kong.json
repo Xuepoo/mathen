@@ -1,0 +1,198 @@
+{
+  "id": "kong",
+  "name": "Kong Gateway",
+  "version_context": "commit 21032122ab80c973f368f6bc539f53985e7164e8",
+  "summary": "A Lua/OpenResty API gateway that matches routes to upstream services, executes scoped plugins in the proxy lifecycle, and can separate configuration control planes from traffic-serving data planes.",
+  "scope": [
+    "API gateway",
+    "routes and services",
+    "plugin pipeline",
+    "control/data plane",
+    "declarative and database-backed configuration"
+  ],
+  "features": [
+    {
+      "id": "route-service-upstream-abstraction",
+      "name": "Route-to-service upstream abstraction",
+      "category": "routing-model",
+      "claim_type": "fact",
+      "description": "Routes match request criteria and forward to Gateway Services, which represent upstream connectivity and can be shared by multiple routes.",
+      "benefits": [
+        "Separates client-facing matching from backend connectivity"
+      ],
+      "costs": [
+        "Route priority, path handling, timeouts, and retries affect proxy semantics"
+      ],
+      "evidence_ids": [
+        "kong-route-doc",
+        "kong-service-doc",
+        "kong-runloop-source"
+      ]
+    },
+    {
+      "id": "scoped-plugin-lifecycle",
+      "name": "Scoped plugin lifecycle execution",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Plugins implement lifecycle handlers and configuration schemas and can attach to routes or services to transform or control proxied traffic.",
+      "benefits": [
+        "Adds reusable authentication, transformation, and policy stages"
+      ],
+      "costs": [
+        "Plugin ordering, scope, shared state, and database requirements complicate behavior"
+      ],
+      "evidence_ids": [
+        "kong-plugin-doc",
+        "kong-runloop-source"
+      ]
+    },
+    {
+      "id": "control-data-plane-topologies",
+      "name": "Control-plane/data-plane topology",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "Hybrid deployments separate configuration management in control-plane nodes from traffic serving in data-plane nodes, while traditional and DB-less modes provide alternate state topologies.",
+      "benefits": [
+        "Allows geographically distributed data planes and cached last-known configuration"
+      ],
+      "costs": [
+        "Control-plane availability, configuration propagation, and plugin storage capabilities differ by topology"
+      ],
+      "evidence_ids": [
+        "kong-topology-doc",
+        "kong-clustering-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Priority route matching graph",
+      "question": "Which highest-priority route matches a request and identifies the service and route-scoped policies?",
+      "assumptions": [
+        "Routes are predicates over protocol, host, path, method, headers, port, or SNI",
+        "The router selects the highest-priority matching route",
+        "The view abstracts NGINX/OpenResty request parsing"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "kong-route-doc",
+        "kong-runloop-source"
+      ]
+    },
+    {
+      "model": "Plugin lifecycle pipeline",
+      "question": "How do route, service, and global plugins transform a request and response across proxy lifecycle phases?",
+      "assumptions": [
+        "Plugins are handlers attached to scoped entities",
+        "Lifecycle phases are ordered execution stages",
+        "The view does not claim that plugins are commutative or isolated"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "kong-plugin-doc",
+        "kong-runloop-source"
+      ]
+    },
+    {
+      "model": "Control/data-plane propagation graph",
+      "question": "When does configuration authored at a control plane become usable by a data plane serving traffic?",
+      "assumptions": [
+        "Control-plane configuration is propagated over the Kong clustering channel",
+        "A data plane can continue with last-known configuration in hybrid mode",
+        "The model does not infer convergence latency or availability guarantees"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "kong-topology-doc",
+        "kong-clustering-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "route-service-upstream-abstraction",
+      "benefits": [
+        "Reusable backend definitions with multiple client-facing routes"
+      ],
+      "costs": [
+        "Matching and proxy options create a broad route/service configuration space"
+      ]
+    },
+    {
+      "feature_id": "scoped-plugin-lifecycle",
+      "benefits": [
+        "Extensible request policy without changing core routing"
+      ],
+      "costs": [
+        "Lifecycle ordering and plugin persistence needs complicate deployment"
+      ]
+    },
+    {
+      "feature_id": "control-data-plane-topologies",
+      "benefits": [
+        "Traffic-plane isolation and multi-location deployment"
+      ],
+      "costs": [
+        "Configuration propagation and topology-specific plugin limitations require operational discipline"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "kong-repository-commit",
+      "kind": "source-code",
+      "title": "Kong source at 21032122ab80",
+      "uri": "https://github.com/Kong/kong/commit/21032122ab80c973f368f6bc539f53985e7164e8",
+      "accessed": "2026-10-23",
+      "notes": "Fixed upstream revision used for all source evidence in this card."
+    },
+    {
+      "id": "kong-topology-doc",
+      "kind": "official-doc",
+      "title": "Kong Gateway deployment topologies",
+      "uri": "https://docs.konghq.com/gateway/deployment-topologies/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for hybrid, traditional, and DB-less control/data state topologies."
+    },
+    {
+      "id": "kong-route-doc",
+      "kind": "official-doc",
+      "title": "Kong Gateway Routes",
+      "uri": "https://docs.konghq.com/gateway/entities/route/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for route matching, priority, service attachment, and route behavior."
+    },
+    {
+      "id": "kong-service-doc",
+      "kind": "official-doc",
+      "title": "Kong Gateway Services",
+      "uri": "https://docs.konghq.com/gateway/entities/service/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for upstream service abstraction, routing, plugins, retries, and timeouts."
+    },
+    {
+      "id": "kong-plugin-doc",
+      "kind": "official-doc",
+      "title": "Kong custom plugin reference",
+      "uri": "https://docs.konghq.com/gateway/latest/custom-plugins/reference/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for plugin modules, lifecycle handlers, schemas, and persistence extensions."
+    },
+    {
+      "id": "kong-runloop-source",
+      "kind": "source-code",
+      "title": "Kong proxy runloop at pinned commit",
+      "uri": "https://github.com/Kong/kong/blob/21032122ab80c973f368f6bc539f53985e7164e8/kong/runloop/handler.lua",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for route resolution and proxy lifecycle handling."
+    },
+    {
+      "id": "kong-clustering-source",
+      "kind": "source-code",
+      "title": "Kong clustering module at pinned commit",
+      "uri": "https://github.com/Kong/kong/blob/21032122ab80c973f368f6bc539f53985e7164e8/kong/clustering/init.lua",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for clustering initialization and control/data-plane coordination."
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "id": "wasm",
+  "name": "WebAssembly",
+  "version_context": "WebAssembly core specification repository commit b0ec1f3f449525c217dbff3f1dfab435a756ea92",
+  "summary": "A typed portable instruction format and abstract machine with validation, module-scoped definitions, store-owned runtime instances, structured control, and explicit embedder boundaries.",
+  "scope": [
+    "typed instruction format",
+    "module validation",
+    "abstract machine execution",
+    "embedding and runtime instances"
+  ],
+  "features": [
+    {
+      "id": "typed-module-validation",
+      "name": "Typed module validation",
+      "category": "static-safety-model",
+      "claim_type": "fact",
+      "description": "The WebAssembly core specification defines value, instruction, module, and matching rules that validate modules before execution. Validation checks that instruction sequences and module components satisfy their declared types and limits.",
+      "benefits": [
+        "Rejects malformed or ill-typed modules before execution",
+        "Creates a portable contract between producers and embedders"
+      ],
+      "costs": [
+        "The type and validation rules constrain expressiveness at the module boundary",
+        "Implementations must maintain validation and execution agreement"
+      ],
+      "evidence_ids": ["wasm-core-spec", "wasm-fixed-source"]
+    },
+    {
+      "id": "structured-stack-machine",
+      "name": "Structured stack-machine execution",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "WebAssembly execution uses an interleaved stack containing values and control frames such as labels, call frames, and exception handlers. Structured control instructions reduce through these frames, and traps represent abrupt termination.",
+      "benefits": [
+        "Provides a compact, portable execution semantics",
+        "Makes control-flow and activation boundaries explicit in the abstract machine"
+      ],
+      "costs": [
+        "Stack and control-frame invariants must be preserved by implementations",
+        "The abstract machine leaves optimization and host scheduling to implementations"
+      ],
+      "evidence_ids": ["wasm-execution", "wasm-fixed-source"]
+    },
+    {
+      "id": "store-module-instance-boundary",
+      "name": "Store-owned module instances",
+      "category": "embedding-model",
+      "claim_type": "fact",
+      "description": "The specification models global runtime state in a store containing instances of functions, tables, memories, globals, and other entities. A module instance collects runtime representations of imported, defined, and exported entities, while host functions remain an embedder-defined boundary.",
+      "benefits": [
+        "Separates static module indices from dynamic runtime addresses",
+        "Defines a precise object boundary for instantiation and embedding"
+      ],
+      "costs": [
+        "Embedding requires explicit mapping of imports, exports, and host behavior",
+        "Store and instance state add lifecycle and resource-management obligations"
+      ],
+      "evidence_ids": ["wasm-runtime", "wasm-fixed-source"]
+    },
+    {
+      "id": "bounded-linear-memory",
+      "name": "Bounded linear memory",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "A WebAssembly memory instance is a typed sequence of bytes whose length is a multiple of the 64 KiB page size and cannot exceed its declared maximum. Memory mutation occurs through instructions, data segments, or permitted embedder actions.",
+      "benefits": [
+        "Gives modules a portable byte-addressable resource with explicit growth limits",
+        "Makes memory size and mutation part of the module contract"
+      ],
+      "costs": [
+        "Fixed page and maximum-size rules constrain resource layout",
+        "The embedder must account for growth failures and host-side access policy"
+      ],
+      "evidence_ids": ["wasm-runtime", "wasm-fixed-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed validation relation",
+      "question": "When does a module's instruction sequence satisfy the types, limits, and component contracts required for instantiation?",
+      "assumptions": [
+        "Instruction sequences and module components are related by the specification's typing and matching judgments",
+        "Validation precedes execution and does not model implementation-specific compilation",
+        "The view abstracts host policy beyond the import and export contract"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["wasm-core-spec", "wasm-fixed-source"]
+    },
+    {
+      "model": "Store-and-stack transition system",
+      "question": "How do store instances, module frames, control labels, and operand values evolve during execution?",
+      "assumptions": [
+        "A configuration consists of a store, current frame, and remaining instruction sequence",
+        "Administrative labels, frames, handlers, and traps are transitions of the abstract machine",
+        "The view does not assert that an implementation uses a literal operand stack"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["wasm-execution", "wasm-runtime", "wasm-fixed-source"]
+    },
+    {
+      "model": "Embedder capability boundary hypothesis",
+      "question": "Which properties of a WebAssembly execution remain specification invariants, and which are supplied by the embedder?",
+      "assumptions": [
+        "Module validation and store invariants are specification-level properties",
+        "Host function behavior and host addresses are external inputs to the abstract machine",
+        "The hypothesis requires comparison across concrete embedders to determine practical isolation guarantees"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["wasm-runtime", "wasm-fixed-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "typed-module-validation",
+      "benefits": ["Portable pre-execution type and limit checks"],
+      "costs": ["Validation rules constrain module expressiveness and implementation freedom"]
+    },
+    {
+      "feature_id": "structured-stack-machine",
+      "benefits": ["Explicit portable control and activation semantics"],
+      "costs": ["Control-frame invariants add implementation and reasoning work"]
+    },
+    {
+      "feature_id": "store-module-instance-boundary",
+      "benefits": ["Clear runtime ownership and import/export boundary"],
+      "costs": ["Instantiation and host integration require lifecycle coordination"]
+    },
+    {
+      "feature_id": "bounded-linear-memory",
+      "benefits": ["Portable bounded byte storage"],
+      "costs": ["Page, growth, and maximum-size constraints shape resource design"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "wasm-fixed-source",
+      "kind": "source-code",
+      "title": "WebAssembly core specification source at fixed revision",
+      "uri": "https://github.com/WebAssembly/spec/commit/b0ec1f3f449525c217dbff3f1dfab435a756ea92",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance selected for this review; the revision identifies the inspected WebAssembly specification repository."
+    },
+    {
+      "id": "wasm-core-spec",
+      "kind": "official-doc",
+      "title": "WebAssembly Core Specification: Validation",
+      "uri": "https://webassembly.github.io/spec/core/valid/index.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official specification for value types, instruction typing, matching, and module validation."
+    },
+    {
+      "id": "wasm-execution",
+      "kind": "official-doc",
+      "title": "WebAssembly Core Specification: Execution",
+      "uri": "https://webassembly.github.io/spec/core/exec/index.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official specification for configurations, stores, stacks, frames, traps, and execution transitions."
+    },
+    {
+      "id": "wasm-runtime",
+      "kind": "official-doc",
+      "title": "WebAssembly Core Specification: Runtime Structure",
+      "uri": "https://webassembly.github.io/spec/core/exec/runtime.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official runtime semantics for stores, module instances, memories, functions, and embedder-provided host entities."
+    }
+  ],
+  "related_systems": ["wasmtime", "rust", "v8"]
+}

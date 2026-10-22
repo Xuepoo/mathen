@@ -1,0 +1,130 @@
+{
+  "id": "deno",
+  "name": "Deno",
+  "version_context": "commit 7e4306fbe8587dc7d4c103deb8a95af56cca00cb",
+  "summary": "A JavaScript and TypeScript runtime that combines standard module graphs with explicit, resource-scoped permission checks and worker construction carrying permission state.",
+  "scope": [
+    "javascript runtime",
+    "module graph",
+    "permission model",
+    "worker execution"
+  ],
+  "features": [
+    {
+      "id": "explicit-resource-permissions",
+      "name": "Explicit resource-scoped permissions",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Deno mediates sensitive resource classes such as read, write, net, env, run, ffi, and import through permission descriptors. Permissions can be queried, requested, revoked, and scoped by path, host, command, or variable.",
+      "benefits": [
+        "Makes host resource authority explicit at runtime",
+        "Allows narrower grants than an unrestricted process environment"
+      ],
+      "costs": [
+        "Code must handle denied or partial permissions",
+        "FFI and subprocess permissions can cross the runtime's ordinary mediation boundary"
+      ],
+      "evidence_ids": ["deno-security", "deno-fixed-source"]
+    },
+    {
+      "id": "standard-module-graph",
+      "name": "Standard module graph with runtime imports",
+      "category": "module-model",
+      "claim_type": "fact",
+      "description": "Deno uses ECMAScript modules as its primary module system, loads statically analyzable imports as part of the module graph, and checks computed dynamic imports against relevant permissions at runtime. It also supports CommonJS interoperability.",
+      "benefits": [
+        "Preserves browser-compatible import and export structure",
+        "Separates graph loading from later resource operations"
+      ],
+      "costs": [
+        "Static and computed imports have different permission behavior",
+        "Interoperability adds resolution and evaluation cases"
+      ],
+      "evidence_ids": ["deno-modules", "deno-security"]
+    },
+    {
+      "id": "permission-carrying-workers",
+      "name": "Permission-carrying worker construction",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The fixed Deno source passes a root PermissionsContainer into main-worker construction and accepts a PermissionsContainer for custom worker creation, making permission state an explicit input to runtime worker setup.",
+      "benefits": [
+        "Makes authority part of worker lifecycle construction",
+        "Provides a boundary for applying different worker execution modes"
+      ],
+      "costs": [
+        "Worker creation must coordinate execution configuration with permission state",
+        "The card does not establish a complete worker inheritance or restriction policy"
+      ],
+      "evidence_ids": ["deno-fixed-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Capability-guarded transition system",
+      "question": "How do permission descriptors and permission transitions constrain resource operations during runtime execution?",
+      "assumptions": [
+        "A permission descriptor is modeled as a capability predicate over a resource",
+        "Query, request, revoke, and operation transitions consult the current permission state",
+        "The model abstracts OS-level enforcement and the full permission broker protocol"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["deno-security", "deno-fixed-source"]
+    },
+    {
+      "model": "Permission-annotated module graph",
+      "question": "Which module-loading transitions are graph construction and which require a runtime permission decision?",
+      "assumptions": [
+        "Modules are graph nodes and import edges carry static or computed resolution labels",
+        "Statically analyzable edges are loaded during graph construction",
+        "Computed edges are evaluated as runtime transitions subject to permission checks"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["deno-modules", "deno-security"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "explicit-resource-permissions",
+      "benefits": ["Explicit and scoping-aware authority"],
+      "costs": ["Permission failures and bypass-capable privileges require handling"]
+    },
+    {
+      "feature_id": "standard-module-graph",
+      "benefits": ["Portable ECMAScript module structure"],
+      "costs": ["Static versus computed import semantics differ"]
+    },
+    {
+      "feature_id": "permission-carrying-workers",
+      "benefits": ["Worker setup has an explicit authority input"],
+      "costs": ["Worker lifecycle configuration becomes more coupled"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "deno-fixed-source",
+      "kind": "source-code",
+      "title": "Deno source tree at fixed commit 7e4306fbe858",
+      "uri": "https://github.com/denoland/deno/commit/7e4306fbe8587dc7d4c103deb8a95af56cca00cb",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance for runtime/js/10_permissions.js and cli/worker.rs."
+    },
+    {
+      "id": "deno-security",
+      "kind": "official-doc",
+      "title": "Deno security and permissions",
+      "uri": "https://docs.deno.com/runtime/fundamentals/security/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for default denial, scoped grants, runtime permission changes, and permission limitations."
+    },
+    {
+      "id": "deno-modules",
+      "kind": "official-doc",
+      "title": "Deno modules",
+      "uri": "https://docs.deno.com/runtime/fundamentals/modules/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for ECMAScript module graphs, dynamic imports, and CommonJS interoperability."
+    }
+  ],
+  "related_systems": ["node", "v8", "wasmtime"]
+}

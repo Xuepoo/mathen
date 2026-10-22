@@ -1,0 +1,149 @@
+{
+  "id": "luajit",
+  "name": "LuaJIT",
+  "version_context": "repository HEAD commit a4c064539ea931274d407e1249b4bb575424a0f4",
+  "summary": "An embeddable Lua 5.1-compatible runtime that combines an assembler interpreter with a trace-based JIT compiler, exposes JIT and trace controls, and integrates a C declaration and data interface through FFI.",
+  "scope": [
+    "Lua execution",
+    "trace-based JIT compilation",
+    "FFI and C data access",
+    "embeddable runtime boundary"
+  ],
+  "features": [
+    {
+      "id": "interpreter-and-trace-jit",
+      "name": "Interpreter plus trace-based JIT",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "LuaJIT's official project description identifies a high-speed assembler interpreter and a trace compiler with SSA-based optimizations and tuned code-generation backends. The JIT library documents automatic compilation, trace flushing, and per-function enablement controls.",
+      "benefits": [
+        "Retains an interpreter path while specializing hot execution traces",
+        "Allows generated code to use runtime observations for dynamic-language performance"
+      ],
+      "costs": [
+        "Trace formation, exits, invalidation, and generated-code caching add runtime complexity",
+        "Performance depends on workload shape and the compiler's ability to form useful traces"
+      ],
+      "evidence_ids": ["luajit-overview", "luajit-jit", "luajit-fixed-source"]
+    },
+    {
+      "id": "integrated-c-ffi-boundary",
+      "name": "Integrated C FFI boundary",
+      "category": "embedding-and-interoperability",
+      "claim_type": "fact",
+      "description": "LuaJIT's official FFI documentation allows Lua code to parse C declarations, call external C functions, and create or access C data structures. It states that the FFI is integrated into LuaJIT and that C calls can be inlined in JIT-compiled code.",
+      "benefits": [
+        "Reduces the amount of handwritten binding code for C libraries",
+        "Provides low-level C-compatible data access from Lua code"
+      ],
+      "costs": [
+        "C ABI, layout, and lifetime assumptions become part of Lua code's correctness surface",
+        "Native calls and mutable C data reduce the isolation of the managed language boundary"
+      ],
+      "evidence_ids": ["luajit-ffi", "luajit-fixed-source"]
+    },
+    {
+      "id": "embeddable-lua-runtime",
+      "name": "Embeddable Lua runtime",
+      "category": "runtime-boundary",
+      "claim_type": "fact",
+      "description": "LuaJIT describes Lua as embeddable or standalone and documents compatibility with the Lua 5.1 API and ABI. The fixed source is organized as a runtime implementation with public Lua and JIT interfaces.",
+      "benefits": [
+        "Supports use as scripting middleware inside host applications",
+        "Preserves a familiar Lua-facing API while adding JIT and FFI facilities"
+      ],
+      "costs": [
+        "Hosts must manage runtime lifecycle and native integration boundaries",
+        "Compatibility and extension facilities increase the surface that embedders must understand"
+      ],
+      "evidence_ids": ["luajit-overview", "luajit-ffi", "luajit-fixed-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Interpreter-to-trace execution transition system",
+      "question": "Under what runtime observations can LuaJIT transition from interpreted execution to a compiled trace and later return through exits or flushes?",
+      "assumptions": [
+        "Interpreter states, trace roots, side traces, and generated-code cache entries are abstract states",
+        "Trace compilation and cache flushing are transitions controlled by runtime observations and JIT settings",
+        "The view abstracts processor-specific code generation and exact hot-loop thresholds"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["luajit-overview", "luajit-jit", "luajit-fixed-source"]
+    },
+    {
+      "model": "FFI type-and-memory boundary graph",
+      "question": "How do parsed C declarations, Lua-visible C data, native calls, and JIT-generated accesses compose at the FFI boundary?",
+      "assumptions": [
+        "C declarations and data objects are typed interface vertices connected to Lua values and native symbols",
+        "A call or field access is valid only when the declared ABI and layout contract is satisfied",
+        "The model abstracts platform ABI details and does not prove safety of arbitrary native declarations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["luajit-ffi", "luajit-fixed-source"]
+    },
+    {
+      "model": "Dynamic-language specialization hypothesis",
+      "question": "Which combinations of stable runtime behavior and FFI access patterns are suitable for trace specialization without changing observable Lua semantics?",
+      "assumptions": [
+        "Observed execution paths provide candidate guards and specialization inputs",
+        "Trace exits preserve a fallback path when observations no longer hold",
+        "This is a hypothesis about an analysis lens, not a claim that every trace or FFI operation is optimized"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["luajit-overview", "luajit-jit", "luajit-ffi"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "interpreter-and-trace-jit",
+      "benefits": ["Adaptive specialization while retaining an interpreter fallback"],
+      "costs": ["Trace lifecycle, exits, and code-cache management increase runtime complexity"]
+    },
+    {
+      "feature_id": "integrated-c-ffi-boundary",
+      "benefits": ["Low-boilerplate access to C functions and layouts"],
+      "costs": ["Native ABI and memory assumptions enter the dynamic-language program"]
+    },
+    {
+      "feature_id": "embeddable-lua-runtime",
+      "benefits": ["Reusable Lua-compatible scripting boundary"],
+      "costs": ["Host lifecycle and compatibility responsibilities remain"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "luajit-fixed-source",
+      "kind": "source-code",
+      "title": "LuaJIT source tree at fixed revision",
+      "uri": "https://github.com/LuaJIT/LuaJIT/commit/a4c064539ea931274d407e1249b4bb575424a0f4",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance selected for this review; the revision identifies the inspected LuaJIT source tree."
+    },
+    {
+      "id": "luajit-overview",
+      "kind": "official-doc",
+      "title": "LuaJIT project overview",
+      "uri": "https://luajit.org/luajit.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official project documentation for the assembler interpreter, trace compiler, SSA optimizations, embeddability, and compatibility."
+    },
+    {
+      "id": "luajit-jit",
+      "kind": "official-doc",
+      "title": "LuaJIT jit.* library",
+      "uri": "https://luajit.org/ext_jit.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for automatic JIT behavior, per-function controls, trace flushing, and JIT introspection."
+    },
+    {
+      "id": "luajit-ffi",
+      "kind": "official-doc",
+      "title": "LuaJIT FFI library",
+      "uri": "https://luajit.org/ext_ffi.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for C declarations, external calls, C data structures, and JIT integration at the FFI boundary."
+    }
+  ],
+  "related_systems": ["lua", "v8", "cpython"]
+}

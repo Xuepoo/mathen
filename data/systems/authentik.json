@@ -1,0 +1,238 @@
+{
+  "id": "authentik",
+  "name": "authentik",
+  "version_context": "authentik commit 678beb6f13993f0a49aa38d151172ab22e2c4207",
+  "summary": "A self-hosted identity provider that models authentication as policy-aware staged flows and separates provider/application configuration from deployable outposts.",
+  "scope": [
+    "identity provider",
+    "staged authentication flows",
+    "policy evaluation",
+    "provider and outpost lifecycle"
+  ],
+  "features": [
+    {
+      "id": "staged-flow-planning",
+      "name": "Staged flow planning and execution",
+      "category": "workflow-model",
+      "claim_type": "fact",
+      "description": "A Flow is composed from ordered stages; the planner evaluates applicability and produces a flat FlowPlan whose pending stages are consumed by an executor.",
+      "benefits": [
+        "Authentication, enrollment, recovery, and authorization can reuse stage components",
+        "Planning can skip or insert stages based on request context and markers"
+      ],
+      "costs": [
+        "The outcome depends on stage ordering, markers, and request context",
+        "A flow's behavior is distributed across planner, stage, and executor contracts"
+      ],
+      "evidence_ids": [
+        "authentik-flow-model",
+        "authentik-flow-planner"
+      ]
+    },
+    {
+      "id": "policy-binding-evaluation",
+      "name": "Policy binding evaluation and aggregation",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Policy bindings are evaluated for a request and user, with static and dynamic results combined according to an ALL or ANY policy mode and optional negation, dry-run, caching, and failure behavior.",
+      "benefits": [
+        "Authorization rules can be attached to flows and other bound objects",
+        "Policy evaluation can be cached, logged, and aggregated consistently"
+      ],
+      "costs": [
+        "The effective decision depends on binding mode, negation, expiration, and failure results",
+        "Dynamic policy execution adds latency and operational observability requirements"
+      ],
+      "evidence_ids": [
+        "authentik-policy-engine",
+        "authentik-policy-process"
+      ]
+    },
+    {
+      "id": "provider-application-boundary",
+      "name": "Provider and application boundary",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "Provider objects expose protocol-specific identity services such as OAuth2/OIDC, while applications and flows provide the surrounding routing and policy context.",
+      "benefits": [
+        "Protocol implementations can evolve behind a common provider model",
+        "A single identity core can serve several application integration styles"
+      ],
+      "costs": [
+        "Provider configuration, scopes, claims, redirect rules, and application bindings must remain consistent",
+        "Cross-provider behavior cannot be inferred from one protocol implementation"
+      ],
+      "evidence_ids": [
+        "authentik-readme",
+        "authentik-oauth-model"
+      ]
+    },
+    {
+      "id": "managed-outpost-lifecycle",
+      "name": "Managed outpost lifecycle",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "An Outpost associates providers with a service connection and serialized configuration, exposes service-account credentials, and records instance health and version state in a cache.",
+      "benefits": [
+        "Protocol-specific edge services can be deployed separately from the identity core",
+        "Controllers can reconcile deployment configuration and observe outpost instances"
+      ],
+      "costs": [
+        "Control-plane configuration and outpost runtime state can diverge",
+        "Service connections, credentials, version compatibility, and health become additional failure boundaries"
+      ],
+      "evidence_ids": [
+        "authentik-outpost-model",
+        "authentik-outpost-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Context-dependent workflow transition system",
+      "question": "How does a request context transition through a planned sequence of stages, including skipped, inserted, redirected, and failed stages?",
+      "assumptions": [
+        "A FlowPlan is represented as an ordered list of stage bindings and markers",
+        "Each stage transition consumes or preserves explicit request and flow context",
+        "Policy decisions that alter planning are modeled before stage execution"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "authentik-flow-model",
+        "authentik-flow-planner"
+      ]
+    },
+    {
+      "model": "Boolean policy aggregation algebra",
+      "question": "How do individual policy results combine into an effective authorization decision under ALL, ANY, negation, and failure-result rules?",
+      "assumptions": [
+        "Each evaluated binding produces a Boolean passing result plus metadata",
+        "Dry-run results do not affect the effective result",
+        "The aggregation mode and empty-result policy are fixed for one evaluation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "authentik-policy-engine",
+        "authentik-policy-process"
+      ]
+    },
+    {
+      "model": "Control-plane reconciliation transition system",
+      "question": "How do provider assignments, service connections, outpost configuration, and observed instance health evolve toward a deployed outpost state?",
+      "assumptions": [
+        "The database model is the desired configuration and cached OutpostState is observation",
+        "Controller actions are modeled as transitions that may be delayed or fail",
+        "The model does not assume convergence without controller and transport evidence"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "authentik-outpost-model",
+        "authentik-outpost-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "staged-flow-planning",
+      "benefits": [
+        "Reusable and context-sensitive identity workflows"
+      ],
+      "costs": [
+        "Stage order and planner context make behavior harder to reason about locally"
+      ]
+    },
+    {
+      "feature_id": "policy-binding-evaluation",
+      "benefits": [
+        "Uniform policy attachment and composition across protected objects"
+      ],
+      "costs": [
+        "Policy aggregation and dynamic execution add decision complexity and latency"
+      ]
+    },
+    {
+      "feature_id": "provider-application-boundary",
+      "benefits": [
+        "Protocol-specific integrations share an identity-management core"
+      ],
+      "costs": [
+        "Configuration contracts cross object and protocol boundaries"
+      ]
+    },
+    {
+      "feature_id": "managed-outpost-lifecycle",
+      "benefits": [
+        "Separates edge protocol deployment from central identity state"
+      ],
+      "costs": [
+        "Reconciliation, credentials, and health monitoring add distributed-state failure modes"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "authentik-readme",
+      "kind": "official-doc",
+      "title": "authentik README at fixed commit",
+      "uri": "https://github.com/goauthentik/authentik/blob/678beb6f13993f0a49aa38d151172ab22e2c4207/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Local checkout /tmp/opencode/mth-0050/authentik; identifies authentik as a self-hosted IdP supporting SAML, OAuth2/OIDC, LDAP, RADIUS, and more."
+    },
+    {
+      "id": "authentik-flow-model",
+      "kind": "source-code",
+      "title": "authentik Flow and Stage models at fixed commit",
+      "uri": "https://github.com/goauthentik/authentik/blob/678beb6f13993f0a49aa38d151172ab22e2c4207/authentik/flows/models.py",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/authentik/authentik/flows/models.py; Flow binds ordered stages and exposes authentication and denial requirements."
+    },
+    {
+      "id": "authentik-flow-planner",
+      "kind": "source-code",
+      "title": "authentik FlowPlan and FlowPlanner at fixed commit",
+      "uri": "https://github.com/goauthentik/authentik/blob/678beb6f13993f0a49aa38d151172ab22e2c4207/authentik/flows/planner.py",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/authentik/authentik/flows/planner.py; plans stages, applies markers, and may skip directly to a final stage."
+    },
+    {
+      "id": "authentik-policy-engine",
+      "kind": "source-code",
+      "title": "authentik PolicyEngine at fixed commit",
+      "uri": "https://github.com/goauthentik/authentik/blob/678beb6f13993f0a49aa38d151172ab22e2c4207/authentik/policies/engine.py",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/authentik/authentik/policies/engine.py; static and dynamic policy results are combined under configured modes."
+    },
+    {
+      "id": "authentik-policy-process",
+      "kind": "source-code",
+      "title": "authentik PolicyProcess at fixed commit",
+      "uri": "https://github.com/goauthentik/authentik/blob/678beb6f13993f0a49aa38d151172ab22e2c4207/authentik/policies/process.py",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/authentik/authentik/policies/process.py; policy execution handles negation, failure results, logging, and caching."
+    },
+    {
+      "id": "authentik-oauth-model",
+      "kind": "source-code",
+      "title": "authentik OAuth2 provider models at fixed commit",
+      "uri": "https://github.com/goauthentik/authentik/blob/678beb6f13993f0a49aa38d151172ab22e2c4207/authentik/providers/oauth2/models.py",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/authentik/authentik/providers/oauth2/models.py; provider model defines grant, response, redirect, scope, and signing choices."
+    },
+    {
+      "id": "authentik-outpost-model",
+      "kind": "source-code",
+      "title": "authentik Outpost models at fixed commit",
+      "uri": "https://github.com/goauthentik/authentik/blob/678beb6f13993f0a49aa38d151172ab22e2c4207/authentik/outposts/models.py",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/authentik/authentik/outposts/models.py; Outpost links providers and service connections and stores desired config plus cached instance state."
+    },
+    {
+      "id": "authentik-outpost-doc",
+      "kind": "official-doc",
+      "title": "authentik outpost documentation",
+      "uri": "https://docs.goauthentik.io/docs/add-secure-apps/outposts/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for outpost deployment and the control-plane/edge-service boundary; the modeled source version is pinned separately by authentik-outpost-model."
+    }
+  ]
+}

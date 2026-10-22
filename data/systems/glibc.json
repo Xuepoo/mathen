@@ -1,0 +1,197 @@
+{
+  "id": "glibc",
+  "name": "GNU C Library",
+  "version_context": "commit 9e77a668c94f892f2ce0ad9ef7f6e88525852af3",
+  "summary": "A broad GNU implementation of the C library and operating-system-facing interfaces with symbol-versioned ABI support, dynamic loading, thread-local runtime state, and extensive platform integration.",
+  "scope": [
+    "C and POSIX library interfaces",
+    "symbol-versioned ABI",
+    "dynamic loading and relocation",
+    "threads, TLS, and memory allocation"
+  ],
+  "features": [
+    {
+      "id": "symbol-versioned-library-abi",
+      "name": "Symbol-versioned library ABI",
+      "category": "compatibility-boundary",
+      "claim_type": "fact",
+      "description": "glibc maintains exported interfaces through ABI lists, symbol versioning support, and compatibility mechanisms in the source tree, allowing multiple historical symbol versions to coexist at the library boundary.",
+      "benefits": [
+        "Supports compatibility with programs built against earlier glibc interfaces",
+        "Makes library evolution explicit at the binary symbol boundary"
+      ],
+      "costs": [
+        "Historical ABI commitments increase maintenance surface",
+        "Symbol version selection complicates linking and debugging"
+      ],
+      "evidence_ids": [
+        "glibc-abi-doc",
+        "glibc-abi-source",
+        "glibc-fixed-source"
+      ]
+    },
+    {
+      "id": "dynamic-loader-and-relocation",
+      "name": "Dynamic loader and relocation",
+      "category": "linking-model",
+      "claim_type": "fact",
+      "description": "glibc includes the ELF dynamic linker, relocation, symbol lookup, and shared-object loading implementation, forming a runtime boundary between executable objects and their loaded dependencies.",
+      "benefits": [
+        "Allows programs to share libraries and resolve dependencies at load time",
+        "Separates executable composition from the complete set of runtime objects"
+      ],
+      "costs": [
+        "Runtime behavior depends on loader paths, object metadata, and relocation state",
+        "Dynamic dependencies add deployment and compatibility failure modes"
+      ],
+      "evidence_ids": [
+        "glibc-loader-doc",
+        "glibc-loader-source",
+        "glibc-fixed-source"
+      ]
+    },
+    {
+      "id": "thread-local-and-process-runtime",
+      "name": "Thread-local and process runtime",
+      "category": "runtime-state",
+      "claim_type": "fact",
+      "description": "The glibc source contains NPTL thread creation and cleanup, thread-control-block and TLS layout support, allocator implementation, and process-facing library subsystems that coordinate with the operating system.",
+      "benefits": [
+        "Provides standardized process and thread services through one libc boundary",
+        "Supports per-thread state and concurrent runtime operations"
+      ],
+      "costs": [
+        "Thread, TLS, and allocator lifecycles add cross-layer state transitions",
+        "Platform and kernel integration expands the implementation and testing surface"
+      ],
+      "evidence_ids": [
+        "glibc-runtime-doc",
+        "glibc-thread-source",
+        "glibc-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Versioned ABI compatibility relation",
+      "question": "How can a library evolve while preserving the set of historical symbol contracts required by existing binaries?",
+      "assumptions": [
+        "A binary interface is modeled as symbols paired with version labels and calling contracts",
+        "Compatibility is considered at symbol resolution and interface availability, not complete behavioral equivalence",
+        "The view abstracts compiler and processor-specific calling convention details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "glibc-abi-doc",
+        "glibc-abi-source",
+        "glibc-fixed-source"
+      ]
+    },
+    {
+      "model": "Loaded-object dependency graph",
+      "question": "How do executable objects, shared libraries, relocations, and thread-local runtime state form a process during startup and loading?",
+      "assumptions": [
+        "Object files are vertices and load-time dependency or relocation requirements are directed edges",
+        "The graph describes loader composition and omits scheduling and application-level behavior",
+        "TLS and allocator state are modeled as process lifecycle resources rather than ordinary graph vertices"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "glibc-loader-source",
+        "glibc-thread-source",
+        "glibc-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "symbol-versioned-library-abi",
+      "benefits": [
+        "Historical binaries can resolve maintained symbol contracts"
+      ],
+      "costs": [
+        "ABI compatibility creates long-lived maintenance obligations"
+      ]
+    },
+    {
+      "feature_id": "dynamic-loader-and-relocation",
+      "benefits": [
+        "Shared libraries reduce duplicated deployed code"
+      ],
+      "costs": [
+        "Loader paths and runtime dependencies increase deployment complexity"
+      ]
+    },
+    {
+      "feature_id": "thread-local-and-process-runtime",
+      "benefits": [
+        "Common process and concurrency services are available through libc"
+      ],
+      "costs": [
+        "Cross-layer thread and TLS state expands lifecycle reasoning"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "glibc-fixed-source",
+      "kind": "source-code",
+      "title": "GNU C Library source tree at fixed commit 9e77a668c94f",
+      "uri": "https://sourceware.org/git/?p=glibc.git;a=commit;h=9e77a668c94f892f2ce0ad9ef7f6e88525852af3",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed official sourceware Git provenance for the reviewed glibc source tree."
+    },
+    {
+      "id": "glibc-abi-doc",
+      "kind": "official-doc",
+      "title": "GNU C Library manual",
+      "uri": "https://sourceware.org/glibc/manual/latest/html_mono/libc.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official GNU C Library manual for the C library and operating-system-facing interfaces."
+    },
+    {
+      "id": "glibc-abi-source",
+      "kind": "source-code",
+      "title": "glibc ABI and symbol-versioning sources at fixed commit",
+      "uri": "https://sourceware.org/git/?p=glibc.git;a=tree;f=elf;hb=9e77a668c94f892f2ce0ad9ef7f6e88525852af3",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official fixed-commit source path for ELF symbol lookup, versioning, and ABI-related loader code."
+    },
+    {
+      "id": "glibc-loader-doc",
+      "kind": "official-doc",
+      "title": "GNU C Library program startup and dynamic linking documentation",
+      "uri": "https://sourceware.org/glibc/manual/latest/html_mono/libc.html#Program-Basics",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official manual section covering program startup and process environment at the libc boundary."
+    },
+    {
+      "id": "glibc-loader-source",
+      "kind": "source-code",
+      "title": "glibc dynamic loader sources at fixed commit",
+      "uri": "https://sourceware.org/git/?p=glibc.git;a=tree;f=elf;hb=9e77a668c94f892f2ce0ad9ef7f6e88525852af3",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official fixed-commit source path for dynamic loading, relocation, and shared-object dependency handling."
+    },
+    {
+      "id": "glibc-runtime-doc",
+      "kind": "official-doc",
+      "title": "GNU C Library POSIX threads documentation",
+      "uri": "https://sourceware.org/glibc/manual/latest/html_mono/libc.html#POSIX-Threads",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official GNU C Library manual section for POSIX thread interfaces and lifecycle."
+    },
+    {
+      "id": "glibc-thread-source",
+      "kind": "source-code",
+      "title": "glibc NPTL thread and TLS sources at fixed commit",
+      "uri": "https://sourceware.org/git/?p=glibc.git;a=tree;f=nptl;hb=9e77a668c94f892f2ce0ad9ef7f6e88525852af3",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official fixed-commit source path for thread creation, thread-local storage, and cleanup."
+    }
+  ],
+  "related_systems": [
+    "musl",
+    "linux"
+  ]
+}

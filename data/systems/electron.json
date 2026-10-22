@@ -1,0 +1,132 @@
+{
+  "id": "electron",
+  "name": "Electron",
+  "version_context": "commit a89731b06cc1003140f794db0f9b92b268dd407c",
+  "summary": "A desktop application framework that combines a privileged main process with Chromium renderer contexts, explicit IPC bridges, and utility processes for web-based user interfaces.",
+  "scope": [
+    "main and renderer process model",
+    "preload and capability bridge",
+    "inter-process communication",
+    "utility processes and window lifecycle"
+  ],
+  "features": [
+    {
+      "id": "main-renderer-process-boundary",
+      "name": "Main and renderer process boundary",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Electron documents a main process that runs the application lifecycle and creates BrowserWindow instances, while each BrowserWindow runs page content in a renderer process. Renderer processes are Chromium web contexts and do not directly own the native application lifecycle.",
+      "benefits": [
+        "Separates native window control from web content execution",
+        "Allows Chromium renderer isolation and independent page contexts"
+      ],
+      "costs": [
+        "Application behavior crosses asynchronous process boundaries",
+        "Window and renderer lifetimes must be coordinated explicitly"
+      ],
+      "evidence_ids": ["electron-process-model-doc", "electron-browser-window-source", "repository-commit"]
+    },
+    {
+      "id": "preload-capability-bridge",
+      "name": "Preload capability bridge",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "A preload script runs before page loading and can expose a deliberately selected API to the renderer. Electron's tutorial recommends context isolation and exposing narrow functions rather than handing untrusted content the complete IPC module; sandboxed preload execution has a restricted environment.",
+      "benefits": [
+        "Makes native capabilities explicit at the web/native boundary",
+        "Supports least-authority APIs for renderer code"
+      ],
+      "costs": [
+        "Every exposed method becomes a security and validation surface",
+        "Sandbox and context-isolation constraints limit available Node APIs"
+      ],
+      "evidence_ids": ["electron-preload-doc", "electron-security-doc", "electron-preload-source"]
+    },
+    {
+      "id": "ipc-channel-model",
+      "name": "IPC channel model",
+      "category": "communication-model",
+      "claim_type": "fact",
+      "description": "Electron provides main-side ipcMain and renderer-side ipcRenderer APIs with send, invoke/handle, and event channels. The documented preload pattern converts these channels into application-specific functions, while the source implements native IPC dispatch at the renderer and browser boundaries.",
+      "benefits": [
+        "Supports request/response and event-oriented communication",
+        "Lets applications define a smaller protocol than the framework API"
+      ],
+      "costs": [
+        "Serialization, sender validation, and error propagation are application responsibilities",
+        "Channel names and payload contracts must remain compatible across processes"
+      ],
+      "evidence_ids": ["electron-ipc-doc", "electron-security-doc", "electron-ipc-source"]
+    },
+    {
+      "id": "utility-process-isolation",
+      "name": "Utility process isolation",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Electron exposes utilityProcess for starting Node.js environments in separate child processes and communicating with them through MessagePorts. The utility process API provides a separate lifecycle and failure boundary for work that should not run in the main or renderer process.",
+      "benefits": [
+        "Moves selected Node workloads outside the main process",
+        "Provides an additional process boundary for fault containment"
+      ],
+      "costs": [
+        "Additional processes increase startup, memory, and supervision cost",
+        "Message passing replaces direct in-process calls"
+      ],
+      "evidence_ids": ["electron-utility-process-doc", "electron-utility-process-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Labeled process topology graph",
+      "question": "How do main, renderer, preload, and utility process nodes connect through window ownership and IPC edges?",
+      "assumptions": [
+        "Processes and execution contexts are explicit nodes",
+        "Window ownership and message channels are labeled edges",
+        "The graph abstracts Chromium scheduling and operating-system process details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["electron-process-model-doc", "electron-ipc-doc", "electron-utility-process-doc"]
+    },
+    {
+      "model": "Capability-preserving protocol refinement",
+      "question": "Which native operations can a renderer access after a preload bridge refines a broad framework API into application-specific functions?",
+      "assumptions": [
+        "The exposed API is a subset of main-process handlers",
+        "IPC serialization and sender checks are part of the protocol boundary",
+        "Security equivalence is a hypothesis requiring review of each exposed method"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["electron-preload-doc", "electron-security-doc", "electron-ipc-doc"]
+    },
+    {
+      "model": "Process lifecycle state machine",
+      "question": "What transitions connect application startup, window creation, renderer failure, utility-process exit, and application shutdown?",
+      "assumptions": [
+        "Main-process events coordinate the lifecycle",
+        "Renderer and utility processes can fail independently of the main process",
+        "The model abstracts platform-specific shutdown behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["electron-process-model-doc", "electron-browser-window-source", "electron-utility-process-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "main-renderer-process-boundary", "benefits": ["Native control and web content have separate failure and privilege domains"], "costs": ["Cross-process lifecycle coordination adds latency and state-management work"]},
+    {"feature_id": "preload-capability-bridge", "benefits": ["A narrow bridge can reduce renderer authority"], "costs": ["Bridge design and validation determine the effective security boundary"]},
+    {"feature_id": "ipc-channel-model", "benefits": ["Explicit channels support decoupled process communication"], "costs": ["Protocol compatibility and serialization become application obligations"]},
+    {"feature_id": "utility-process-isolation", "benefits": ["Selected workloads gain a separate process failure boundary"], "costs": ["Extra processes consume resources and require supervision"]}
+  ],
+  "evidence": [
+    {"id": "repository-commit", "kind": "source-code", "title": "Electron source at a89731b06cc1", "uri": "https://github.com/electron/electron/commit/a89731b06cc1003140f794db0f9b92b268dd407c", "accessed": "2026-10-23", "notes": "Fixed repository provenance for the reviewed revision."},
+    {"id": "electron-process-model-doc", "kind": "official-doc", "title": "Electron process model tutorial", "uri": "https://www.electronjs.org/docs/latest/tutorial/process-model", "accessed": "2026-10-23", "notes": "Official documentation for main, renderer, utility, and other process roles."},
+    {"id": "electron-preload-doc", "kind": "official-doc", "title": "Electron preload scripts tutorial", "uri": "https://www.electronjs.org/docs/latest/tutorial/tutorial-preload", "accessed": "2026-10-23", "notes": "Official documentation for preload execution, context isolation, and exposing APIs."},
+    {"id": "electron-ipc-doc", "kind": "official-doc", "title": "Electron inter-process communication tutorial", "uri": "https://www.electronjs.org/docs/latest/tutorial/ipc", "accessed": "2026-10-23", "notes": "Official documentation for main/renderer IPC patterns and request/response channels."},
+    {"id": "electron-security-doc", "kind": "official-doc", "title": "Electron security tutorial", "uri": "https://www.electronjs.org/docs/latest/tutorial/security", "accessed": "2026-10-23", "notes": "Official security guidance for sandboxing, context isolation, preload APIs, and IPC sender validation."},
+    {"id": "electron-utility-process-doc", "kind": "official-doc", "title": "Electron utilityProcess API", "uri": "https://www.electronjs.org/docs/latest/api/utility-process", "accessed": "2026-10-23", "notes": "Official API documentation for child Node.js processes and MessagePort communication."},
+    {"id": "electron-browser-window-source", "kind": "source-code", "title": "Electron BrowserWindow implementation at fixed commit", "uri": "https://github.com/electron/electron/blob/a89731b06cc1003140f794db0f9b92b268dd407c/shell/browser/api/electron_api_browser_window.cc", "accessed": "2026-10-23", "notes": "Fixed source for BrowserWindow creation and native/browser lifecycle integration."},
+    {"id": "electron-preload-source", "kind": "source-code", "title": "Electron preload implementation at fixed commit", "uri": "https://github.com/electron/electron/blob/a89731b06cc1003140f794db0f9b92b268dd407c/shell/browser/preload_script.cc", "accessed": "2026-10-23", "notes": "Fixed source for preload script loading and execution boundaries."},
+    {"id": "electron-ipc-source", "kind": "source-code", "title": "Electron IPC implementation at fixed commit", "uri": "https://github.com/electron/electron/blob/a89731b06cc1003140f794db0f9b92b268dd407c/shell/browser/electron_api_ipc_handler_impl.cc", "accessed": "2026-10-23", "notes": "Fixed source for browser-side IPC handler dispatch."},
+    {"id": "electron-utility-process-source", "kind": "source-code", "title": "Electron utility process implementation at fixed commit", "uri": "https://github.com/electron/electron/blob/a89731b06cc1003140f794db0f9b92b268dd407c/shell/browser/api/electron_api_utility_process.cc", "accessed": "2026-10-23", "notes": "Fixed source for utility process creation and lifecycle events."}
+  ],
+  "related_systems": []
+}

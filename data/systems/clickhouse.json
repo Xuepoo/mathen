@@ -1,0 +1,67 @@
+{
+  "id": "clickhouse",
+  "name": "ClickHouse",
+  "version_context": "commit 49e620f853b41023c3508f6dc80566a7efec8903",
+  "summary": "A column-oriented analytical database that organizes data into sorted parts, executes expressions in vectors, and merges immutable parts in the background.",
+  "scope": ["columnar storage", "analytical query execution", "MergeTree tables", "background merging"],
+  "features": [
+    {
+      "id": "column-oriented-storage",
+      "name": "Column-oriented storage",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "ClickHouse stores table data by columns and its MergeTree family organizes inserted data into sorted parts, making columns and parts explicit units of analytical storage.",
+      "benefits": ["Efficiently reads only columns needed by analytical queries", "Makes sorted data parts suitable for large scans"],
+      "costs": ["Write and schema choices are optimized for analytical access patterns", "Part lifecycle adds storage-management state"],
+      "evidence_ids": ["clickhouse-intro", "clickhouse-mergetree"]
+    },
+    {
+      "id": "vectorized-expression-execution",
+      "name": "Vectorized expression execution",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The ClickHouse query pipeline processes data in blocks and evaluates expressions over columns of values, exposing a vectorized unit between storage and query operators.",
+      "benefits": ["Amortizes operator overhead across batches", "Supports high-throughput analytical scans and transformations"],
+      "costs": ["Batch-oriented execution is less directly suited to point-oriented workloads", "Operators must manage block sizing and materialization"],
+      "evidence_ids": ["clickhouse-query-pipeline"]
+    },
+    {
+      "id": "background-part-merging",
+      "name": "Background data-part merging",
+      "category": "storage-maintenance",
+      "claim_type": "fact",
+      "description": "MergeTree tables continually merge data parts in the background; the merge process combines sorted parts into larger parts and applies configured data transformations such as deduplication or aggregation where supported.",
+      "benefits": ["Converts many small writes into fewer read-efficient parts", "Moves compaction work out of foreground query execution"],
+      "costs": ["Background I/O and CPU compete with queries and inserts", "Read visibility and storage shape depend on merge progress"],
+      "evidence_ids": ["clickhouse-mergetree"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Columnar relational operator pipeline",
+      "question": "How can a relational query be represented as transformations over selected columns and finite blocks?",
+      "assumptions": ["Each operator preserves the intended relational semantics", "Blocks are finite partitions of a logical stream", "Physical compression and hardware effects are abstracted"],
+      "claim_type": "inference",
+      "evidence_ids": ["clickhouse-query-pipeline", "clickhouse-intro"]
+    },
+    {
+      "model": "Part merge rewrite system",
+      "question": "Under what conditions can a set of sorted data parts be replaced by a larger part while preserving the table's query-visible semantics?",
+      "assumptions": ["Parts have compatible table metadata and ordering", "Merge transformations implement the table-engine contract", "The view abstracts replication and failure recovery"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["clickhouse-mergetree"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "column-oriented-storage", "benefits": ["Selective, high-throughput analytical reads"], "costs": ["Analytical layout and part management constrain write patterns"]},
+    {"feature_id": "vectorized-expression-execution", "benefits": ["Efficient batch computation"], "costs": ["Batch execution adds workload-specific buffering and tuning"]},
+    {"feature_id": "background-part-merging", "benefits": ["Read-optimized consolidation of incremental writes"], "costs": ["Compaction consumes resources asynchronously"]}
+  ],
+  "evidence": [
+    {"id": "clickhouse-repository-commit", "kind": "source-code", "title": "ClickHouse source at 49e620f853b4", "uri": "https://github.com/ClickHouse/ClickHouse/commit/49e620f853b41023c3508f6dc80566a7efec8903", "accessed": "2026-10-23", "notes": "Fixed source revision used for this reviewed card."},
+    {"id": "clickhouse-intro", "kind": "official-doc", "title": "ClickHouse introduction", "uri": "https://clickhouse.com/docs/intro", "accessed": "2026-10-23", "notes": "Official documentation describing ClickHouse as a column-oriented SQL analytical database."},
+    {"id": "clickhouse-mergetree", "kind": "official-doc", "title": "MergeTree table engine", "uri": "https://clickhouse.com/docs/engines/table-engines/mergetree-family/mergetree", "accessed": "2026-10-23", "notes": "Official documentation for sorted data parts and background merges."},
+    {"id": "clickhouse-query-pipeline", "kind": "official-doc", "title": "ClickHouse query processing and pipeline", "uri": "https://clickhouse.com/docs/academic_overview", "accessed": "2026-10-23", "notes": "Official technical overview for columnar, vectorized query processing and pipeline execution."}
+  ],
+  "related_systems": ["duckdb", "postgresql"]
+}

@@ -1,0 +1,195 @@
+{
+  "id": "freebsd",
+  "name": "FreeBSD",
+  "version_context": "commit 9c67d6ed9632e180e95bebabc5a8ceae7f22ce1a",
+  "summary": "A Unix-like operating system whose kernel combines process, filesystem, and networking subsystems with modular storage and jail-based operating-system virtualization.",
+  "scope": [
+    "operating-system kernel",
+    "process and filesystem abstractions",
+    "network stack",
+    "jails and resource isolation"
+  ],
+  "features": [
+    {
+      "id": "kernel-subsystem-model",
+      "name": "Integrated kernel subsystem model",
+      "category": "kernel-model",
+      "claim_type": "fact",
+      "description": "FreeBSD provides process, filesystem, networking, and device functionality through cooperating kernel subsystems exposed through system calls and kernel interfaces.",
+      "benefits": [
+        "Provides a coherent Unix operating-system boundary",
+        "Allows subsystems to share kernel services and resource mechanisms"
+      ],
+      "costs": [
+        "Kernel-wide faults can affect unrelated workloads",
+        "Subsystem coupling and synchronization increase implementation complexity"
+      ],
+      "evidence_ids": [
+        "freebsd-handbook-doc",
+        "freebsd-kernel-source"
+      ]
+    },
+    {
+      "id": "jail-operating-system-virtualization",
+      "name": "Jail operating-system virtualization",
+      "category": "isolation-model",
+      "claim_type": "fact",
+      "description": "FreeBSD jails virtualize selected filesystem, user, process, and networking views for contained processes, with VNET providing a distinct network stack when configured.",
+      "benefits": [
+        "Provides operating-system-level isolation without a guest kernel",
+        "Supports distinct network and resource configurations"
+      ],
+      "costs": [
+        "Jails do not provide hardware-virtual-machine isolation",
+        "Security and isolation depend on kernel policy and jail configuration"
+      ],
+      "evidence_ids": [
+        "freebsd-jails-doc",
+        "freebsd-jail-source"
+      ]
+    },
+    {
+      "id": "modular-storage-stack",
+      "name": "Modular storage transformation stack",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "FreeBSD GEOM composes storage transformations such as partitioning, mirroring, and encryption as a modular provider/consumer stack beneath filesystems and applications.",
+      "benefits": [
+        "Composes storage policies without embedding them in each filesystem",
+        "Supports layered administration and replacement of storage providers"
+      ],
+      "costs": [
+        "Layered failures and metadata interactions complicate diagnosis",
+        "Performance and semantics depend on the selected stack"
+      ],
+      "evidence_ids": [
+        "freebsd-geom-doc",
+        "freebsd-geom-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Kernel resource object graph",
+      "question": "How do processes, files, sockets, devices, and kernel subsystems connect across system-call operations?",
+      "assumptions": [
+        "The graph abstracts locking and interrupt details",
+        "Subsystem interfaces define typed ownership and lifecycle edges"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "freebsd-handbook-doc",
+        "freebsd-kernel-source"
+      ]
+    },
+    {
+      "model": "Namespaced operating-system state",
+      "question": "Which host resources and views are shared, virtualized, or restricted for a jail?",
+      "assumptions": [
+        "A jail is modeled as a constrained kernel view rather than a second kernel",
+        "Network isolation depends on configured VNET and related options"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "freebsd-jails-doc",
+        "freebsd-jail-source"
+      ]
+    },
+    {
+      "model": "Composable storage pipeline",
+      "question": "How do GEOM providers transform and expose storage to consumers?",
+      "assumptions": [
+        "Providers and consumers form an ordered data path",
+        "The model does not claim every composition is valid or failure-transparent"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "freebsd-geom-doc",
+        "freebsd-geom-source"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "freebsd-handbook-doc",
+      "kind": "official-doc",
+      "title": "FreeBSD Handbook",
+      "uri": "https://docs.freebsd.org/en/books/handbook/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official FreeBSD documentation for system operation, kernel configuration, services, storage, and networking."
+    },
+    {
+      "id": "freebsd-jails-doc",
+      "kind": "official-doc",
+      "title": "FreeBSD Handbook: Jails and Containers",
+      "uri": "https://docs.freebsd.org/en/books/handbook/jails/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for jail isolation, VNET, jail types, and resource limits."
+    },
+    {
+      "id": "freebsd-geom-doc",
+      "kind": "official-doc",
+      "title": "FreeBSD Handbook: GEOM",
+      "uri": "https://docs.freebsd.org/en/books/handbook/geom/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for the modular GEOM storage framework."
+    },
+    {
+      "id": "freebsd-kernel-source",
+      "kind": "source-code",
+      "title": "FreeBSD kernel source at 9c67d6ed9632",
+      "uri": "https://github.com/freebsd/freebsd/tree/9c67d6ed9632e180e95bebabc5a8ceae7f22ce1a/sys",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for kernel subsystem boundaries."
+    },
+    {
+      "id": "freebsd-jail-source",
+      "kind": "source-code",
+      "title": "FreeBSD jail source at 9c67d6ed9632",
+      "uri": "https://github.com/freebsd/freebsd/blob/9c67d6ed9632e180e95bebabc5a8ceae7f22ce1a/sys/kern/kern_jail.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for jail lifecycle and restrictions."
+    },
+    {
+      "id": "freebsd-geom-source",
+      "kind": "source-code",
+      "title": "FreeBSD GEOM source at 9c67d6ed9632",
+      "uri": "https://github.com/freebsd/freebsd/tree/9c67d6ed9632e180e95bebabc5a8ceae7f22ce1a/sys/geom",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for GEOM provider/consumer layering."
+    }
+  ],
+  "related_systems": [
+    "linux",
+    "docker"
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "kernel-subsystem-model",
+      "benefits": [
+        "Provides a coherent Unix operating-system boundary"
+      ],
+      "costs": [
+        "Kernel-wide faults can affect unrelated workloads"
+      ]
+    },
+    {
+      "feature_id": "jail-operating-system-virtualization",
+      "benefits": [
+        "Provides operating-system-level isolation without a guest kernel"
+      ],
+      "costs": [
+        "Jails do not provide hardware-virtual-machine isolation"
+      ]
+    },
+    {
+      "feature_id": "modular-storage-stack",
+      "benefits": [
+        "Composes storage policies without embedding them in each filesystem"
+      ],
+      "costs": [
+        "Layered failures and metadata interactions complicate diagnosis"
+      ]
+    }
+  ]
+}

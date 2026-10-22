@@ -1,0 +1,146 @@
+{
+  "id": "fd",
+  "name": "fd",
+  "version_context": "commit 9e904639aee44df4507200cf0ed5e8531e120d6f",
+  "summary": "A Rust filesystem finder that combines regex or glob matching, ignore-aware parallel traversal, metadata predicates, and parallel per-entry or batched command execution.",
+  "scope": [
+    "filesystem search CLI",
+    "path and metadata filtering",
+    "ignore-aware parallel traversal",
+    "parallel command execution"
+  ],
+  "features": [
+    {
+      "id": "ignore-aware-parallel-filesystem-walk",
+      "name": "Ignore-aware parallel filesystem walk",
+      "category": "traversal-model",
+      "claim_type": "fact",
+      "description": "The official README describes parallelized directory traversal with hidden and Git-ignored entries excluded by default. The fixed walk implementation configures ignore sources, overrides, thread count, and a parallel walker.",
+      "benefits": [
+        "Reduces traversal time for large directory trees",
+        "Provides useful project-oriented defaults while retaining explicit unrestricted modes"
+      ],
+      "costs": [
+        "Default exclusions can hide entries unless users understand the policy",
+        "Concurrent traversal requires coordination of errors, cancellation, and result delivery"
+      ],
+      "evidence_ids": ["fd-readme", "fd-walk-source"]
+    },
+    {
+      "id": "composable-path-and-metadata-filters",
+      "name": "Composable path and metadata filters",
+      "category": "query-model",
+      "claim_type": "fact",
+      "description": "fd accepts regex or glob patterns and composes path, type, extension, depth, size, owner, time, exclusion, and ignore-contain constraints. The fixed source applies these predicates while consuming walker entries.",
+      "benefits": [
+        "Expresses common filesystem queries without shelling out to multiple tools",
+        "Allows traversal results to be narrowed before output or execution"
+      ],
+      "costs": [
+        "Predicate interactions make matching semantics less obvious than a single pattern",
+        "Metadata checks can add filesystem calls and platform-specific behavior"
+      ],
+      "evidence_ids": ["fd-readme", "fd-walk-source", "fd-filter-source"]
+    },
+    {
+      "id": "parallel-command-execution-boundary",
+      "name": "Parallel command execution boundary",
+      "category": "process-interface",
+      "claim_type": "fact",
+      "description": "The official documentation distinguishes per-result execution from one batched command and states that per-result jobs can run in parallel. The fixed source distributes jobs across worker threads and buffers or streams their output.",
+      "benefits": [
+        "Turns a filesystem query into a bounded batch or parallel job fan-out",
+        "Keeps output from concurrent commands from being interlaced"
+      ],
+      "costs": [
+        "External command failure, side effects, and ordering become part of the invocation contract",
+        "Parallelism can amplify resource consumption and expose filesystem races"
+      ],
+      "evidence_ids": ["fd-readme", "fd-walk-source", "fd-exec-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Filesystem query predicate algebra",
+      "question": "How do pattern, path, metadata, ignore, and exclusion predicates select entries from a filesystem walk?",
+      "assumptions": [
+        "A walker emits entries and each option contributes a predicate or traversal constraint",
+        "Predicates are composed as conjunctions except where an option explicitly changes traversal or matching mode",
+        "The model abstracts symlink races, permission failures, and platform metadata differences"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["fd-readme", "fd-walk-source", "fd-filter-source"]
+    },
+    {
+      "model": "Traversal-to-job queue transition system",
+      "question": "How do discovered entries become serialized output, per-entry jobs, or a single batch command under bounded parallelism?",
+      "assumptions": [
+        "Entries move through discovered, filtered, queued, executed, and reported states",
+        "Worker count bounds concurrent job execution but does not make external commands deterministic",
+        "The view abstracts shell argument escaping details and process scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["fd-readme", "fd-walk-source", "fd-exec-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "ignore-aware-parallel-filesystem-walk",
+      "benefits": ["Fast project-oriented traversal with configurable exclusions"],
+      "costs": ["Concurrent traversal and implicit ignore policy affect completeness and ordering"]
+    },
+    {
+      "feature_id": "composable-path-and-metadata-filters",
+      "benefits": ["Rich filesystem selection in one CLI boundary"],
+      "costs": ["Predicate composition and metadata access increase semantic complexity"]
+    },
+    {
+      "feature_id": "parallel-command-execution-boundary",
+      "benefits": ["Search results can drive parallel or batched workflows"],
+      "costs": ["External side effects and resource contention are delegated to the caller"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "fd-fixed-source",
+      "kind": "source-code",
+      "title": "fd source tree at fixed commit 9e904639aee4",
+      "uri": "https://github.com/sharkdp/fd/commit/9e904639aee44df4507200cf0ed5e8531e120d6f",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official source inspected locally at the fixed commit."
+    },
+    {
+      "id": "fd-readme",
+      "kind": "official-doc",
+      "title": "fd README",
+      "uri": "https://github.com/sharkdp/fd/blob/9e904639aee44df4507200cf0ed5e8531e120d6f/README.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official README for matching modes, ignore defaults, parallel traversal, filtering, and command execution."
+    },
+    {
+      "id": "fd-walk-source",
+      "kind": "source-code",
+      "title": "fd parallel walk implementation",
+      "uri": "https://github.com/sharkdp/fd/blob/9e904639aee44df4507200cf0ed5e8531e120d6f/src/walk.rs",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source for ignore configuration, parallel walker setup, filtering, cancellation, and output buffering."
+    },
+    {
+      "id": "fd-filter-source",
+      "kind": "source-code",
+      "title": "fd filter modules",
+      "uri": "https://github.com/sharkdp/fd/tree/9e904639aee44df4507200cf0ed5e8531e120d6f/src/filter",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source for owner, size, and time predicate implementations."
+    },
+    {
+      "id": "fd-exec-source",
+      "kind": "source-code",
+      "title": "fd command execution modules",
+      "uri": "https://github.com/sharkdp/fd/tree/9e904639aee44df4507200cf0ed5e8531e120d6f/src/exec",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source for per-entry jobs, batched execution, placeholders, and command result handling."
+    }
+  ],
+  "related_systems": ["ripgrep", "coreutils", "rust"]
+}

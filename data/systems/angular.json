@@ -1,0 +1,77 @@
+{
+  "id": "angular",
+  "name": "Angular",
+  "version_context": "tag 21.0.3, commit c355ffd99e691fffe5a53e5069d8fc4291676869",
+  "summary": "A component framework that compiles templates, resolves services through hierarchical injectors, and coordinates component views with change-detection and signal-based update mechanisms.",
+  "scope": ["components and templates", "dependency injection", "change detection", "signals"],
+  "features": [
+    {
+      "id": "compiled-component-template-view",
+      "name": "Compiled component template view",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "Angular components pair metadata and templates with a compiled render representation, turning declarative template bindings into view instructions executed by the runtime.",
+      "benefits": ["Provides a structured component and template boundary", "Allows compilation to validate and specialize template work"],
+      "costs": ["Template and compiler contracts add framework-specific semantics", "Generated view behavior is less direct than hand-written DOM code"],
+      "evidence_ids": ["angular-render3-source", "angular-component-doc"]
+    },
+    {
+      "id": "hierarchical-dependency-injection",
+      "name": "Hierarchical dependency injection",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "Angular resolves provided values through injector structures associated with application, environment, and component scopes, allowing dependencies to be supplied rather than constructed by consumers.",
+      "benefits": ["Supports scoped services and replaceable implementations", "Makes application composition and testing seams explicit"],
+      "costs": ["Provider scope and lookup precedence affect behavior", "Injector graphs add lifecycle and debugging complexity"],
+      "evidence_ids": ["angular-di-source", "angular-di-doc"]
+    },
+    {
+      "id": "change-detection-and-signals",
+      "name": "Change detection and signals",
+      "category": "reactivity-model",
+      "claim_type": "fact",
+      "description": "Angular coordinates view refresh through change-detection infrastructure and provides signals as tracked reactive values whose reads and writes can inform dependent computations and views.",
+      "benefits": ["Supports both established view checking and finer-grained reactive dependencies", "Makes state-to-view update relationships modelable"],
+      "costs": ["Update strategy and scheduling choices affect application cost", "Mixing legacy and signal-based paths increases migration surface"],
+      "evidence_ids": ["angular-change-detection-source", "angular-signals-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Hierarchical provider resolution tree",
+      "question": "Which provider instance is selected for a token when lookup traverses nested injector scopes?",
+      "assumptions": ["Injector scopes form a rooted hierarchy", "Tokens identify requested dependency classes or values", "Factory side effects are abstracted from lookup"],
+      "claim_type": "inference",
+      "evidence_ids": ["angular-di-source", "angular-di-doc"]
+    },
+    {
+      "model": "Template-to-view transition system",
+      "question": "How does a compiled template binding transition component state into view instructions and host updates?",
+      "assumptions": ["Templates compile to a view instruction representation", "Bindings define dependencies from component context to view state", "DOM operations are abstracted as renderer effects"],
+      "claim_type": "inference",
+      "evidence_ids": ["angular-render3-source", "angular-component-doc"]
+    },
+    {
+      "model": "Signal dependency graph with view invalidation",
+      "question": "Which computations or views become eligible for refresh after a signal write?",
+      "assumptions": ["Signal reads create dependency edges", "Writes invalidate dependent consumers", "Scheduling and zone integration are modeled as separate policies"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["angular-change-detection-source", "angular-signals-doc"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "compiled-component-template-view", "benefits": ["Validated declarative view composition"], "costs": ["Compiler/runtime and template semantics increase framework surface"]},
+    {"feature_id": "hierarchical-dependency-injection", "benefits": ["Scoped composition and test substitution"], "costs": ["Provider scope and lookup rules require operational understanding"]},
+    {"feature_id": "change-detection-and-signals", "benefits": ["Multiple paths from state changes to view updates"], "costs": ["Scheduling strategies and migration between models add complexity"]}
+  ],
+  "evidence": [
+    {"id": "angular-repository-commit", "kind": "source-code", "title": "Angular source at 21.0.3 commit c355ffd99e69", "uri": "https://github.com/angular/angular/commit/c355ffd99e691fffe5a53e5069d8fc4291676869", "accessed": "2026-10-23", "notes": "Fixed official repository revision for this reviewed card."},
+    {"id": "angular-render3-source", "kind": "source-code", "title": "Angular render3 view compiler at fixed commit", "uri": "https://github.com/angular/angular/blob/c355ffd99e691fffe5a53e5069d8fc4291676869/packages/core/src/render3/instructions/template.ts", "accessed": "2026-10-23", "notes": "Pinned source for compiled template/view instructions."},
+    {"id": "angular-di-source", "kind": "source-code", "title": "Angular injector implementation at fixed commit", "uri": "https://github.com/angular/angular/blob/c355ffd99e691fffe5a53e5069d8fc4291676869/packages/core/src/di/r3_injector.ts", "accessed": "2026-10-23", "notes": "Pinned source for injector construction and provider resolution."},
+    {"id": "angular-change-detection-source", "kind": "source-code", "title": "Angular change detection implementation at fixed commit", "uri": "https://github.com/angular/angular/blob/c355ffd99e691fffe5a53e5069d8fc4291676869/packages/core/src/change_detection/change_detection.ts", "accessed": "2026-10-23", "notes": "Pinned source for view refresh and change-detection behavior."},
+    {"id": "angular-component-doc", "kind": "official-doc", "title": "Angular components overview", "uri": "https://angular.dev/guide/components", "accessed": "2026-10-23", "notes": "Official documentation for components, templates, and views."},
+    {"id": "angular-di-doc", "kind": "official-doc", "title": "Angular dependency injection", "uri": "https://angular.dev/guide/di", "accessed": "2026-10-23", "notes": "Official documentation for providers, injectors, and injection contexts."},
+    {"id": "angular-signals-doc", "kind": "official-doc", "title": "Angular signals", "uri": "https://angular.dev/guide/signals", "accessed": "2026-10-23", "notes": "Official documentation for signal reads, writes, and dependent views."}
+  ],
+  "related_systems": []
+}

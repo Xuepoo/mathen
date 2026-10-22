@@ -1,0 +1,288 @@
+{
+  "id": "rollup",
+  "name": "Rollup",
+  "version_context": "commit 9aac09a39dc1fa297a7b06f1ad6907f7bd41b310",
+  "summary": "A JavaScript module bundler that builds an analyzed module graph through plugin hooks, tree-shakes included statements, and generates one or more output bundles with chunk and code-splitting decisions.",
+  "scope": [
+    "module graph and plugin-driven loading",
+    "tree-shaking and execution analysis",
+    "chunk assignment and output generation",
+    "multi-environment package boundary"
+  ],
+  "features": [
+    {
+      "id": "plugin-driven-module-graph",
+      "name": "Plugin-driven module graph",
+      "category": "graph-model",
+      "claim_type": "fact",
+      "description": "Rollup's Graph initializes a ModuleLoader and PluginDriver; entries and plugin-emitted entries are loaded, resolved, transformed, parsed, and recursively followed through static and dynamic dependencies. The resulting graph is the input to later analysis and generation.",
+      "benefits": [
+        "Keeps resolution, loading, and transformation extensible",
+        "Makes dependency discovery and module ownership explicit"
+      ],
+      "costs": [
+        "Plugin behavior affects graph completeness and module identity",
+        "I/O, parsing, and plugin caches add build coordination cost"
+      ],
+      "evidence_ids": [
+        "rollup-graph-source",
+        "rollup-module-loader-source",
+        "rollup-plugin-driver-source",
+        "rollup-architecture-doc"
+      ]
+    },
+    {
+      "id": "tree-shaking-execution-analysis",
+      "name": "Tree-shaking and execution analysis",
+      "category": "optimization-model",
+      "claim_type": "fact",
+      "description": "During the build phase Rollup sorts and binds modules, repeatedly marks included statements, and uses AST side-effect analysis to omit statements that are not needed by the output. The fixed architecture document describes this as a distinct phase before chunk rendering.",
+      "benefits": [
+        "Can remove unused statements while preserving analyzed dependencies and side effects",
+        "Separates semantic inclusion decisions from output formatting"
+      ],
+      "costs": [
+        "Side-effect uncertainty limits removal and can retain more code",
+        "Repeated inclusion passes add analysis time and require conservative semantics"
+      ],
+      "evidence_ids": [
+        "rollup-graph-source",
+        "rollup-module-source",
+        "rollup-architecture-doc",
+        "rollup-tree-shaking-doc"
+      ]
+    },
+    {
+      "id": "chunk-assignment-output-generation",
+      "name": "Chunk assignment and output generation",
+      "category": "artifact-model",
+      "claim_type": "fact",
+      "description": "Rollup returns a bundle after graph building; generate and write then create output bundles, assign modules to chunks, render chunks, apply output hooks, and finalize hashes and format-specific wrappers. Multiple outputs can be generated from the same analyzed bundle.",
+      "benefits": [
+        "Reuses graph analysis across output formats",
+        "Makes code splitting and output rendering explicit stages"
+      ],
+      "costs": [
+        "Chunk boundaries and format wrappers affect inter-module semantics",
+        "Output configuration and dynamic imports add coordination constraints"
+      ],
+      "evidence_ids": [
+        "rollup-bundle-source",
+        "rollup-chunk-source",
+        "rollup-architecture-doc",
+        "rollup-code-splitting-doc"
+      ]
+    },
+    {
+      "id": "node-browser-package-boundary",
+      "name": "Node, browser, and native/WASM package boundary",
+      "category": "distribution-model",
+      "claim_type": "fact",
+      "description": "The official architecture documentation distinguishes Node, browser, CLI, native platform packages, and WASM builds. The core JavaScript interface is shared where possible, while file access and native parser/runtime dependencies are adapted at package boundaries.",
+      "benefits": [
+        "Supports multiple host distributions around a common bundling interface",
+        "Offers browser and WASM paths where native modules are unavailable"
+      ],
+      "costs": [
+        "Host capabilities and plugin file-loading requirements differ by package",
+        "Publishing platform-specific native artifacts increases release complexity"
+      ],
+      "evidence_ids": [
+        "rollup-architecture-doc",
+        "rollup-package-source",
+        "rollup-browser-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Plugin-parameterized module graph",
+      "question": "How do plugin resolution, loading, transformation, parsing, and dependency discovery construct Rollup's graph?",
+      "assumptions": [
+        "Modules and external modules are graph nodes",
+        "Plugin hooks define transitions for module identity and source",
+        "The view abstracts filesystem and native parser implementation details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rollup-graph-source",
+        "rollup-module-loader-source",
+        "rollup-plugin-driver-source"
+      ]
+    },
+    {
+      "model": "Inclusion fixed-point process",
+      "question": "Which statements reach the tree-shaken output after repeated inclusion and side-effect analysis?",
+      "assumptions": [
+        "AST nodes expose inclusion and effect observations",
+        "The inclusion process reaches a practical fixed point before generation",
+        "The model does not claim semantic equivalence for code with unknown side effects"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rollup-graph-source",
+        "rollup-module-source",
+        "rollup-tree-shaking-doc"
+      ]
+    },
+    {
+      "model": "Bundle-to-output relation",
+      "question": "How does one analyzed bundle map to output formats, chunks, rendered assets, and code-splitting boundaries?",
+      "assumptions": [
+        "Build analysis can be reused for multiple output options",
+        "Chunk assignment and rendering are separate transformations",
+        "File naming, hashes, and format wrappers are output concerns"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rollup-bundle-source",
+        "rollup-chunk-source",
+        "rollup-architecture-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "plugin-driven-module-graph",
+      "benefits": [
+        "Extensible graph construction through ordered hooks"
+      ],
+      "costs": [
+        "Plugin correctness and cache behavior affect graph validity"
+      ]
+    },
+    {
+      "feature_id": "tree-shaking-execution-analysis",
+      "benefits": [
+        "Compact output based on explicit dependency and effect analysis"
+      ],
+      "costs": [
+        "Conservative side-effect handling can retain code and increase analysis cost"
+      ]
+    },
+    {
+      "feature_id": "chunk-assignment-output-generation",
+      "benefits": [
+        "Multiple output formats and explicit code splitting"
+      ],
+      "costs": [
+        "Chunk and wrapper decisions can change loading and execution behavior"
+      ]
+    },
+    {
+      "feature_id": "node-browser-package-boundary",
+      "benefits": [
+        "Common interface across Node, browser, native, and WASM distributions"
+      ],
+      "costs": [
+        "Separate host constraints and artifacts increase release surface"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Rollup source at fixed commit 9aac09a39dc1fa297a7b06f1ad6907f7bd41b310",
+      "uri": "https://github.com/rollup/rollup/commit/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "rollup-graph-source",
+      "kind": "source-code",
+      "title": "Rollup Graph at fixed commit",
+      "uri": "https://github.com/rollup/rollup/blob/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310/src/Graph.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for graph phases, module analysis, inclusion, and plugin coordination."
+    },
+    {
+      "id": "rollup-module-loader-source",
+      "kind": "source-code",
+      "title": "Rollup ModuleLoader at fixed commit",
+      "uri": "https://github.com/rollup/rollup/blob/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310/src/ModuleLoader.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for entry loading, resolution, transformation, and recursive dependency discovery."
+    },
+    {
+      "id": "rollup-plugin-driver-source",
+      "kind": "source-code",
+      "title": "Rollup PluginDriver at fixed commit",
+      "uri": "https://github.com/rollup/rollup/blob/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310/src/utils/PluginDriver.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for ordered plugin hook dispatch."
+    },
+    {
+      "id": "rollup-module-source",
+      "kind": "source-code",
+      "title": "Rollup Module at fixed commit",
+      "uri": "https://github.com/rollup/rollup/blob/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310/src/Module.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for module source, AST, inclusion, and execution metadata."
+    },
+    {
+      "id": "rollup-bundle-source",
+      "kind": "source-code",
+      "title": "Rollup Bundle at fixed commit",
+      "uri": "https://github.com/rollup/rollup/blob/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310/src/Bundle.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for output generation and bundle orchestration."
+    },
+    {
+      "id": "rollup-chunk-source",
+      "kind": "source-code",
+      "title": "Rollup Chunk at fixed commit",
+      "uri": "https://github.com/rollup/rollup/blob/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310/src/Chunk.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for chunk rendering and output chunk state."
+    },
+    {
+      "id": "rollup-package-source",
+      "kind": "source-code",
+      "title": "Rollup package architecture at fixed commit",
+      "uri": "https://github.com/rollup/rollup/blob/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310/package.json",
+      "accessed": "2026-10-23",
+      "notes": "Fixed package metadata for the Node interface and CLI distribution."
+    },
+    {
+      "id": "rollup-browser-source",
+      "kind": "source-code",
+      "title": "Rollup browser entry at fixed commit",
+      "uri": "https://github.com/rollup/rollup/blob/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310/src/browser-entry.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for browser distribution boundary."
+    },
+    {
+      "id": "rollup-architecture-doc",
+      "kind": "official-doc",
+      "title": "Rollup official architecture documentation at fixed commit",
+      "uri": "https://github.com/rollup/rollup/blob/9aac09a39dc1fa297a7b06f1ad6907f7bd41b310/ARCHITECTURE.md",
+      "accessed": "2026-10-23",
+      "notes": "Official repository architecture document for build/generate phases and package boundaries."
+    },
+    {
+      "id": "rollup-tree-shaking-doc",
+      "kind": "official-doc",
+      "title": "Rollup tree-shaking documentation",
+      "uri": "https://rollupjs.org/introduction/#tree-shaking",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for tree-shaking and static analysis."
+    },
+    {
+      "id": "rollup-code-splitting-doc",
+      "kind": "official-doc",
+      "title": "Rollup code-splitting documentation",
+      "uri": "https://rollupjs.org/configuration-options/#outputpreservemodules",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for output and code-splitting options."
+    },
+    {
+      "id": "rollup-plugin-doc",
+      "kind": "official-doc",
+      "title": "Rollup plugin development documentation",
+      "uri": "https://rollupjs.org/plugin-development/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for plugin hooks and build/output phases."
+    }
+  ]
+}

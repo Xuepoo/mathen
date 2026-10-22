@@ -1,0 +1,197 @@
+{
+  "id": "crossplane",
+  "name": "Crossplane",
+  "version_context": "commit 6dbabf1e17b5f5f2b9866742c0ee11ed6668f8c7",
+  "summary": "A Kubernetes-native control plane framework that composes custom APIs into managed resources, runs composition functions, and reconciles external services through provider controllers.",
+  "scope": [
+    "Kubernetes control plane",
+    "composite resources",
+    "composition functions",
+    "provider packages",
+    "managed resources"
+  ],
+  "features": [
+    {
+      "id": "function-pipeline-composition",
+      "name": "Function-pipeline composition",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "A Composition selects a composite resource type and invokes an ordered pipeline of functions to build desired composed resources from observed state.",
+      "benefits": [
+        "Provides reusable API-to-resource composition and extension points"
+      ],
+      "costs": [
+        "Pipeline ordering, desired-state copying, and function availability constrain behavior"
+      ],
+      "evidence_ids": [
+        "crossplane-composition-doc",
+        "crossplane-composition-source"
+      ]
+    },
+    {
+      "id": "provider-managed-resource-boundary",
+      "name": "Provider-managed external resource boundary",
+      "category": "provider-model",
+      "claim_type": "fact",
+      "description": "Providers install Kubernetes APIs for external resources and run controllers that observe managed resources and create or update corresponding resources in an external system.",
+      "benefits": [
+        "Separates external API integration from core composition logic"
+      ],
+      "costs": [
+        "Provider versions, credentials, and external API semantics affect reconciliation"
+      ],
+      "evidence_ids": [
+        "crossplane-provider-doc",
+        "crossplane-managed-source"
+      ]
+    },
+    {
+      "id": "desired-observed-reconciliation",
+      "name": "Desired-versus-observed reconciliation",
+      "category": "control-loop",
+      "claim_type": "fact",
+      "description": "Crossplane compares managed-resource intent with external observations and repeatedly reconciles creation, update, deletion, status, and connection details.",
+      "benefits": [
+        "Supports declarative convergence and drift correction"
+      ],
+      "costs": [
+        "External side effects, retries, and finalizers make convergence asynchronous"
+      ],
+      "evidence_ids": [
+        "crossplane-managed-doc",
+        "crossplane-managed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Composition function pipeline",
+      "question": "How does a composite resource and its observed composed resources produce a desired resource set?",
+      "assumptions": [
+        "Functions are ordered stages with request and response state",
+        "Each stage preserves desired state it does not intentionally remove",
+        "The view does not claim atomicity across composed resources"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "crossplane-composition-doc",
+        "crossplane-composition-source"
+      ]
+    },
+    {
+      "model": "External-resource feedback controller",
+      "question": "Under what observations and permissions does a managed resource converge toward an external resource specification?",
+      "assumptions": [
+        "The Kubernetes managed resource is the source of truth for forProvider fields",
+        "Provider observations may be delayed or fail",
+        "Finalizers model deletion until the external resource is gone"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "crossplane-managed-doc",
+        "crossplane-managed-source"
+      ]
+    },
+    {
+      "model": "Package and controller dependency graph",
+      "question": "How do provider packages, revisions, runtime pods, APIs, and managed-resource controllers depend on one another?",
+      "assumptions": [
+        "Package installation creates API and runtime/controller nodes",
+        "A provider controller watches the managed-resource kinds it supports",
+        "The graph abstracts package registry availability and image execution"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "crossplane-provider-doc",
+        "crossplane-manager-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "function-pipeline-composition",
+      "benefits": [
+        "Reusable infrastructure APIs with programmable composition"
+      ],
+      "costs": [
+        "Pipeline contracts and missing desired-state fields can alter or delete composed resources"
+      ]
+    },
+    {
+      "feature_id": "provider-managed-resource-boundary",
+      "benefits": [
+        "Broad external-system integration without embedding every API in core"
+      ],
+      "costs": [
+        "Credential, provider-version, and API compatibility become operational dependencies"
+      ]
+    },
+    {
+      "feature_id": "desired-observed-reconciliation",
+      "benefits": [
+        "Drift correction and declarative control"
+      ],
+      "costs": [
+        "Eventual convergence and external side effects require retries, finalizers, and observability"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "crossplane-repository-commit",
+      "kind": "source-code",
+      "title": "Crossplane source at 6dbabf1e17b",
+      "uri": "https://github.com/crossplane/crossplane/commit/6dbabf1e17b5f5f2b9866742c0ee11ed6668f8c7",
+      "accessed": "2026-10-23",
+      "notes": "Fixed upstream revision used for all source evidence in this card."
+    },
+    {
+      "id": "crossplane-composition-doc",
+      "kind": "official-doc",
+      "title": "Crossplane compositions",
+      "uri": "https://docs.crossplane.io/latest/composition/compositions/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for composite resources, function pipelines, observed state, and desired state."
+    },
+    {
+      "id": "crossplane-provider-doc",
+      "kind": "official-doc",
+      "title": "Crossplane providers",
+      "uri": "https://docs.crossplane.io/latest/packages/providers/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for provider packages, APIs, provider pods, revisions, and credentials."
+    },
+    {
+      "id": "crossplane-managed-doc",
+      "kind": "official-doc",
+      "title": "Crossplane managed resources",
+      "uri": "https://docs.crossplane.io/latest/managed-resources/managed-resources/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for managed/external resource mapping, source-of-truth fields, conditions, and finalizers."
+    },
+    {
+      "id": "crossplane-composition-source",
+      "kind": "source-code",
+      "title": "Crossplane composition functions controller at pinned commit",
+      "uri": "https://github.com/crossplane/crossplane/blob/6dbabf1e17b5f5f2b9866742c0ee11ed6668f8c7/internal/controller/apiextensions/composite/composition_functions.go",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for function invocation and desired-state processing."
+    },
+    {
+      "id": "crossplane-managed-source",
+      "kind": "source-code",
+      "title": "Crossplane managed-resource reconciler at pinned commit",
+      "uri": "https://github.com/crossplane/crossplane/blob/6dbabf1e17b5f5f2b9866742c0ee11ed6668f8c7/internal/controller/apiextensions/managed/reconciler.go",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for managed-resource reconciliation and lifecycle handling."
+    },
+    {
+      "id": "crossplane-manager-source",
+      "kind": "source-code",
+      "title": "Crossplane package manager reconciler at pinned commit",
+      "uri": "https://github.com/crossplane/crossplane/blob/6dbabf1e17b5f5f2b9866742c0ee11ed6668f8c7/internal/controller/pkg/manager/reconciler.go",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for package runtime and controller management."
+    }
+  ]
+}

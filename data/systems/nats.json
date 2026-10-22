@@ -1,0 +1,170 @@
+{
+    "id": "nats",
+    "name": "NATS",
+    "version_context": "commit f8f6db894528640b27311353e874ac62c3a47af5",
+    "summary": "A subject-addressed messaging system whose Core NATS routes live publications and whose JetStream layer adds persistent streams, stateful consumers, replay, and replicated storage.",
+    "scope": [
+        "subject-based messaging",
+        "publish-subscribe routing",
+        "persistent streams",
+        "stateful consumers",
+        "replicated message storage"
+    ],
+    "features": [
+        {
+            "id": "hierarchical-subject-routing",
+            "name": "Hierarchical subject routing",
+            "category": "messaging-model",
+            "claim_type": "fact",
+            "description": "NATS addresses messages with named subjects. Dot-delimited subject hierarchies and single- or multi-token wildcards let subscribers express interest in groups of subjects; the server maintains the active routing structure in memory.",
+            "benefits": [
+                "Separates publisher addressing from subscriber location",
+                "Supports broad or narrow subscriptions without publisher changes",
+                "Makes authorization and monitoring patterns expressible over subject names"
+            ],
+            "costs": [
+                "Subject naming becomes part of the messaging contract",
+                "Wildcard subscriptions can widen delivery and authorization scope",
+                "Core NATS delivery is tied to currently connected subscribers"
+            ],
+            "evidence_ids": ["nats-subjects", "nats-sublist-source"]
+        },
+        {
+            "id": "stream-consumer-cursor",
+            "name": "Persistent stream and consumer cursor",
+            "category": "persistence-model",
+            "claim_type": "fact",
+            "description": "JetStream binds streams to subject patterns and assigns sequence numbers to stored messages. A consumer is a server-side stateful view with its own position; acknowledgements advance that position and unacknowledged messages may be redelivered.",
+            "benefits": [
+                "Decouples publisher and consumer availability in time",
+                "Allows independent consumers to replay the same stream",
+                "Moves delivery-position bookkeeping into the server"
+            ],
+            "costs": [
+                "At-least-once delivery can require idempotent processing",
+                "Retention and consumer policy determine replayability",
+                "Consumer state adds operational lifecycle and recovery concerns"
+            ],
+            "evidence_ids": [
+                "nats-jetstream",
+                "nats-stream-source",
+                "nats-consumer-source"
+            ]
+        },
+        {
+            "id": "configurable-replicated-stream-storage",
+            "name": "Configurable replicated stream storage",
+            "category": "durability-model",
+            "claim_type": "fact",
+            "description": "JetStream stream configuration selects memory or file storage, retention limits, and a replica count. The fixed server source exposes these choices in StreamConfig and routes persistence through a StreamStore abstraction.",
+            "benefits": [
+                "Offers a durable history that survives server restarts",
+                "Makes storage, retention, and replication policy explicit per stream",
+                "Keeps the storage implementation behind a server-side interface"
+            ],
+            "costs": [
+                "Replication consumes additional storage and network capacity",
+                "Retention limits can remove data needed by a lagging consumer",
+                "Durability depends on deployment and configured replica policy"
+            ],
+            "evidence_ids": [
+                "nats-jetstream",
+                "nats-stream-source",
+                "nats-store-source"
+            ]
+        }
+    ],
+    "mathematical_views": [
+        {
+            "model": "Subject trie and subscription relation",
+            "question": "Which subscribers are eligible to receive a publication for a given subject?",
+            "assumptions": [
+                "Subjects are token sequences separated by dots",
+                "Wildcard matching is modeled as a relation from published subjects to subscriptions",
+                "The view describes routing eligibility, not authorization or delivery timing"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": ["nats-subjects", "nats-sublist-source"]
+        },
+        {
+            "model": "Retention-bounded cursor transition system",
+            "question": "How do acknowledgements and redelivery evolve each consumer's position over a persistent stream?",
+            "assumptions": [
+                "A stream is an ordered sequence of stored messages",
+                "Each consumer has an independent server-maintained cursor",
+                "The model includes retention and acknowledgement timeout transitions but does not prove external exactly-once effects"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": ["nats-jetstream", "nats-consumer-source"]
+        }
+    ],
+    "trade_offs": [
+        {
+            "feature_id": "hierarchical-subject-routing",
+            "benefits": ["Flexible fan-out and location-transparent subscriptions"],
+            "costs": ["Naming and wildcard scope require deliberate governance"]
+        },
+        {
+            "feature_id": "stream-consumer-cursor",
+            "benefits": ["Replay and independent consumer progress"],
+            "costs": [
+                "Redelivery and retention create application-level recovery obligations"
+            ]
+        },
+        {
+            "feature_id": "configurable-replicated-stream-storage",
+            "benefits": ["Selectable durability and replication boundaries"],
+            "costs": ["Storage, network, and failure-recovery overhead"]
+        }
+    ],
+    "evidence": [
+        {
+            "id": "nats-subjects",
+            "kind": "official-doc",
+            "title": "NATS subjects and wildcards",
+            "uri": "https://docs.nats.io/nats-concepts/subjects",
+            "accessed": "2026-10-23",
+            "notes": "Official documentation for subject addressing, hierarchical tokens, wildcards, location transparency, and in-memory interest routing."
+        },
+        {
+            "id": "nats-jetstream",
+            "kind": "official-doc",
+            "title": "NATS JetStream",
+            "uri": "https://docs.nats.io/nats-concepts/jetstream",
+            "accessed": "2026-10-23",
+            "notes": "Official documentation for streams, consumers, persistence, replay, acknowledgements, retention, and replication."
+        },
+        {
+            "id": "nats-sublist-source",
+            "kind": "source-code",
+            "title": "NATS server subject sublist at f8f6db894528",
+            "uri": "https://github.com/nats-io/nats-server/blob/f8f6db894528640b27311353e874ac62c3a47af5/server/sublist.go",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for the server's subject subscription index and matching implementation."
+        },
+        {
+            "id": "nats-stream-source",
+            "kind": "source-code",
+            "title": "NATS server stream configuration at f8f6db894528",
+            "uri": "https://github.com/nats-io/nats-server/blob/f8f6db894528640b27311353e874ac62c3a47af5/server/stream.go",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for stream subjects, retention, storage, replica, and sequencing configuration."
+        },
+        {
+            "id": "nats-consumer-source",
+            "kind": "source-code",
+            "title": "NATS server consumer configuration at f8f6db894528",
+            "uri": "https://github.com/nats-io/nats-server/blob/f8f6db894528640b27311353e874ac62c3a47af5/server/consumer.go",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for stateful consumer configuration and delivery-position behavior."
+        },
+        {
+            "id": "nats-store-source",
+            "kind": "source-code",
+            "title": "NATS server stream store interface at f8f6db894528",
+            "uri": "https://github.com/nats-io/nats-server/blob/f8f6db894528640b27311353e874ac62c3a47af5/server/store.go",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for append, load, purge, sequence, and state operations behind stream persistence."
+        }
+    ]
+}

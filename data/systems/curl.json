@@ -1,0 +1,256 @@
+{
+  "id": "curl",
+  "name": "curl",
+  "version_context": "commit b5ca96a4419fc156ee644dfef64f6fbc0a6e3c72",
+  "summary": "A portable transfer library and command-line tool whose libcurl API models transfers with reusable easy handles, multi-handle coordination, connection reuse, and protocol-specific nonblocking state machines.",
+  "scope": [
+    "network transfer library",
+    "easy and multi APIs",
+    "protocol state machines",
+    "connection and transfer lifecycle",
+    "protocol abstraction"
+  ],
+  "features": [
+    {
+      "id": "transfer-oriented-easy-handle",
+      "name": "Transfer-oriented reusable easy handle",
+      "category": "protocol-abstraction",
+      "claim_type": "fact",
+      "description": "libcurl represents an individual transfer with an opaque easy handle whose options configure the transfer and whose callbacks deliver or consume data. Easy handles can be reused after completion, with options remaining set until changed or reset.",
+      "benefits": [
+        "Presents one stable application boundary across supported protocols",
+        "Allows transfer configuration and reuse without exposing protocol internals"
+      ],
+      "costs": [
+        "Sticky options and deferred validation require careful handle lifecycle management",
+        "Protocol-specific behavior remains behind a broad and option-rich API"
+      ],
+      "evidence_ids": [
+        "repository-commit",
+        "curl-easy-doc",
+        "curl-easy-source"
+      ]
+    },
+    {
+      "id": "multi-handle-event-coordination",
+      "name": "Multi-handle event coordination",
+      "category": "concurrency-model",
+      "claim_type": "fact",
+      "description": "The multi interface groups one or more easy handles and lets an application drive nonblocking progress using sockets, timeouts, and repeated perform calls. Completion messages identify finished transfers, while adding or removing handles changes the active transfer set.",
+      "benefits": [
+        "Supports multiple transfers in one application event loop",
+        "Allows applications to integrate transfer readiness with their own file descriptors"
+      ],
+      "costs": [
+        "The application must drive readiness, timeout, and completion processing correctly",
+        "Adding and removing handles changes transfer ownership and can abort active work"
+      ],
+      "evidence_ids": [
+        "curl-multi-doc",
+        "curl-multi-interface",
+        "curl-multi-source"
+      ]
+    },
+    {
+      "id": "protocol-transfer-state-machines",
+      "name": "Protocol and transfer state machines",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "curl's transfer engine advances nonblocking state machines as data and socket readiness become available. Each transfer has a main mode state, and protocol handlers may add protocol-specific states and socket-interest calculations.",
+      "benefits": [
+        "Preserves progress across partial network operations",
+        "Separates generic transfer orchestration from protocol-specific behavior"
+      ],
+      "costs": [
+        "State-space growth makes protocol and error-path reasoning substantial",
+        "Each protocol must preserve progress and readiness contracts across callbacks"
+      ],
+      "evidence_ids": [
+        "curl-state-machines",
+        "curl-internals-multi",
+        "curl-multi-source"
+      ]
+    },
+    {
+      "id": "connection-cache-and-multiplexing-boundary",
+      "name": "Connection cache and multiplexing boundary",
+      "category": "connection-model",
+      "claim_type": "fact",
+      "description": "libcurl separates transfer-specific state from connection state and can reuse connections through a connection cache. Multiple easy handles may be associated with streams sharing a connection when protocol multiplexing is available.",
+      "benefits": [
+        "Avoids repeating connection setup when reuse is possible",
+        "Separates per-transfer state from reusable transport state"
+      ],
+      "costs": [
+        "Connection ownership and transfer association require precise lifecycle rules",
+        "Multiplexing introduces additional scheduling and stream-state interactions"
+      ],
+      "evidence_ids": [
+        "curl-internals-structs",
+        "curl-multi-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Transfer state machine",
+      "question": "How does an individual transfer progress from setup through connection, protocol work, data transfer, and completion?",
+      "assumptions": [
+        "A transfer has a finite set of implementation-defined modes and transitions",
+        "Readiness, timeout, protocol results, and errors are transition inputs",
+        "The view abstracts individual protocol wire formats and platform socket APIs"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "curl-state-machines",
+        "curl-internals-multi",
+        "curl-multi-source"
+      ]
+    },
+    {
+      "model": "Multi-to-easy ownership graph",
+      "question": "How are multiple transfer handles coordinated and reported through a multi handle?",
+      "assumptions": [
+        "A multi handle is a coordinator vertex and easy handles are transfer vertices",
+        "Membership edges determine which transfers are driven together",
+        "Completion messages represent terminal observations rather than proof of application-level success"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "curl-multi-doc",
+        "curl-multi-interface",
+        "curl-multi-source"
+      ]
+    },
+    {
+      "model": "Transfer-to-connection sharing graph",
+      "question": "Which transfer-specific states may share reusable connection state?",
+      "assumptions": [
+        "Transfers and connections are distinct vertices with association edges",
+        "A connection may be reused only when protocol and lifecycle conditions permit",
+        "The view abstracts the detailed connection-cache eviction policy and wire protocol rules"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "curl-internals-structs",
+        "curl-multi-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "transfer-oriented-easy-handle",
+      "benefits": [
+        "Portable transfer configuration and callback boundary"
+      ],
+      "costs": [
+        "Option persistence and broad protocol surface complicate lifecycle reasoning"
+      ]
+    },
+    {
+      "feature_id": "multi-handle-event-coordination",
+      "benefits": [
+        "Application-controlled integration of concurrent transfers"
+      ],
+      "costs": [
+        "Readiness, timeout, and completion driving become application responsibilities"
+      ]
+    },
+    {
+      "feature_id": "protocol-transfer-state-machines",
+      "benefits": [
+        "Nonblocking progress across partial protocol operations"
+      ],
+      "costs": [
+        "Many protocol and failure transitions increase implementation complexity"
+      ]
+    },
+    {
+      "feature_id": "connection-cache-and-multiplexing-boundary",
+      "benefits": [
+        "Connection reuse can reduce repeated setup work"
+      ],
+      "costs": [
+        "Shared transport state increases association and scheduling complexity"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "curl source at b5ca96a4419f",
+      "uri": "https://github.com/curl/curl/commit/b5ca96a4419fc156ee644dfef64f6fbc0a6e3c72",
+      "accessed": "2026-10-23T06:07:29+00:00",
+      "notes": "Fixed repository provenance inherited from the deterministic draft; the commit identifies the inspected source revision."
+    },
+    {
+      "id": "curl-easy-doc",
+      "kind": "official-doc",
+      "title": "everything curl: Easy handle",
+      "uri": "https://everything.curl.dev/transfers/easyhandle.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official curl project book for easy-handle configuration, callbacks, reuse, and reset behavior."
+    },
+    {
+      "id": "curl-multi-doc",
+      "kind": "official-doc",
+      "title": "everything curl: Drive with multi",
+      "uri": "https://everything.curl.dev/transfers/drive/multi.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official curl project book for multi-handle driving, readiness, timeouts, and completion messages."
+    },
+    {
+      "id": "curl-state-machines",
+      "kind": "official-doc",
+      "title": "everything curl: State machines",
+      "uri": "https://everything.curl.dev/internals/statemachines.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official curl project internals documentation for transfer and protocol state machines."
+    },
+    {
+      "id": "curl-internals-multi",
+      "kind": "official-doc",
+      "title": "everything curl: Everything is multi",
+      "uri": "https://everything.curl.dev/internals/multi.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official curl project internals documentation for the multi interface and nonblocking engine."
+    },
+    {
+      "id": "curl-internals-structs",
+      "kind": "official-doc",
+      "title": "everything curl: Internal structs",
+      "uri": "https://everything.curl.dev/internals/structs.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official curl project internals documentation for easy, multi, connection, and transfer state."
+    },
+    {
+      "id": "curl-multi-interface",
+      "kind": "official-doc",
+      "title": "libcurl multi interface API",
+      "uri": "https://curl.se/libcurl/c/libcurl-multi.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official libcurl API documentation for the multi interface."
+    },
+    {
+      "id": "curl-easy-source",
+      "kind": "source-code",
+      "title": "curl easy interface at b5ca96a4419f",
+      "uri": "https://github.com/curl/curl/blob/b5ca96a4419fc156ee644dfef64f6fbc0a6e3c72/lib/easy.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for easy-handle setup and transfer entry points."
+    },
+    {
+      "id": "curl-multi-source",
+      "kind": "source-code",
+      "title": "curl multi interface at b5ca96a4419f",
+      "uri": "https://github.com/curl/curl/blob/b5ca96a4419fc156ee644dfef64f6fbc0a6e3c72/lib/multi.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for multi coordination and transfer state progression."
+    }
+  ],
+  "related_systems": [
+    "libuv",
+    "nginx"
+  ]
+}

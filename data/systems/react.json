@@ -1,0 +1,76 @@
+{
+  "id": "react",
+  "name": "React",
+  "version_context": "tag v19.3.1, commit 61aa00df822d0eb76d0362eb8b6fdd3527693efe",
+  "summary": "A declarative UI library that represents component output as a tree, schedules updates through a reconciler, and commits the minimal host-environment changes needed to realize the rendered result.",
+  "scope": ["component model", "hooks", "reconciler", "host commit boundary"],
+  "features": [
+    {
+      "id": "component-output-tree",
+      "name": "Component output tree",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "React's component APIs produce nested element descriptions that the reconciler represents as a Fiber tree, separating component evaluation from host-environment mutation.",
+      "benefits": ["Makes UI composition explicit", "Allows reconciliation to reason over retained component and host structure"],
+      "costs": ["The retained tree adds bookkeeping and identity semantics", "Component purity is required for predictable rendering"],
+      "evidence_ids": ["react-reconciler-source", "react-render-doc"]
+    },
+    {
+      "id": "hook-state-attached-to-render",
+      "name": "Hook state attached to render",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "The Hooks implementation exposes state and effect APIs whose call order is interpreted while a function component renders, attaching hook state to the component's work-in-progress render.",
+      "benefits": ["Composes local state and effects without class instances", "Keeps stateful logic close to component computation"],
+      "costs": ["Hook call order is an architectural invariant", "Effects and state updates participate in scheduler timing"],
+      "evidence_ids": ["react-hooks-source", "react-rules-hooks-doc"]
+    },
+    {
+      "id": "reconciler-host-commit-boundary",
+      "name": "Reconciler and host commit boundary",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "The reconciler renders work and then commits the resulting changes through a host configuration, allowing React's component and scheduling model to target DOM or other host environments.",
+      "benefits": ["Separates UI computation from host mutation", "Supports multiple host renderers behind a reconciler contract"],
+      "costs": ["Host configuration semantics constrain portability", "Scheduling and commit phases require careful lifecycle reasoning"],
+      "evidence_ids": ["react-reconciler-source", "react-render-doc", "react-reconciler-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Rooted component and host tree",
+      "question": "How does a component output tree map nested component identities to host nodes across renders?",
+      "assumptions": ["Nodes represent component or host output", "Stable positions and keys are abstracted as identity constraints", "Host-specific mutation details are abstracted"],
+      "claim_type": "inference",
+      "evidence_ids": ["react-reconciler-source", "react-render-doc"]
+    },
+    {
+      "model": "Scheduled render-to-commit transition system",
+      "question": "Which pending updates can be rendered and committed while preserving the reconciler's phase boundaries?",
+      "assumptions": ["Updates enter scheduler lanes abstracted as pending work", "Rendering is a calculation over component inputs and retained state", "Commit operations are the only modeled host mutations"],
+      "claim_type": "inference",
+      "evidence_ids": ["react-reconciler-source", "react-reconciler-doc"]
+    },
+    {
+      "model": "Hook call-order state machine",
+      "question": "What state transition follows a valid sequence of hook calls during component renders?",
+      "assumptions": ["A component preserves hook call order between renders", "Hook state is modeled as an ordered sequence", "Effect execution timing is not reduced to synchronous render time"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["react-hooks-source", "react-rules-hooks-doc"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "component-output-tree", "benefits": ["Composable declarative UI structure"], "costs": ["Retained identity and purity rules add conceptual overhead"]},
+    {"feature_id": "hook-state-attached-to-render", "benefits": ["Reusable stateful logic in function components"], "costs": ["Call-order and effect timing constraints are observable"]},
+    {"feature_id": "reconciler-host-commit-boundary", "benefits": ["Host-independent reconciliation model"], "costs": ["Renderer contracts and commit scheduling increase implementation complexity"]}
+  ],
+  "evidence": [
+    {"id": "react-repository-commit", "kind": "source-code", "title": "React source at v19.3.1 commit 61aa00df822d", "uri": "https://github.com/facebook/react/commit/61aa00df822d0eb76d0362eb8b6fdd3527693efe", "accessed": "2026-10-23", "notes": "Fixed official repository revision for this reviewed card."},
+    {"id": "react-reconciler-source", "kind": "source-code", "title": "React Fiber work loop at fixed commit", "uri": "https://github.com/facebook/react/blob/61aa00df822d0eb76d0362eb8b6fdd3527693efe/packages/react-reconciler/src/ReactFiberWorkLoop.js", "accessed": "2026-10-23", "notes": "Pinned source for render work, scheduling, and commit phases."},
+    {"id": "react-hooks-source", "kind": "source-code", "title": "React Hooks implementation at fixed commit", "uri": "https://github.com/facebook/react/blob/61aa00df822d0eb76d0362eb8b6fdd3527693efe/packages/react-reconciler/src/ReactFiberHooks.js", "accessed": "2026-10-23", "notes": "Pinned source for hook state and render-time hook dispatch."},
+    {"id": "react-reconciler-doc", "kind": "official-doc", "title": "React reconciler architecture documentation", "uri": "https://github.com/facebook/react/blob/61aa00df822d0eb76d0362eb8b6fdd3527693efe/packages/react-reconciler/README.md", "accessed": "2026-10-23", "notes": "Official repository documentation for renderer and reconciler boundaries."},
+    {"id": "react-render-doc", "kind": "official-doc", "title": "React render and commit", "uri": "https://react.dev/learn/render-and-commit", "accessed": "2026-10-23", "notes": "Official documentation for trigger, render, and commit phases."},
+    {"id": "react-rules-hooks-doc", "kind": "official-doc", "title": "Rules of Hooks", "uri": "https://react.dev/reference/rules/rules-of-hooks", "accessed": "2026-10-23", "notes": "Official documentation for hook call-order constraints."}
+  ],
+  "related_systems": []
+}

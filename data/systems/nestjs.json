@@ -1,0 +1,258 @@
+{
+  "id": "nestjs",
+  "name": "NestJS",
+  "version_context": "commit e19b5866a21ad28c0229f0a0f988ca1339c2a592 (v11.0.0)",
+  "summary": "A TypeScript application framework that scans a root module into a typed module graph, resolves providers through dependency injection, and adapts the initialized application to HTTP or other transports.",
+  "scope": [
+    "module graph discovery",
+    "dependency injection",
+    "application initialization",
+    "HTTP and transport adapters"
+  ],
+  "features": [
+    {
+      "id": "decorated-module-graph",
+      "name": "Decorated module graph",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "Nest scans a root module and recursively discovers imported modules, dynamic modules, controllers, providers, and exports into a container keyed by compiled module tokens.",
+      "benefits": [
+        "Makes application composition explicit through module boundaries",
+        "Supports reusable and dynamic module assemblies"
+      ],
+      "costs": [
+        "Import cycles, scope, and dynamic metadata affect graph construction",
+        "The runtime graph can be larger than the entry module suggests"
+      ],
+      "evidence_ids": [
+        "nestjs-repository-commit",
+        "nestjs-factory-source",
+        "nestjs-scanner-source",
+        "nestjs-modules-doc"
+      ]
+    },
+    {
+      "id": "container-provider-resolution",
+      "name": "Container provider resolution",
+      "category": "dependency-model",
+      "claim_type": "fact",
+      "description": "Nest stores providers, injectables, controllers, imports, and exports in module references and uses an instance loader and injector to create dependency-resolved instances.",
+      "benefits": [
+        "Separates provider contracts from construction and scope",
+        "Allows module-local and exported dependencies to compose"
+      ],
+      "costs": [
+        "Resolution errors depend on visibility and provider scope",
+        "Runtime metadata adds indirection to dependency reasoning"
+      ],
+      "evidence_ids": [
+        "nestjs-container-source",
+        "nestjs-factory-source",
+        "nestjs-custom-providers-doc"
+      ]
+    },
+    {
+      "id": "scanned-initialization-lifecycle",
+      "name": "Scanned initialization lifecycle",
+      "category": "lifecycle-model",
+      "claim_type": "fact",
+      "description": "Nest application creation constructs a container, scans dependencies, creates provider instances, applies application providers, and then constructs an application context or transport-specific application.",
+      "benefits": [
+        "Separates graph discovery from instance construction and transport startup",
+        "Provides a repeatable initialization boundary"
+      ],
+      "costs": [
+        "Failures can arise in scanning, provider creation, or adapter setup",
+        "Large graphs increase startup work"
+      ],
+      "evidence_ids": [
+        "nestjs-factory-source",
+        "nestjs-container-source",
+        "nestjs-injection-doc"
+      ]
+    },
+    {
+      "id": "transport-adapter-boundary",
+      "name": "Transport adapter boundary",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "Nest creates applications against an abstract HTTP adapter and can select or receive an adapter implementation, separating core module and provider assembly from the concrete transport server.",
+      "benefits": [
+        "Reuses application structure across supported adapters and contexts",
+        "Localizes transport-specific behavior"
+      ],
+      "costs": [
+        "Adapter capabilities differ",
+        "Portable module graphs remain bounded by deployment constraints"
+      ],
+      "evidence_ids": [
+        "nestjs-factory-source",
+        "nestjs-platform-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed module import and export graph",
+      "question": "How does Nest turn a root module and metadata into reachable modules, providers, controllers, and exported dependencies?",
+      "assumptions": [
+        "Modules are vertices and imports, exports, and ownership are typed edges",
+        "Dynamic modules have generated opaque keys",
+        "The graph models discovery and visibility, not provider correctness"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "nestjs-scanner-source",
+        "nestjs-container-source",
+        "nestjs-modules-doc"
+      ]
+    },
+    {
+      "model": "Dependency-resolution graph",
+      "question": "Which provider instances can be constructed given local providers, imports, exports, and scopes?",
+      "assumptions": [
+        "Provider tokens and instances are vertices with injection edges",
+        "Module visibility restricts available edges",
+        "Reflection and asynchronous factories are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "nestjs-container-source",
+        "nestjs-injector-source",
+        "nestjs-custom-providers-doc"
+      ]
+    },
+    {
+      "model": "Application initialization state machine with adapter refinement",
+      "question": "How does a root module progress from scan to instantiated graph and then to a concrete transport application?",
+      "assumptions": [
+        "Container construction, scanning, loading, provider application, and adapter creation are ordered states",
+        "An adapter refines a transport-independent contract",
+        "The view does not claim behavioral equivalence among adapters"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "nestjs-factory-source",
+        "nestjs-injection-doc",
+        "nestjs-platform-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "decorated-module-graph",
+      "benefits": [
+        "Explicit boundaries support reusable composition"
+      ],
+      "costs": [
+        "Metadata-driven construction increases runtime and tooling complexity"
+      ]
+    },
+    {
+      "feature_id": "container-provider-resolution",
+      "benefits": [
+        "Construction and visibility are separated from consumers"
+      ],
+      "costs": [
+        "Scope and metadata can obscure dependency paths"
+      ]
+    },
+    {
+      "feature_id": "scanned-initialization-lifecycle",
+      "benefits": [
+        "Discovery, construction, and setup have distinct phases"
+      ],
+      "costs": [
+        "Large graphs increase startup time and phase-specific failures"
+      ]
+    },
+    {
+      "feature_id": "transport-adapter-boundary",
+      "benefits": [
+        "Core composition can be reused across transports"
+      ],
+      "costs": [
+        "Portability is bounded by adapter behavior"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "nestjs-repository-commit",
+      "kind": "source-code",
+      "title": "NestJS source at 257bbf909fd2 (v11.0.0)",
+      "uri": "https://github.com/nestjs/nest/commit/e19b5866a21ad28c0229f0a0f988ca1339c2a592",
+      "accessed": "2026-10-23",
+      "notes": "Fixed official repository revision."
+    },
+    {
+      "id": "nestjs-factory-source",
+      "kind": "source-code",
+      "title": "NestFactory at v11.0.0",
+      "uri": "https://github.com/nestjs/nest/blob/e19b5866a21ad28c0229f0a0f988ca1339c2a592/packages/core/nest-factory.ts",
+      "accessed": "2026-10-23",
+      "notes": "Container creation, scanning, instance loading, context creation, and adapter selection."
+    },
+    {
+      "id": "nestjs-container-source",
+      "kind": "source-code",
+      "title": "NestContainer at v11.0.0",
+      "uri": "https://github.com/nestjs/nest/blob/e19b5866a21ad28c0229f0a0f988ca1339c2a592/packages/core/injector/container.ts",
+      "accessed": "2026-10-23",
+      "notes": "Module compilation, storage, providers, controllers, imports, exports, and globals."
+    },
+    {
+      "id": "nestjs-scanner-source",
+      "kind": "source-code",
+      "title": "Nest dependencies scanner at v11.0.0",
+      "uri": "https://github.com/nestjs/nest/blob/e19b5866a21ad28c0229f0a0f988ca1339c2a592/packages/core/scanner.ts",
+      "accessed": "2026-10-23",
+      "notes": "Recursive discovery, dynamic modules, forward references, and global scope."
+    },
+    {
+      "id": "nestjs-injector-source",
+      "kind": "source-code",
+      "title": "Nest injector at v11.0.0",
+      "uri": "https://github.com/nestjs/nest/blob/e19b5866a21ad28c0229f0a0f988ca1339c2a592/packages/core/injector/injector.ts",
+      "accessed": "2026-10-23",
+      "notes": "Provider lookup and instance resolution."
+    },
+    {
+      "id": "nestjs-modules-doc",
+      "kind": "official-doc",
+      "title": "NestJS modules",
+      "uri": "https://docs.nestjs.com/modules",
+      "accessed": "2026-10-23",
+      "notes": "Official module, import, provider, export, and global-module documentation."
+    },
+    {
+      "id": "nestjs-custom-providers-doc",
+      "kind": "official-doc",
+      "title": "NestJS custom providers",
+      "uri": "https://docs.nestjs.com/fundamentals/custom-providers",
+      "accessed": "2026-10-23",
+      "notes": "Official provider-token, value, factory, class, and injection documentation."
+    },
+    {
+      "id": "nestjs-injection-doc",
+      "kind": "official-doc",
+      "title": "NestJS dependency injection",
+      "uri": "https://docs.nestjs.com/fundamentals/dependency-injection",
+      "accessed": "2026-10-23",
+      "notes": "Official dependency-injection documentation."
+    },
+    {
+      "id": "nestjs-platform-doc",
+      "kind": "official-doc",
+      "title": "NestJS HTTP platform adapters",
+      "uri": "https://docs.nestjs.com/techniques/performance",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for platform adapters and HTTP server boundaries."
+    }
+  ],
+  "related_systems": [
+    "node",
+    "typescript",
+    "express"
+  ]
+}

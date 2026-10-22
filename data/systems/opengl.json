@@ -1,0 +1,28 @@
+{
+  "id": "opengl",
+  "name": "OpenGL",
+  "version_context": "OpenGL-Registry commit 6af574a14089ccfee87efe230ebcdd8742859813",
+  "summary": "A cross-platform graphics API centered on a context-owned state machine in which applications bind objects, configure fixed and programmable pipeline state, and issue drawing commands against the current state.",
+  "scope": ["graphics context", "object bindings", "programmable pipeline", "draw command state"],
+  "features": [
+    {"id": "context-state-machine", "name": "Context-owned mutable state machine", "category": "execution-model", "claim_type": "fact", "description": "An OpenGL context stores current bindings and pipeline state; commands such as bind, configure, and draw mutate or consume that state in order.", "benefits": ["Provides a compact, widely implemented immediate-style graphics interface"], "costs": ["Implicit state makes command order and cross-component interactions hard to reason about"] ,"evidence_ids": ["opengl-spec-source", "opengl-reference"]},
+    {"id": "object-binding-pipeline", "name": "Object binding and programmable pipeline", "category": "rendering-model", "claim_type": "fact", "description": "OpenGL separates named objects such as buffers, textures, vertex arrays, shaders, and programs from the context bindings that make them active for configuration or drawing.", "benefits": ["Allows reusable GPU objects and shader programs to be configured through stable API categories"], "costs": ["Binding targets and compatibility rules create hidden coupling between calls"], "evidence_ids": ["opengl-spec-source", "opengl-reference"]},
+    {"id": "context-platform-boundary", "name": "Context and platform integration boundary", "category": "deployment-model", "claim_type": "fact", "description": "OpenGL rendering occurs through a platform-created context and drawable surface; the registry specifications define API behavior while window-system integration supplies context creation and presentation mechanics.", "benefits": ["Separates portable rendering commands from platform window-system setup"], "costs": ["Context profiles, extensions, and platform integration affect portability"] ,"evidence_ids": ["opengl-spec-source", "opengl-registry-doc"]}
+  ],
+  "mathematical_views": [
+    {"model": "Labeled transition system for OpenGL context state", "question": "What state does an ordered sequence of binds, configuration calls, and draw commands produce?", "assumptions": ["The context is the modeled state carrier", "Each API call is a labeled transition with validation effects", "Driver scheduling and GPU microarchitecture are abstracted"], "claim_type": "inference", "evidence_ids": ["opengl-spec-source", "opengl-reference"]},
+    {"model": "Binding graph for pipeline resources", "question": "How do named objects become active pipeline inputs through context binding points?", "assumptions": ["Objects and binding points are graph nodes", "A binding edge is current for the modeled context state", "The graph describes API relationships rather than physical memory"], "claim_type": "inference", "evidence_ids": ["opengl-spec-source", "opengl-reference"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "context-state-machine", "benefits": ["Concise command interface with broad implementation support"], "costs": ["Implicit state and ordering increase debugging and validation burden"]},
+    {"feature_id": "object-binding-pipeline", "benefits": ["Reusable resources and programmable shaders"], "costs": ["Binding compatibility and state leakage constrain composability"]},
+    {"feature_id": "context-platform-boundary", "benefits": ["Portable API commands across window systems"], "costs": ["Profiles, extensions, and context creation remain platform-specific"]}
+  ],
+  "evidence": [
+    {"id": "opengl-repository-commit", "kind": "source-code", "title": "OpenGL Registry at fixed commit", "uri": "https://github.com/KhronosGroup/OpenGL-Registry/commit/6af574a14089ccfee87efe230ebcdd8742859813", "accessed": "2026-10-23", "notes": "Official registry revision used as temporal anchor."},
+    {"id": "opengl-spec-source", "kind": "source-code", "title": "OpenGL Registry specifications", "uri": "https://github.com/KhronosGroup/OpenGL-Registry/tree/6af574a14089ccfee87efe230ebcdd8742859813/specs", "accessed": "2026-10-23", "notes": "Official specification sources for context state, objects, bindings, and commands."},
+    {"id": "opengl-reference", "kind": "official-doc", "title": "OpenGL Reference Pages", "uri": "https://registry.khronos.org/OpenGL-Refpages/gl4/", "accessed": "2026-10-23", "notes": "Official reference documentation for object, state, and draw commands."},
+    {"id": "opengl-registry-doc", "kind": "official-doc", "title": "Khronos OpenGL Registry", "uri": "https://registry.khronos.org/OpenGL/", "accessed": "2026-10-23", "notes": "Official registry for OpenGL specifications and extensions."}
+  ],
+  "related_systems": ["vulkan", "webgl"]
+}

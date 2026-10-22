@@ -1,0 +1,169 @@
+{
+  "id": "argo-cd",
+  "name": "Argo CD",
+  "version_context": "commit 81c0798e7c85bb6615173a498e2bd4c617ddb879",
+  "summary": "A Kubernetes GitOps controller that compares Git-defined application targets with live cluster state, renders manifests through configured tools, and drives synchronization while reporting health and operation status.",
+  "scope": [
+    "Kubernetes GitOps delivery",
+    "desired and live application state",
+    "reconciliation and sync",
+    "health assessment"
+  ],
+  "features": [
+    {
+      "id": "git-defined-application-state",
+      "name": "Git-defined application target state",
+      "category": "declarative-control",
+      "claim_type": "fact",
+      "description": "Argo CD models an Application with a target state derived from a source repository and compares it with the live Kubernetes state.",
+      "benefits": "Makes deployment intent versioned and reviewable in Git",
+      "costs": "Repository content, rendering tools, and cluster observations can diverge from operator expectations",
+      "evidence_ids": [
+        "argo-cd-core-concepts-doc",
+        "argo-cd-application-source"
+      ]
+    },
+    {
+      "id": "application-reconciliation-sync",
+      "name": "Application refresh and synchronization loop",
+      "category": "control-loop",
+      "claim_type": "fact",
+      "description": "The application controller refreshes comparisons, determines sync status, and performs sync operations that apply changes toward the target state.",
+      "benefits": "Automates repeatable convergence and exposes operation status",
+      "costs": "Retries, ordering, hooks, and partial failures create transient divergence",
+      "evidence_ids": [
+        "argo-cd-core-concepts-doc",
+        "argo-cd-controller-source"
+      ]
+    },
+    {
+      "id": "health-and-revision-operations",
+      "name": "Health and revision-aware operations",
+      "category": "operational-state",
+      "claim_type": "fact",
+      "description": "Argo CD reports application health separately from sync status and retains operation/revision information for inspection and rollback-oriented workflows.",
+      "benefits": "Separates configuration equality from runtime health",
+      "costs": "Health checks are tool/resource-specific and a prior revision does not guarantee restoration of external state",
+      "evidence_ids": [
+        "argo-cd-core-concepts-doc",
+        "argo-cd-controller-source",
+        "argo-cd-application-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Git-to-cluster feedback control",
+      "question": "How do repository target state, rendered manifests, live observations, and sync actions form a feedback loop?",
+      "assumptions": [
+        "Git is treated as the target-state source",
+        "The controller can observe live resources and issue idempotent operations",
+        "The model does not infer convergence time or success for every sync"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "argo-cd-core-concepts-doc",
+        "argo-cd-controller-source"
+      ]
+    },
+    {
+      "model": "Application state product space",
+      "question": "How are sync equality, operation status, and runtime health represented as distinct coordinates?",
+      "assumptions": [
+        "Sync status compares target and live state",
+        "Health is evaluated independently of exact manifest equality",
+        "The view abstracts individual health checks"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "argo-cd-core-concepts-doc",
+        "argo-cd-application-source"
+      ]
+    },
+    {
+      "model": "Revision transition system",
+      "question": "Which application revisions and sync operations can be selected for deployment or rollback?",
+      "assumptions": [
+        "Revisions identify source or rendered application versions",
+        "Operations may fail or be superseded",
+        "Rollback is modeled as selecting a prior revision, not as a proof of environmental reversal"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "argo-cd-core-concepts-doc",
+        "argo-cd-controller-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "git-defined-application-state",
+      "benefits": [
+        "Auditable, reproducible deployment intent"
+      ],
+      "costs": [
+        "Git and rendering become critical dependencies"
+      ]
+    },
+    {
+      "feature_id": "application-reconciliation-sync",
+      "benefits": [
+        "Continuous correction of drift"
+      ],
+      "costs": [
+        "Eventual convergence and repeated operations require idempotent resources"
+      ]
+    },
+    {
+      "feature_id": "health-and-revision-operations",
+      "benefits": [
+        "Operational visibility beyond manifest equality"
+      ],
+      "costs": [
+        "Health semantics vary by resource and rollback has external-state limits"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "argo-cd-repository-commit",
+      "kind": "source-code",
+      "title": "Argo CD source at 81c0798e7c85",
+      "uri": "https://github.com/argoproj/argo-cd/commit/81c0798e7c85bb6615173a498e2bd4c617ddb879",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision; source claims in this card are pinned to this commit."
+    },
+    {
+      "id": "argo-cd-core-concepts-doc",
+      "kind": "official-doc",
+      "title": "Argo CD core concepts",
+      "uri": "https://argo-cd.readthedocs.io/en/stable/core_concepts/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for applications, target/live state, refresh, sync, health, and tools."
+    },
+    {
+      "id": "argo-cd-overview-doc",
+      "kind": "official-doc",
+      "title": "Argo CD overview",
+      "uri": "https://argo-cd.readthedocs.io/en/stable/",
+      "accessed": "2026-10-23",
+      "notes": "Official project documentation for declarative GitOps continuous delivery on Kubernetes."
+    },
+    {
+      "id": "argo-cd-controller-source",
+      "kind": "source-code",
+      "title": "Argo CD application controller at 81c0798e7c85",
+      "uri": "https://github.com/argoproj/argo-cd/blob/81c0798e7c85bb6615173a498e2bd4c617ddb879/controller/appcontroller.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for application reconciliation, refresh, sync orchestration, and health evaluation."
+    },
+    {
+      "id": "argo-cd-application-source",
+      "kind": "source-code",
+      "title": "Argo CD Application API at 81c0798e7c85",
+      "uri": "https://github.com/argoproj/argo-cd/blob/81c0798e7c85bb6615173a498e2bd4c617ddb879/pkg/apis/application/v1alpha1/types.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for application target/live state and sync status types."
+    }
+  ]
+}

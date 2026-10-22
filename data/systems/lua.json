@@ -1,0 +1,143 @@
+{
+  "id": "lua",
+  "name": "Lua",
+  "version_context": "commit 8cb93bada561977eb370819e39d7d644e5fd0a3f",
+  "summary": "A lightweight embeddable language implemented as a C library with register-based bytecode interpretation, coroutine states, extensible metatables, and automatic incremental or generational garbage collection.",
+  "scope": [
+    "programming-language runtime",
+    "C embedding API",
+    "bytecode interpreter",
+    "coroutines and memory management"
+  ],
+  "features": [
+    {
+      "id": "embeddable-c-library-runtime",
+      "name": "Embeddable C-library runtime",
+      "category": "embedding-model",
+      "claim_type": "fact",
+      "description": "Lua is implemented as a C library, and the standalone lua program is a host that invokes the library. The C API represents a lua_State with call frames, a value stack, and runtime state used by the interpreter and coroutines.",
+      "benefits": [
+        "Allows hosts to execute chunks and register C functions",
+        "Keeps the language core small and reusable across host applications"
+      ],
+      "costs": [
+        "The host must manage state and protected error boundaries",
+        "C integration exposes lifetime and calling-convention responsibilities"
+      ],
+      "evidence_ids": ["lua-manual", "lua-fixed-source"]
+    },
+    {
+      "id": "register-bytecode-interpreter",
+      "name": "Register-based bytecode interpreter",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Lua compiles chunks into instructions for a virtual machine and executes them through a register-based interpreter loop. The fixed lvm.c source implements luaV_execute over a CallInfo frame and instruction stream.",
+      "benefits": [
+        "Provides a compact execution representation for interpreted chunks",
+        "Makes call frames and register values explicit runtime state"
+      ],
+      "costs": [
+        "Interpretation adds dispatch overhead compared with native execution",
+        "Frame, stack, and instruction invariants must be maintained"
+      ],
+      "evidence_ids": ["lua-manual", "lua-fixed-source"]
+    },
+    {
+      "id": "coroutine-and-automatic-memory-state",
+      "name": "Resumable coroutines with automatic memory management",
+      "category": "state-and-memory-model",
+      "claim_type": "fact",
+      "description": "Lua coroutines suspend only at explicit yield points and resume from the saved execution state. Lua automatically manages runtime objects with incremental or generational collection; the fixed source maintains collector state and object lists.",
+      "benefits": [
+        "Supports cooperative suspension without requiring OS threads",
+        "Provides automatic reclamation with selectable collection strategies"
+      ],
+      "costs": [
+        "Cooperative scheduling requires explicit yield points",
+        "Collection timing and tuning affect performance and resource behavior"
+      ],
+      "evidence_ids": ["lua-manual", "lua-fixed-source"]
+    },
+    {
+      "id": "metatable-extension-boundary",
+      "name": "Metatable-driven semantic extension boundary",
+      "category": "language-model",
+      "claim_type": "fact",
+      "description": "Lua uses metatables to customize operations such as indexing, arithmetic, calls, and finalization. Full userdata is created and modified through the C API, providing a host-controlled data boundary.",
+      "benefits": [
+        "Allows host and language values to expose domain-specific behavior",
+        "Keeps userdata storage under C-side control while enabling Lua-level operations"
+      ],
+      "costs": [
+        "Operator behavior can be dynamically redirected",
+        "Finalizers and host-owned data require careful lifetime coordination"
+      ],
+      "evidence_ids": ["lua-manual"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Host-driven virtual-machine transition system",
+      "question": "How do a host call, bytecode frame, register state, coroutine yield, and resume compose into Lua execution?",
+      "assumptions": [
+        "lua_State and CallInfo frames are modeled as explicit execution state",
+        "Bytecode dispatch is a transition over register values and the current frame",
+        "The model abstracts C ABI details and instruction-level performance"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["lua-manual", "lua-fixed-source"]
+    },
+    {
+      "model": "Reachability and finalization transition system",
+      "question": "How do Lua object reachability, collector modes, weak structures, and finalizers affect object lifetime?",
+      "assumptions": [
+        "Managed objects form a graph rooted in live Lua and host-visible state",
+        "Incremental and generational modes are alternative collector transition strategies",
+        "The view does not model every allocator or platform-specific tuning behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["lua-manual", "lua-fixed-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "embeddable-c-library-runtime",
+      "benefits": ["Small reusable host integration boundary"],
+      "costs": ["Host code owns state and error-boundary responsibilities"]
+    },
+    {
+      "feature_id": "register-bytecode-interpreter",
+      "benefits": ["Compact explicit VM execution state"],
+      "costs": ["Interpreter dispatch costs performance"]
+    },
+    {
+      "feature_id": "coroutine-and-automatic-memory-state",
+      "benefits": ["Cooperative suspension and automatic reclamation"],
+      "costs": ["Yield points and collector tuning constrain behavior"]
+    },
+    {
+      "feature_id": "metatable-extension-boundary",
+      "benefits": ["Extensible semantics and controlled userdata bridge"],
+      "costs": ["Dynamic dispatch and finalization complicate reasoning"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "lua-fixed-source",
+      "kind": "source-code",
+      "title": "Lua source tree at fixed commit 8cb93bada561",
+      "uri": "https://github.com/lua/lua/commit/8cb93bada561977eb370819e39d7d644e5fd0a3f",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance for lstate.h, ldo.c, lvm.c, lgc.c, and lapi.c."
+    },
+    {
+      "id": "lua-manual",
+      "kind": "official-doc",
+      "title": "Lua 5.4 Reference Manual",
+      "uri": "https://www.lua.org/manual/5.4/manual.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official reference for embedding, bytecode execution, coroutines, metatables, userdata, and garbage collection."
+    }
+  ],
+  "related_systems": ["cpython", "node", "v8"]
+}

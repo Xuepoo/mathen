@@ -1,0 +1,276 @@
+{
+  "id": "vite",
+  "name": "Vite",
+  "version_context": "commit 4ca25e1d3a24cb3343352f781a276cbfd2d206d6",
+  "summary": "A frontend development and build system that maintains environment-specific module graphs, transforms modules on demand through a plugin container, serves native ESM with HMR, pre-bundles dependencies, and produces optimized build outputs.",
+  "scope": [
+    "on-demand module graph and transform server",
+    "plugin and environment boundary",
+    "dependency pre-bundling",
+    "production build and output pipeline"
+  ],
+  "features": [
+    {
+      "id": "on-demand-module-graph-server",
+      "name": "On-demand module graph server",
+      "category": "development-model",
+      "claim_type": "fact",
+      "description": "The fixed server creates development environments with module graphs whose nodes track URLs, resolved files, importers, imported modules, transform results, and invalidation state. Requests resolve and transform modules on demand instead of requiring a complete application bundle before serving the first page.",
+      "benefits": [
+        "Supports fast startup and per-module transformation",
+        "Makes importer relationships and invalidation targets explicit"
+      ],
+      "costs": [
+        "Graph state and transform caches can become stale or fragmented",
+        "Unbundled development exposes browser request and compatibility constraints"
+      ],
+      "evidence_ids": [
+        "vite-server-source",
+        "vite-module-graph-source",
+        "vite-why-doc"
+      ]
+    },
+    {
+      "id": "plugin-environment-pipeline",
+      "name": "Plugin and environment pipeline",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Vite constructs a plugin container and invokes ordered plugin hooks for resolution, loading, transformation, hot updates, and build integration. The environment-aware server and build APIs provide shared extension points while allowing client, SSR, and other environments to carry distinct module state.",
+      "benefits": [
+        "Extends resolution and transformation without hard-coding every framework",
+        "Allows environment-specific behavior behind a common plugin contract"
+      ],
+      "costs": [
+        "Hook ordering and environment differences can produce non-obvious interactions",
+        "Plugin authors must preserve graph and cache invariants"
+      ],
+      "evidence_ids": [
+        "vite-plugin-container-source",
+        "vite-transform-source",
+        "vite-plugin-doc"
+      ]
+    },
+    {
+      "id": "dependency-prebundling",
+      "name": "Dependency pre-bundling",
+      "category": "dependency-model",
+      "claim_type": "fact",
+      "description": "Vite documents dependency pre-bundling as a development optimization that converts dependencies to a browser-friendly form and reduces repeated nested dependency requests. The fixed source exposes optimizer state alongside the development server pipeline.",
+      "benefits": [
+        "Reduces dependency request overhead during development",
+        "Normalizes packages that are awkward to consume as native browser ESM"
+      ],
+      "costs": [
+        "Optimizer invalidation and package discovery add a separate cache lifecycle",
+        "Pre-bundled output can differ from application source transformation behavior"
+      ],
+      "evidence_ids": [
+        "vite-dep-optimizer-source",
+        "vite-dep-prebundle-doc"
+      ]
+    },
+    {
+      "id": "production-build-output",
+      "name": "Production build and output pipeline",
+      "category": "build-model",
+      "claim_type": "fact",
+      "description": "The Vite build API resolves build configuration and invokes the production bundling pipeline, while official documentation distinguishes development serving from optimized production output. The build emits chunks and assets according to configured targets and output options.",
+      "benefits": [
+        "Separates low-latency development serving from optimized deployment artifacts",
+        "Supports framework and asset transforms through the same configuration surface"
+      ],
+      "costs": [
+        "Two execution modes require parity testing for transforms and environment behavior",
+        "Output chunking and asset policy affect deployment performance and correctness"
+      ],
+      "evidence_ids": [
+        "vite-build-source",
+        "vite-build-doc",
+        "vite-why-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Environment-indexed module graph",
+      "question": "How do module imports, transformed results, and invalidation states evolve independently across Vite environments?",
+      "assumptions": [
+        "Each environment has a graph whose nodes represent resolved modules and transform state",
+        "Importer edges are sufficient to model HMR propagation at this abstraction level",
+        "Filesystem watching, browser scheduling, and bundler internals are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "vite-module-graph-source",
+        "vite-server-source",
+        "vite-hmr-doc"
+      ]
+    },
+    {
+      "model": "Plugin hook transition system",
+      "question": "Which ordered plugin hooks map a request or build module from unresolved input to transformed output?",
+      "assumptions": [
+        "Hook order is modeled as a transition sequence over resolve, load, transform, and update operations",
+        "Plugin return values are treated as the boundary state passed to later hooks",
+        "The view does not prove that arbitrary plugins compose successfully"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "vite-plugin-container-source",
+        "vite-transform-source",
+        "vite-plugin-doc"
+      ]
+    },
+    {
+      "model": "Development-to-production pipeline relation",
+      "question": "Which module and asset properties are preserved when a project moves from on-demand development transforms to production bundling?",
+      "assumptions": [
+        "Development and production are separate execution paths with shared configuration and plugin concepts",
+        "Preservation means intended module semantics, not identical request graphs or filenames",
+        "Minification, target support, and deployment behavior require separate validation"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "vite-why-doc",
+        "vite-build-doc",
+        "vite-build-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "on-demand-module-graph-server",
+      "benefits": [
+        "Fast feedback through per-module serving and invalidation"
+      ],
+      "costs": [
+        "Browser request volume and graph cache coherence become operational concerns"
+      ]
+    },
+    {
+      "feature_id": "plugin-environment-pipeline",
+      "benefits": [
+        "Framework-neutral extension points across environments"
+      ],
+      "costs": [
+        "Hook ordering and cross-environment compatibility increase integration surface"
+      ]
+    },
+    {
+      "feature_id": "dependency-prebundling",
+      "benefits": [
+        "Fewer development requests and normalized dependencies"
+      ],
+      "costs": [
+        "Discovery and optimizer caches require invalidation policy"
+      ]
+    },
+    {
+      "feature_id": "production-build-output",
+      "benefits": [
+        "Optimized deployable artifacts distinct from dev serving"
+      ],
+      "costs": [
+        "Maintaining dev/build parity adds pipeline complexity"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Vite source at fixed commit 4ca25e1d3a24cb3343352f781a276cbfd2d206d6",
+      "uri": "https://github.com/vitejs/vite/commit/4ca25e1d3a24cb3343352f781a276cbfd2d206d6",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "vite-server-source",
+      "kind": "source-code",
+      "title": "Vite development server at fixed commit",
+      "uri": "https://github.com/vitejs/vite/blob/4ca25e1d3a24cb3343352f781a276cbfd2d206d6/packages/vite/src/node/server/index.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for server creation, request transforms, HMR, and environment setup."
+    },
+    {
+      "id": "vite-module-graph-source",
+      "kind": "source-code",
+      "title": "Vite module graph at fixed commit",
+      "uri": "https://github.com/vitejs/vite/blob/4ca25e1d3a24cb3343352f781a276cbfd2d206d6/packages/vite/src/node/server/moduleGraph.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for module nodes, importer edges, transform results, and invalidation state."
+    },
+    {
+      "id": "vite-plugin-container-source",
+      "kind": "source-code",
+      "title": "Vite plugin container at fixed commit",
+      "uri": "https://github.com/vitejs/vite/blob/4ca25e1d3a24cb3343352f781a276cbfd2d206d6/packages/vite/src/node/server/pluginContainer.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for plugin hook dispatch and extension boundaries."
+    },
+    {
+      "id": "vite-transform-source",
+      "kind": "source-code",
+      "title": "Vite transform request pipeline at fixed commit",
+      "uri": "https://github.com/vitejs/vite/blob/4ca25e1d3a24cb3343352f781a276cbfd2d206d6/packages/vite/src/node/server/transformRequest.ts",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for resolve/load/transform request processing."
+    },
+    {
+      "id": "vite-dep-optimizer-source",
+      "kind": "source-code",
+      "title": "Vite dependency optimizer at fixed commit",
+      "uri": "https://github.com/vitejs/vite/tree/4ca25e1d3a24cb3343352f781a276cbfd2d206d6/packages/vite/src/node/optimizer",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for dependency discovery and pre-bundling state."
+    },
+    {
+      "id": "vite-build-source",
+      "kind": "source-code",
+      "title": "Vite build pipeline at fixed commit",
+      "uri": "https://github.com/vitejs/vite/tree/4ca25e1d3a24cb3343352f781a276cbfd2d206d6/packages/vite/src/node/build",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for production build configuration and output integration."
+    },
+    {
+      "id": "vite-why-doc",
+      "kind": "official-doc",
+      "title": "Vite rationale and architecture documentation",
+      "uri": "https://vite.dev/guide/why",
+      "accessed": "2026-10-23",
+      "notes": "Official explanation of native ESM development, HMR, and production bundling."
+    },
+    {
+      "id": "vite-dep-prebundle-doc",
+      "kind": "official-doc",
+      "title": "Vite dependency pre-bundling documentation",
+      "uri": "https://vite.dev/guide/dep-pre-bundling",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for dependency discovery and pre-bundling."
+    },
+    {
+      "id": "vite-hmr-doc",
+      "kind": "official-doc",
+      "title": "Vite HMR API documentation",
+      "uri": "https://vite.dev/guide/api-hmr",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for HMR boundaries and update propagation."
+    },
+    {
+      "id": "vite-plugin-doc",
+      "kind": "official-doc",
+      "title": "Vite plugin API documentation",
+      "uri": "https://vite.dev/guide/api-plugin",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for plugin hooks and extension behavior."
+    },
+    {
+      "id": "vite-build-doc",
+      "kind": "official-doc",
+      "title": "Vite build guide",
+      "uri": "https://vite.dev/guide/build",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for production builds and output artifacts."
+    }
+  ]
+}

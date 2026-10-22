@@ -1,0 +1,76 @@
+{
+  "id": "svelte",
+  "name": "Svelte",
+  "version_context": "tag v3.9.2, commit 615c8faf480160fd5271d969005af7fb00a1847a",
+  "summary": "A compiler-oriented UI framework that transforms component files into imperative update code, with component boundaries and DOM operations largely established during compilation.",
+  "scope": ["component syntax", "compile-time transformation", "reactive updates", "DOM output"],
+  "features": [
+    {
+      "id": "component-as-source-program",
+      "name": "Component as source program",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "Svelte treats a component file as a source unit containing script, markup, and style regions that the compiler parses into a component representation.",
+      "benefits": ["Keeps component structure close to ordinary HTML, CSS, and JavaScript", "Gives the compiler a complete unit for static analysis"],
+      "costs": ["Component semantics depend on compiler rules", "Tooling must understand the component-file format"]
+      ,"evidence_ids": ["svelte-component-source", "svelte-component-doc"]
+    },
+    {
+      "id": "compile-time-dom-update-generation",
+      "name": "Compile-time DOM update generation",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "The compiler lowers component markup and expressions into DOM creation and update instructions, moving much of the rendering work from runtime tree comparison into generated component code.",
+      "benefits": ["Can produce focused update operations for known dependencies", "Reduces the need for a general runtime virtual-DOM diff"],
+      "costs": ["Build output is coupled to compiler behavior", "Dynamic patterns can limit static optimization"],
+      "evidence_ids": ["svelte-compiler-source", "svelte-compiler-doc"]
+    },
+    {
+      "id": "reactive-declaration-updates",
+      "name": "Reactive declaration updates",
+      "category": "reactivity-model",
+      "claim_type": "fact",
+      "description": "Svelte's compiler recognizes reactive declarations and assignments in component code and emits invalidation/update paths that keep dependent markup synchronized.",
+      "benefits": ["Uses ordinary-looking assignment syntax for local updates", "Makes dependency relationships available during compilation"],
+      "costs": ["Dependency analysis has syntax and aliasing limits", "Generated invalidation order becomes part of observable behavior"],
+      "evidence_ids": ["svelte-compiler-source", "svelte-reactivity-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Component syntax transformation graph",
+      "question": "How do script, markup, and style regions map to generated component artifacts and runtime operations?",
+      "assumptions": ["A component file is a finite source graph", "Compiler passes preserve declared component dependencies", "Bundler and module-linking behavior are abstracted"],
+      "claim_type": "inference",
+      "evidence_ids": ["svelte-component-source", "svelte-compiler-source", "svelte-component-doc"]
+    },
+    {
+      "model": "Dependency invalidation relation",
+      "question": "Which generated update operations are enabled when a component variable or reactive expression changes?",
+      "assumptions": ["Assignments and expressions define dependency edges", "The compiler can conservatively identify relevant reads", "DOM mutation ordering is represented but browser layout is abstracted"],
+      "claim_type": "inference",
+      "evidence_ids": ["svelte-compiler-source", "svelte-reactivity-doc"]
+    },
+    {
+      "model": "Compile-time versus runtime cost partition",
+      "question": "Which rendering costs can be shifted from component execution to compilation without changing the component's observable update behavior?",
+      "assumptions": ["Compilation is performed before deployment", "Generated code is semantically equivalent for supported syntax", "Dynamic evaluation and external state are modeled as residual runtime work"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["svelte-compiler-source", "svelte-compiler-doc"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "component-as-source-program", "benefits": ["Unified source-level component boundary"], "costs": ["Compiler-aware syntax and tooling are required"]},
+    {"feature_id": "compile-time-dom-update-generation", "benefits": ["Focused runtime DOM operations"], "costs": ["Build pipeline and generated output become central constraints"]},
+    {"feature_id": "reactive-declaration-updates", "benefits": ["Concise local reactive programming model"], "costs": ["Static dependency analysis can be sensitive to code shape"]}
+  ],
+  "evidence": [
+    {"id": "svelte-repository-commit", "kind": "source-code", "title": "Svelte source at v3.9.2 commit 615c8faf4801", "uri": "https://github.com/sveltejs/svelte/commit/615c8faf480160fd5271d969005af7fb00a1847a", "accessed": "2026-10-23", "notes": "Fixed official repository revision for this reviewed card."},
+    {"id": "svelte-component-source", "kind": "source-code", "title": "Svelte component compiler at fixed commit", "uri": "https://github.com/sveltejs/svelte/blob/615c8faf480160fd5271d969005af7fb00a1847a/src/compiler/compile/Component.ts", "accessed": "2026-10-23", "notes": "Pinned source for component-file compilation."},
+    {"id": "svelte-compiler-source", "kind": "source-code", "title": "Svelte DOM compiler at fixed commit", "uri": "https://github.com/sveltejs/svelte/blob/615c8faf480160fd5271d969005af7fb00a1847a/src/compiler/compile/render_dom/Renderer.ts", "accessed": "2026-10-23", "notes": "Pinned source for generated DOM renderer operations."},
+    {"id": "svelte-component-doc", "kind": "official-doc", "title": "Svelte component format", "uri": "https://svelte.dev/docs/svelte/svelte-files", "accessed": "2026-10-23", "notes": "Official documentation for component-file structure."},
+    {"id": "svelte-compiler-doc", "kind": "official-doc", "title": "Svelte compiler reference", "uri": "https://svelte.dev/docs/svelte/svelte-compiler", "accessed": "2026-10-23", "notes": "Official documentation for compile-time component transformation."},
+    {"id": "svelte-reactivity-doc", "kind": "official-doc", "title": "Svelte reactive statements", "uri": "https://svelte.dev/docs/svelte/legacy-reactive-assignments", "accessed": "2026-10-23", "notes": "Official documentation for reactive declarations and dependency analysis."}
+  ],
+  "related_systems": []
+}

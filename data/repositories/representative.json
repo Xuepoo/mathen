@@ -126,6 +126,42 @@
     "priority": "extended"
   },
   {
+    "id": "envoy",
+    "name": "Envoy",
+    "category": "network-proxy",
+    "repository": "https://github.com/envoyproxy/envoy.git",
+    "documentation": "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "haproxy",
+    "name": "HAProxy",
+    "category": "network-proxy",
+    "repository": "https://github.com/haproxy/haproxy.git",
+    "documentation": "https://docs.haproxy.org/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "caddy",
+    "name": "Caddy",
+    "category": "web-server",
+    "repository": "https://github.com/caddyserver/caddy.git",
+    "documentation": "https://caddyserver.com/docs/architecture",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "wireguard",
+    "name": "WireGuard",
+    "category": "secure-tunnel",
+    "repository": "https://git.zx2c4.com/wireguard-go",
+    "documentation": "https://www.wireguard.com/protocol/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
     "id": "llvm",
     "name": "LLVM",
     "category": "compiler-infrastructure",
@@ -366,6 +402,42 @@
     "repository": "https://github.com/facebook/rocksdb.git",
     "documentation": "https://github.com/facebook/rocksdb/wiki",
     "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "leveldb",
+    "name": "LevelDB",
+    "category": "embedded-database",
+    "repository": "https://github.com/google/leveldb.git",
+    "documentation": "https://github.com/google/leveldb/tree/main/doc",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "foundationdb",
+    "name": "FoundationDB",
+    "category": "distributed-database",
+    "repository": "https://github.com/apple/foundationdb.git",
+    "documentation": "https://apple.github.io/foundationdb/",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "mongodb",
+    "name": "MongoDB",
+    "category": "document-database",
+    "repository": "https://github.com/mongodb/mongo.git",
+    "documentation": "https://www.mongodb.com/docs/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "cassandra",
+    "name": "Apache Cassandra",
+    "category": "distributed-database",
+    "repository": "https://github.com/apache/cassandra.git",
+    "documentation": "https://cassandra.apache.org/doc/stable/",
+    "ref": "trunk",
     "priority": "core"
   },
   {

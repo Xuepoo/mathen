@@ -1,0 +1,129 @@
+{
+  "id": "containerd",
+  "name": "containerd",
+  "version_context": "tag v2.1.9, commit 926009266892d80087b532f7f17ea14b43c4f23d",
+  "summary": "A daemon and client architecture for managing container images, metadata, snapshots, tasks, and runtime shims through typed internal and external plugin boundaries.",
+  "scope": [
+    "container lifecycle management",
+    "runtime shims",
+    "plugin architecture",
+    "content and snapshot storage"
+  ],
+  "features": [
+    {
+      "id": "typed-plugin-boundaries",
+      "name": "Typed internal and external plugin boundaries",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "containerd defines plugin types for runtimes, snapshotters, content, metadata, services, and other subsystems. External plugins can be supplied as binaries or as local gRPC services without recompiling the daemon.",
+      "benefits": [
+        "Allows subsystem implementations to evolve behind explicit interfaces",
+        "Permits deployment-time extension of a released daemon"
+      ],
+      "costs": [
+        "Plugin contracts and local IPC become compatibility and operational concerns",
+        "The system's behavior depends on configuration and the selected plugin set"
+      ],
+      "evidence_ids": ["containerd-plugins-doc", "containerd-plugin-types-source"]
+    },
+    {
+      "id": "runtime-v2-shim-lifecycle",
+      "name": "Runtime v2 shim lifecycle",
+      "category": "execution-boundary",
+      "claim_type": "fact",
+      "description": "containerd selects a runtime for a container and invokes a runtime-v2 binary to start a shim; the shim then exposes the runtime shim API through which containerd starts and manages tasks.",
+      "benefits": [
+        "Separates daemon lifetime from container task lifetime",
+        "Supports multiple runtime implementations selected per container"
+      ],
+      "costs": [
+        "Task, shim, and daemon lifecycles must remain coordinated",
+        "Runtime selection and shim discovery add configuration surface"
+      ],
+      "evidence_ids": ["containerd-plugins-doc", "containerd-runtime-v2-source"]
+    },
+    {
+      "id": "client-side-high-level-operations",
+      "name": "Client-side high-level operations",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "The smart-client model leaves operations not required by the daemon, such as specification construction and registry interaction, in the client while the daemon provides shared lifecycle services.",
+      "benefits": [
+        "Keeps the daemon focused on shared state and task management",
+        "Lets clients tailor image and container workflows"
+      ],
+      "costs": [
+        "Clients can differ in behavior and feature coverage",
+        "Some lifecycle intent is distributed across client and daemon boundaries"
+      ],
+      "evidence_ids": ["containerd-plugins-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed plugin graph",
+      "question": "How do daemon services, runtime implementations, snapshotters, and external endpoints compose into one container-management system?",
+      "assumptions": [
+        "Plugin types are treated as typed vertices and configured dependencies as edges",
+        "The model abstracts transport and serialization details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["containerd-plugins-doc", "containerd-plugin-types-source"]
+    },
+    {
+      "model": "Shim-mediated lifecycle transition system",
+      "question": "How does a container request move from runtime selection to an independently managed task?",
+      "assumptions": [
+        "Runtime selection and shim startup are modeled as explicit transitions",
+        "The model does not assert that every transition succeeds",
+        "The shim API abstracts individual task implementation details"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["containerd-plugins-doc", "containerd-runtime-v2-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "typed-plugin-boundaries",
+      "benefits": ["Extensibility without rebuilding the daemon"],
+      "costs": ["More interfaces, configuration, and IPC failure modes"]
+    },
+    {
+      "feature_id": "runtime-v2-shim-lifecycle",
+      "benefits": ["Runtime-specific task management with daemon isolation"],
+      "costs": ["Additional processes and lifecycle coordination"]
+    },
+    {
+      "feature_id": "client-side-high-level-operations",
+      "benefits": ["A smaller shared daemon and flexible clients"],
+      "costs": ["Behavioral variation across client implementations"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "containerd-plugins-doc",
+      "kind": "official-doc",
+      "title": "containerd Plugins",
+      "uri": "https://github.com/containerd/containerd/blob/926009266892d80087b532f7f17ea14b43c4f23d/docs/PLUGINS.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision official documentation for smart clients, internal and external plugins, runtime selection, and runtime-v2 shims."
+    },
+    {
+      "id": "containerd-plugin-types-source",
+      "kind": "source-code",
+      "title": "containerd plugin type definitions at v2.1.9",
+      "uri": "https://github.com/containerd/containerd/blob/926009266892d80087b532f7f17ea14b43c4f23d/plugins/types.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source defining runtime, snapshotter, content, metadata, service, and shim plugin types."
+    },
+    {
+      "id": "containerd-runtime-v2-source",
+      "kind": "source-code",
+      "title": "containerd runtime v2 shim manager at v2.1.9",
+      "uri": "https://github.com/containerd/containerd/blob/926009266892d80087b532f7f17ea14b43c4f23d/core/runtime/v2/shim_manager.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source for runtime-v2 shim discovery and management."
+    }
+  ],
+  "related_systems": ["runc", "kubernetes", "kata-containers", "gvisor"]
+}

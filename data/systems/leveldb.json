@@ -1,0 +1,224 @@
+{
+  "id": "leveldb",
+  "name": "LevelDB",
+  "version_context": "commit bb74ef739973a70ca9f0d90788a1da89b788c0ad",
+  "summary": "An embedded ordered key-value library that combines a write log and memtable with sorted table levels, background compaction, and sequence-bounded snapshots.",
+  "scope": [
+    "embedded key-value storage",
+    "log-structured persistence",
+    "sorted tables and compaction",
+    "snapshot reads and recovery"
+  ],
+  "features": [
+    {
+      "id": "ordered-key-value-api",
+      "name": "Persistent ordered key-value API",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "The public DB interface defines a persistent ordered map from byte-string keys to values, with Put, Delete, WriteBatch, Get, iteration, and range compaction operations.",
+      "benefits": [
+        "Provides a small embeddable storage boundary",
+        "Supports ordered iteration and application-defined key comparison"
+      ],
+      "costs": [
+        "Does not provide SQL, secondary indexes, or a built-in client-server boundary",
+        "A database is restricted to one accessing process"
+      ],
+      "evidence_ids": [
+        "leveldb-readme",
+        "leveldb-db-api"
+      ]
+    },
+    {
+      "id": "log-memtable-sstable-levels",
+      "name": "Log, memtable, and leveled sorted tables",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "Recent updates are appended to a log and represented in a memtable; the memtable is converted to sorted tables, which are organized into levels with non-overlapping ranges outside level zero.",
+      "benefits": [
+        "Turns sequential updates into sorted immutable files",
+        "Separates foreground update state from durable table organization"
+      ],
+      "costs": [
+        "Reads may merge several tables",
+        "Memory buffers and immutable files add space and recovery work"
+      ],
+      "evidence_ids": [
+        "leveldb-implementation",
+        "leveldb-options"
+      ]
+    },
+    {
+      "id": "background-compaction",
+      "name": "Background leveled compaction",
+      "category": "maintenance-model",
+      "claim_type": "fact",
+      "description": "When level size thresholds are exceeded, background compaction merges a level's files with overlapping files in the next level, discarding overwritten values and obsolete deletion markers when safe.",
+      "benefits": [
+        "Reduces the number of files and read merging work",
+        "Bulk merges gradually move updates toward larger levels"
+      ],
+      "costs": [
+        "Compaction consumes I/O and CPU and can create latency pressure",
+        "Delayed compactions increase read amplification"
+      ],
+      "evidence_ids": [
+        "leveldb-implementation",
+        "leveldb-db-api"
+      ]
+    },
+    {
+      "id": "sequence-snapshot-recovery",
+      "name": "Sequence-bounded snapshots and log recovery",
+      "category": "consistency-model",
+      "claim_type": "fact",
+      "description": "The API exposes immutable snapshots of the current database state; the implementation assigns sequence numbers to batches and recovery replays log records into a memtable before restoring the serving state.",
+      "benefits": [
+        "Provides stable read boundaries while later writes continue",
+        "Makes restart reconstruction explicit through log and manifest state"
+      ],
+      "costs": [
+        "Long-lived snapshots retain versions and delay cleanup",
+        "Recovery time grows with the unflushed log"
+      ],
+      "evidence_ids": [
+        "leveldb-db-api",
+        "leveldb-recovery-source",
+        "leveldb-implementation"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Log-structured state refinement",
+      "question": "How does a logical ordered map refine into a write log, memtable, sorted-table levels, and compaction generations?",
+      "assumptions": [
+        "Updates are compared at explicit sequence boundaries",
+        "Flush and compaction preserve the visible key-value map",
+        "File count, I/O, and memory are modeled as costs rather than logical state"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "leveldb-implementation",
+        "leveldb-options"
+      ]
+    },
+    {
+      "model": "Snapshot visibility relation",
+      "question": "Which version of each key is visible to an iterator associated with a snapshot sequence?",
+      "assumptions": [
+        "Write batches receive monotonically increasing sequence numbers",
+        "A snapshot fixes a read boundary while later writes remain outside it",
+        "Compaction preserves versions required by live snapshots"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "leveldb-db-api",
+        "leveldb-recovery-source"
+      ]
+    },
+    {
+      "model": "Crash-recovery transition system",
+      "question": "Which log, manifest, and sorted-table states reconstruct a valid logical database after reopening?",
+      "assumptions": [
+        "CURRENT identifies the latest manifest",
+        "Log records are replayed in generation order",
+        "The model distinguishes acknowledged writes from the configured sync boundary"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "leveldb-implementation",
+        "leveldb-recovery-source",
+        "leveldb-options"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "ordered-key-value-api",
+      "benefits": [
+        "Small embeddable ordered storage interface"
+      ],
+      "costs": [
+        "Limited data model and no built-in network service"
+      ]
+    },
+    {
+      "feature_id": "log-memtable-sstable-levels",
+      "benefits": [
+        "Sequential writes with sorted persistent representation"
+      ],
+      "costs": [
+        "Read and space amplification across levels"
+      ]
+    },
+    {
+      "feature_id": "background-compaction",
+      "benefits": [
+        "Online organization reduces lookup work"
+      ],
+      "costs": [
+        "Compaction resource pressure and bursty latency"
+      ]
+    },
+    {
+      "feature_id": "sequence-snapshot-recovery",
+      "benefits": [
+        "Stable reads and deterministic restart path"
+      ],
+      "costs": [
+        "Pinned versions and recovery-time dependence on log state"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "leveldb-readme",
+      "kind": "official-doc",
+      "title": "LevelDB README at fixed commit",
+      "uri": "https://github.com/google/leveldb/blob/bb74ef739973a70ca9f0d90788a1da89b788c0ad/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Official repository documentation for ordered key-value operations, batches, snapshots, limitations, and compaction."
+    },
+    {
+      "id": "leveldb-implementation",
+      "kind": "official-doc",
+      "title": "LevelDB implementation overview at fixed commit",
+      "uri": "https://github.com/google/leveldb/blob/bb74ef739973a70ca9f0d90788a1da89b788c0ad/doc/impl.md",
+      "accessed": "2026-10-23",
+      "notes": "Official implementation document describing logs, memtables, sorted tables, levels, manifests, compaction, and recovery."
+    },
+    {
+      "id": "leveldb-db-api",
+      "kind": "source-code",
+      "title": "LevelDB DB API at fixed commit",
+      "uri": "https://github.com/google/leveldb/blob/bb74ef739973a70ca9f0d90788a1da89b788c0ad/include/leveldb/db.h",
+      "accessed": "2026-10-23",
+      "notes": "Pinned public API inspection of ordered map operations, batches, snapshots, iteration, and compaction."
+    },
+    {
+      "id": "leveldb-options",
+      "kind": "source-code",
+      "title": "LevelDB options at fixed commit",
+      "uri": "https://github.com/google/leveldb/blob/bb74ef739973a70ca9f0d90788a1da89b788c0ad/include/leveldb/options.h",
+      "accessed": "2026-10-23",
+      "notes": "Pinned option definitions for write buffers, log-backed memory, blocks, files, and compaction costs."
+    },
+    {
+      "id": "leveldb-recovery-source",
+      "kind": "source-code",
+      "title": "LevelDB DB implementation at fixed commit",
+      "uri": "https://github.com/google/leveldb/blob/bb74ef739973a70ca9f0d90788a1da89b788c0ad/db/db_impl.cc",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of log replay, sequence assignment, snapshots, writes, and recovery."
+    },
+    {
+      "id": "leveldb-repository-commit",
+      "kind": "source-code",
+      "title": "LevelDB source at bb74ef739973a",
+      "uri": "https://github.com/google/leveldb/commit/bb74ef739973a70ca9f0d90788a1da89b788c0ad",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision used for all source evidence in this card."
+    }
+  ]
+}

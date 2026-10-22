@@ -1,0 +1,217 @@
+{
+  "id": "haproxy",
+  "name": "HAProxy",
+  "version_context": "commit 73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5",
+  "summary": "A high-performance proxy that schedules connection and stream work through event polling and task queues, separates transport and multiplexing layers, and balances work across threads and processes.",
+  "scope": [
+    "reverse proxy",
+    "event polling",
+    "task scheduling",
+    "connection and stream state",
+    "load balancing"
+  ],
+  "features": [
+    {
+      "id": "poller-and-task-scheduler",
+      "name": "Event poller and prioritized task scheduler",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "HAProxy drives network progress from OS-specific polling and schedules timers, streams, and tasklets through per-thread run queues. Tasks carry ownership and wake-up state so work can be queued, expired, migrated, or handed to another thread when appropriate.",
+      "benefits": [
+        "Handles many sockets without one blocking thread per connection",
+        "Makes timer expiry and runnable work explicit scheduling inputs",
+        "Allows urgent tasklets and ordinary tasks to receive different scheduling treatment"
+      ],
+      "costs": [
+        "Every protocol path must preserve readiness and wake-up invariants",
+        "Priorities and queue ownership make latency and fairness harder to reason about",
+        "A slow task can still consume a shared thread's execution budget"
+      ],
+      "evidence_ids": [
+        "haproxy-polling-doc",
+        "haproxy-task-source",
+        "haproxy-main-source"
+      ]
+    },
+    {
+      "id": "layered-connection-stream-multiplexing",
+      "name": "Layered connection, stream, and multiplexer state",
+      "category": "connection-model",
+      "claim_type": "fact",
+      "description": "HAProxy represents a logical stream separately from its connection and transport, and selects protocol multiplexers for frontend and backend sides. Connection ownership, readiness, shutdown, and mux callbacks form explicit boundaries between socket transport and proxy stream processing.",
+      "benefits": [
+        "Separates reusable transport behavior from logical request or stream state",
+        "Supports multiple protocol muxes behind common connection operations",
+        "Provides lifecycle hooks for connection reuse, shutdown, and protocol upgrades"
+      ],
+      "costs": [
+        "State must stay consistent across stream, connection, transport, and mux layers",
+        "Protocol upgrades and half-closes create many partial-lifecycle cases",
+        "Debugging requires tracing ownership across several abstractions"
+      ],
+      "evidence_ids": [
+        "haproxy-layering-doc",
+        "haproxy-connection-source",
+        "haproxy-stream-source"
+      ]
+    },
+    {
+      "id": "thread-and-process-work-distribution",
+      "name": "Thread and process work distribution",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "HAProxy supports multi-threaded execution with thread-local contexts and cross-thread tasklets, while its master-worker documentation describes process supervision and seamless reload mechanisms. The proxy can therefore separate connection work, coordination, and replacement across execution boundaries.",
+      "benefits": [
+        "Uses multiple CPUs while retaining thread-local scheduling structures",
+        "Supports operational replacement with reduced interruption during reload",
+        "Makes process and thread lifecycle responsibilities explicit"
+      ],
+      "costs": [
+        "Cross-thread wake-ups and shared state need synchronization",
+        "Reload and descriptor migration behavior adds operational state",
+        "The selected process and thread topology affects resource usage and latency"
+      ],
+      "evidence_ids": [
+        "haproxy-thread-doc",
+        "haproxy-mworker-doc",
+        "haproxy-task-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Polling and task-queue transition system",
+      "question": "How do socket readiness, timers, task priorities, and wake-ups select the next HAProxy work item?",
+      "assumptions": [
+        "Each thread has a runnable queue and timer structure",
+        "Polling produces readiness events that wake connection or stream tasks",
+        "The view abstracts the implementation-specific poller while retaining task ownership"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "haproxy-polling-doc",
+        "haproxy-task-source"
+      ]
+    },
+    {
+      "model": "Layered stream-to-transport graph",
+      "question": "Which stream, mux, transport, and socket states must agree for data to advance or a connection to close?",
+      "assumptions": [
+        "Streams and connections are distinct vertices linked by ownership edges",
+        "Mux and transport layers expose readiness and shutdown transitions",
+        "The graph describes implementation boundaries rather than protocol correctness"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "haproxy-layering-doc",
+        "haproxy-connection-source",
+        "haproxy-stream-source"
+      ]
+    },
+    {
+      "model": "Reload and execution-topology state machine",
+      "question": "How does HAProxy move from one supervised process/thread topology to another while preserving eligible live work?",
+      "assumptions": [
+        "A master or worker process owns lifecycle transitions",
+        "Descriptor and state transfer are explicit transition inputs",
+        "The view does not claim zero interruption for every protocol or failure mode"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "haproxy-thread-doc",
+        "haproxy-mworker-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "poller-and-task-scheduler",
+      "benefits": ["High connection concurrency with explicit readiness and timer scheduling"],
+      "costs": ["Wake-up, priority, and task ownership rules increase scheduling complexity"]
+    },
+    {
+      "feature_id": "layered-connection-stream-multiplexing",
+      "benefits": ["Protocol reuse and separation of logical streams from sockets"],
+      "costs": ["Partial shutdowns and cross-layer lifecycle ownership are difficult to validate"]
+    },
+    {
+      "feature_id": "thread-and-process-work-distribution",
+      "benefits": ["CPU scaling and operationally controlled reloads"],
+      "costs": ["Synchronization, migration, and topology choices expand the failure surface"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "haproxy-repository-commit",
+      "kind": "source-code",
+      "title": "HAProxy source at 73ce20faa03e",
+      "uri": "https://github.com/haproxy/haproxy/commit/73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision resolved from the target manifest row; all source evidence in this card is pinned to this commit."
+    },
+    {
+      "id": "haproxy-polling-doc",
+      "kind": "official-doc",
+      "title": "HAProxy polling and scheduling internals",
+      "uri": "https://github.com/haproxy/haproxy/blob/73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5/doc/internals/notes-polling.txt",
+      "accessed": "2026-10-23",
+      "notes": "Official repository documentation for polling states and readiness-driven processing."
+    },
+    {
+      "id": "haproxy-thread-doc",
+      "kind": "official-doc",
+      "title": "HAProxy thread execution context",
+      "uri": "https://github.com/haproxy/haproxy/blob/73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5/doc/internals/thread-exec-ctx.txt",
+      "accessed": "2026-10-23",
+      "notes": "Official repository documentation for thread-local execution contexts and scheduling ownership."
+    },
+    {
+      "id": "haproxy-layering-doc",
+      "kind": "official-doc",
+      "title": "HAProxy layer internals",
+      "uri": "https://github.com/haproxy/haproxy/blob/73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5/doc/internals/notes-layers.txt",
+      "accessed": "2026-10-23",
+      "notes": "Official repository documentation for the protocol, mux, connection, stream, and transport layering."
+    },
+    {
+      "id": "haproxy-mworker-doc",
+      "kind": "official-doc",
+      "title": "HAProxy master-worker mode",
+      "uri": "https://github.com/haproxy/haproxy/blob/73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5/doc/internals/mworker.md",
+      "accessed": "2026-10-23",
+      "notes": "Official repository documentation for master-worker supervision and reload behavior."
+    },
+    {
+      "id": "haproxy-task-source",
+      "kind": "source-code",
+      "title": "HAProxy task scheduler at 73ce20faa03e",
+      "uri": "https://github.com/haproxy/haproxy/blob/73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5/src/task.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for run queues, timer queues, tasklets, cross-thread wake-ups, and task ownership."
+    },
+    {
+      "id": "haproxy-main-source",
+      "kind": "source-code",
+      "title": "HAProxy process loop at 73ce20faa03e",
+      "uri": "https://github.com/haproxy/haproxy/blob/73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5/src/haproxy.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for process initialization and the main event-driven execution path."
+    },
+    {
+      "id": "haproxy-connection-source",
+      "kind": "source-code",
+      "title": "HAProxy connection layer at 73ce20faa03e",
+      "uri": "https://github.com/haproxy/haproxy/blob/73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5/include/haproxy/connection.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for connection ownership, transport readiness, mux installation, and shutdown boundaries."
+    },
+    {
+      "id": "haproxy-stream-source",
+      "kind": "source-code",
+      "title": "HAProxy stream layer at 73ce20faa03e",
+      "uri": "https://github.com/haproxy/haproxy/blob/73ce20faa03e8c2670abc78bf7da73bb8bbe2bf5/include/haproxy/stream.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for logical stream lifecycle and stream-to-session/proxy relationships."
+    }
+  ]
+}

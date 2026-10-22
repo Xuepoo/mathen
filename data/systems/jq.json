@@ -1,0 +1,167 @@
+{
+  "id": "jq",
+  "name": "jq",
+  "version_context": "commit 49fbca1242c7f46f00b849de76565764e0254a03",
+  "summary": "A portable JSON processor that evaluates composable filters over JSON value streams and exposes the results through a command-line input, output, and status interface.",
+  "scope": [
+    "JSON value representation",
+    "filter composition and evaluation",
+    "streaming input and output",
+    "command-line protocol"
+  ],
+  "features": [
+    {
+      "id": "filter-composition",
+      "name": "Composable filter language",
+      "category": "evaluation-model",
+      "claim_type": "fact",
+      "description": "The jq manual models a program as a filter with an input and output, and documents composition operators that feed one filter's outputs into another filter or concatenate multiple result streams.",
+      "benefits": [
+        "Makes extraction, transformation, and aggregation reusable as small expressions",
+        "Supports composition without requiring a separate host-language program"
+      ],
+      "costs": [
+        "Filter evaluation semantics must be understood to predict cardinality and ordering",
+        "Complex expressions can become a separate language-maintenance surface"
+      ],
+      "evidence_ids": [
+        "jq-manual",
+        "jq-fixed-source"
+      ]
+    },
+    {
+      "id": "json-value-stream-processing",
+      "name": "JSON value stream processing",
+      "category": "dataflow-model",
+      "claim_type": "fact",
+      "description": "The official manual describes JSON entities as an input stream processed one at a time, with filters able to produce zero, one, or multiple output values; it also documents a streaming parser mode for large inputs.",
+      "benefits": [
+        "Allows pipeline-style processing of successive JSON values",
+        "Provides a streaming mode that can avoid materializing a complete input tree"
+      ],
+      "costs": [
+        "Streaming changes the representation to path/value events that consumers must interpret",
+        "Filters that require whole-input context may need slurping and more memory"
+      ],
+      "evidence_ids": [
+        "jq-manual",
+        "jq-parser-source",
+        "jq-fixed-source"
+      ]
+    },
+    {
+      "id": "portable-cli-boundary",
+      "name": "Portable command-line boundary",
+      "category": "deployment-interface",
+      "claim_type": "fact",
+      "description": "The upstream README describes jq as portable C with zero runtime dependencies, while the manual defines a command-line filter argument, file or standard-input inputs, standard-output results, and documented exit statuses.",
+      "benefits": [
+        "Fits shell pipelines and automation with a small process boundary",
+        "Reduces runtime deployment dependencies for the standalone processor"
+      ],
+      "costs": [
+        "Textual command invocation and JSON output remain outside typed host-language contracts",
+        "Portability still leaves platform, locale, and filesystem behavior as external concerns"
+      ],
+      "evidence_ids": [
+        "jq-readme",
+        "jq-manual",
+        "jq-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Partial filter stream transducer",
+      "question": "How does a jq filter transform one input value stream into an ordered output value stream?",
+      "assumptions": [
+        "A filter is modeled as a relation or transducer that may emit zero or more values for each input",
+        "The view abstracts parser buffering, memory management, and command-line option handling",
+        "Stream ordering is treated as observable while external side effects are excluded from the model"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "jq-manual",
+        "jq-parser-source",
+        "jq-fixed-source"
+      ]
+    },
+    {
+      "model": "Filter composition algebra",
+      "question": "Which composition operators preserve a useful stream interface when filters are chained or branched?",
+      "assumptions": [
+        "Filter composition is modeled by feeding outputs forward and concatenating branch outputs",
+        "The model abstracts errors, resource limits, and filters with external effects",
+        "The view describes candidate algebraic structure rather than proving equivalence of arbitrary programs"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "jq-manual",
+        "jq-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "filter-composition",
+      "benefits": [
+        "Small expressions compose into reusable transformations"
+      ],
+      "costs": [
+        "Cardinality and evaluation behavior add language-specific reasoning cost"
+      ]
+    },
+    {
+      "feature_id": "json-value-stream-processing",
+      "benefits": [
+        "Supports both per-value pipelines and explicit whole-input aggregation"
+      ],
+      "costs": [
+        "Consumers trade memory savings for streaming-specific path/value handling"
+      ]
+    },
+    {
+      "feature_id": "portable-cli-boundary",
+      "benefits": [
+        "Simple portable integration point for scripts and tools"
+      ],
+      "costs": [
+        "Process and textual interfaces provide less structure than an embedded API"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "jq-fixed-source",
+      "kind": "source-code",
+      "title": "jq source tree at fixed commit 49fbca1242c7",
+      "uri": "https://github.com/jqlang/jq/commit/49fbca1242c7f46f00b849de76565764e0254a03",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed upstream source provenance for this card."
+    },
+    {
+      "id": "jq-readme",
+      "kind": "official-doc",
+      "title": "jq README",
+      "uri": "https://github.com/jqlang/jq/blob/49fbca1242c7f46f00b849de76565764e0254a03/README.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Upstream description of jq as a portable C JSON processor with zero runtime dependencies."
+    },
+    {
+      "id": "jq-manual",
+      "kind": "official-doc",
+      "title": "jq 1.8 Manual",
+      "uri": "https://jqlang.org/manual/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official manual for filters, stream processing, CLI protocols, and exit status behavior."
+    },
+    {
+      "id": "jq-parser-source",
+      "kind": "source-code",
+      "title": "jq JSON parser implementation",
+      "uri": "https://github.com/jqlang/jq/blob/49fbca1242c7f46f00b849de76565764e0254a03/src/jv_parse.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Pinned parser source inspected for the value-stream input boundary."
+    }
+  ]
+}

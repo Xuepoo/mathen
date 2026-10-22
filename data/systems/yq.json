@@ -1,0 +1,187 @@
+{
+  "id": "yq",
+  "name": "yq",
+  "version_context": "commit c2a5da47eac34382dfceb032521b2b08ca8d543e",
+  "summary": "A portable command-line processor that applies jq-like expressions across YAML and several additional document formats, with sequence and all-input evaluation modes.",
+  "scope": [
+    "multi-format document decoding",
+    "expression evaluation",
+    "document stream processing",
+    "format-preserving command output"
+  ],
+  "features": [
+    {
+      "id": "multi-format-document-boundary",
+      "name": "Multi-format document boundary",
+      "category": "input-output-model",
+      "claim_type": "fact",
+      "description": "The upstream README and command interface document YAML, JSON, XML, INI, properties, CSV, TSV, and other input/output formats, with format selection by file detection or explicit flags.",
+      "benefits": [
+        "Applies one expression-oriented tool across heterogeneous configuration formats",
+        "Makes conversion between supported formats available at the CLI boundary"
+      ],
+      "costs": [
+        "Format-specific typing, ordering, comments, and encoding rules affect semantics",
+        "A common expression surface cannot expose every capability of every format"
+      ],
+      "evidence_ids": [
+        "yq-readme",
+        "yq-root-source",
+        "yq-fixed-source"
+      ]
+    },
+    {
+      "id": "expression-evaluation-modes",
+      "name": "Sequence and all-input evaluation modes",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The official command documentation distinguishes eval, which applies an expression to each document in sequence, from eval-all, which loads all documents from all files and evaluates once; the pinned command implementations construct separate evaluators for these modes.",
+      "benefits": [
+        "Supports independent document transformations and cross-document operations",
+        "Makes whole-input aggregation an explicit invocation choice"
+      ],
+      "costs": [
+        "All-input evaluation can increase memory use with large document sets",
+        "The same expression may have different behavior under sequential and aggregate evaluation"
+      ],
+      "evidence_ids": [
+        "yq-command-doc",
+        "yq-eval-source",
+        "yq-eval-all-source",
+        "yq-fixed-source"
+      ]
+    },
+    {
+      "id": "document-aware-transformation",
+      "name": "Document-aware transformation pipeline",
+      "category": "transformation-model",
+      "claim_type": "fact",
+      "description": "yq exposes expression files, input and output format controls, multi-document YAML support, split-expression output, and in-place updates, forming a pipeline from decoder through expression evaluator to encoder or file writer.",
+      "benefits": [
+        "Provides scriptable transformations while retaining document-oriented output options",
+        "Allows updates to be routed to streams, split files, or an existing file"
+      ],
+      "costs": [
+        "Output fidelity depends on decoder and encoder behavior for each format",
+        "In-place and split output modes add filesystem and naming failure modes"
+      ],
+      "evidence_ids": [
+        "yq-readme",
+        "yq-command-doc",
+        "yq-root-source",
+        "yq-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed document transformation relation",
+      "question": "How does an expression map documents between input and output format representations?",
+      "assumptions": [
+        "A document is modeled as a format-specific decoded tree or value",
+        "The evaluator is treated as a partial transformation that can fail on unsupported structure or syntax",
+        "The view abstracts comments, anchors, scalar styles, and format-specific round-tripping details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "yq-readme",
+        "yq-root-source",
+        "yq-fixed-source"
+      ]
+    },
+    {
+      "model": "Sequential versus aggregate evaluation semantics",
+      "question": "When do sequential document evaluation and all-input evaluation produce different transformation domains?",
+      "assumptions": [
+        "Sequential mode maps an expression independently over each decoded document",
+        "Aggregate mode supplies the complete collection of decoded documents to one evaluator",
+        "The model abstracts parser buffering and does not claim equivalence between modes"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "yq-command-doc",
+        "yq-eval-source",
+        "yq-eval-all-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "multi-format-document-boundary",
+      "benefits": [
+        "One CLI can bridge several structured document ecosystems"
+      ],
+      "costs": [
+        "Format diversity expands compatibility and fidelity testing"
+      ]
+    },
+    {
+      "feature_id": "expression-evaluation-modes",
+      "benefits": [
+        "Users can select per-document streaming or cross-document context"
+      ],
+      "costs": [
+        "Evaluation mode becomes part of expression correctness and resource planning"
+      ]
+    },
+    {
+      "feature_id": "document-aware-transformation",
+      "benefits": [
+        "Output routing supports both pipelines and file-oriented workflows"
+      ],
+      "costs": [
+        "Writer and filesystem modes add operational variation beyond expression semantics"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "yq-fixed-source",
+      "kind": "source-code",
+      "title": "yq source tree at fixed commit c2a5da47eac3",
+      "uri": "https://github.com/mikefarah/yq/commit/c2a5da47eac34382dfceb032521b2b08ca8d543e",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed upstream source provenance for this card."
+    },
+    {
+      "id": "yq-readme",
+      "kind": "official-doc",
+      "title": "yq README",
+      "uri": "https://github.com/mikefarah/yq/blob/c2a5da47eac34382dfceb032521b2b08ca8d543e/README.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Upstream format support, conversion, multi-document, and transformation behavior."
+    },
+    {
+      "id": "yq-command-doc",
+      "kind": "official-doc",
+      "title": "yq command documentation",
+      "uri": "https://mikefarah.gitbook.io/yq/commands/evaluate",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official command documentation for eval, expression input, formats, and output modes."
+    },
+    {
+      "id": "yq-root-source",
+      "kind": "source-code",
+      "title": "yq command and format configuration",
+      "uri": "https://github.com/mikefarah/yq/blob/c2a5da47eac34382dfceb032521b2b08ca8d543e/cmd/root.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Pinned command boundary for format, expression, and output configuration."
+    },
+    {
+      "id": "yq-eval-source",
+      "kind": "source-code",
+      "title": "yq sequential evaluator command",
+      "uri": "https://github.com/mikefarah/yq/blob/c2a5da47eac34382dfceb032521b2b08ca8d543e/cmd/evaluate_sequence_command.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Pinned implementation of per-document sequential evaluation."
+    },
+    {
+      "id": "yq-eval-all-source",
+      "kind": "source-code",
+      "title": "yq aggregate evaluator command",
+      "uri": "https://github.com/mikefarah/yq/blob/c2a5da47eac34382dfceb032521b2b08ca8d543e/cmd/evaluate_all_command.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Pinned implementation of all-input evaluation."
+    }
+  ]
+}

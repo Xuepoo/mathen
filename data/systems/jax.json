@@ -1,0 +1,257 @@
+{
+  "id": "jax",
+  "name": "JAX",
+  "version_context": "commit a16e85bf31bf6e332571c35a04179f9ad72b7af1",
+  "summary": "A Python numerical computing system that represents array programs through functional transformations, traces them into jaxprs, lowers compiled computations to XLA, and assigns arrays to devices through explicit sharding objects.",
+  "scope": [
+    "functional transformations",
+    "tracing and jaxpr representation",
+    "XLA lowering and compilation",
+    "array sharding and device placement"
+  ],
+  "features": [
+    {
+      "id": "functional-transformation-composition",
+      "name": "Functional transformation composition",
+      "category": "program-model",
+      "claim_type": "fact",
+      "description": "JAX exposes transformations such as jit, grad, jacfwd, jacrev, vmap, and pmap that take functions or array programs and produce transformed callable computations. The API implementation composes these transformations through tracing and vector-Jacobian or batching machinery rather than requiring users to construct a separate graph format.",
+      "benefits": [
+        "Reuses one Python function across differentiation, batching, and compilation workflows",
+        "Keeps transformation selection at the callable boundary"
+      ],
+      "costs": [
+        "Transformation semantics require side-effect-free code and compatible traced control flow",
+        "Nested transformations can increase compilation and debugging complexity"
+      ],
+      "evidence_ids": [
+        "jax-api-source",
+        "jax-transformations-doc"
+      ]
+    },
+    {
+      "id": "tracer-jaxpr-intermediate-representation",
+      "name": "Tracer and jaxpr intermediate representation",
+      "category": "intermediate-representation",
+      "claim_type": "fact",
+      "description": "During tracing, JAX wraps arguments in tracer objects that record JAX primitive operations; make_jaxpr exposes a Jaxpr containing variables, equations, effects, and typed abstract values. Python side effects are not represented in the jaxpr.",
+      "benefits": [
+        "Makes a compact, inspectable computation representation available before lowering",
+        "Supports transformation-specific interpretation of primitive operations"
+      ],
+      "costs": [
+        "Python effects can occur during tracing without appearing in the representation",
+        "Value-dependent Python control flow may fail or require JAX control-flow primitives"
+      ],
+      "evidence_ids": [
+        "jax-core-source",
+        "jax-jit-doc"
+      ]
+    },
+    {
+      "id": "xla-lowering-compilation-cache",
+      "name": "Explicit lowering and XLA compilation boundary",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "JAX jit traces a function, lowers the resulting computation, compiles it through XLA, and reuses compiled code for compatible later calls; the AOT API exposes separate trace, lower, and compile stages.",
+      "benefits": [
+        "Allows whole-function optimization and accelerator execution",
+        "Separates Python tracing from compiled executable reuse"
+      ],
+      "costs": [
+        "Initial calls pay tracing and compilation costs",
+        "Static argument changes and shape or dtype changes can trigger additional compilations"
+      ],
+      "evidence_ids": [
+        "jax-aot-doc",
+        "jax-jit-doc",
+        "jax-api-source"
+      ]
+    },
+    {
+      "id": "array-sharding-device-placement",
+      "name": "Array sharding and device placement",
+      "category": "distribution-model",
+      "claim_type": "fact",
+      "description": "JAX arrays carry a sharding object that maps global array indices to devices; Array and Shard APIs expose global shape, device indices, replica identifiers, and local shard data. This makes placement part of the array execution contract.",
+      "benefits": [
+        "Represents replicated and partitioned data with one array abstraction",
+        "Provides explicit placement information for multi-device execution"
+      ],
+      "costs": [
+        "Programs must satisfy sharding and addressability constraints",
+        "Data movement and replicated storage add communication or memory cost"
+      ],
+      "evidence_ids": [
+        "jax-array-source",
+        "jax-sharding-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed transformation algebra",
+      "question": "How do function transformations compose into differentiated, batched, and compiled computations?",
+      "assumptions": [
+        "A program is represented as a pure callable over pytrees of array-like values",
+        "Each transformation has a compatible interpreter over JAX primitives",
+        "The view abstracts backend-specific lowering details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "jax-api-source",
+        "jax-transformations-doc"
+      ]
+    },
+    {
+      "model": "Jaxpr dataflow graph",
+      "question": "Which primitive equations and abstract values are produced by tracing a callable?",
+      "assumptions": [
+        "Nodes are typed variables or primitive equations",
+        "Tracing observes JAX operations but not arbitrary Python side effects",
+        "The graph is a representation of a traced specialization, not all possible Python executions"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "jax-core-source",
+        "jax-jit-doc"
+      ]
+    },
+    {
+      "model": "Compilation state transition system",
+      "question": "When does a callable transition from Python execution to a cached accelerator executable?",
+      "assumptions": [
+        "Trace and compilation are keyed by relevant argument properties and static values",
+        "Lowering preserves the computation needed by the selected backend",
+        "Cache reuse does not imply semantic equivalence across all shapes and devices"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "jax-aot-doc",
+        "jax-jit-doc"
+      ]
+    },
+    {
+      "model": "Sharded array placement relation",
+      "question": "How are global array indices partitioned or replicated across devices?",
+      "assumptions": [
+        "A sharding defines a device-to-index relation for a global shape",
+        "Replica identifiers distinguish repeated placements",
+        "The model abstracts collective operations and transport implementation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "jax-array-source",
+        "jax-sharding-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "functional-transformation-composition",
+      "benefits": [
+        "One callable can serve multiple numerical execution strategies"
+      ],
+      "costs": [
+        "Purity and transformation compatibility constrain ordinary Python idioms"
+      ]
+    },
+    {
+      "feature_id": "tracer-jaxpr-intermediate-representation",
+      "benefits": [
+        "Inspectability and interpreter reuse before backend compilation"
+      ],
+      "costs": [
+        "Trace-time behavior differs from ordinary eager Python behavior"
+      ]
+    },
+    {
+      "feature_id": "xla-lowering-compilation-cache",
+      "benefits": [
+        "Optimized accelerator execution and executable reuse"
+      ],
+      "costs": [
+        "Compilation latency and cache specialization consume time and resources"
+      ]
+    },
+    {
+      "feature_id": "array-sharding-device-placement",
+      "benefits": [
+        "Explicit multi-device placement model"
+      ],
+      "costs": [
+        "Sharding constraints and communication complicate program design"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "jax-repository-commit",
+      "kind": "source-code",
+      "title": "JAX source at a16e85bf31bf",
+      "uri": "https://github.com/jax-ml/jax/commit/a16e85bf31bf6e332571c35a04179f9ad72b7af1",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision inspected locally for this card."
+    },
+    {
+      "id": "jax-api-source",
+      "kind": "source-code",
+      "title": "JAX transformation API at fixed commit",
+      "uri": "https://github.com/jax-ml/jax/blob/a16e85bf31bf6e332571c35a04179f9ad72b7af1/jax/_src/api.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for grad, value_and_grad, jacfwd, and transformation API boundaries."
+    },
+    {
+      "id": "jax-core-source",
+      "kind": "source-code",
+      "title": "JAX core Jaxpr representation at fixed commit",
+      "uri": "https://github.com/jax-ml/jax/blob/a16e85bf31bf6e332571c35a04179f9ad72b7af1/jax/_src/core.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for Jaxpr variables, equations, effects, and abstract values."
+    },
+    {
+      "id": "jax-array-source",
+      "kind": "source-code",
+      "title": "JAX Array and Shard implementation at fixed commit",
+      "uri": "https://github.com/jax-ml/jax/blob/a16e85bf31bf6e332571c35a04179f9ad72b7af1/jax/_src/array.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for shard indices, replica identifiers, and array placement state."
+    },
+    {
+      "id": "jax-jit-doc",
+      "kind": "official-doc",
+      "title": "JAX just-in-time compilation documentation",
+      "uri": "https://docs.jax.dev/en/latest/201/jit.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for tracing, jaxpr, jit, XLA compilation, purity, and cache behavior."
+    },
+    {
+      "id": "jax-aot-doc",
+      "kind": "official-doc",
+      "title": "JAX ahead-of-time lowering and compilation",
+      "uri": "https://docs.jax.dev/en/latest/201/aot.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for trace, lower, compile, and executable stages."
+    },
+    {
+      "id": "jax-transformations-doc",
+      "kind": "official-doc",
+      "title": "JAX transformations documentation",
+      "uri": "https://docs.jax.dev/en/latest/key-concepts.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for transformations and their functional programming model."
+    },
+    {
+      "id": "jax-sharding-doc",
+      "kind": "official-doc",
+      "title": "JAX sharding documentation",
+      "uri": "https://docs.jax.dev/en/latest/notebooks/Distributed_arrays_and_automatic_parallelization.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for distributed arrays, sharding, and device placement."
+    }
+  ],
+  "related_systems": [
+    "pytorch",
+    "tensorflow"
+  ]
+}

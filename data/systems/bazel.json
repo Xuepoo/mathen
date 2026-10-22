@@ -1,0 +1,196 @@
+{
+  "id": "bazel",
+  "name": "Bazel",
+  "version_context": "commit 0950e0ad06d28896b2a577d2e2bcd9e9dda197ad",
+  "summary": "A multi-language build system that analyzes declared targets into an action graph, executes actions in controlled environments, and reuses results through incremental and remote caching.",
+  "scope": [
+    "target and dependency analysis",
+    "action graph execution",
+    "sandboxed and remote execution",
+    "incremental and remote caching"
+  ],
+  "features": [
+    {
+      "id": "declared-target-action-graph",
+      "name": "Declared target and action graph",
+      "category": "build-model",
+      "claim_type": "fact",
+      "description": "Bazel's official documentation describes analysis of packages and targets into an action graph, where actions and their inputs determine the work needed to produce build outputs.",
+      "benefits": [
+        "Makes dependencies and build work available for parallel scheduling and querying",
+        "Separates declarative target descriptions from execution of individual actions"
+      ],
+      "costs": [
+        "Rule analysis and configuration add a substantial conceptual layer",
+        "Incorrect or incomplete dependency declarations can invalidate incremental results"
+      ],
+      "evidence_ids": [
+        "bazel-build-doc",
+        "bazel-action-source",
+        "bazel-fixed-source"
+      ]
+    },
+    {
+      "id": "hermetic-sandboxed-actions",
+      "name": "Hermetic sandboxed actions",
+      "category": "execution-boundary",
+      "claim_type": "fact",
+      "description": "The official documentation states that Bazel uses sandboxes to restrict action visibility and support hermetic execution, while its hermeticity guidance ties reproducibility to declared inputs and controlled environments.",
+      "benefits": [
+        "Reduces accidental dependence on undeclared host files and tools",
+        "Provides a basis for reproducible local or remote action execution"
+      ],
+      "costs": [
+        "Actions that rely on undeclared host state can fail or require explicit escape hatches",
+        "Sandbox setup and platform constraints can add execution overhead"
+      ],
+      "evidence_ids": [
+        "bazel-sandbox-doc",
+        "bazel-hermeticity-doc",
+        "bazel-sandbox-source",
+        "bazel-fixed-source"
+      ]
+    },
+    {
+      "id": "content-addressed-build-caching",
+      "name": "Content-addressed build caching",
+      "category": "incrementality-model",
+      "claim_type": "fact",
+      "description": "Bazel documents caching action results and dependency graph state across builds, including remote caching, so unchanged inputs and command configuration can avoid repeating eligible work.",
+      "benefits": [
+        "Speeds repeated and distributed builds by reusing prior action results",
+        "Combines dependency analysis with incremental rebuild decisions"
+      ],
+      "costs": [
+        "Cache correctness depends on complete input, toolchain, and environment keys",
+        "Remote cache availability and trust add operational dependencies"
+      ],
+      "evidence_ids": [
+        "bazel-hermeticity-doc",
+        "bazel-cache-doc",
+        "bazel-build-doc",
+        "bazel-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Configured action dependency graph",
+      "question": "When does a configured target set admit a valid action execution order and a set of required inputs?",
+      "assumptions": [
+        "Targets and generated actions are vertices with directed dependency edges",
+        "Configuration and toolchain selection are held fixed for one graph instance",
+        "The view abstracts rule implementation details and platform-specific execution failures"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "bazel-build-doc",
+        "bazel-action-source",
+        "bazel-fixed-source"
+      ]
+    },
+    {
+      "model": "Hermetic action cache relation",
+      "question": "Under which declared inputs and execution properties can an action result be reused without re-execution?",
+      "assumptions": [
+        "An action key includes the inputs and relevant command or toolchain properties required by the cache contract",
+        "Sandboxing sufficiently constrains undeclared filesystem and process inputs for the modeled action",
+        "The relation is a candidate architectural view and does not prove that every action is hermetic"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "bazel-hermeticity-doc",
+        "bazel-sandbox-doc",
+        "bazel-cache-doc",
+        "bazel-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "declared-target-action-graph",
+      "benefits": [
+        "Explicit graph structure enables parallel and inspectable build planning"
+      ],
+      "costs": [
+        "Analysis and configuration complexity grows with rule and platform variation"
+      ]
+    },
+    {
+      "feature_id": "hermetic-sandboxed-actions",
+      "benefits": [
+        "Controlled inputs improve reproducibility across execution hosts"
+      ],
+      "costs": [
+        "Isolation constraints can expose undeclared dependencies and slow setup"
+      ]
+    },
+    {
+      "feature_id": "content-addressed-build-caching",
+      "benefits": [
+        "Repeated work can be reused locally or through a shared remote cache"
+      ],
+      "costs": [
+        "Cache keys, invalidation, and remote service reliability require discipline"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "bazel-fixed-source",
+      "kind": "source-code",
+      "title": "Bazel source tree at fixed commit 0950e0ad06d2",
+      "uri": "https://github.com/bazelbuild/bazel/commit/0950e0ad06d28896b2a577d2e2bcd9e9dda197ad",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed upstream source provenance for this card."
+    },
+    {
+      "id": "bazel-build-doc",
+      "kind": "official-doc",
+      "title": "Bazel build phases and action graph",
+      "uri": "https://bazel.build/run/build",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for loading, analysis, action graph construction, and execution."
+    },
+    {
+      "id": "bazel-action-source",
+      "kind": "source-code",
+      "title": "Bazel action graph implementation area",
+      "uri": "https://github.com/bazelbuild/bazel/tree/0950e0ad06d28896b2a577d2e2bcd9e9dda197ad/src/main/java/com/google/devtools/build/lib/actions",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Pinned source area for action graph and action execution abstractions."
+    },
+    {
+      "id": "bazel-sandbox-doc",
+      "kind": "official-doc",
+      "title": "Bazel Sandboxing",
+      "uri": "https://bazel.build/docs/sandboxing",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for sandboxed action execution and hermeticity boundaries."
+    },
+    {
+      "id": "bazel-sandbox-source",
+      "kind": "source-code",
+      "title": "Bazel sandbox execution implementation area",
+      "uri": "https://github.com/bazelbuild/bazel/tree/0950e0ad06d28896b2a577d2e2bcd9e9dda197ad/src/main/java/com/google/devtools/build/lib/sandbox",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Pinned source area for sandbox execution implementations."
+    },
+    {
+      "id": "bazel-hermeticity-doc",
+      "kind": "official-doc",
+      "title": "Bazel Hermeticity",
+      "uri": "https://bazel.build/docs/hermeticity",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official guidance on declared inputs, reproducibility, and action caching."
+    },
+    {
+      "id": "bazel-cache-doc",
+      "kind": "official-doc",
+      "title": "Bazel Remote Caching",
+      "uri": "https://bazel.build/remote/caching",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for local and remote action result caching."
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "id": "dbt",
+  "name": "dbt Core",
+  "version_context": "source commit e7c3c72b5aa28c85378aa9ddbf54c329a3ce59e3",
+  "summary": "A project-oriented transformation engine that compiles declarative SQL resources into a dependency-ordered warehouse build graph with adapter-specific materializations and tests.",
+  "scope": [
+    "project resources",
+    "dependency graph compilation",
+    "warehouse materialization",
+    "data tests"
+  ],
+  "features": [
+    {
+      "id": "declarative-resource-graph",
+      "name": "Declarative resource graph",
+      "category": "dependency-model",
+      "claim_type": "fact",
+      "description": "A dbt project declares resources such as models, sources, snapshots, seeds, tests, macros, and exposures; ref-based dependencies determine the order of model execution and form a DAG.",
+      "benefits": [
+        "Makes transformation dependencies inspectable and schedulable",
+        "Allows SQL files and project metadata to serve as a reproducible build description"
+      ],
+      "costs": [
+        "The graph must remain acyclic and complete enough for dbt to infer ordering",
+        "Warehouse behavior outside declared resources can remain outside the graph"
+      ],
+      "evidence_ids": ["dbt-project-doc", "dbt-ref-doc", "dbt-source"]
+    },
+    {
+      "id": "adapter-mediated-warehouse-execution",
+      "name": "Adapter-mediated warehouse execution",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "dbt delegates warehouse-specific relation creation and SQL execution to adapters while retaining a common project and resource model.",
+      "benefits": [
+        "Reuses project-level transformation concepts across supported data platforms",
+        "Localizes platform-specific SQL and DDL behavior at an adapter boundary"
+      ],
+      "costs": [
+        "Cross-platform behavior depends on adapter capabilities and SQL differences",
+        "The common abstraction cannot erase warehouse-specific performance and transaction semantics"
+      ],
+      "evidence_ids": ["dbt-project-doc", "dbt-materialization-doc", "dbt-source"]
+    },
+    {
+      "id": "configurable-model-materialization",
+      "name": "Configurable model materialization",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "dbt persists models using configurable strategies including views, tables, incremental models, ephemeral CTE expansion, and materialized views where supported.",
+      "benefits": [
+        "Lets one logical model target different freshness, cost, and query-latency profiles",
+        "Supports incremental rebuilds when full recomputation is too expensive"
+      ],
+      "costs": [
+        "Each strategy changes freshness, storage, rebuild, and debugging behavior",
+        "Incremental and platform-managed strategies require additional configuration and platform support"
+      ],
+      "evidence_ids": ["dbt-materialization-doc", "dbt-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Finite dependency DAG and topological execution order",
+      "question": "How does dbt turn references between resources into an executable order that respects upstream dependencies?",
+      "assumptions": [
+        "Declared ref and source relationships form an acyclic graph",
+        "A topological order is sufficient for the selected build operation",
+        "External warehouse changes and concurrent execution effects are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["dbt-project-doc", "dbt-ref-doc"]
+    },
+    {
+      "model": "Relational transformation with persistence strategy",
+      "question": "How can a logical SQL transformation be viewed separately from the warehouse relation used to persist its result?",
+      "assumptions": [
+        "The adapter implements the selected materialization contract",
+        "The materialized relation preserves the intended query semantics for the modeled scope",
+        "Cost, freshness, and warehouse-specific behavior are explicit trade-offs rather than algebraic equivalences"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["dbt-materialization-doc", "dbt-project-doc"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "declarative-resource-graph",
+      "benefits": ["Dependency-aware builds and lineage-oriented project structure"],
+      "costs": ["Undeclared side effects and cycles undermine graph-based planning"]
+    },
+    {
+      "feature_id": "adapter-mediated-warehouse-execution",
+      "benefits": ["Portable project concepts across warehouse adapters"],
+      "costs": ["Portability is bounded by adapter feature and SQL dialect differences"]
+    },
+    {
+      "feature_id": "configurable-model-materialization",
+      "benefits": ["Workload-specific balance of freshness, query speed, and build cost"],
+      "costs": ["Materialization choices create different operational and debugging obligations"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "dbt-source",
+      "kind": "source-code",
+      "title": "dbt Core source at e7c3c72b5aa2",
+      "uri": "https://github.com/dbt-labs/dbt-core/commit/e7c3c72b5aa28c85378aa9ddbf54c329a3ce59e3",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision used as the implementation provenance boundary for this card."
+    },
+    {
+      "id": "dbt-project-doc",
+      "kind": "official-doc",
+      "title": "About dbt projects",
+      "uri": "https://docs.getdbt.com/docs/build/projects",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for project resources and configuration."
+    },
+    {
+      "id": "dbt-ref-doc",
+      "kind": "official-doc",
+      "title": "About the ref function",
+      "uri": "https://docs.getdbt.com/reference/dbt-jinja-functions/ref",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for model references and dependency ordering."
+    },
+    {
+      "id": "dbt-materialization-doc",
+      "kind": "official-doc",
+      "title": "Materializations",
+      "uri": "https://docs.getdbt.com/docs/build/materializations",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for table, view, incremental, ephemeral, and materialized-view strategies."
+    }
+  ],
+  "related_systems": ["dagster", "clickhouse", "postgresql"]
+}

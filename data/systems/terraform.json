@@ -1,0 +1,77 @@
+{
+  "id": "terraform",
+  "name": "Terraform",
+  "version_context": "commit cdbff3eebc5b82efb826fb40df3368236c408a46",
+  "summary": "A declarative infrastructure tool that builds a dependency graph from configuration, providers, and state, then plans and applies changes toward the declared resource configuration.",
+  "scope": ["configuration evaluation", "resource dependency graph", "provider boundary", "plan and apply lifecycle"],
+  "features": [
+    {
+      "id": "declarative-resource-graph",
+      "name": "Declarative resource dependency graph",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Terraform translates configuration into resource nodes and dependency edges, using references and explicit dependencies to determine an order for planning and applying changes.",
+      "benefits": ["Makes dependency ordering explicit and repeatable", "Allows a configuration to describe desired infrastructure rather than imperative steps"],
+      "costs": ["Implicit dependencies can be difficult to inspect", "Cycles or incomplete dependencies prevent a valid execution order"],
+      "evidence_ids": ["terraform-graph-doc", "terraform-graph-source"]
+    },
+    {
+      "id": "provider-resource-boundary",
+      "name": "Provider and resource boundary",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Terraform delegates resource and data-source behavior to providers through a provider boundary, allowing the core graph and lifecycle engine to coordinate resources without implementing every external API.",
+      "benefits": ["Extends Terraform to many infrastructure APIs", "Separates graph orchestration from provider-specific resource operations"],
+      "costs": ["Provider schemas and behavior become part of the configuration contract", "External API and provider version differences affect plans"],
+      "evidence_ids": ["terraform-providers-doc", "terraform-plugin-source"]
+    },
+    {
+      "id": "plan-apply-state-lifecycle",
+      "name": "Plan, apply, and state lifecycle",
+      "category": "change-management",
+      "claim_type": "fact",
+      "description": "Terraform compares configuration, prior state, and provider observations to produce a plan, then applies the selected changes and records resulting resource state for later reconciliation.",
+      "benefits": ["Provides a reviewable intermediate plan before mutation", "Retains resource identity and observed attributes across runs"],
+      "costs": ["State must be protected, synchronized, and kept compatible with providers", "External drift and unknown values complicate planning"],
+      "evidence_ids": ["terraform-plan-doc", "terraform-state-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Dependency-directed resource graph",
+      "question": "When does a configured set of resources admit a valid topological order for planning and application?",
+      "assumptions": ["Nodes represent resource and data operations", "Edges represent required ordering constraints", "Provider side effects are abstracted behind node operations"],
+      "claim_type": "inference",
+      "evidence_ids": ["terraform-graph-doc", "terraform-graph-source"]
+    },
+    {
+      "model": "Desired-versus-observed state transition",
+      "question": "How can configuration, prior state, and provider observations determine a proposed resource transition?",
+      "assumptions": ["Provider reads and plans expose sufficiently comparable values", "Unknown and sensitive values follow Terraform's evaluation rules", "The model abstracts remote API transaction semantics"],
+      "claim_type": "inference",
+      "evidence_ids": ["terraform-plan-doc", "terraform-state-doc"]
+    },
+    {
+      "model": "Provider composition boundary",
+      "question": "Which resource operations can be composed into one graph while preserving provider schema and lifecycle contracts?",
+      "assumptions": ["Each provider implements the supported plugin contract", "Resource schemas define valid configuration and state fields", "Composition does not imply atomicity across providers"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["terraform-providers-doc", "terraform-plugin-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "declarative-resource-graph", "benefits": ["Automatic dependency ordering and parallelizable work"], "costs": ["Graph construction and cycle diagnosis add conceptual complexity"]},
+    {"feature_id": "provider-resource-boundary", "benefits": ["Broad external-system extensibility"], "costs": ["Provider compatibility and API behavior affect reproducibility"]},
+    {"feature_id": "plan-apply-state-lifecycle", "benefits": ["Reviewable changes and persistent resource identity"], "costs": ["State security, locking, drift, and unknown values require operations discipline"]}
+  ],
+  "evidence": [
+    {"id": "terraform-repository-commit", "kind": "source-code", "title": "Terraform source at cdbff3eebc5b", "uri": "https://github.com/hashicorp/terraform/commit/cdbff3eebc5b82efb826fb40df3368236c408a46", "accessed": "2026-10-23", "notes": "Fixed source revision used for this reviewed card."},
+    {"id": "terraform-graph-doc", "kind": "official-doc", "title": "Terraform resource graph", "uri": "https://developer.hashicorp.com/terraform/internals/graph", "accessed": "2026-10-23", "notes": "Official internals documentation for graph construction, dependencies, and walking."},
+    {"id": "terraform-providers-doc", "kind": "official-doc", "title": "Terraform providers", "uri": "https://developer.hashicorp.com/terraform/language/providers", "accessed": "2026-10-23", "notes": "Official documentation for provider configuration and resource/data-source boundaries."},
+    {"id": "terraform-plan-doc", "kind": "official-doc", "title": "Terraform plan command", "uri": "https://developer.hashicorp.com/terraform/cli/commands/plan", "accessed": "2026-10-23", "notes": "Official documentation for proposed change planning."},
+    {"id": "terraform-state-doc", "kind": "official-doc", "title": "Terraform state", "uri": "https://developer.hashicorp.com/terraform/language/state", "accessed": "2026-10-23", "notes": "Official documentation for state, resource identity, and state management."},
+    {"id": "terraform-graph-source", "kind": "source-code", "title": "Terraform graph implementation", "uri": "https://github.com/hashicorp/terraform/blob/cdbff3eebc5b82efb826fb40df3368236c408a46/internal/terraform/graph.go", "accessed": "2026-10-23", "notes": "Pinned source for graph structure and graph walking interfaces."},
+    {"id": "terraform-plugin-source", "kind": "source-code", "title": "Terraform provider integration", "uri": "https://github.com/hashicorp/terraform/tree/cdbff3eebc5b82efb826fb40df3368236c408a46/internal", "accessed": "2026-10-23", "notes": "Pinned Terraform source boundary for provider-mediated resource operations."}
+  ],
+  "related_systems": ["kubernetes", "pulumi"]
+}

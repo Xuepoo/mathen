@@ -1,0 +1,211 @@
+{
+    "id": "spark",
+    "name": "Apache Spark",
+    "version_context": "commit 668fdddb148513af2b35b68871ec905968ca1d89",
+    "summary": "A distributed dataflow engine that builds lazy transformations over partitioned datasets, schedules jobs as dependent stages and tasks, and runs each application through an isolated driver and executor set.",
+    "scope": [
+        "distributed dataflow",
+        "partitioned datasets",
+        "lazy transformations",
+        "DAG scheduling",
+        "driver and executor isolation"
+    ],
+    "features": [
+        {
+            "id": "driver-executor-application-boundary",
+            "name": "Driver and executor application boundary",
+            "category": "execution-model",
+            "claim_type": "fact",
+            "description": "A Spark application has a driver program that creates SparkContext and coordinates work, plus an independent set of executor processes that run tasks and store application data. Cluster managers allocate those executors and Spark ships application code to them.",
+            "benefits": [
+                "Isolates applications from one another at executor and scheduling boundaries",
+                "Allows Spark to use standalone, YARN, or Kubernetes resource managers",
+                "Makes application coordination and worker execution explicit"
+            ],
+            "costs": [
+                "The driver must remain network-addressable to executors",
+                "Data is not shared between Spark applications without external storage",
+                "Driver failure and executor lifecycle affect distributed job progress"
+            ],
+            "evidence_ids": [
+                "spark-cluster-overview",
+                "spark-context-source",
+                "spark-executor-source"
+            ]
+        },
+        {
+            "id": "lazy-partitioned-rdd-lineage",
+            "name": "Lazy partitioned RDD lineage",
+            "category": "data-model",
+            "claim_type": "fact",
+            "description": "An RDD is a partitioned distributed dataset that supports transformations and actions. Transformations are lazy and record how to derive a dataset; an action materializes the required computation, and lost partitions can be recomputed from lineage.",
+            "benefits": [
+                "Enables optimization before computation is materialized",
+                "Provides parallel work units through partitions",
+                "Allows recovery by recomputing lost derived partitions"
+            ],
+            "costs": [
+                "Repeated actions can recompute uncached lineage",
+                "Partitioning and shuffle choices control data movement",
+                "Lineage recovery trades storage overhead for recomputation time"
+            ],
+            "evidence_ids": ["spark-rdd-guide", "spark-rdd-source"]
+        },
+        {
+            "id": "dag-stage-task-scheduling",
+            "name": "DAG, stage, and task scheduling",
+            "category": "scheduler-model",
+            "claim_type": "fact",
+            "description": "Spark turns an action's dependency graph into jobs, stages, and tasks. A stage groups work across partitions around shuffle boundaries, and tasks are sent to executors; scheduling can also coordinate multiple jobs within one SparkContext.",
+            "benefits": [
+                "Exposes parallel task scheduling while retaining dependency structure",
+                "Uses shuffle boundaries to separate stages with different data dependencies",
+                "Supports FIFO or fair scheduling for concurrent jobs"
+            ],
+            "costs": [
+                "Shuffle introduces network, disk, and serialization cost",
+                "Long-running stages can delay later jobs under FIFO scheduling",
+                "Task locality and stragglers influence end-to-end latency"
+            ],
+            "evidence_ids": [
+                "spark-cluster-overview",
+                "spark-scheduling",
+                "spark-dagscheduler-source"
+            ]
+        },
+        {
+            "id": "application-scoped-persistence",
+            "name": "Application-scoped persistence and shared variables",
+            "category": "state-model",
+            "claim_type": "fact",
+            "description": "Spark can persist RDD partitions in memory, on disk, or with replication for reuse within an application. Broadcast variables distribute read-only values to workers, while accumulators support aggregated updates from tasks.",
+            "benefits": [
+                "Avoids repeated recomputation for reused datasets",
+                "Provides explicit mechanisms for read-only distribution and aggregation",
+                "Keeps cached data scoped to the application's executor set"
+            ],
+            "costs": [
+                "Cached data competes for executor memory and storage",
+                "Persistence policies affect recomputation and eviction behavior",
+                "Shared-variable semantics differ from ordinary driver-side mutation"
+            ],
+            "evidence_ids": ["spark-rdd-guide", "spark-scheduling"]
+        }
+    ],
+    "mathematical_views": [
+        {
+            "model": "Partitioned lineage DAG",
+            "question": "How does a lazy dataset transformation graph determine the partition computations needed for an action?",
+            "assumptions": [
+                "RDDs are vertices with partition sets and dependency edges",
+                "Transformations are evaluated only when an action requests results",
+                "The view abstracts optimizer and scheduler implementation details"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": ["spark-rdd-guide", "spark-rdd-source"]
+        },
+        {
+            "model": "Stage-task execution refinement",
+            "question": "Which distributed task execution traces implement a job's dependency graph across shuffle boundaries?",
+            "assumptions": [
+                "Stages are formed from dependency and shuffle boundaries",
+                "Each task processes one or more input partitions on an executor",
+                "The model treats scheduling policy and failures as explicit transition parameters"
+            ],
+            "claim_type": "hypothesis",
+            "evidence_ids": [
+                "spark-scheduling",
+                "spark-dagscheduler-source",
+                "spark-executor-source"
+            ]
+        }
+    ],
+    "trade_offs": [
+        {
+            "feature_id": "driver-executor-application-boundary",
+            "benefits": ["Application isolation with interchangeable cluster managers"],
+            "costs": [
+                "Driver reachability and executor lifecycle become correctness concerns"
+            ]
+        },
+        {
+            "feature_id": "lazy-partitioned-rdd-lineage",
+            "benefits": ["Parallel lazy computation and lineage-based recovery"],
+            "costs": ["Recomputation and shuffle costs depend on graph shape"]
+        },
+        {
+            "feature_id": "dag-stage-task-scheduling",
+            "benefits": ["Structured scheduling over data dependencies"],
+            "costs": [
+                "Shuffle and scheduling policy add latency and operational tuning"
+            ]
+        },
+        {
+            "feature_id": "application-scoped-persistence",
+            "benefits": [
+                "Efficient reuse and explicit distributed shared-value mechanisms"
+            ],
+            "costs": [
+                "Executor memory, storage, and eviction become application constraints"
+            ]
+        }
+    ],
+    "evidence": [
+        {
+            "id": "spark-cluster-overview",
+            "kind": "official-doc",
+            "title": "Apache Spark cluster mode overview",
+            "uri": "https://spark.apache.org/docs/latest/cluster-overview.html",
+            "accessed": "2026-10-23",
+            "notes": "Official documentation for drivers, executors, cluster managers, tasks, jobs, stages, and application isolation."
+        },
+        {
+            "id": "spark-rdd-guide",
+            "kind": "official-doc",
+            "title": "Apache Spark RDD programming guide",
+            "uri": "https://spark.apache.org/docs/latest/rdd-programming-guide.html",
+            "accessed": "2026-10-23",
+            "notes": "Official documentation for RDD partitions, transformations, actions, laziness, lineage recovery, persistence, broadcast variables, and accumulators."
+        },
+        {
+            "id": "spark-scheduling",
+            "kind": "official-doc",
+            "title": "Apache Spark job scheduling",
+            "uri": "https://spark.apache.org/docs/latest/job-scheduling.html",
+            "accessed": "2026-10-23",
+            "notes": "Official documentation for scheduling across applications, executor allocation, stages, FIFO scheduling, and fair scheduler pools."
+        },
+        {
+            "id": "spark-context-source",
+            "kind": "source-code",
+            "title": "Apache Spark SparkContext at 668fdddb1485",
+            "uri": "https://github.com/apache/spark/blob/668fdddb148513af2b35b68871ec905968ca1d89/core/src/main/scala/org/apache/spark/SparkContext.scala",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for application context, scheduler integration, executors, and distributed dataset entry points."
+        },
+        {
+            "id": "spark-rdd-source",
+            "kind": "source-code",
+            "title": "Apache Spark RDD at 668fdddb1485",
+            "uri": "https://github.com/apache/spark/blob/668fdddb148513af2b35b68871ec905968ca1d89/core/src/main/scala/org/apache/spark/rdd/RDD.scala",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for partitioned datasets, dependencies, transformations, and lineage."
+        },
+        {
+            "id": "spark-dagscheduler-source",
+            "kind": "source-code",
+            "title": "Apache Spark DAGScheduler at 668fdddb1485",
+            "uri": "https://github.com/apache/spark/blob/668fdddb148513af2b35b68871ec905968ca1d89/core/src/main/scala/org/apache/spark/scheduler/DAGScheduler.scala",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for translating jobs and dependencies into stages and tasks."
+        },
+        {
+            "id": "spark-executor-source",
+            "kind": "source-code",
+            "title": "Apache Spark Executor at 668fdddb1485",
+            "uri": "https://github.com/apache/spark/blob/668fdddb148513af2b35b68871ec905968ca1d89/core/src/main/scala/org/apache/spark/executor/Executor.scala",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for executor task launch, task execution, and application-scoped worker state."
+        }
+    ]
+}

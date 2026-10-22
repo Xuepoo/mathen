@@ -1,0 +1,249 @@
+{
+  "id": "mongodb",
+  "name": "MongoDB",
+  "version_context": "commit 3e90ba8b000e61c7c5c084a611a545abe30d3861",
+  "summary": "A document database server whose collections and indexes are persisted through storage-engine record stores, coordinated with replication and oplog state, and optionally partitioned behind sharded routing services.",
+  "scope": [
+    "document database",
+    "collections and indexes",
+    "WiredTiger storage boundary",
+    "replica-set replication",
+    "sharded routing"
+  ],
+  "features": [
+    {
+      "id": "document-collection-model",
+      "name": "Document and collection data model",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "MongoDB exposes database collections containing BSON documents and indexes; the server's collection and index abstractions sit above storage-engine record and cursor interfaces.",
+      "benefits": [
+        "Supports flexible nested document shapes",
+        "Lets indexes and query execution specialize around document fields"
+      ],
+      "costs": [
+        "Schema discipline and index selection remain application and operational concerns",
+        "Document and index representations can create write and storage amplification"
+      ],
+      "evidence_ids": [
+        "mongodb-collection-api",
+        "mongodb-record-store"
+      ]
+    },
+    {
+      "id": "storage-engine-record-boundary",
+      "name": "Storage-engine record-store boundary",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "The server uses a storage-engine abstraction for record stores, recovery units, cursors, and write units of work; the fixed source includes a WiredTiger implementation beneath those server interfaces.",
+      "benefits": [
+        "Separates collection/catalog behavior from physical storage implementation",
+        "Provides a transaction and recovery-unit boundary for storage operations"
+      ],
+      "costs": [
+        "Engine capabilities and durability semantics constrain higher layers",
+        "Abstraction crossings add coordination and implementation complexity"
+      ],
+      "evidence_ids": [
+        "mongodb-record-store",
+        "mongodb-write-unit",
+        "mongodb-wiredtiger"
+      ]
+    },
+    {
+      "id": "replica-set-oplog-replication",
+      "name": "Replica-set oplog replication",
+      "category": "replication-model",
+      "claim_type": "fact",
+      "description": "MongoDB's replication source contains replica-set coordination and oplog-related components that represent primary writes, secondary application, rollback, and replication state transitions.",
+      "benefits": [
+        "Provides redundant copies and failover-oriented topology",
+        "Separates replicated operation history from the local storage representation"
+      ],
+      "costs": [
+        "Replication lag, elections, rollback, and write concerns affect observed behavior",
+        "Keeping operation history and data state aligned adds recovery machinery"
+      ],
+      "evidence_ids": [
+        "mongodb-replication-coordinator",
+        "mongodb-oplog"
+      ]
+    },
+    {
+      "id": "sharded-routing-boundary",
+      "name": "Sharded routing and ownership boundary",
+      "category": "distribution-model",
+      "claim_type": "fact",
+      "description": "The source contains router and shard topology components that coordinate requests across shards, shard versions, migrations, and ownership metadata.",
+      "benefits": [
+        "Scales collections across independent shard storage boundaries",
+        "Allows routing to use ownership metadata rather than broadcasting every operation"
+      ],
+      "costs": [
+        "Metadata refresh, migration, and multi-shard operations add coordination cost",
+        "Query and consistency behavior depends on shard-key and topology choices"
+      ],
+      "evidence_ids": [
+        "mongodb-sharding-state",
+        "mongodb-router-transaction"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Document-to-record refinement",
+      "question": "How do document and index operations refine into record-store, cursor, recovery-unit, and write-unit transitions?",
+      "assumptions": [
+        "BSON documents and index entries are modeled as logical objects",
+        "The storage engine preserves the server-visible record contract at transaction boundaries",
+        "Physical page and cache behavior is outside the semantic view"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mongodb-collection-api",
+        "mongodb-record-store",
+        "mongodb-write-unit"
+      ]
+    },
+    {
+      "model": "Oplog replication transition system",
+      "question": "Which primary operation-history and secondary-application states preserve a replica set's replicated data contract?",
+      "assumptions": [
+        "The oplog is modeled as an ordered operation history",
+        "Election, rollback, and lag are explicit transitions",
+        "Write acknowledgement policy is distinguished from eventual secondary application"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mongodb-replication-coordinator",
+        "mongodb-oplog"
+      ]
+    },
+    {
+      "model": "Sharded ownership and routing relation",
+      "question": "Which shard ownership metadata and routing transitions determine the set of nodes that may serve a request?",
+      "assumptions": [
+        "A shard key maps a request to an ownership interval or set",
+        "Migration metadata is versioned and may be refreshed",
+        "Cross-shard transaction behavior is modeled separately from single-shard routing"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "mongodb-sharding-state",
+        "mongodb-router-transaction"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "document-collection-model",
+      "benefits": [
+        "Flexible documents and field-oriented indexes"
+      ],
+      "costs": [
+        "Schema and index governance remain operational work"
+      ]
+    },
+    {
+      "feature_id": "storage-engine-record-boundary",
+      "benefits": [
+        "Replaceable physical storage boundary"
+      ],
+      "costs": [
+        "Engine and recovery contracts add coordination complexity"
+      ]
+    },
+    {
+      "feature_id": "replica-set-oplog-replication",
+      "benefits": [
+        "Redundancy and failover-oriented operation history"
+      ],
+      "costs": [
+        "Lag, election, rollback, and acknowledgement trade-offs"
+      ]
+    },
+    {
+      "feature_id": "sharded-routing-boundary",
+      "benefits": [
+        "Horizontal distribution behind routing metadata"
+      ],
+      "costs": [
+        "Migrations and multi-shard coordination increase complexity"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "mongodb-collection-api",
+      "kind": "source-code",
+      "title": "MongoDB collection and catalog source at fixed commit",
+      "uri": "https://github.com/mongodb/mongo/blob/3e90ba8b000e61c7c5c084a611a545abe30d3861/src/mongo/db/shard_role/shard_catalog/collection.h",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of collection, index, and catalog-facing abstractions."
+    },
+    {
+      "id": "mongodb-record-store",
+      "kind": "source-code",
+      "title": "MongoDB record-store interface at fixed commit",
+      "uri": "https://github.com/mongodb/mongo/blob/3e90ba8b000e61c7c5c084a611a545abe30d3861/src/mongo/db/storage/record_store.h",
+      "accessed": "2026-10-23",
+      "notes": "Pinned storage boundary for records, cursors, and recovery interaction."
+    },
+    {
+      "id": "mongodb-write-unit",
+      "kind": "source-code",
+      "title": "MongoDB write unit of work at fixed commit",
+      "uri": "https://github.com/mongodb/mongo/blob/3e90ba8b000e61c7c5c084a611a545abe30d3861/src/mongo/db/storage/write_unit_of_work.cpp",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of storage recovery-unit and commit/abort boundaries."
+    },
+    {
+      "id": "mongodb-wiredtiger",
+      "kind": "source-code",
+      "title": "MongoDB WiredTiger storage implementation at fixed commit",
+      "uri": "https://github.com/mongodb/mongo/blob/3e90ba8b000e61c7c5c084a611a545abe30d3861/src/mongo/db/storage/wiredtiger/wiredtiger_kv_engine.cpp",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of the bundled WiredTiger engine integration."
+    },
+    {
+      "id": "mongodb-replication-coordinator",
+      "kind": "source-code",
+      "title": "MongoDB replication coordinator at fixed commit",
+      "uri": "https://github.com/mongodb/mongo/blob/3e90ba8b000e61c7c5c084a611a545abe30d3861/src/mongo/db/repl/replication_coordinator_impl.cpp",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of replica-set coordination and state transitions."
+    },
+    {
+      "id": "mongodb-oplog",
+      "kind": "source-code",
+      "title": "MongoDB oplog source at fixed commit",
+      "uri": "https://github.com/mongodb/mongo/blob/3e90ba8b000e61c7c5c084a611a545abe30d3861/src/mongo/db/repl/oplog.cpp",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of operation-log handling."
+    },
+    {
+      "id": "mongodb-sharding-state",
+      "kind": "source-code",
+      "title": "MongoDB sharding state at fixed commit",
+      "uri": "https://github.com/mongodb/mongo/blob/3e90ba8b000e61c7c5c084a611a545abe30d3861/src/mongo/db/topology/sharding_state.cpp",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of shard ownership and topology metadata."
+    },
+    {
+      "id": "mongodb-router-transaction",
+      "kind": "source-code",
+      "title": "MongoDB transaction router at fixed commit",
+      "uri": "https://github.com/mongodb/mongo/blob/3e90ba8b000e61c7c5c084a611a545abe30d3861/src/mongo/s/transaction_router.cpp",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source inspection of router-side transaction coordination."
+    },
+    {
+      "id": "mongodb-repository-commit",
+      "kind": "source-code",
+      "title": "MongoDB source at 3e90ba8b000e",
+      "uri": "https://github.com/mongodb/mongo/commit/3e90ba8b000e61c7c5c084a611a545abe30d3861",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision used for all source evidence in this card."
+    }
+  ]
+}

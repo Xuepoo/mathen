@@ -1,0 +1,184 @@
+{
+  "id": "just",
+  "name": "Just",
+  "version_context": "commit d6fee036379c531369dc37f67f8d4640f6bf1e2d",
+  "summary": "A command runner that parses a justfile into recipes, resolves recipe dependencies and parameters, then invokes recipe bodies through a configured shell or script interpreter.",
+  "scope": [
+    "recipe declaration and parsing",
+    "dependency ordering",
+    "parameter and variable binding",
+    "shell and script execution"
+  ],
+  "features": [
+    {
+      "id": "recipe-dependency-graph",
+      "name": "Recipe dependency graph",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The official manual documents recipes that depend on other recipes, with dependencies executed before the dependent recipe and duplicate recipe invocations deduplicated within an invocation according to the documented argument rules.",
+      "benefits": [
+        "Makes reusable setup and build ordering explicit in a small project file",
+        "Allows a named recipe to compose lower-level commands"
+      ],
+      "costs": [
+        "Dependency ordering and argument propagation must be reasoned about separately from shell commands",
+        "Recipe graphs do not by themselves provide artifact freshness or content-addressed rebuilds"
+      ],
+      "evidence_ids": [
+        "just-dependencies-doc",
+        "just-fixed-source"
+      ]
+    },
+    {
+      "id": "recipe-parameter-binding",
+      "name": "Recipe parameter binding",
+      "category": "interface-model",
+      "claim_type": "fact",
+      "description": "Just documents positional, default, variadic, option, and exported recipe parameters, and its pinned analyzer validates parameter declarations and their use in recipe resolution.",
+      "benefits": [
+        "Turns common command variations into explicit recipe interfaces",
+        "Supports forwarding arguments to dependencies and shell environments"
+      ],
+      "costs": [
+        "Parameter defaults, variadic forms, and dependency binding add invocation cases",
+        "Shell quoting and argument interpretation remain relevant at execution time"
+      ],
+      "evidence_ids": [
+        "just-parameters-doc",
+        "just-analyzer-source",
+        "just-fixed-source"
+      ]
+    },
+    {
+      "id": "configured-shell-execution",
+      "name": "Configured shell execution",
+      "category": "process-boundary",
+      "claim_type": "fact",
+      "description": "The official manual defines shell recipes whose lines are interpreted by a configured shell, supports alternate interpreters and shebang recipes, and documents environment-variable export settings.",
+      "benefits": [
+        "Provides a portable recipe declaration while retaining shell-specific power",
+        "Allows projects to choose shell and environment propagation policy"
+      ],
+      "costs": [
+        "Results depend on the selected shell, host environment, and external commands",
+        "Shell recipes are orchestration declarations rather than hermetic action descriptions"
+      ],
+      "evidence_ids": [
+        "just-settings-doc",
+        "just-shell-doc",
+        "just-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Parameterized recipe dependency graph",
+      "question": "When does a set of parameterized recipes admit an invocation order with all dependency arguments bound?",
+      "assumptions": [
+        "Recipes are vertices and dependency declarations are directed edges",
+        "An invocation carries bindings that must satisfy each recipe's parameter contract",
+        "The view abstracts shell process failures, filesystem effects, and recursive just invocations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "just-dependencies-doc",
+        "just-parameters-doc",
+        "just-analyzer-source"
+      ]
+    },
+    {
+      "model": "Recipe-to-process boundary",
+      "question": "Which recipe declarations map to executable shell processes under a selected interpreter and environment?",
+      "assumptions": [
+        "A recipe body is modeled as a command sequence interpreted by the configured shell",
+        "Environment exports and interpolated values are treated as process inputs",
+        "The view does not claim reproducibility or isolation from the host system"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "just-shell-doc",
+        "just-settings-doc",
+        "just-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "recipe-dependency-graph",
+      "benefits": [
+        "Readable named orchestration and explicit prerequisite ordering"
+      ],
+      "costs": [
+        "Graph execution does not automatically track file-derived freshness"
+      ]
+    },
+    {
+      "feature_id": "recipe-parameter-binding",
+      "benefits": [
+        "Reusable recipes expose structured command variation"
+      ],
+      "costs": [
+        "Binding and quoting rules increase interface surface"
+      ]
+    },
+    {
+      "feature_id": "configured-shell-execution",
+      "benefits": [
+        "Projects can use familiar shell and scripting ecosystems"
+      ],
+      "costs": [
+        "Host shell and environment behavior limit hermeticity and portability"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "just-fixed-source",
+      "kind": "source-code",
+      "title": "Just source tree at fixed commit d6fee036379c",
+      "uri": "https://github.com/casey/just/commit/d6fee036379c531369dc37f67f8d4640f6bf1e2d",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed upstream source provenance for this card."
+    },
+    {
+      "id": "just-dependencies-doc",
+      "kind": "official-doc",
+      "title": "Just Programmer's Manual: Dependencies",
+      "uri": "https://just.systems/man/en/dependencies.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for recipe dependency ordering and invocation behavior."
+    },
+    {
+      "id": "just-parameters-doc",
+      "kind": "official-doc",
+      "title": "Just Programmer's Manual: Recipe Parameters",
+      "uri": "https://just.systems/man/en/recipe-parameters.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for positional, default, variadic, option, and exported parameters."
+    },
+    {
+      "id": "just-settings-doc",
+      "kind": "official-doc",
+      "title": "Just Programmer's Manual: Settings",
+      "uri": "https://just.systems/man/en/settings.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for shell and environment settings."
+    },
+    {
+      "id": "just-shell-doc",
+      "kind": "official-doc",
+      "title": "Just Programmer's Manual",
+      "uri": "https://just.systems/man/en/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official manual for recipe bodies, shell execution, and script recipes."
+    },
+    {
+      "id": "just-analyzer-source",
+      "kind": "source-code",
+      "title": "Just recipe analyzer",
+      "uri": "https://github.com/casey/just/blob/d6fee036379c531369dc37f67f8d4640f6bf1e2d/src/analyzer.rs",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Pinned analyzer implementation inspected for recipe and parameter resolution."
+    }
+  ]
+}

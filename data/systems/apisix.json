@@ -1,0 +1,83 @@
+{
+  "id": "apisix",
+  "name": "Apache APISIX",
+  "version_context": "commit c4f09e1f8297f5d825c26b9de310688b0fc127a8",
+  "summary": "A dynamic API gateway that matches requests to upstreams, composes phase-aware plugins, and distributes configuration changes through an etcd-backed control path.",
+  "scope": ["API gateway routing", "plugin execution", "etcd configuration", "upstream proxying", "dynamic reload"],
+  "features": [
+    {
+      "id": "dynamic-route-upstream-matching",
+      "name": "Dynamic route and upstream matching",
+      "category": "routing-model",
+      "claim_type": "fact",
+      "description": "APISIX matches incoming requests against route predicates and applies the selected route's upstream and policy configuration before proxying the request.",
+      "benefits": ["Separates request matching from upstream destination details", "Supports many gateway policies without duplicating proxy logic"],
+      "costs": ["Overlapping predicates and priorities make route behavior configuration-sensitive", "Each route match adds control-plane and data-plane configuration to reason about"],
+      "evidence_ids": ["apisix-architecture-doc", "apisix-source-commit"]
+    },
+    {
+      "id": "phase-aware-plugin-pipeline",
+      "name": "Phase-aware plugin pipeline",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "APISIX plugins participate in request-processing phases and can implement cross-cutting behavior such as authentication, traffic control, transformation, and observability around proxying.",
+      "benefits": ["Makes gateway policy reusable across routes", "Allows plugin ordering and phase selection to express policy composition"],
+      "costs": ["Plugin ordering and shared mutable request context can create interaction effects", "Plugin execution consumes request latency and worker resources"],
+      "evidence_ids": ["apisix-plugin-doc", "apisix-source-commit"]
+    },
+    {
+      "id": "etcd-config-watch",
+      "name": "etcd-backed configuration watch",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "APISIX stores gateway configuration in etcd and watches configuration changes so gateway workers can use updated routes, upstreams, and plugin settings without a full process restart.",
+      "benefits": ["Provides a centralized configuration source for a gateway cluster", "Reduces reload disruption during policy changes"],
+      "costs": ["Correctness depends on etcd availability and watch propagation", "Operators must reason about configuration convergence across workers"],
+      "evidence_ids": ["apisix-architecture-doc", "apisix-source-commit"]
+    },
+    {
+      "id": "upstream-proxy-boundary",
+      "name": "Upstream proxy boundary",
+      "category": "data-plane-model",
+      "claim_type": "fact",
+      "description": "The gateway terminates or forwards the client-side request at the APISIX boundary and proxies the resulting request to a configured upstream, where retries, load balancing, and response handling affect the observed outcome.",
+      "benefits": ["Centralizes traffic policy and service exposure at one boundary", "Allows upstream pools and gateway policy to evolve independently"],
+      "costs": ["Adds a network hop and another failure domain", "Retry and timeout policy can amplify load or obscure upstream failures"],
+      "evidence_ids": ["apisix-architecture-doc", "apisix-source-commit"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Configuration-indexed request transducer",
+      "question": "How does a request become an upstream request when route predicates and plugin configuration are selected from a changing gateway configuration?",
+      "assumptions": ["A worker observes a coherent enough snapshot of route, plugin, and upstream configuration for one request", "The model abstracts network transport and upstream application semantics", "Route matching and plugin phases are treated as an ordered transduction"],
+      "claim_type": "inference",
+      "evidence_ids": ["apisix-architecture-doc", "apisix-plugin-doc"]
+    },
+    {
+      "model": "Phase-composed policy pipeline",
+      "question": "Which request properties are preserved or transformed when multiple plugins execute across gateway phases?",
+      "assumptions": ["Plugin phase order is the relevant composition order", "Plugins communicate through the request and response context exposed by APISIX", "The view does not imply that arbitrary plugins commute"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["apisix-plugin-doc", "apisix-source-commit"]
+    },
+    {
+      "model": "Eventually convergent gateway configuration",
+      "question": "How does an etcd configuration update become an effective data-plane configuration across APISIX workers?",
+      "assumptions": ["etcd remains the authoritative configuration source", "Watch delivery and worker application eventually converge under healthy conditions", "The model leaves update races and transient mixed versions explicit"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["apisix-architecture-doc", "apisix-source-commit"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "dynamic-route-upstream-matching", "benefits": ["Flexible service exposure and policy selection"], "costs": ["Configuration complexity affects route predictability"]},
+    {"feature_id": "phase-aware-plugin-pipeline", "benefits": ["Reusable, composable gateway policies"], "costs": ["Plugin interactions add latency and ordering risk"]},
+    {"feature_id": "etcd-config-watch", "benefits": ["Fast cluster-wide policy updates without restart"], "costs": ["Availability and convergence depend on the configuration path"]},
+    {"feature_id": "upstream-proxy-boundary", "benefits": ["Centralized traffic management and isolation"], "costs": ["Extra hop and retry policy can increase failure amplification"]}
+  ],
+  "evidence": [
+    {"id": "apisix-source-commit", "kind": "source-code", "title": "Apache APISIX source at c4f09e1f8297", "uri": "https://github.com/apache/apisix/commit/c4f09e1f8297f5d825c26b9de310688b0fc127a8", "accessed": "2026-10-23", "notes": "Fixed official repository revision used as the provenance boundary for this card."},
+    {"id": "apisix-architecture-doc", "kind": "official-doc", "title": "Apache APISIX architecture design", "uri": "https://apisix.apache.org/docs/apisix/architecture-design/", "accessed": "2026-10-23", "notes": "Official architecture documentation for the gateway, route processing, plugin execution, and etcd configuration model."},
+    {"id": "apisix-plugin-doc", "kind": "official-doc", "title": "Apache APISIX plugin development", "uri": "https://apisix.apache.org/docs/apisix/plugin-develop/", "accessed": "2026-10-23", "notes": "Official documentation for plugin lifecycle and request-processing phases."}
+  ]
+}

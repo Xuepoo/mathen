@@ -1,0 +1,87 @@
+{
+  "id": "temporal",
+  "name": "Temporal",
+  "version_context": "commit d5e7d14c11311582cdef1190e4c64292f2daf0ad",
+  "summary": "A durable workflow platform that records workflow event history, dispatches workflow and activity tasks, and replays deterministic workflow code to resume progress after failure.",
+  "scope": ["durable workflows", "event history", "task queues", "replay", "activities and retries"],
+  "features": [
+    {
+      "id": "durable-event-history",
+      "name": "Durable workflow event history",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "Temporal persists workflow state transitions as event history, allowing a workflow execution to resume from recorded events rather than relying on one continuously running process.",
+      "benefits": ["Makes progress recoverable across worker and service failures", "Provides an inspectable history for workflow execution"],
+      "costs": ["History size and transition rate constrain workflow shape", "Persisted history introduces storage and serialization overhead"],
+      "evidence_ids": ["temporal-workflow-execution", "temporal-source-commit"]
+    },
+    {
+      "id": "workflow-activity-task-queues",
+      "name": "Workflow and activity task queues",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Temporal workers poll task queues for workflow tasks and activity tasks, separating durable workflow coordination from execution of external or potentially non-deterministic work.",
+      "benefits": ["Decouples service-side orchestration from worker capacity", "Allows different worker pools to own workflow and activity execution"],
+      "costs": ["Queue routing and worker availability affect progress latency", "Task delivery requires explicit timeout and retry behavior"],
+      "evidence_ids": ["temporal-task-queues", "temporal-workers"]
+    },
+    {
+      "id": "deterministic-replay",
+      "name": "Deterministic workflow replay",
+      "category": "recovery-model",
+      "claim_type": "fact",
+      "description": "A worker re-executes workflow code during replay and checks generated commands against the existing event history, so workflow code must obey Temporal's deterministic execution constraints.",
+      "benefits": ["Restores workflow local state without serializing every in-memory value", "Turns recorded events into a recovery protocol for workflow code"],
+      "costs": ["Non-deterministic workflow changes can cause replay failures", "Replay consumes worker CPU and may be expensive for long histories"],
+      "evidence_ids": ["temporal-workflow-execution", "temporal-determinism"]
+    },
+    {
+      "id": "activity-retry-timeout-boundary",
+      "name": "Activity retry and timeout boundary",
+      "category": "failure-model",
+      "claim_type": "fact",
+      "description": "Activities represent external work whose execution is bounded by timeout and retry policies, while the workflow history records the resulting command and event transitions.",
+      "benefits": ["Makes transient failure handling declarative at the workflow boundary", "Separates workflow progress from individual activity attempts"],
+      "costs": ["Retries can duplicate external effects unless activities are idempotent", "Timeout and retry settings determine recovery latency and load"],
+      "evidence_ids": ["temporal-activity-execution", "temporal-retry-policies"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Event-sourced workflow transition system",
+      "question": "How does a sequence of workflow commands and recorded events define durable progress for one workflow execution?",
+      "assumptions": ["The event history is the authoritative execution record", "Workflow code is deterministic for the modeled history", "The view abstracts persistence implementation and service sharding"],
+      "claim_type": "inference",
+      "evidence_ids": ["temporal-workflow-execution", "temporal-source-commit"]
+    },
+    {
+      "model": "Queue-mediated workflow state machine",
+      "question": "How do task queues and worker polling mediate transitions between persisted workflow state and executable work?",
+      "assumptions": ["A task queue identifies a compatible worker pool", "At-least-once concerns are represented by task retry and timeout transitions", "Worker scheduling latency is not treated as workflow state"],
+      "claim_type": "inference",
+      "evidence_ids": ["temporal-task-queues", "temporal-workers"]
+    },
+    {
+      "model": "Replay refinement with effectful activities",
+      "question": "Which workflow observations remain stable when deterministic replay reconstructs local state while activities perform external effects?",
+      "assumptions": ["Activity results are represented by history events", "External activity effects are idempotent or otherwise compensated", "The model does not claim replay makes external systems transactional"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["temporal-determinism", "temporal-activity-execution", "temporal-retry-policies"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "durable-event-history", "benefits": ["Failure recovery and execution inspection"], "costs": ["History storage and transition limits shape workflow design"]},
+    {"feature_id": "workflow-activity-task-queues", "benefits": ["Independent worker scaling and routing"], "costs": ["Queue backlog and worker matching affect latency"]},
+    {"feature_id": "deterministic-replay", "benefits": ["Recoverable workflow-local state without checkpointing arbitrary memory"], "costs": ["Code evolution must preserve replay compatibility"]},
+    {"feature_id": "activity-retry-timeout-boundary", "benefits": ["Structured recovery for transient external failures"], "costs": ["Retries increase delay and can repeat external effects"]}
+  ],
+  "evidence": [
+    {"id": "temporal-source-commit", "kind": "source-code", "title": "Temporal source at d5e7d14c1131", "uri": "https://github.com/temporalio/temporal/commit/d5e7d14c11311582cdef1190e4c64292f2daf0ad", "accessed": "2026-10-23", "notes": "Fixed official repository revision used as the provenance boundary for this card."},
+    {"id": "temporal-workflow-execution", "kind": "official-doc", "title": "Temporal Workflow Execution", "uri": "https://docs.temporal.io/workflow-execution", "accessed": "2026-10-23", "notes": "Official documentation for durable execution, event history, commands, replay, state transitions, and workflow cache."},
+    {"id": "temporal-task-queues", "kind": "official-doc", "title": "Temporal Task Queues", "uri": "https://docs.temporal.io/task-queue", "accessed": "2026-10-23", "notes": "Official documentation for task queue routing and worker polling."},
+    {"id": "temporal-workers", "kind": "official-doc", "title": "Temporal Workers", "uri": "https://docs.temporal.io/workers", "accessed": "2026-10-23", "notes": "Official documentation for worker processes and workflow/activity task execution."},
+    {"id": "temporal-determinism", "kind": "official-doc", "title": "Temporal Workflow Definition deterministic constraints", "uri": "https://docs.temporal.io/workflow-definition", "accessed": "2026-10-23", "notes": "Official documentation for deterministic workflow code and replay constraints."},
+    {"id": "temporal-activity-execution", "kind": "official-doc", "title": "Temporal Activity Execution", "uri": "https://docs.temporal.io/activity-execution", "accessed": "2026-10-23", "notes": "Official documentation for activity execution, timeouts, and failure behavior."},
+    {"id": "temporal-retry-policies", "kind": "official-doc", "title": "Temporal Retry Policies", "uri": "https://docs.temporal.io/encyclopedia/retry-policies", "accessed": "2026-10-23", "notes": "Official documentation for retry policy behavior."}
+  ]
+}

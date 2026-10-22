@@ -1,0 +1,138 @@
+{
+  "id": "runc",
+  "name": "runc",
+  "version_context": "tag v1.3.6, commit 491b69bab9fa206b984fb26ba07d3110d62e671f",
+  "summary": "A Linux OCI runtime that turns an OCI bundle into a process tree constrained by namespaces, mounts, cgroups, capabilities, and optional security controls.",
+  "scope": [
+    "OCI bundle execution",
+    "Linux namespaces and rootfs",
+    "cgroup resource control",
+    "container lifecycle and checkpointing"
+  ],
+  "features": [
+    {
+      "id": "oci-bundle-execution",
+      "name": "OCI bundle execution",
+      "category": "runtime-interface",
+      "claim_type": "fact",
+      "description": "runc is a Linux CLI runtime for OCI containers. A bundle supplies config.json and a root filesystem, and commands such as run create and manage the corresponding container instance.",
+      "benefits": [
+        "Provides a low-level implementation boundary for higher-level container software",
+        "Uses a portable, declarative OCI bundle input"
+      ],
+      "costs": [
+        "The low-level interface leaves orchestration and monitoring to other software",
+        "The effective behavior depends on host kernel capabilities and bundle configuration"
+      ],
+      "evidence_ids": ["runc-readme", "runc-container-source"]
+    },
+    {
+      "id": "linux-isolation-assembly",
+      "name": "Linux isolation assembly",
+      "category": "isolation-boundary",
+      "claim_type": "fact",
+      "description": "runc constructs the container environment from Linux primitives including namespaces, a mounted and finalized root filesystem, cgroups, capabilities, and optional seccomp, AppArmor, or SELinux controls.",
+      "benefits": [
+        "Composes host-kernel primitives into a configurable process boundary",
+        "Supports resource and privilege reduction without a guest kernel"
+      ],
+      "costs": [
+        "Isolation strength and compatibility depend on host-kernel features and policy configuration",
+        "The composition has many ordering and privilege-sensitive failure modes"
+      ],
+      "evidence_ids": ["runc-rootfs-source", "runc-container-source", "runc-readme"]
+    },
+    {
+      "id": "persistent-container-state",
+      "name": "Persistent container state and checkpointing",
+      "category": "lifecycle-state",
+      "claim_type": "fact",
+      "description": "runc stores container state under a runtime root, reconstructs a read-only view from state files, and exposes checkpoint and restore operations through CRIU-backed commands.",
+      "benefits": [
+        "Allows lifecycle operations to address containers after the initial command",
+        "Provides a path for checkpoint and restore workflows"
+      ],
+      "costs": [
+        "State files and external kernel/process state must remain coherent",
+        "Checkpoint support has additional CRIU and kernel prerequisites"
+      ],
+      "evidence_ids": ["runc-container-source", "runc-checkpoint-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "OCI-to-Linux refinement",
+      "question": "How is an OCI bundle refined into a host process environment with concrete isolation resources?",
+      "assumptions": [
+        "The OCI specification is treated as an input contract rather than a complete security proof",
+        "The host kernel implements the requested primitives",
+        "Mount, namespace, cgroup, and security setup are abstracted as ordered refinement steps"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["runc-readme", "runc-rootfs-source"]
+    },
+    {
+      "model": "Container lifecycle state machine",
+      "question": "Which transitions connect creation, execution, stopping, state reconstruction, checkpointing, and restore?",
+      "assumptions": [
+        "A container has an addressable runtime state directory",
+        "Transitions have preconditions such as a running state for checkpointing",
+        "The model abstracts CRIU internals and host races"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["runc-container-source", "runc-checkpoint-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "oci-bundle-execution",
+      "benefits": ["Small, composable runtime boundary"],
+      "costs": ["Higher-level lifecycle and policy remain external"]
+    },
+    {
+      "feature_id": "linux-isolation-assembly",
+      "benefits": ["Native process model and configurable host-kernel controls"],
+      "costs": ["No separate guest-kernel boundary; correctness depends on host primitives"]
+    },
+    {
+      "feature_id": "persistent-container-state",
+      "benefits": ["Addressable lifecycle and migration state"],
+      "costs": ["State recovery and checkpoint compatibility are operationally complex"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "runc-readme",
+      "kind": "official-doc",
+      "title": "runc README and OCI runtime introduction",
+      "uri": "https://github.com/opencontainers/runc/blob/491b69bab9fa206b984fb26ba07d3110d62e671f/README.md",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision official documentation for OCI bundles, Linux scope, and the low-level runtime role."
+    },
+    {
+      "id": "runc-container-source",
+      "kind": "source-code",
+      "title": "runc libcontainer container state at v1.3.6",
+      "uri": "https://github.com/opencontainers/runc/blob/491b69bab9fa206b984fb26ba07d3110d62e671f/libcontainer/container_linux.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source for container identity, state reconstruction, namespaces, cgroups, and lifecycle state."
+    },
+    {
+      "id": "runc-rootfs-source",
+      "kind": "source-code",
+      "title": "runc Linux root filesystem setup at v1.3.6",
+      "uri": "https://github.com/opencontainers/runc/blob/491b69bab9fa206b984fb26ba07d3110d62e671f/libcontainer/rootfs_linux.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source for rootfs, mount, device, and filesystem setup."
+    },
+    {
+      "id": "runc-checkpoint-source",
+      "kind": "source-code",
+      "title": "runc checkpoint command at v1.3.6",
+      "uri": "https://github.com/opencontainers/runc/blob/491b69bab9fa206b984fb26ba07d3110d62e671f/checkpoint.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source for CRIU-backed checkpoint command preconditions and options."
+    }
+  ],
+  "related_systems": ["containerd", "linux", "gvisor", "kata-containers"]
+}

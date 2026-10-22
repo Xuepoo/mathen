@@ -1,0 +1,170 @@
+{
+  "id": "busybox",
+  "name": "BusyBox",
+  "version_context": "commit 5eee8017a827659b6fb9e29ab1241eb4227c56f7",
+  "summary": "A configurable Unix userland that packages selected applets behind a shared multi-call executable and reusable support code.",
+  "scope": [
+    "multi-call executable dispatch",
+    "configurable Unix applets",
+    "shared userland support code",
+    "embedded deployment"
+  ],
+  "features": [
+    {
+      "id": "multi-call-applet-dispatch",
+      "name": "Multi-call applet dispatch",
+      "category": "execution-boundary",
+      "claim_type": "fact",
+      "description": "BusyBox documents a multi-call binary in which the invoked program name or the first argument selects an applet, while the same executable can also be invoked directly as busybox with an applet argument.",
+      "benefits": [
+        "Provides many command entry points through one executable boundary",
+        "Allows symlink, hardlink, or direct busybox invocation schemes"
+      ],
+      "costs": [
+        "Dispatch behavior and applet naming become part of the deployment contract",
+        "A single image may carry code and data for multiple selected applets"
+      ],
+      "evidence_ids": [
+        "busybox-multicall-doc",
+        "busybox-fixed-source"
+      ]
+    },
+    {
+      "id": "configuration-selected-applet-set",
+      "name": "Configuration-selected applet set",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "The BusyBox source tree uses configuration and generated applet tables to select which applets are built into a particular binary, so the deployed command set is a build-time subset rather than a fixed universal executable.",
+      "benefits": [
+        "Permits small images targeted to a device or recovery environment",
+        "Makes feature selection explicit in the build configuration"
+      ],
+      "costs": [
+        "Different configurations produce different command surfaces to test",
+        "Removing an applet can change scripts or operational assumptions"
+      ],
+      "evidence_ids": [
+        "busybox-config-doc",
+        "busybox-fixed-source"
+      ]
+    },
+    {
+      "id": "shared-libbb-support-boundary",
+      "name": "Shared userland support boundary",
+      "category": "code-reuse",
+      "claim_type": "fact",
+      "description": "BusyBox applets are organized with common support code in libbb and the source documentation describes applets as sharing code, allowing related command implementations to reuse a common internal support boundary.",
+      "benefits": [
+        "Reduces duplicated implementation across many applets",
+        "Creates common helpers for a constrained userland image"
+      ],
+      "costs": [
+        "Changes to shared helpers can affect many applets",
+        "Shared code and global data can increase the footprint of a selected binary"
+      ],
+      "evidence_ids": [
+        "busybox-multicall-doc",
+        "busybox-shared-source",
+        "busybox-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Partial applet dispatch function",
+      "question": "How does an invocation name map to one of the applet behaviors included in a particular BusyBox build?",
+      "assumptions": [
+        "The selected applet names form a finite domain for one build configuration",
+        "Dispatch is modeled as a partial function from invocation names to applet entry points",
+        "The view abstracts argument parsing, filesystem links, environment, and applet-specific side effects"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "busybox-multicall-doc",
+        "busybox-fixed-source"
+      ]
+    },
+    {
+      "model": "Configured userland composition",
+      "question": "Which command surface and shared implementation boundary result from selecting an applet set at build time?",
+      "assumptions": [
+        "A build configuration is modeled as a subset of available applets and support components",
+        "The comparison concerns packaging and code-sharing boundaries rather than binary-size measurements",
+        "Applets can share helpers without becoming semantically equivalent commands"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "busybox-config-doc",
+        "busybox-shared-source",
+        "busybox-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "multi-call-applet-dispatch",
+      "benefits": [
+        "One executable can expose many command entry points"
+      ],
+      "costs": [
+        "Invocation-name dispatch adds a packaging and testing contract"
+      ]
+    },
+    {
+      "feature_id": "configuration-selected-applet-set",
+      "benefits": [
+        "Builds can target constrained environments"
+      ],
+      "costs": [
+        "Command availability varies by configuration"
+      ]
+    },
+    {
+      "feature_id": "shared-libbb-support-boundary",
+      "benefits": [
+        "Common helpers reduce repeated applet code"
+      ],
+      "costs": [
+        "Shared implementation changes widen regression scope"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "busybox-fixed-source",
+      "kind": "source-code",
+      "title": "BusyBox source tree at fixed commit 5eee8017a827",
+      "uri": "https://github.com/vda-linux/busybox_mirror/tree/5eee8017a827659b6fb9e29ab1241eb4227c56f7",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed official BusyBox repository provenance. The reviewed source includes applet metadata, generated dispatch inputs, configuration, and libbb support code."
+    },
+    {
+      "id": "busybox-multicall-doc",
+      "kind": "official-doc",
+      "title": "BusyBox generated command reference",
+      "uri": "https://busybox.net/downloads/BusyBox.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official BusyBox documentation describing the multi-call binary and applet invocation model."
+    },
+    {
+      "id": "busybox-config-doc",
+      "kind": "official-doc",
+      "title": "BusyBox README",
+      "uri": "https://github.com/vda-linux/busybox_mirror/blob/5eee8017a827659b6fb9e29ab1241eb4227c56f7/README",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official repository documentation describing configuration, applet selection, and embedded use."
+    },
+    {
+      "id": "busybox-shared-source",
+      "kind": "source-code",
+      "title": "BusyBox shared libbb support at fixed commit",
+      "uri": "https://github.com/vda-linux/busybox_mirror/tree/5eee8017a827659b6fb9e29ab1241eb4227c56f7/libbb",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official fixed-commit source path for the common support library used by applets."
+    }
+  ],
+  "related_systems": [
+    "coreutils",
+    "linux"
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "id": "zookeeper",
+  "name": "Apache ZooKeeper",
+  "version_context": "commit c26634f34490bb0ea7a09cc51e05ede3b4e320ee (release-3.9.3)",
+  "summary": "A replicated coordination service that presents a hierarchical namespace, session-scoped ephemeral state, ordered updates, and watches for distributed applications.",
+  "scope": [
+    "distributed coordination",
+    "hierarchical namespace",
+    "client sessions",
+    "watches",
+    "quorum replication"
+  ],
+  "features": [
+    {
+      "id": "hierarchical-znode-namespace",
+      "name": "Hierarchical znode namespace",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "ZooKeeper exposes a slash-separated hierarchical namespace of znodes. Each znode can contain data, children, metadata, and an ACL, making coordination state addressable as a tree rather than as an unstructured key set.",
+      "benefits": [
+        "Groups related coordination state under explicit paths",
+        "Supports small configuration, status, rendezvous, and ownership records",
+        "Makes namespace and access boundaries visible to clients"
+      ],
+      "costs": [
+        "The service is intended for relatively small coordination data rather than bulk objects",
+        "Path layout and ACL choices become part of the application contract",
+        "Tree operations can create contention around heavily shared parents"
+      ],
+      "evidence_ids": ["zookeeper-programmers-guide", "zookeeper-source"]
+    },
+    {
+      "id": "session-scoped-ephemeral-state",
+      "name": "Session-scoped ephemeral state",
+      "category": "liveness-model",
+      "claim_type": "fact",
+      "description": "A client session is maintained by the ZooKeeper cluster and can expire after the negotiated timeout. Ephemeral znodes owned by an expired session are deleted, enabling presence and ownership records tied to client liveness.",
+      "benefits": [
+        "Represents process or service presence without a separate cleanup protocol",
+        "Supports locks, leader records, and service-discovery recipes",
+        "Makes session expiration an explicit failure transition"
+      ],
+      "costs": [
+        "Network partitions and timeout selection affect when ownership is withdrawn",
+        "Clients must distinguish temporary disconnection from session expiration",
+        "Ephemeral nodes cannot themselves have children"
+      ],
+      "evidence_ids": ["zookeeper-programmers-guide", "zookeeper-source"]
+    },
+    {
+      "id": "ordered-atomic-coordination-updates",
+      "name": "Ordered atomic coordination updates",
+      "category": "consistency-model",
+      "claim_type": "fact",
+      "description": "ZooKeeper applies znode data access atomically and assigns each state change a zxid that exposes the service order of changes. Version checks can reject an update based on stale znode metadata.",
+      "benefits": [
+        "Provides a coordination order for distributed state changes",
+        "Supports compare-and-update patterns with znode versions",
+        "Lets clients reason about updates without exposing replica internals"
+      ],
+      "costs": [
+        "The ordering scope is the ZooKeeper service, not an application-wide transaction across external systems",
+        "Version conflicts require retry or conflict handling",
+        "Quorum coordination adds latency and limits write availability during insufficient quorum"
+      ],
+      "evidence_ids": ["zookeeper-programmers-guide", "zookeeper-quorum-source"]
+    },
+    {
+      "id": "watch-driven-change-notification",
+      "name": "Watch-driven change notification",
+      "category": "observation-model",
+      "claim_type": "fact",
+      "description": "Clients may register watches through reads of znode data or children. Standard watches are one-time triggers, are ordered with replies and other events, and require the client to establish a new watch for future changes.",
+      "benefits": [
+        "Avoids polling for many coordination changes",
+        "Preserves an observable order between a watch event and the corresponding new data",
+        "Supports event-driven configuration, membership, and lock recipes"
+      ],
+      "costs": [
+        "A standard watch does not report every intermediate change during a re-registration gap",
+        "Disconnected clients do not receive watch events until reconnection",
+        "Applications still need a read-and-reconcile step after notification"
+      ],
+      "evidence_ids": ["zookeeper-programmers-guide", "zookeeper-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Session-indexed coordination tree",
+      "question": "How do path-addressed state, session ownership, and expiry produce a coordination state machine?",
+      "assumptions": [
+        "The namespace is modeled as a rooted tree whose nodes carry data, metadata, and ACL state",
+        "A session is a liveness state with connected, disconnected, and expired transitions",
+        "Ephemeral-node deletion is modeled as a transition caused by session expiry, not by arbitrary client cleanup",
+        "The view abstracts network timing and does not claim a bound on failure-detection latency"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["zookeeper-programmers-guide", "zookeeper-source"]
+    },
+    {
+      "model": "Ordered watch transition system",
+      "question": "Which observations can a client derive from ordered znode updates and one-time watches?",
+      "assumptions": [
+        "Each committed update has a service order represented by zxid",
+        "A standard watch is a pending notification that is removed after triggering",
+        "Clients re-read state after notification and do not infer unseen intermediate values",
+        "The model treats quorum replication as the source of committed service order"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["zookeeper-programmers-guide", "zookeeper-quorum-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "hierarchical-znode-namespace", "benefits": ["Explicit path-scoped coordination state and ACL boundaries"], "costs": ["Small-data limits and path/parent contention constrain modeling choices"]},
+    {"feature_id": "session-scoped-ephemeral-state", "benefits": ["Automatic cleanup of liveness-bound records"], "costs": ["Timeout and partition behavior can delay or prematurely change ownership"]},
+    {"feature_id": "ordered-atomic-coordination-updates", "benefits": ["Service-wide update order and stale-write detection"], "costs": ["Quorum coordination adds write latency and availability dependencies"]},
+    {"feature_id": "watch-driven-change-notification", "benefits": ["Event-driven observation without continuous polling"], "costs": ["One-time watches can miss intermediate states and require reconciliation"]}
+  ],
+  "evidence": [
+    {"id": "zookeeper-programmers-guide", "kind": "official-doc", "title": "ZooKeeper 3.9 Programmer's Guide", "uri": "https://zookeeper.apache.org/doc/r3.9.3/zookeeperProgrammers.html", "accessed": "2026-10-23", "notes": "Official documentation for the znode data model, sessions, ephemeral nodes, consistency guarantees, and watches."},
+    {"id": "zookeeper-source", "kind": "source-code", "title": "Apache ZooKeeper source at release-3.9.3", "uri": "https://github.com/apache/zookeeper/tree/c26634f34490bb0ea7a09cc51e05ede3b4e320ee", "accessed": "2026-10-23", "notes": "Fixed source revision for the reviewed implementation."},
+    {"id": "zookeeper-quorum-source", "kind": "source-code", "title": "ZooKeeper quorum source at release-3.9.3", "uri": "https://github.com/apache/zookeeper/blob/c26634f34490bb0ea7a09cc51e05ede3b4e320ee/zookeeper-server/src/main/java/org/apache/zookeeper/server/quorum/QuorumPeer.java", "accessed": "2026-10-23", "notes": "Fixed-revision source for the quorum peer and replicated-service boundary."}
+  ],
+  "related_systems": ["etcd", "consul", "kubernetes"]
+}

@@ -1,0 +1,75 @@
+{
+  "id": "vault",
+  "name": "HashiCorp Vault",
+  "version_context": "commit bcaa7b6fa9acd60fa9e5fc58f5732d2d10ee0e12",
+  "summary": "A secret-management service that authenticates clients, authorizes mounted backends, protects durable state behind a security barrier, and expires leased credentials.",
+  "scope": ["security barrier", "auth methods and policies", "secrets engines", "leases and revocation", "seal and unseal"],
+  "features": [
+    {
+      "id": "barrier-protected-storage",
+      "name": "Barrier-protected durable storage",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Vault treats the physical storage backend as untrusted and encrypts data through a security barrier before persistence; the core loads protected mount and auth configuration after unseal.",
+      "benefits": ["Raw backend access does not directly expose stored secrets", "Storage backends can provide durability without owning secret semantics"],
+      "costs": ["Barrier and seal state add startup and recovery transitions", "Storage availability and encryption configuration remain critical dependencies"],
+      "evidence_ids": ["vault-architecture-doc", "vault-core-source"]
+    },
+    {
+      "id": "mount-auth-policy-routing",
+      "name": "Mounted backend and policy routing",
+      "category": "authorization-model",
+      "claim_type": "fact",
+      "description": "Vault routes authenticated requests through configurable auth methods, policies, and mounted logical or credential backends, allowing backend-specific secret operations behind a common core.",
+      "benefits": ["Separates authentication and authorization from backend implementations", "Supports multiple secret engines and auth methods behind one API boundary"],
+      "costs": ["Mount paths, policy rules, and backend contracts become operational configuration", "Authorization behavior depends on correctly composed policy and mount state"],
+      "evidence_ids": ["vault-architecture-doc", "vault-core-source", "vault-mount-source"]
+    },
+    {
+      "id": "leased-secret-lifecycle",
+      "name": "Leased secret lifecycle",
+      "category": "lifecycle-model",
+      "claim_type": "fact",
+      "description": "Secrets and auth responses can carry TTL, maximum TTL, renewable state, and lease identity; expiration management renews or revokes them according to those lifecycle rules.",
+      "benefits": ["Limits credential lifetime and supports automatic revocation", "Makes renewal and revocation explicit client operations"],
+      "costs": ["Clients must handle renewal, expiration, and revocation failures", "Lease tracking adds background state and timing sensitivity"],
+      "evidence_ids": ["vault-lease-doc", "vault-lease-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Sealed/unsealed security state machine",
+      "question": "How do initialization, sealing, unsealing, and protected configuration loading constrain which operations are enabled?",
+      "assumptions": ["The barrier key is unavailable while sealed", "A valid unseal procedure transitions the core to an operational state", "The model abstracts individual seal providers and key custody"],
+      "claim_type": "inference",
+      "evidence_ids": ["vault-architecture-doc", "vault-core-source"]
+    },
+    {
+      "model": "Policy-directed mounted-backend graph",
+      "question": "How does an authenticated request traverse token identity, policy permissions, mount routing, and a backend operation?",
+      "assumptions": ["Policies define the permitted path/action relation", "Mounts select a backend implementation", "Audit and replication side effects are abstracted"],
+      "claim_type": "inference",
+      "evidence_ids": ["vault-architecture-doc", "vault-mount-source"]
+    },
+    {
+      "model": "Timed lease state machine",
+      "question": "Under what transitions does a leased secret remain renewable, expire, or become revoked?",
+      "assumptions": ["TTL and maximum TTL are authoritative lifecycle bounds", "Renewal and revocation operations follow backend contracts", "Clock behavior and scheduler delay are abstracted"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["vault-lease-doc", "vault-lease-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "barrier-protected-storage", "benefits": ["Encrypted durable state behind a storage abstraction"], "costs": ["Seal custody and unseal availability affect service startup and recovery"]},
+    {"feature_id": "mount-auth-policy-routing", "benefits": ["Extensible backend and authentication composition"], "costs": ["Policy and mount configuration increases authorization surface area"]},
+    {"feature_id": "leased-secret-lifecycle", "benefits": ["Short-lived and revocable credentials"], "costs": ["Renewal timing and expiration handling complicate clients"]}
+  ],
+  "evidence": [
+    {"id": "vault-repository-commit", "kind": "source-code", "title": "Vault source at bcaa7b6fa9ac", "uri": "https://github.com/hashicorp/vault/commit/bcaa7b6fa9acd60fa9e5fc58f5732d2d10ee0e12", "accessed": "2026-10-23", "notes": "Fixed source revision used for this reviewed card."},
+    {"id": "vault-architecture-doc", "kind": "official-doc", "title": "Vault architecture", "uri": "https://developer.hashicorp.com/vault/docs/internals/architecture", "accessed": "2026-10-23", "notes": "Official HashiCorp architecture documentation for the barrier, core, auth, mounts, policies, leases, and audit flow."},
+    {"id": "vault-core-source", "kind": "source-code", "title": "Vault core state and barrier source", "uri": "https://github.com/hashicorp/vault/blob/bcaa7b6fa9acd60fa9e5fc58f5732d2d10ee0e12/vault/core.go", "accessed": "2026-10-23", "notes": "Pinned core implementation for physical storage, barrier, seal, mounts, auth, and sealed state."},
+    {"id": "vault-mount-source", "kind": "source-code", "title": "Vault mount table source", "uri": "https://github.com/hashicorp/vault/blob/bcaa7b6fa9acd60fa9e5fc58f5732d2d10ee0e12/vault/mount.go", "accessed": "2026-10-23", "notes": "Pinned mount configuration implementation."},
+    {"id": "vault-lease-doc", "kind": "official-doc", "title": "Vault leases and renewal", "uri": "https://developer.hashicorp.com/vault/docs/concepts/lease", "accessed": "2026-10-23", "notes": "Official documentation for TTLs, renewal, expiration, and revocation."},
+    {"id": "vault-lease-source", "kind": "source-code", "title": "Vault lease options source", "uri": "https://github.com/hashicorp/vault/blob/bcaa7b6fa9acd60fa9e5fc58f5732d2d10ee0e12/sdk/logical/lease.go", "accessed": "2026-10-23", "notes": "Pinned lease option and expiration semantics."}
+  ]
+}

@@ -1,0 +1,242 @@
+{
+  "id": "rails",
+  "name": "Ruby on Rails",
+  "version_context": "commit 3235827585d87661942c91bc81f64f56d710f0b2 (v8.0.2)",
+  "summary": "A Ruby web application framework that composes applications from railties and engines, executes ordered initialization, and exposes routing, middleware, and convention-driven code loading as shared boundaries.",
+  "scope": [
+    "web application lifecycle",
+    "engine and railtie composition",
+    "routing and middleware",
+    "autoloading and reloading"
+  ],
+  "features": [
+    {
+      "id": "railtie-engine-composition",
+      "name": "Railtie and engine composition",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "Rails::Application inherits from Rails::Engine, and engines and railties contribute configuration, paths, routes, middleware, and initializers to the host application.",
+      "benefits": [
+        "Packages reusable capabilities behind framework extension boundaries",
+        "Allows mounted engines to contribute routes and isolated behavior"
+      ],
+      "costs": [
+        "Initialization order and host/engine interactions become application behavior",
+        "Mounted engines coordinate paths, routes, middleware, and configuration with the host"
+      ],
+      "evidence_ids": [
+        "rails-repository-commit",
+        "rails-engine-source",
+        "rails-engine-doc"
+      ]
+    },
+    {
+      "id": "ordered-application-initialization",
+      "name": "Ordered application initialization",
+      "category": "lifecycle-model",
+      "claim_type": "fact",
+      "description": "Rails runs bootstrap, railtie, engine, application, middleware, eager-loading, and finishing callbacks in an ordered initialization process before the application serves requests.",
+      "benefits": [
+        "Makes extension setup predictable",
+        "Provides callback boundaries for environment-specific preparation"
+      ],
+      "costs": [
+        "Initialization dependencies are sensitive to callback ordering",
+        "Startup work and eager loading increase boot cost"
+      ],
+      "evidence_ids": [
+        "rails-application-source",
+        "rails-engine-doc"
+      ]
+    },
+    {
+      "id": "convention-driven-code-loading",
+      "name": "Convention-driven code loading",
+      "category": "module-loading",
+      "claim_type": "fact",
+      "description": "Rails configures autoload and autoload-once paths for applications and engines, with reloadable code managed through framework autoloaders during development.",
+      "benefits": [
+        "Reduces explicit require wiring",
+        "Supports development reloading"
+      ],
+      "costs": [
+        "Constant naming and directory conventions constrain correctness",
+        "Reloading exposes lifecycle and object-identity assumptions"
+      ],
+      "evidence_ids": [
+        "rails-dependencies-source",
+        "rails-autoloading-doc"
+      ]
+    },
+    {
+      "id": "rack-routing-middleware-boundary",
+      "name": "Rack routing and middleware boundary",
+      "category": "request-execution",
+      "claim_type": "fact",
+      "description": "Rails builds a middleware stack around an application endpoint, dispatches controller actions through that stack, and combines application and engine route sets.",
+      "benefits": [
+        "Composes request concerns around a common boundary",
+        "Separates route selection from cross-cutting middleware"
+      ],
+      "costs": [
+        "Middleware order changes request behavior",
+        "Multiple route sets increase dispatch reasoning cost"
+      ],
+      "evidence_ids": [
+        "rails-controller-source",
+        "rails-routing-doc",
+        "rails-engine-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Ordered initialization state machine",
+      "question": "Which configuration and loading transitions must complete before a Rails application is ready?",
+      "assumptions": [
+        "Bootstrap, initializer, middleware, eager-loading, and finishing phases are ordered states",
+        "The view abstracts individual callback implementations and does not prove successful startup"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rails-application-source",
+        "rails-engine-doc"
+      ]
+    },
+    {
+      "model": "Typed engine and railtie composition graph",
+      "question": "How do applications, engines, railties, routes, paths, and initializers contribute to one runnable application?",
+      "assumptions": [
+        "Applications, engines, and railties are vertices with contribution edges",
+        "The graph describes structural composition, not historical influence"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "rails-engine-source",
+        "rails-engine-doc"
+      ]
+    },
+    {
+      "model": "Request middleware function composition",
+      "question": "How do middleware layers transform or delegate a request before controller action execution?",
+      "assumptions": [
+        "Each middleware is modeled as a function around a downstream Rack endpoint",
+        "Composition order follows the built stack",
+        "This is explanatory and does not assert invertibility"
+      ],
+      "claim_type": "analogy",
+      "evidence_ids": [
+        "rails-controller-source",
+        "rails-routing-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "railtie-engine-composition",
+      "benefits": [
+        "Reusable extensions contribute to a host application"
+      ],
+      "costs": [
+        "Cross-component lifecycle interactions expand integration surface"
+      ]
+    },
+    {
+      "feature_id": "ordered-application-initialization",
+      "benefits": [
+        "Stable lifecycle hooks for extensions"
+      ],
+      "costs": [
+        "Ordering makes boot failures harder to localize"
+      ]
+    },
+    {
+      "feature_id": "convention-driven-code-loading",
+      "benefits": [
+        "Less explicit loading code and development reloads"
+      ],
+      "costs": [
+        "Conventions constrain implementation choices"
+      ]
+    },
+    {
+      "feature_id": "rack-routing-middleware-boundary",
+      "benefits": [
+        "Composable request interception"
+      ],
+      "costs": [
+        "Stack order and route mounts increase request-path complexity"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "rails-repository-commit",
+      "kind": "source-code",
+      "title": "Rails source at 4d0b4290359c (v8.0.2)",
+      "uri": "https://github.com/rails/rails/commit/3235827585d87661942c91bc81f64f56d710f0b2",
+      "accessed": "2026-10-23",
+      "notes": "Fixed official repository revision."
+    },
+    {
+      "id": "rails-application-source",
+      "kind": "source-code",
+      "title": "Rails application lifecycle at v8.0.2",
+      "uri": "https://github.com/rails/rails/blob/3235827585d87661942c91bc81f64f56d710f0b2/railties/lib/rails/application.rb",
+      "accessed": "2026-10-23",
+      "notes": "Application state, initializers, routes, reloaders, and middleware setup."
+    },
+    {
+      "id": "rails-engine-source",
+      "kind": "source-code",
+      "title": "Rails engine source at v8.0.2",
+      "uri": "https://github.com/rails/rails/blob/3235827585d87661942c91bc81f64f56d710f0b2/railties/lib/rails/engine.rb",
+      "accessed": "2026-10-23",
+      "notes": "Engine paths, routes, initializers, middleware, and eager loading."
+    },
+    {
+      "id": "rails-dependencies-source",
+      "kind": "source-code",
+      "title": "Rails dependencies source at v8.0.2",
+      "uri": "https://github.com/rails/rails/blob/3235827585d87661942c91bc81f64f56d710f0b2/activesupport/lib/active_support/dependencies.rb",
+      "accessed": "2026-10-23",
+      "notes": "Autoload paths, autoload-once paths, and reload tracking."
+    },
+    {
+      "id": "rails-controller-source",
+      "kind": "source-code",
+      "title": "Rails controller dispatch at v8.0.2",
+      "uri": "https://github.com/rails/rails/blob/3235827585d87661942c91bc81f64f56d710f0b2/actionpack/lib/action_controller/metal.rb",
+      "accessed": "2026-10-23",
+      "notes": "Middleware wrapping and controller dispatch."
+    },
+    {
+      "id": "rails-engine-doc",
+      "kind": "official-doc",
+      "title": "Rails engines guide",
+      "uri": "https://guides.rubyonrails.org/engines.html",
+      "accessed": "2026-10-23",
+      "notes": "Official guide for engines, railties, routes, middleware, and integration."
+    },
+    {
+      "id": "rails-autoloading-doc",
+      "kind": "official-doc",
+      "title": "Autoloading and reloading constants",
+      "uri": "https://guides.rubyonrails.org/autoloading_and_reloading_constants.html",
+      "accessed": "2026-10-23",
+      "notes": "Official guide for Zeitwerk-managed loading and reloading."
+    },
+    {
+      "id": "rails-routing-doc",
+      "kind": "official-doc",
+      "title": "Rails routing guide",
+      "uri": "https://guides.rubyonrails.org/routing.html",
+      "accessed": "2026-10-23",
+      "notes": "Official guide for route sets, dispatch, and mounted routes."
+    }
+  ],
+  "related_systems": [
+    "ruby",
+    "rack"
+  ]
+}

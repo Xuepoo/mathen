@@ -1,0 +1,185 @@
+{
+  "id": "cilium",
+  "name": "Cilium",
+  "version_context": "commit 28b8d3eb93ae5bd9a38baec3ed1d4ebad0ae1c34",
+  "summary": "A Kubernetes networking and security system that attaches eBPF programs to node and endpoint paths, derives identity-aware policy, implements service load balancing, and exposes datapath observability.",
+  "scope": [
+    "Kubernetes networking",
+    "eBPF datapath",
+    "identity-aware policy",
+    "service routing and observability"
+  ],
+  "features": [
+    {
+      "id": "ebpf-endpoint-datapath",
+      "name": "eBPF endpoint datapath",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Cilium uses eBPF programs attached at kernel networking hooks to process endpoint traffic and implement datapath behavior without requiring every decision in a user-space proxy.",
+      "benefits": "Efficient, programmable packet processing close to the kernel path",
+      "costs": "Kernel capabilities, verifier constraints, and program/map lifecycle become deployment dependencies",
+      "evidence_ids": [
+        "cilium-ebpf-doc",
+        "cilium-datapath-source"
+      ]
+    },
+    {
+      "id": "identity-aware-network-policy",
+      "name": "Identity-aware network policy",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Cilium associates network policy with identities derived from endpoint labels and evaluates policy at datapath boundaries rather than relying only on IP addresses.",
+      "benefits": "Policy can follow workload identity across endpoint address changes",
+      "costs": "Identity allocation, policy distribution, and rule complexity affect correctness and scale",
+      "evidence_ids": [
+        "cilium-network-policy-doc",
+        "cilium-policy-source"
+      ]
+    },
+    {
+      "id": "service-routing-observability",
+      "name": "Service routing and datapath observability",
+      "category": "networking-model",
+      "claim_type": "fact",
+      "description": "Cilium implements Kubernetes service translation and load balancing in its datapath and provides observability around flows and policy decisions.",
+      "benefits": "Integrates service routing, security, and flow visibility in one datapath",
+      "costs": "Service state synchronization and high-volume telemetry add control and storage pressure",
+      "evidence_ids": [
+        "cilium-services-doc",
+        "cilium-service-source",
+        "cilium-ebpf-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Programmable kernel datapath graph",
+      "question": "How do endpoint hooks, eBPF programs, maps, and service backends transform packets?",
+      "assumptions": [
+        "Hook points are graph vertices with ordered program transitions",
+        "Maps represent bounded shared datapath state",
+        "The view abstracts verifier and kernel scheduling details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "cilium-ebpf-doc",
+        "cilium-datapath-source"
+      ]
+    },
+    {
+      "model": "Identity-policy relation graph",
+      "question": "How do endpoint identities and policy rules determine allowed communication edges?",
+      "assumptions": [
+        "Identity is modeled as a label-derived vertex attribute",
+        "Rules define allowed or denied relations between identities and ports",
+        "The view does not infer policy completeness from configured rules"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "cilium-network-policy-doc",
+        "cilium-policy-source"
+      ]
+    },
+    {
+      "model": "Service translation state machine",
+      "question": "How does a Kubernetes service become a datapath load-balancing decision?",
+      "assumptions": [
+        "Service and backend state are synchronized into datapath representations",
+        "A packet selects among currently eligible backends",
+        "The model does not claim availability during every update transition"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "cilium-services-doc",
+        "cilium-service-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "ebpf-endpoint-datapath",
+      "benefits": [
+        "Kernel-local programmable processing and fewer user-space hops"
+      ],
+      "costs": [
+        "Kernel/version constraints and verifier limits shape implementation"
+      ]
+    },
+    {
+      "feature_id": "identity-aware-network-policy",
+      "benefits": [
+        "Stable workload-oriented policy semantics"
+      ],
+      "costs": [
+        "Identity distribution and policy evaluation add coordination state"
+      ]
+    },
+    {
+      "feature_id": "service-routing-observability",
+      "benefits": [
+        "Unified routing, enforcement, and flow visibility"
+      ],
+      "costs": [
+        "Datapath state and telemetry scale with endpoints and traffic"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "cilium-repository-commit",
+      "kind": "source-code",
+      "title": "Cilium source at 28b8d3eb93ae",
+      "uri": "https://github.com/cilium/cilium/commit/28b8d3eb93ae5bd9a38baec3ed1d4ebad0ae1c34",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision; source claims in this card are pinned to this commit."
+    },
+    {
+      "id": "cilium-ebpf-doc",
+      "kind": "official-doc",
+      "title": "Cilium eBPF introduction",
+      "uri": "https://docs.cilium.io/en/stable/network/ebpf/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for eBPF-based packet processing and observability."
+    },
+    {
+      "id": "cilium-network-policy-doc",
+      "kind": "official-doc",
+      "title": "Cilium network policy",
+      "uri": "https://docs.cilium.io/en/stable/network/kubernetes/policy/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for identity-aware network policy and enforcement."
+    },
+    {
+      "id": "cilium-services-doc",
+      "kind": "official-doc",
+      "title": "Cilium service load balancing",
+      "uri": "https://docs.cilium.io/en/stable/network/servicemesh/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for service routing and kube-proxy replacement."
+    },
+    {
+      "id": "cilium-datapath-source",
+      "kind": "source-code",
+      "title": "Cilium datapath at 28b8d3eb93ae",
+      "uri": "https://github.com/cilium/cilium/blob/28b8d3eb93ae5bd9a38baec3ed1d4ebad0ae1c34/bpf/bpf_lxc.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for eBPF datapath hooks and endpoint packet handling."
+    },
+    {
+      "id": "cilium-policy-source",
+      "kind": "source-code",
+      "title": "Cilium policy engine at 28b8d3eb93ae",
+      "uri": "https://github.com/cilium/cilium/blob/28b8d3eb93ae5bd9a38baec3ed1d4ebad0ae1c34/pkg/policy/k8s/network_policy.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for policy representation and enforcement decisions."
+    },
+    {
+      "id": "cilium-service-source",
+      "kind": "source-code",
+      "title": "Cilium service implementation at 28b8d3eb93ae",
+      "uri": "https://github.com/cilium/cilium/blob/28b8d3eb93ae5bd9a38baec3ed1d4ebad0ae1c34/pkg/loadbalancer/service.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for service translation and load-balancing state."
+    }
+  ]
+}

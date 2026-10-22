@@ -1,0 +1,215 @@
+{
+  "id": "tensorflow",
+  "name": "TensorFlow",
+  "version_context": "TensorFlow commit bcc76d68e58eac89218b06ba096e13549b070e67",
+  "summary": "An end-to-end machine-learning platform with tensor operations, eager and graph-oriented execution paths, explicit device/runtime placement, and a SavedModel serialization boundary.",
+  "scope": [
+    "tensor and operation runtime",
+    "eager execution",
+    "device placement",
+    "SavedModel serialization"
+  ],
+  "features": [
+    {
+      "id": "eager-operation-runtime",
+      "name": "Eager operation runtime",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "EagerContext owns tensor handles, devices, function libraries, executors, rendezvous, and distributed execution context; EagerExecute can run locally, asynchronously, or on a remote task.",
+      "benefits": [
+        "Supports immediate tensor experimentation and runtime control flow",
+        "Uses one context to coordinate local, asynchronous, and remote execution"
+      ],
+      "costs": [
+        "Execution timing and synchronization differ between synchronous and asynchronous paths",
+        "Remote execution introduces transport and rendezvous failure boundaries"
+      ],
+      "evidence_ids": [
+        "tensorflow-readme",
+        "tensorflow-eager-context",
+        "tensorflow-eager-execute"
+      ]
+    },
+    {
+      "id": "device-placement-runtime",
+      "name": "Explicit and soft device placement runtime",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "The eager context tracks devices and selects a suitable device for an operation from a preferred device description, with optional soft placement when an exact match is unavailable.",
+      "benefits": [
+        "Makes heterogeneous CPU, accelerator, and remote device execution available through one operation model",
+        "Can fall back to a suitable device when configured to allow soft placement"
+      ],
+      "costs": [
+        "Placement affects transfers, performance, and numerical/runtime behavior",
+        "Unavailable or incorrectly configured devices turn placement into an execution failure"
+      ],
+      "evidence_ids": [
+        "tensorflow-eager-context",
+        "tensorflow-device-source"
+      ]
+    },
+    {
+      "id": "serialized-metagraph-boundary",
+      "name": "Serialized SavedModel MetaGraph boundary",
+      "category": "persistence-model",
+      "claim_type": "fact",
+      "description": "SavedModel is a versioned high-level serialization format containing one or more MetaGraphDef records, providing a persistence boundary for TensorFlow models and signatures.",
+      "benefits": [
+        "Separates model exchange and serving artifacts from an in-process runtime",
+        "Allows a SavedModel to carry multiple MetaGraphs under one schema"
+      ],
+      "costs": [
+        "Compatibility depends on schema versions, signatures, assets, variables, and runtime support",
+        "Serialization captures a model boundary rather than arbitrary live runtime state"
+      ],
+      "evidence_ids": [
+        "tensorflow-readme",
+        "tensorflow-saved-model-proto"
+      ]
+    },
+    {
+      "id": "function-library-and-distributed-rendezvous",
+      "name": "Function-library and distributed rendezvous substrate",
+      "category": "distributed-execution",
+      "claim_type": "fact",
+      "description": "The eager context integrates a process function library runtime, rendezvous manager, distributed worker environment, and collective executor manager for functions and cross-task coordination.",
+      "benefits": [
+        "Shares operation and function execution abstractions across local and distributed contexts",
+        "Provides runtime hooks for coordination and collective execution"
+      ],
+      "costs": [
+        "Distributed coordination adds lifecycle, ordering, and failure complexity",
+        "Correctness depends on matching worker, rendezvous, and collective configuration"
+      ],
+      "evidence_ids": [
+        "tensorflow-eager-context",
+        "tensorflow-eager-execute"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Operation dataflow graph with eager execution semantics",
+      "question": "How can tensor operations be understood as a dataflow graph while preserving immediate, asynchronous, and remote execution choices?",
+      "assumptions": [
+        "Tensor handles are graph values and operations are graph nodes",
+        "Execution mode and device placement are explicit runtime state",
+        "Remote and asynchronous execution preserve operation input/output contracts but not identical timing"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "tensorflow-eager-context",
+        "tensorflow-eager-execute"
+      ]
+    },
+    {
+      "model": "Device-placement constraint satisfaction",
+      "question": "Given an operation's preferred device and the devices in a context, when does placement select an exact device, a soft fallback, or failure?",
+      "assumptions": [
+        "The preferred device is a constraint over device attributes",
+        "The context's device set and soft-placement policy are fixed during one decision",
+        "Transfer cost is analyzed separately from placement feasibility"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "tensorflow-eager-context",
+        "tensorflow-device-source"
+      ]
+    },
+    {
+      "model": "Versioned serialization refinement",
+      "question": "Which live model structures can be refined into a SavedModel containing one or more MetaGraphs while remaining loadable by a compatible runtime?",
+      "assumptions": [
+        "SavedModel schema version and MetaGraphDef contracts are explicit",
+        "Signatures, variables, assets, and function bodies are included in the persistence boundary as required",
+        "Loadability and numerical equivalence are separate validation questions"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "tensorflow-saved-model-proto",
+        "tensorflow-readme"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "eager-operation-runtime",
+      "benefits": [
+        "Immediate execution with local, asynchronous, and remote options"
+      ],
+      "costs": [
+        "Multiple execution modes complicate timing and failure reasoning"
+      ]
+    },
+    {
+      "feature_id": "device-placement-runtime",
+      "benefits": [
+        "One operation model spans heterogeneous devices"
+      ],
+      "costs": [
+        "Placement and transfer choices affect performance and availability"
+      ]
+    },
+    {
+      "feature_id": "serialized-metagraph-boundary",
+      "benefits": [
+        "Portable model artifact and serving boundary"
+      ],
+      "costs": [
+        "Schema and runtime compatibility constrain portability"
+      ]
+    },
+    {
+      "feature_id": "function-library-and-distributed-rendezvous",
+      "benefits": [
+        "Reusable function and coordination substrate across tasks"
+      ],
+      "costs": [
+        "Coordination state and distributed failure handling add operational complexity"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "tensorflow-readme",
+      "kind": "official-doc",
+      "title": "TensorFlow README at fixed commit",
+      "uri": "https://github.com/tensorflow/tensorflow/blob/bcc76d68e58eac89218b06ba096e13549b070e67/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Local checkout /tmp/opencode/mth-0050/tensorflow-shallow; describes TensorFlow as an end-to-end ML platform with Python and C++ APIs and CPU/GPU installation paths."
+    },
+    {
+      "id": "tensorflow-eager-context",
+      "kind": "source-code",
+      "title": "TensorFlow EagerContext at fixed commit",
+      "uri": "https://github.com/tensorflow/tensorflow/blob/bcc76d68e58eac89218b06ba096e13549b070e67/tensorflow/core/common_runtime/eager/context.h",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/tensorflow-shallow/tensorflow/core/common_runtime/eager/context.h; includes devices, executors, function runtime, rendezvous, distributed context, and placement selection."
+    },
+    {
+      "id": "tensorflow-eager-execute",
+      "kind": "source-code",
+      "title": "TensorFlow eager execution API at fixed commit",
+      "uri": "https://github.com/tensorflow/tensorflow/blob/bcc76d68e58eac89218b06ba096e13549b070e67/tensorflow/core/common_runtime/eager/execute.h",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/tensorflow-shallow/tensorflow/core/common_runtime/eager/execute.h; documents synchronous, asynchronous, remote, and local async execution paths."
+    },
+    {
+      "id": "tensorflow-device-source",
+      "kind": "source-code",
+      "title": "TensorFlow device runtime boundary at fixed commit",
+      "uri": "https://github.com/tensorflow/tensorflow/blob/bcc76d68e58eac89218b06ba096e13549b070e67/tensorflow/core/common_runtime/device.h",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/tensorflow-shallow/tensorflow/core/common_runtime/device.h; the common runtime delegates to the framework device abstraction used by EagerContext."
+    },
+    {
+      "id": "tensorflow-saved-model-proto",
+      "kind": "source-code",
+      "title": "TensorFlow SavedModel protobuf at fixed commit",
+      "uri": "https://github.com/tensorflow/tensorflow/blob/bcc76d68e58eac89218b06ba096e13549b070e67/tensorflow/core/protobuf/saved_model.proto",
+      "accessed": "2026-10-23",
+      "notes": "Local source inspected at /tmp/opencode/mth-0050/tensorflow-shallow/tensorflow/core/protobuf/saved_model.proto; SavedModel carries a schema version and repeated MetaGraphDef records."
+    }
+  ]
+}

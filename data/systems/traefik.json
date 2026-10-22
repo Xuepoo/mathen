@@ -1,0 +1,197 @@
+{
+  "id": "traefik",
+  "name": "Traefik",
+  "version_context": "commit 9f1c3614d9f7c99c8a78a09ead666d7868ba3491",
+  "summary": "A dynamic edge router that ingests configuration from multiple providers, builds routers, services, and middleware chains, and manages TLS certificates as routing state.",
+  "scope": [
+    "edge proxy",
+    "provider discovery",
+    "HTTP routing",
+    "middleware chains",
+    "TLS certificates"
+  ],
+  "features": [
+    {
+      "id": "provider-driven-dynamic-configuration",
+      "name": "Provider-driven dynamic configuration",
+      "category": "configuration-model",
+      "claim_type": "fact",
+      "description": "Traefik queries orchestrators, container engines, files, and key-value stores for routing information and updates routes when provider state changes.",
+      "benefits": [
+        "Supports infrastructure-native service discovery"
+      ],
+      "costs": [
+        "Provider-specific namespaces and update timing affect routing behavior"
+      ],
+      "evidence_ids": [
+        "traefik-providers-doc",
+        "traefik-provider-source"
+      ]
+    },
+    {
+      "id": "router-service-middleware-composition",
+      "name": "Router, service, and middleware composition",
+      "category": "request-path",
+      "claim_type": "fact",
+      "description": "A router matches incoming traffic and connects it to a service; middleware objects can be chained to transform or control request processing before the service handler.",
+      "benefits": [
+        "Separates matching, backend selection, and policy stages"
+      ],
+      "costs": [
+        "Ordering and cross-provider references become part of request semantics"
+      ],
+      "evidence_ids": [
+        "traefik-routing-doc",
+        "traefik-router-source"
+      ]
+    },
+    {
+      "id": "dynamic-tls-certificate-stores",
+      "name": "Dynamic TLS certificate stores",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "TLS certificates can be added or removed through dynamic configuration, selected by SNI, and grouped in the globally available default TLS store.",
+      "benefits": [
+        "Allows certificate rotation without rebuilding the proxy"
+      ],
+      "costs": [
+        "Certificate selection occurs before HTTP router rules and has a distinct fallback path"
+      ],
+      "evidence_ids": [
+        "traefik-tls-doc",
+        "traefik-tls-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Provider update graph",
+      "question": "How do provider observations become a coherent set of routers, services, middlewares, and TLS objects?",
+      "assumptions": [
+        "Provider events are modeled as updates to typed configuration nodes",
+        "The view abstracts provider-specific watch and polling mechanisms",
+        "A route is usable only after referenced objects are available"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "traefik-providers-doc",
+        "traefik-provider-source"
+      ]
+    },
+    {
+      "model": "Typed request pipeline",
+      "question": "Which matching, middleware, service, and backend stages process a request, and in what order?",
+      "assumptions": [
+        "Routers are match predicates with references to services",
+        "Middleware chains are ordered transformations or controls",
+        "The model does not infer latency or fault tolerance"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "traefik-routing-doc",
+        "traefik-router-source"
+      ]
+    },
+    {
+      "model": "SNI certificate-selection state machine",
+      "question": "How does a TLS connection select a certificate before HTTP routing begins?",
+      "assumptions": [
+        "Client SNI is the input to certificate selection",
+        "The default TLS store is the fallback when no match exists",
+        "HTTP router rules are evaluated only after TLS establishment"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "traefik-tls-doc",
+        "traefik-tls-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "provider-driven-dynamic-configuration",
+      "benefits": [
+        "Automatic route updates from infrastructure state"
+      ],
+      "costs": [
+        "Provider heterogeneity and propagation timing complicate predictability"
+      ]
+    },
+    {
+      "feature_id": "router-service-middleware-composition",
+      "benefits": [
+        "Clear compositional request policy boundary"
+      ],
+      "costs": [
+        "Ordering and references enlarge the configuration state space"
+      ]
+    },
+    {
+      "feature_id": "dynamic-tls-certificate-stores",
+      "benefits": [
+        "Operational certificate rotation at runtime"
+      ],
+      "costs": [
+        "SNI/TLS state is separate from later HTTP route matching"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "traefik-repository-commit",
+      "kind": "source-code",
+      "title": "Traefik source at 9f1c3614d9f7",
+      "uri": "https://github.com/traefik/traefik/commit/9f1c3614d9f7c99c8a78a09ead666d7868ba3491",
+      "accessed": "2026-10-23",
+      "notes": "Fixed upstream revision used for all source evidence in this card."
+    },
+    {
+      "id": "traefik-providers-doc",
+      "kind": "official-doc",
+      "title": "Traefik provider overview",
+      "uri": "https://doc.traefik.io/traefik/reference/install-configuration/providers/overview/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for provider categories, namespaces, route updates, and precedence."
+    },
+    {
+      "id": "traefik-routing-doc",
+      "kind": "official-doc",
+      "title": "Providing dynamic routing configuration to Traefik",
+      "uri": "https://doc.traefik.io/traefik/reference/routing-configuration/dynamic-configuration-methods/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for dynamic routing configuration and router/service relationships."
+    },
+    {
+      "id": "traefik-tls-doc",
+      "kind": "official-doc",
+      "title": "Traefik TLS certificates",
+      "uri": "https://doc.traefik.io/traefik/reference/routing-configuration/http/tls/tls-certificates/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for dynamic certificates, SNI selection, stores, and fallback."
+    },
+    {
+      "id": "traefik-provider-source",
+      "kind": "source-code",
+      "title": "Traefik provider aggregator at pinned commit",
+      "uri": "https://github.com/traefik/traefik/blob/9f1c3614d9f7c99c8a78a09ead666d7868ba3491/pkg/provider/aggregator/aggregator.go",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for aggregating provider configuration updates."
+    },
+    {
+      "id": "traefik-router-source",
+      "kind": "source-code",
+      "title": "Traefik router manager at pinned commit",
+      "uri": "https://github.com/traefik/traefik/blob/9f1c3614d9f7c99c8a78a09ead666d7868ba3491/pkg/server/router/router.go",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for router construction and middleware/service handler composition."
+    },
+    {
+      "id": "traefik-tls-source",
+      "kind": "source-code",
+      "title": "Traefik TLS manager at pinned commit",
+      "uri": "https://github.com/traefik/traefik/blob/9f1c3614d9f7c99c8a78a09ead666d7868ba3491/pkg/tls/tlsmanager.go",
+      "accessed": "2026-10-23",
+      "notes": "Pinned source for certificate stores and TLS configuration management."
+    }
+  ]
+}

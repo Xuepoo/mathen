@@ -1,0 +1,154 @@
+{
+  "id": "minio",
+  "name": "MinIO",
+  "version_context": "source commit 7aac2a2c5b7c882e68c1ce017d8256be2feea27f",
+  "summary": "An S3-compatible object storage server that distributes object data across erasure-coded sets and repairs missing or damaged fragments through healing operations.",
+  "scope": [
+    "S3 object API",
+    "distributed object storage",
+    "erasure coding",
+    "healing and recovery"
+  ],
+  "features": [
+    {
+      "id": "s3-object-namespace",
+      "name": "S3 object namespace",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "MinIO exposes bucket and object operations through an S3-compatible API, presenting a key-based object namespace above its storage implementation.",
+      "benefits": [
+        "Allows clients and tools built for the S3 protocol to use the service",
+        "Separates object naming and API semantics from physical disk layout"
+      ],
+      "costs": [
+        "Object semantics do not provide relational querying or arbitrary in-place record updates",
+        "API compatibility still leaves deployment-specific consistency and feature behavior to verify"
+      ],
+      "evidence_ids": ["minio-s3-doc", "minio-source"]
+    },
+    {
+      "id": "erasure-coded-object-layout",
+      "name": "Erasure-coded object layout",
+      "category": "fault-tolerance-model",
+      "claim_type": "fact",
+      "description": "The distributed server implementation organizes object data and parity across erasure sets, allowing an object to be reconstructed from surviving fragments subject to the configured quorum.",
+      "benefits": [
+        "Uses parity to tolerate selected drive or node failures without simple full replicas",
+        "Makes storage protection a property of the distributed object layout"
+      ],
+      "costs": [
+        "Parity consumes capacity and adds encoding, decoding, and quorum work",
+        "Placement and failure domains constrain which failures can be tolerated"
+      ],
+      "evidence_ids": ["minio-erasure-doc", "minio-erasure-source", "minio-source"]
+    },
+    {
+      "id": "background-healing",
+      "name": "Background healing",
+      "category": "recovery-model",
+      "claim_type": "fact",
+      "description": "MinIO includes healing operations that scan and repair missing or stale object and disk state after failures or topology changes.",
+      "benefits": [
+        "Restores redundancy after a recoverable failure",
+        "Moves repair work into an explicit recovery mechanism instead of requiring manual object reconstruction"
+      ],
+      "costs": [
+        "Healing consumes disk, network, and CPU resources alongside foreground requests",
+        "Repair progress and remaining risk must be monitored during degraded operation"
+      ],
+      "evidence_ids": ["minio-healing-doc", "minio-healing-source", "minio-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Key-to-fragment encoding map",
+      "question": "How can a logical object key map to data and parity fragments distributed over a storage set while preserving reconstructability?",
+      "assumptions": [
+        "The erasure-code parameters and placement set are fixed for the modeled write",
+        "The surviving fragment count meets the implementation's read or write quorum",
+        "Network, disk latency, and bit-level encoding costs are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["minio-erasure-doc", "minio-erasure-source"]
+    },
+    {
+      "model": "Repair transition system over fragment states",
+      "question": "How does an object move from degraded fragment state back to a redundant state after a disk or node failure?",
+      "assumptions": [
+        "The object remains readable or reconstructable from surviving fragments",
+        "Healing can identify the missing or stale state and reach the affected storage endpoint",
+        "The model treats healing as a recovery transition and does not claim instantaneous durability"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["minio-healing-doc", "minio-healing-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "s3-object-namespace",
+      "benefits": ["Broad client interoperability through an established object API"],
+      "costs": ["Object-oriented access is a poor fit for transactional relational workloads"]
+    },
+    {
+      "feature_id": "erasure-coded-object-layout",
+      "benefits": ["Failure tolerance with less redundancy than full replication in some layouts"],
+      "costs": ["Parity and quorum operations reduce usable capacity and add failure-domain constraints"]
+    },
+    {
+      "feature_id": "background-healing",
+      "benefits": ["Restores redundancy without rebuilding the entire service manually"],
+      "costs": ["Recovery competes with foreground workloads and extends degraded-state exposure"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "minio-source",
+      "kind": "source-code",
+      "title": "MinIO source at 7aac2a2c5b7c",
+      "uri": "https://github.com/minio/minio/commit/7aac2a2c5b7c882e68c1ce017d8256be2feea27f",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision used as the implementation provenance boundary for this card."
+    },
+    {
+      "id": "minio-erasure-source",
+      "kind": "source-code",
+      "title": "MinIO erasure object and set implementation",
+      "uri": "https://github.com/minio/minio/blob/7aac2a2c5b7c882e68c1ce017d8256be2feea27f/cmd/erasure.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision source for erasure-coded object operations."
+    },
+    {
+      "id": "minio-healing-source",
+      "kind": "source-code",
+      "title": "MinIO healing implementation",
+      "uri": "https://github.com/minio/minio/blob/7aac2a2c5b7c882e68c1ce017d8256be2feea27f/cmd/global-heal.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed-revision source for object and bucket healing operations."
+    },
+    {
+      "id": "minio-s3-doc",
+      "kind": "official-doc",
+      "title": "MinIO S3 API compatibility",
+      "uri": "https://docs.min.io/aistor/developers/s3-api-compatibility/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for the S3-compatible object API boundary."
+    },
+    {
+      "id": "minio-erasure-doc",
+      "kind": "official-doc",
+      "title": "MinIO erasure coding",
+      "uri": "https://docs.min.io/aistor/operations/core-concepts/erasure-coding/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for distributed erasure coding and parity."
+    },
+    {
+      "id": "minio-healing-doc",
+      "kind": "official-doc",
+      "title": "MinIO healing",
+      "uri": "https://docs.min.io/aistor/operations/core-concepts/healing/",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for healing degraded object storage state."
+    }
+  ],
+  "related_systems": ["seaweedfs"]
+}

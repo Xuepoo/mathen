@@ -1,0 +1,172 @@
+{
+  "id": "docker",
+  "name": "Docker Engine",
+  "version_context": "commit b0e1577f1e3dfadd56a3ff4df8b6875817beb500",
+  "summary": "A container engine that exposes a client-facing API through a daemon, delegates container execution to a runtime stack, and composes images and layered filesystems into isolated workloads.",
+  "scope": [
+    "container runtime",
+    "daemon boundary",
+    "OCI runtime integration",
+    "image and filesystem layers"
+  ],
+  "features": [
+    {
+      "id": "daemon-api-control-plane",
+      "name": "Daemon API control plane",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "Docker Engine exposes a client API whose daemon owns image, container, network, and volume management and coordinates lifecycle operations.",
+      "benefits": [
+        "Centralizes lifecycle and resource coordination",
+        "Provides a stable client boundary across local and remote use"
+      ],
+      "costs": [
+        "The daemon is a shared availability and privilege boundary",
+        "API and daemon state must remain compatible"
+      ],
+      "evidence_ids": [
+        "docker-architecture-doc",
+        "docker-daemon-source"
+      ]
+    },
+    {
+      "id": "runtime-isolation-stack",
+      "name": "Layered runtime isolation stack",
+      "category": "execution-boundary",
+      "claim_type": "fact",
+      "description": "The Engine delegates low-level container execution through the containerd and OCI runtime stack, while Linux namespaces and cgroups provide process and resource isolation.",
+      "benefits": [
+        "Separates lifecycle management from low-level execution",
+        "Uses established kernel isolation primitives"
+      ],
+      "costs": [
+        "Correctness depends on multiple runtime and kernel boundaries",
+        "Isolation behavior varies with host capabilities and configuration"
+      ],
+      "evidence_ids": [
+        "docker-architecture-doc",
+        "docker-daemon-source"
+      ]
+    },
+    {
+      "id": "image-layer-filesystem",
+      "name": "Content-addressed image and filesystem layers",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "Docker images are composed from immutable layers and containers add a writable layer, allowing shared image content with per-container changes.",
+      "benefits": [
+        "Reuses common image content",
+        "Separates distributable image state from container mutation"
+      ],
+      "costs": [
+        "Layer count and copy-on-write behavior affect performance",
+        "Deleting or changing data may not reduce lower-layer storage"
+      ],
+      "evidence_ids": [
+        "docker-images-doc",
+        "docker-daemon-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Daemon-mediated lifecycle state machine",
+      "question": "How do API requests transition image, container, network, and volume resources through lifecycle states?",
+      "assumptions": [
+        "The daemon is the authority for modeled Engine resources",
+        "Runtime failures can leave transitions incomplete or failed"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "docker-architecture-doc",
+        "docker-daemon-source"
+      ]
+    },
+    {
+      "model": "Layered isolation composition",
+      "question": "How are daemon-managed containers mapped onto runtime, namespace, cgroup, and filesystem boundaries?",
+      "assumptions": [
+        "The host kernel supplies the relevant isolation primitives",
+        "The model abstracts implementation details of individual OCI runtimes"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "docker-architecture-doc",
+        "docker-daemon-source"
+      ]
+    },
+    {
+      "model": "Immutable-layer refinement system",
+      "question": "How does a writable container view refine shared immutable image layers?",
+      "assumptions": [
+        "Image layers are treated as immutable inputs",
+        "The writable layer records container-specific changes"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "docker-images-doc",
+        "docker-daemon-source"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "docker-architecture-doc",
+      "kind": "official-doc",
+      "title": "Docker Engine architecture",
+      "uri": "https://docs.docker.com/engine",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official Docker Engine documentation describing the client-server architecture, daemon, managed objects, and runtime integrations."
+    },
+    {
+      "id": "docker-images-doc",
+      "kind": "official-doc",
+      "title": "Docker image layers",
+      "uri": "https://docs.docker.com/get-started/docker-concepts/building-images/understanding-image-layers/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for immutable image layers and the writable container layer."
+    },
+    {
+      "id": "docker-daemon-source",
+      "kind": "source-code",
+      "title": "Docker Engine daemon source at b0e1577f1e3d",
+      "uri": "https://github.com/moby/moby/tree/b0e1577f1e3dfadd56a3ff4df8b6875817beb500/daemon",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for daemon lifecycle and container management."
+    }
+  ],
+  "related_systems": [
+    "containerd",
+    "runc",
+    "linux"
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "daemon-api-control-plane",
+      "benefits": [
+        "Centralizes lifecycle and resource coordination"
+      ],
+      "costs": [
+        "The daemon is a shared availability and privilege boundary"
+      ]
+    },
+    {
+      "feature_id": "runtime-isolation-stack",
+      "benefits": [
+        "Separates lifecycle management from low-level execution"
+      ],
+      "costs": [
+        "Correctness depends on multiple runtime and kernel boundaries"
+      ]
+    },
+    {
+      "feature_id": "image-layer-filesystem",
+      "benefits": [
+        "Reuses common image content"
+      ],
+      "costs": [
+        "Layer count and copy-on-write behavior affect performance"
+      ]
+    }
+  ]
+}

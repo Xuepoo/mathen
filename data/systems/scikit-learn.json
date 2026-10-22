@@ -1,0 +1,235 @@
+{
+  "id": "scikit-learn",
+  "name": "scikit-learn",
+  "version_context": "commit 289c4d5cfa1b5c74c2c03420ed809c499ddf7287",
+  "summary": "A Python machine-learning library organized around cloneable estimator objects, fit/transform/predict protocols, compositional meta-estimators, and cross-validated model selection.",
+  "scope": [
+    "estimator protocol",
+    "transformer and predictor interfaces",
+    "pipeline and meta-estimator composition",
+    "parameter cloning and model selection"
+  ],
+  "features": [
+    {
+      "id": "cloneable-estimator-protocol",
+      "name": "Cloneable estimator protocol",
+      "category": "model-api",
+      "claim_type": "fact",
+      "description": "BaseEstimator derives parameter names from explicit constructor arguments, exposes get_params and set_params, and supports cloning constructor state without fitted attributes. Estimators learn data-dependent state in fit and expose learned attributes with a trailing underscore.",
+      "benefits": [
+        "Gives tools a uniform way to inspect, configure, and reproduce estimators",
+        "Separates hyperparameters from fitted state"
+      ],
+      "costs": [
+        "Constructor signatures become part of interoperability requirements",
+        "Estimator authors must respect fit/reset and parameter identity conventions"
+      ],
+      "evidence_ids": [
+        "sklearn-base-source",
+        "sklearn-developer-doc"
+      ]
+    },
+    {
+      "id": "fit-transform-predict-contracts",
+      "name": "Fit, transform, and predict contracts",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The developer API distinguishes estimators that fit state, transformers that preserve sample correspondence while changing features, predictors that produce outputs, and models that score data. Pipeline validates these capabilities by position in a sequence.",
+      "benefits": [
+        "Allows heterogeneous algorithms to participate in shared workflows",
+        "Makes training and inference stages explicit"
+      ],
+      "costs": [
+        "Interface conformance does not guarantee statistical correctness",
+        "Data validation and feature-shape compatibility remain runtime concerns"
+      ],
+      "evidence_ids": [
+        "sklearn-base-source",
+        "sklearn-developer-doc",
+        "sklearn-pipeline-source"
+      ]
+    },
+    {
+      "id": "pipeline-meta-estimator-composition",
+      "name": "Pipeline and meta-estimator composition",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "Pipeline chains named transformers and a final estimator, forwards nested parameters with name__parameter keys, and can cache fitted transformers. GridSearchCV wraps an estimator, clones candidates, evaluates parameter settings under cross-validation, and can refit the selected configuration.",
+      "benefits": [
+        "Encodes preprocessing and prediction as one configurable object",
+        "Supports systematic parameter search without hand-written orchestration"
+      ],
+      "costs": [
+        "Nested cloning and fitting can multiply memory and compute use",
+        "Pipeline correctness depends on ordering, leakage control, and compatible interfaces"
+      ],
+      "evidence_ids": [
+        "sklearn-pipeline-source",
+        "sklearn-search-source",
+        "sklearn-developer-doc"
+      ]
+    },
+    {
+      "id": "validation-and-estimator-tags",
+      "name": "Validation and capability metadata",
+      "category": "validation-model",
+      "claim_type": "fact",
+      "description": "Scikit-learn validation utilities establish input and fitted-state checks, while estimator tags describe capabilities such as supported inputs, outputs, and methods for generic checks and dispatch.",
+      "benefits": [
+        "Enables common checks and conditional behavior across estimator families",
+        "Surfaces input-shape and capability assumptions programmatically"
+      ],
+      "costs": [
+        "Tags and validation add protocol surface to every estimator",
+        "Capability metadata may depend on parameters or runtime environment"
+      ],
+      "evidence_ids": [
+        "sklearn-base-source",
+        "sklearn-developer-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Estimator protocol category",
+      "question": "Which objects can be composed when they share fit, transform, predict, parameter, and fitted-state contracts?",
+      "assumptions": [
+        "Objects are modeled by supported methods and parameter behavior rather than inheritance alone",
+        "fit creates state that later methods consume",
+        "The view abstracts individual statistical algorithms"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "sklearn-base-source",
+        "sklearn-developer-doc"
+      ]
+    },
+    {
+      "model": "Nested parameter graph",
+      "question": "How do named meta-estimator components expose and update parameters recursively?",
+      "assumptions": [
+        "Nodes are estimators or transformers and edges are named containment relations",
+        "The __ separator provides a path encoding for nested parameters",
+        "Setting parameters preserves the component graph unless a whole step is replaced"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "sklearn-pipeline-source",
+        "sklearn-base-source"
+      ]
+    },
+    {
+      "model": "Cross-validation selection process",
+      "question": "How does parameter search map candidate estimator states to validation scores and a refitted choice?",
+      "assumptions": [
+        "Each candidate is cloned before fitting",
+        "Splits and scoring define the evaluation relation",
+        "A selected candidate is not a proof of generalization outside the sampled protocol"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "sklearn-search-source",
+        "sklearn-developer-doc"
+      ]
+    },
+    {
+      "model": "Fitted-state transition system",
+      "question": "What state transition distinguishes an unfitted estimator from one ready for prediction or transformation?",
+      "assumptions": [
+        "fit is the transition that creates learned attributes",
+        "Trailing-underscore attributes represent learned state by convention",
+        "Repeated fit replaces prior learned state except documented warm-start behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "sklearn-base-source",
+        "sklearn-developer-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "cloneable-estimator-protocol",
+      "benefits": [
+        "Uniform inspection and reproducible configuration"
+      ],
+      "costs": [
+        "Strict constructor and state conventions constrain implementation style"
+      ]
+    },
+    {
+      "feature_id": "fit-transform-predict-contracts",
+      "benefits": [
+        "Interoperability across many algorithms"
+      ],
+      "costs": [
+        "Runtime validation cannot capture every semantic incompatibility"
+      ]
+    },
+    {
+      "feature_id": "pipeline-meta-estimator-composition",
+      "benefits": [
+        "Reusable workflow composition and automated search"
+      ],
+      "costs": [
+        "Nested fits, cloning, and cross-validation can be computationally expensive"
+      ]
+    },
+    {
+      "feature_id": "validation-and-estimator-tags",
+      "benefits": [
+        "Generic tooling can adapt to declared capabilities"
+      ],
+      "costs": [
+        "Metadata and validation paths increase framework surface area"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "sklearn-repository-commit",
+      "kind": "source-code",
+      "title": "scikit-learn source at 289c4d5cfa1b",
+      "uri": "https://github.com/scikit-learn/scikit-learn/commit/289c4d5cfa1b5c74c2c03420ed809c499ddf7287",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision inspected locally for this card."
+    },
+    {
+      "id": "sklearn-base-source",
+      "kind": "source-code",
+      "title": "scikit-learn BaseEstimator at fixed commit",
+      "uri": "https://github.com/scikit-learn/scikit-learn/blob/289c4d5cfa1b5c74c2c03420ed809c499ddf7287/sklearn/base.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for parameter introspection, cloning, fitted state, and estimator base behavior."
+    },
+    {
+      "id": "sklearn-pipeline-source",
+      "kind": "source-code",
+      "title": "scikit-learn Pipeline at fixed commit",
+      "uri": "https://github.com/scikit-learn/scikit-learn/blob/289c4d5cfa1b5c74c2c03420ed809c499ddf7287/sklearn/pipeline.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for named sequential composition, nested parameters, caching, and fit/transform/predict forwarding."
+    },
+    {
+      "id": "sklearn-search-source",
+      "kind": "source-code",
+      "title": "scikit-learn GridSearchCV at fixed commit",
+      "uri": "https://github.com/scikit-learn/scikit-learn/blob/289c4d5cfa1b5c74c2c03420ed809c499ddf7287/sklearn/model_selection/_search.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for cross-validated candidate search and refit behavior."
+    },
+    {
+      "id": "sklearn-developer-doc",
+      "kind": "official-doc",
+      "title": "Developing scikit-learn estimators",
+      "uri": "https://scikit-learn.org/stable/developers/develop.html",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for estimator, transformer, predictor, cloning, pipeline, and model-selection contracts."
+    }
+  ],
+  "related_systems": [
+    "pytorch",
+    "tensorflow",
+    "jax"
+  ]
+}

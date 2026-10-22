@@ -1,0 +1,138 @@
+{
+  "id": "neovim",
+  "name": "Neovim",
+  "version_context": "commit d714648b8e7c476b7b5c1f661aa192b179bfc1d3",
+  "summary": "A terminal editor whose core owns mutable buffer and UI state while an event loop coordinates jobs, timers, input, embedded Lua execution, and MessagePack-RPC clients.",
+  "scope": [
+    "terminal editor runtime",
+    "event-driven process and I/O coordination",
+    "Lua scripting and plugin boundary",
+    "buffer, UI, and RPC state"
+  ],
+  "features": [
+    {
+      "id": "event-driven-editor-core",
+      "name": "Event-driven editor core",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The fixed source initializes a main event loop, channels, timers, processes, and UI state, then polls events as part of the editor lifecycle. Editor operations therefore advance through shared mutable state in response to asynchronous input and scheduled work.",
+      "benefits": [
+        "Unifies terminal input, jobs, timers, and UI activity under one coordination model",
+        "Allows external processes and remote UIs to progress without blocking every editor operation"
+      ],
+      "costs": [
+        "Callbacks and queued events make ordering and reentrancy part of correctness",
+        "Long-running synchronous work can delay unrelated editor activity"
+      ],
+      "evidence_ids": ["neovim-fixed-source", "neovim-event-doc"]
+    },
+    {
+      "id": "msgpack-rpc-channel-boundary",
+      "name": "MessagePack-RPC channel boundary",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "Neovim exposes API calls and notifications through RPC channels, including embedded stdio mode and socket-connected clients. The fixed source initializes channel and MessagePack-RPC components alongside the editor core.",
+      "benefits": [
+        "Permits UIs, plugins, and other clients to drive the same editor API",
+        "Separates transport framing from editor state transitions"
+      ],
+      "costs": [
+        "Transport failures and asynchronous responses must be represented at the client boundary",
+        "API compatibility and channel lifecycle become integration contracts"
+      ],
+      "evidence_ids": ["neovim-api-doc", "neovim-fixed-source"]
+    },
+    {
+      "id": "embedded-lua-script-boundary",
+      "name": "Embedded Lua script boundary",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "The source initializes an embedded Lua interpreter and loads plugins through startup configuration; the API documentation describes Lua access to editor state and namespaced APIs. This creates a host-controlled scripting boundary over buffers, commands, events, and UI operations.",
+      "benefits": [
+        "Makes editor behavior programmable without changing the core executable",
+        "Exposes structured editor state to plugins through documented APIs"
+      ],
+      "costs": [
+        "Plugin behavior shares the editor lifecycle and can affect responsiveness",
+        "Configuration, API compatibility, and plugin ordering add operational complexity"
+      ],
+      "evidence_ids": ["neovim-lua-doc", "neovim-api-doc", "neovim-fixed-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Event-driven editor transition system",
+      "question": "How do input, RPC messages, timers, process events, callbacks, and buffer/UI mutations advance Neovim state?",
+      "assumptions": [
+        "Editor state includes buffers, windows, clients, jobs, and pending events",
+        "The event loop is modeled as selecting and dispatching enabled transitions",
+        "The view abstracts terminal timing, operating-system scheduling, and exact callback queues"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["neovim-event-doc", "neovim-fixed-source"]
+    },
+    {
+      "model": "Client-channel and plugin interaction graph",
+      "question": "Which clients and scripts can observe or mutate editor state through API calls and notifications?",
+      "assumptions": [
+        "Editor state is a central resource vertex and channels/plugins are boundary vertices",
+        "Edges represent documented requests, notifications, callbacks, or Lua API calls",
+        "The graph describes reachability and does not imply that every path is safe, synchronous, or authorized"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["neovim-api-doc", "neovim-lua-doc", "neovim-fixed-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "event-driven-editor-core",
+      "benefits": ["One loop coordinates interactive and asynchronous work"],
+      "costs": ["Scheduling, callback ordering, and responsiveness become coupled"]
+    },
+    {
+      "feature_id": "msgpack-rpc-channel-boundary",
+      "benefits": ["Remote and embedded clients can share a structured API"],
+      "costs": ["Transport and protocol lifecycle failures cross the editor boundary"]
+    },
+    {
+      "feature_id": "embedded-lua-script-boundary",
+      "benefits": ["Plugins extend editor behavior through host APIs"],
+      "costs": ["Extension behavior and compatibility increase lifecycle complexity"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "neovim-fixed-source",
+      "kind": "source-code",
+      "title": "Neovim source tree at fixed commit d714648b8e7c",
+      "uri": "https://github.com/neovim/neovim/commit/d714648b8e7c476b7b5c1f661aa192b179bfc1d3",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official source inspected locally at the fixed commit; relevant paths include src/nvim/main.c, src/nvim/channel.c, src/nvim/event, and src/nvim/msgpack_rpc."
+    },
+    {
+      "id": "neovim-api-doc",
+      "kind": "official-doc",
+      "title": "Neovim API help",
+      "uri": "https://neovim.io/doc/user/api.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official API documentation for RPC clients, requests, notifications, buffers, and UI access."
+    },
+    {
+      "id": "neovim-event-doc",
+      "kind": "official-doc",
+      "title": "Neovim job-control help",
+      "uri": "https://neovim.io/doc/user/job_control.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for jobs, channels, callbacks, and asynchronous process interaction."
+    },
+    {
+      "id": "neovim-lua-doc",
+      "kind": "official-doc",
+      "title": "Neovim Lua help",
+      "uri": "https://neovim.io/doc/user/lua.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for embedded Lua, plugin loading, and Lua-facing editor APIs."
+    }
+  ],
+  "related_systems": ["lua", "libuv", "tree-sitter"]
+}

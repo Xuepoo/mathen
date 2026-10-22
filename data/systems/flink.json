@@ -1,0 +1,197 @@
+{
+    "id": "flink",
+    "name": "Apache Flink",
+    "version_context": "commit 8d01380ff5bf9892462ef9808b1b56fd9723f54d",
+    "summary": "A distributed data-processing runtime that executes stateful and timely stream dataflows through JobManagers, TaskManagers, operator tasks, keyed state, and checkpoint-based recovery.",
+    "scope": [
+        "stateful stream processing",
+        "event-time computation",
+        "distributed job execution",
+        "operator parallelism",
+        "checkpoint recovery"
+    ],
+    "features": [
+        {
+            "id": "jobmanager-taskmanager-runtime",
+            "name": "JobManager and TaskManager runtime",
+            "category": "execution-model",
+            "claim_type": "fact",
+            "description": "Flink separates coordination and execution between JobManagers and TaskManagers. JobManagers coordinate scheduling, checkpoints, and recovery, while TaskManagers execute tasks and exchange buffered data streams; task slots are the basic scheduling unit.",
+            "benefits": [
+                "Separates global coordination from worker execution",
+                "Supports multiple resource providers and cluster deployment modes",
+                "Makes task parallelism and resource allocation explicit"
+            ],
+            "costs": [
+                "Coordination and worker failure require distributed recovery",
+                "Task slots reserve managed memory but do not provide full CPU isolation",
+                "Deployment mode changes cluster lifecycle and resource-sharing behavior"
+            ],
+            "evidence_ids": [
+                "flink-architecture",
+                "flink-jobmaster-source",
+                "flink-taskexecutor-source"
+            ]
+        },
+        {
+            "id": "operator-chaining-and-parallelism",
+            "name": "Operator chaining and parallel subtasks",
+            "category": "dataflow-model",
+            "claim_type": "fact",
+            "description": "Flink chains compatible operator subtasks into tasks. Each task executes in one thread, while parallel subtasks run across TaskManagers and share task-slot resources according to the job's parallelism and slot-sharing configuration.",
+            "benefits": [
+                "Reduces handoff and buffering overhead between chained operators",
+                "Expresses dataflow parallelism as independently scheduled subtasks",
+                "Improves resource utilization through same-job slot sharing"
+            ],
+            "costs": [
+                "Chaining can make task boundaries less visible during diagnosis",
+                "Shared slots couple memory and JVM failure domains",
+                "Parallelism and partitioning choices affect throughput and state movement"
+            ],
+            "evidence_ids": ["flink-architecture", "flink-taskexecutor-source"]
+        },
+        {
+            "id": "keyed-state-checkpoint-recovery",
+            "name": "Keyed state and checkpoint recovery",
+            "category": "state-model",
+            "claim_type": "fact",
+            "description": "Flink partitions keyed state together with keyed streams and uses distributed checkpoints to capture source positions and operator state. Recovery restores the latest completed checkpoint and replays input from the recorded positions.",
+            "benefits": [
+                "Keeps state access local to the current event key",
+                "Supports rescaling by redistributing state through key groups",
+                "Provides a documented path to consistent recovery and exactly-once processing semantics"
+            ],
+            "costs": [
+                "Checkpoint storage and coordination add runtime overhead",
+                "Strong guarantees depend on rewindable sources and compatible sinks",
+                "Large state increases checkpoint, recovery, and rescaling cost"
+            ],
+            "evidence_ids": ["flink-stateful-processing", "flink-checkpoint-source"]
+        },
+        {
+            "id": "event-time-watermarks",
+            "name": "Event-time watermarks and windows",
+            "category": "time-model",
+            "claim_type": "fact",
+            "description": "Flink distinguishes processing time from event time. Watermarks advance an operator's event-time clock and permit windows to process out-of-order data, while multi-input operators advance according to the minimum input watermark.",
+            "benefits": [
+                "Makes event timestamps rather than machine clocks drive window semantics",
+                "Provides a protocol for bounded waiting on out-of-order events",
+                "Allows time- and data-driven windows over unbounded streams"
+            ],
+            "costs": [
+                "Late events and finite watermark delays limit determinism",
+                "Waiting for event-time progress adds latency",
+                "Watermark alignment across inputs can hold back downstream progress"
+            ],
+            "evidence_ids": ["flink-timely-processing", "flink-streamtask-source"]
+        }
+    ],
+    "mathematical_views": [
+        {
+            "model": "Checkpointed dataflow transition system",
+            "question": "Which state and input positions must be restored to reproduce a consistent distributed stream computation after failure?",
+            "assumptions": [
+                "Operators and sources expose serializable state and positions",
+                "Checkpoint barriers define a consistent cut through the dataflow",
+                "Sources can rewind to the recorded positions and side effects are modeled separately"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": ["flink-stateful-processing", "flink-checkpoint-source"]
+        },
+        {
+            "model": "Watermark partial order",
+            "question": "How does event-time progress propagate through parallel and multi-input operators?",
+            "assumptions": [
+                "Each input carries an event-time watermark",
+                "A multi-input operator's progress is bounded by the minimum input watermark",
+                "Late data and allowed lateness are explicit parts of the model"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": ["flink-timely-processing"]
+        }
+    ],
+    "trade_offs": [
+        {
+            "feature_id": "jobmanager-taskmanager-runtime",
+            "benefits": ["Clear coordinator and worker responsibilities"],
+            "costs": ["Distributed lifecycle and recovery coordination"]
+        },
+        {
+            "feature_id": "operator-chaining-and-parallelism",
+            "benefits": ["Efficient parallel execution with configurable sharing"],
+            "costs": [
+                "Resource and debugging boundaries become configuration-sensitive"
+            ]
+        },
+        {
+            "feature_id": "keyed-state-checkpoint-recovery",
+            "benefits": ["Consistent stateful recovery and rescaling"],
+            "costs": ["State snapshots consume storage, I/O, and recovery time"]
+        },
+        {
+            "feature_id": "event-time-watermarks",
+            "benefits": ["Time semantics remain tied to event data"],
+            "costs": ["Out-of-order handling introduces latency and lateness policy"]
+        }
+    ],
+    "evidence": [
+        {
+            "id": "flink-architecture",
+            "kind": "official-doc",
+            "title": "Apache Flink architecture",
+            "uri": "https://nightlies.apache.org/flink/flink-docs-master/docs/concepts/flink-architecture/",
+            "accessed": "2026-10-23",
+            "notes": "Official documentation for JobManagers, TaskManagers, operator chaining, task slots, and application cluster lifecycles."
+        },
+        {
+            "id": "flink-stateful-processing",
+            "kind": "official-doc",
+            "title": "Apache Flink stateful stream processing",
+            "uri": "https://nightlies.apache.org/flink/flink-docs-master/docs/concepts/stateful-stream-processing/",
+            "accessed": "2026-10-23",
+            "notes": "Official documentation for keyed state, key groups, checkpoints, stream replay, and recovery semantics."
+        },
+        {
+            "id": "flink-timely-processing",
+            "kind": "official-doc",
+            "title": "Apache Flink timely stream processing",
+            "uri": "https://nightlies.apache.org/flink/flink-docs-master/docs/concepts/time/",
+            "accessed": "2026-10-23",
+            "notes": "Official documentation for processing time, event time, watermarks, lateness, and windows."
+        },
+        {
+            "id": "flink-jobmaster-source",
+            "kind": "source-code",
+            "title": "Apache Flink JobMaster at 8d01380ff5bf",
+            "uri": "https://github.com/apache/flink/blob/8d01380ff5bf9892462ef9808b1b56fd9723f54d/flink-runtime/src/main/java/org/apache/flink/runtime/jobmaster/JobMaster.java",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for per-job coordination and runtime control."
+        },
+        {
+            "id": "flink-taskexecutor-source",
+            "kind": "source-code",
+            "title": "Apache Flink TaskExecutor at 8d01380ff5bf",
+            "uri": "https://github.com/apache/flink/blob/8d01380ff5bf9892462ef9808b1b56fd9723f54d/flink-runtime/src/main/java/org/apache/flink/runtime/taskexecutor/TaskExecutor.java",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for worker task execution, slots, and task lifecycle."
+        },
+        {
+            "id": "flink-checkpoint-source",
+            "kind": "source-code",
+            "title": "Apache Flink checkpoint coordinator at 8d01380ff5bf",
+            "uri": "https://github.com/apache/flink/blob/8d01380ff5bf9892462ef9808b1b56fd9723f54d/flink-runtime/src/main/java/org/apache/flink/runtime/checkpoint/CheckpointCoordinator.java",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for checkpoint coordination and distributed recovery state."
+        },
+        {
+            "id": "flink-streamtask-source",
+            "kind": "source-code",
+            "title": "Apache Flink StreamTask at 8d01380ff5bf",
+            "uri": "https://github.com/apache/flink/blob/8d01380ff5bf9892462ef9808b1b56fd9723f54d/flink-runtime/src/main/java/org/apache/flink/streaming/runtime/tasks/StreamTask.java",
+            "accessed": "2026-10-23",
+            "notes": "Fixed-commit source for streaming task execution and operator runtime behavior."
+        }
+    ]
+}

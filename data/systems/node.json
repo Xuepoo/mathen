@@ -1,0 +1,130 @@
+{
+  "id": "node",
+  "name": "Node.js",
+  "version_context": "commit e0619bb7e39092f191685f156449f8783fe712f7",
+  "summary": "A JavaScript host runtime that combines V8 execution with a phase-oriented event loop, microtask and nextTick queues, and cached CommonJS module loading.",
+  "scope": [
+    "javascript runtime",
+    "event-loop scheduling",
+    "module loading",
+    "native extension boundary"
+  ],
+  "features": [
+    {
+      "id": "phase-oriented-io-loop",
+      "name": "Phase-oriented asynchronous I/O loop",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Node.js organizes asynchronous work around libuv event-loop phases including timers, pending callbacks, poll, check, and close callbacks. The poll phase retrieves I/O events and executes their callbacks, while setImmediate callbacks run in the check phase.",
+      "benefits": [
+        "Provides a deterministic scheduling vocabulary for non-blocking I/O callbacks",
+        "Allows kernel or libuv work to progress without blocking the JavaScript thread"
+      ],
+      "costs": [
+        "Long-running callbacks delay later phases and timers",
+        "Phase ordering and platform differences complicate latency reasoning"
+      ],
+      "evidence_ids": ["node-event-loop", "node-fixed-source"]
+    },
+    {
+      "id": "priority-microtask-queues",
+      "name": "Priority nextTick and microtask queues",
+      "category": "scheduling-model",
+      "claim_type": "fact",
+      "description": "Node.js drains the nextTick queue and V8 microtasks between event-loop operations. Its fixed queue is processed before the next loop phase, and recursive nextTick scheduling can starve I/O progress.",
+      "benefits": [
+        "Supports callbacks after the current stack unwinds while preserving ordering guarantees",
+        "Integrates promise microtasks with Node-specific asynchronous APIs"
+      ],
+      "costs": [
+        "Unbounded nextTick work can prevent the poll phase from running",
+        "Multiple scheduling queues require explicit reasoning about priority"
+      ],
+      "evidence_ids": ["node-event-loop", "node-fixed-source"]
+    },
+    {
+      "id": "cached-commonjs-loader",
+      "name": "Cached CommonJS module loader",
+      "category": "module-model",
+      "claim_type": "fact",
+      "description": "The CommonJS loader resolves a request, returns exports from Module._cache when available, inserts a newly created module into the cache before evaluation, and removes it if evaluation throws. An unfinished cached module can be returned for circular dependencies.",
+      "benefits": [
+        "Avoids re-evaluating the same resolved module",
+        "Provides a concrete partial-state mechanism for cyclic dependencies"
+      ],
+      "costs": [
+        "Module identity depends on resolution and filename details",
+        "Consumers of a cycle can observe partially initialized exports"
+      ],
+      "evidence_ids": ["node-commonjs", "node-fixed-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Priority event-loop transition system",
+      "question": "How do phase queues, nextTick callbacks, and microtasks transition toward the next asynchronous I/O opportunity?",
+      "assumptions": [
+        "The documented phases are modeled as ordered states with callback queues",
+        "Callbacks execute synchronously within a phase until that phase's queue or callback limit permits transition",
+        "The model abstracts libuv internals and platform-specific phase details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["node-event-loop", "node-fixed-source"]
+    },
+    {
+      "model": "Cached module dependency graph",
+      "question": "How do resolution, cache insertion, evaluation, and failure transitions determine CommonJS module identity and cyclic loading behavior?",
+      "assumptions": [
+        "Resolved filenames are graph node identities",
+        "The module cache is a mutable map from resolved identity to module state",
+        "The view covers the CommonJS loader path and not every ESM loader hook"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["node-commonjs", "node-fixed-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "phase-oriented-io-loop",
+      "benefits": ["Non-blocking I/O organized into explicit phases"],
+      "costs": ["Callback duration and phase ordering affect latency"]
+    },
+    {
+      "feature_id": "priority-microtask-queues",
+      "benefits": ["Fine-grained asynchronous ordering"],
+      "costs": ["Priority work can starve I/O"]
+    },
+    {
+      "feature_id": "cached-commonjs-loader",
+      "benefits": ["Stable reuse of loaded module instances"],
+      "costs": ["Cycles expose partial initialization"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "node-fixed-source",
+      "kind": "source-code",
+      "title": "Node.js source tree at fixed commit e0619bb7e390",
+      "uri": "https://github.com/nodejs/node/commit/e0619bb7e39092f191685f156449f8783fe712f7",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance for lib/internal/process/task_queues.js and lib/internal/modules/cjs/loader.js."
+    },
+    {
+      "id": "node-event-loop",
+      "kind": "official-doc",
+      "title": "The Node.js Event Loop",
+      "uri": "https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for event-loop phases, poll behavior, timers, setImmediate, and process.nextTick."
+    },
+    {
+      "id": "node-commonjs",
+      "kind": "official-doc",
+      "title": "Node.js CommonJS modules",
+      "uri": "https://nodejs.org/api/modules.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for CommonJS resolution, caching, wrappers, and cycles."
+    }
+  ],
+  "related_systems": ["deno", "v8", "libuv"]
+}

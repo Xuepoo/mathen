@@ -1,0 +1,68 @@
+{
+  "id": "seaweedfs",
+  "name": "SeaweedFS",
+  "version_context": "commit 137d29633b2b5d62da7fa63b0da7b43caff08822",
+  "summary": "A distributed storage system that separates volume placement, blob serving, and filesystem metadata while exposing object, file, and lakehouse interfaces.",
+  "scope": ["volume servers", "master placement", "filer metadata", "S3 object API", "replication and topology"],
+  "features": [
+    {
+      "id": "volume-filer-master-separation",
+      "name": "Volume, filer, and master separation",
+      "category": "storage-architecture",
+      "claim_type": "fact",
+      "description": "SeaweedFS separates volume servers that hold blobs, a master that tracks volumes and placement, and stateless filer or S3 gateways that provide metadata and client-facing access.",
+      "benefits": ["Keeps file-count metadata out of the master placement service", "Allows gateways to scale independently from storage capacity"],
+      "costs": ["Requests cross multiple service boundaries", "Metadata-store and placement availability become distinct operational concerns"],
+      "evidence_ids": ["seaweedfs-readme", "seaweedfs-volume-source", "seaweedfs-master-source"]
+    },
+    {
+      "id": "direct-volume-routing",
+      "name": "Cached direct volume routing",
+      "category": "data-path",
+      "claim_type": "fact",
+      "description": "Clients obtain volume-to-server mappings from the master, cache those mappings, and then access volume servers directly rather than routing blob reads through the master.",
+      "benefits": ["Removes the master from the blob data path", "Makes one-blob lookup and read locality explicit"],
+      "costs": ["Cached mappings require refresh and invalidation", "Placement changes can introduce stale-routing behavior"],
+      "evidence_ids": ["seaweedfs-readme", "seaweedfs-wdclient-source"]
+    },
+    {
+      "id": "topology-aware-replication",
+      "name": "Topology-aware replication",
+      "category": "durability-model",
+      "claim_type": "fact",
+      "description": "Replication placement can account for racks and data centers, while volume growth, repair, balancing, and erasure coding are explicit maintenance operations.",
+      "benefits": ["Places copies across failure domains", "Separates foreground writes from selected maintenance work"],
+      "costs": ["Replica repair and balancing consume resources asynchronously", "Durability depends on placement and maintenance configuration"],
+      "evidence_ids": ["seaweedfs-readme", "seaweedfs-topology-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Layered placement and data-path graph",
+      "question": "How do placement metadata, cached volume locations, gateways, and direct blob reads form a graph with a control path distinct from the data path?",
+      "assumptions": ["Volume identifiers map to a bounded set of serving locations", "Cached mappings are refreshed when placement changes", "Gateway metadata operations are abstracted from blob contents"],
+      "claim_type": "inference",
+      "evidence_ids": ["seaweedfs-readme", "seaweedfs-wdclient-source"]
+    },
+    {
+      "model": "Failure-domain replica placement",
+      "question": "Under what placement constraints does a volume's replica set tolerate selected rack or data-center failures?",
+      "assumptions": ["Failure domains are represented by the configured topology", "A replica is independently readable or repairable", "The view abstracts filesystem metadata consistency"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["seaweedfs-readme", "seaweedfs-topology-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "volume-filer-master-separation", "benefits": ["Independent scaling of metadata, gateways, and capacity"], "costs": ["More components and cross-service failure modes"]},
+    {"feature_id": "direct-volume-routing", "benefits": ["Low-hop blob access and a small placement control path"], "costs": ["Routing caches must track topology changes"]},
+    {"feature_id": "topology-aware-replication", "benefits": ["Configurable failure-domain durability"], "costs": ["Copies, repair, and erasure coding require capacity and operational policy"]}
+  ],
+  "evidence": [
+    {"id": "seaweedfs-repository-commit", "kind": "source-code", "title": "SeaweedFS source at 137d29633b2b", "uri": "https://github.com/seaweedfs/seaweedfs/commit/137d29633b2b5d62da7fa63b0da7b43caff08822", "accessed": "2026-10-23", "notes": "Fixed source revision used for this reviewed card."},
+    {"id": "seaweedfs-readme", "kind": "official-doc", "title": "SeaweedFS architecture and scale-out overview", "uri": "https://github.com/seaweedfs/seaweedfs/blob/137d29633b2b5d62da7fa63b0da7b43caff08822/README.md", "accessed": "2026-10-23", "notes": "Official repository documentation for service separation, direct volume access, topology, replication, and S3 access."},
+    {"id": "seaweedfs-volume-source", "kind": "source-code", "title": "SeaweedFS volume storage source", "uri": "https://github.com/seaweedfs/seaweedfs/blob/137d29633b2b5d62da7fa63b0da7b43caff08822/weed/storage/volume.go", "accessed": "2026-10-23", "notes": "Pinned volume-server storage implementation."},
+    {"id": "seaweedfs-master-source", "kind": "source-code", "title": "SeaweedFS master topology source", "uri": "https://github.com/seaweedfs/seaweedfs/blob/137d29633b2b5d62da7fa63b0da7b43caff08822/weed/topology/topology.go", "accessed": "2026-10-23", "notes": "Pinned master/topology implementation."},
+    {"id": "seaweedfs-wdclient-source", "kind": "source-code", "title": "SeaweedFS volume-location client source", "uri": "https://github.com/seaweedfs/seaweedfs/blob/137d29633b2b5d62da7fa63b0da7b43caff08822/weed/wdclient/vidmap_client.go", "accessed": "2026-10-23", "notes": "Pinned client mapping and routing implementation."},
+    {"id": "seaweedfs-topology-source", "kind": "source-code", "title": "SeaweedFS replica placement source", "uri": "https://github.com/seaweedfs/seaweedfs/blob/137d29633b2b5d62da7fa63b0da7b43caff08822/weed/topology/balancer/replica_placement.go", "accessed": "2026-10-23", "notes": "Pinned topology-aware replica placement implementation."}
+  ]
+}

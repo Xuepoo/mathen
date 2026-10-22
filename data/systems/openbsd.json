@@ -1,0 +1,212 @@
+{
+  "id": "openbsd",
+  "name": "OpenBSD",
+  "version_context": "commit 2114d7b7c8fbfd8d285dd7b5b5eb44e1f6b70f55",
+  "summary": "A security-oriented Unix system whose monolithic kernel combines process and thread management with explicit syscall and filesystem restriction primitives and stateful packet filtering.",
+  "scope": [
+    "Unix operating system",
+    "process and thread execution",
+    "pledge and unveil restrictions",
+    "stateful packet filtering"
+  ],
+  "features": [
+    {
+      "id": "process-thread-kernel-boundary",
+      "name": "Process and thread kernel boundary",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "OpenBSD maintains distinct process and thread structures, allocates them through kernel pools, and creates new processes or threads through fork-family paths.",
+      "benefits": [
+        "Provides a Unix process API while supporting kernel-managed threads and explicit parent-child lifecycle state."
+      ],
+      "costs": [
+        "The monolithic kernel shares privileged address space and subsystem state, so process isolation does not remove kernel-wide fault impact."
+      ],
+      "evidence_ids": ["openbsd-fork-source", "openbsd-platforms"]
+    },
+    {
+      "id": "pledge-capability-reduction",
+      "name": "Irreversible pledge capability reduction",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "pledge divides system operations into named promise groups; a process may reduce its available groups, and disallowed operations are blocked or terminate the process according to the documented mode.",
+      "benefits": [
+        "Makes intended syscall capability reduction explicit and composable with process lifecycle."
+      ],
+      "costs": [
+        "Programs must know their future operation set, and irreversible reduction can expose integration failures when assumptions are incomplete."
+      ],
+      "evidence_ids": ["openbsd-pledge", "openbsd-pledge-source"]
+    },
+    {
+      "id": "unveil-path-visibility",
+      "name": "Unveil path and filesystem visibility",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "unveil records per-process path permissions and can lock further changes, restricting filesystem operations to declared paths and permissions.",
+      "benefits": [
+        "Adds a path-oriented boundary complementary to operation-level pledge restrictions."
+      ],
+      "costs": [
+        "Path rules, directory matching, and post-exec behavior require careful configuration; the mechanism is advisory to application design rather than automatic policy synthesis."
+      ],
+      "evidence_ids": ["openbsd-unveil", "openbsd-unveil-source"]
+    },
+    {
+      "id": "pf-stateful-filtering",
+      "name": "Stateful packet-filtering subsystem",
+      "category": "networking-model",
+      "claim_type": "fact",
+      "description": "The fixed source contains PF rule, state, queue, and address-pool structures and routines that evaluate packets and maintain stateful filtering data.",
+      "benefits": ["Provides an in-kernel policy and state boundary for network traffic."],
+      "costs": [
+        "Rule evaluation, state tracking, and kernel integration create substantial policy and concurrency complexity."
+      ],
+      "evidence_ids": ["openbsd-faq", "openbsd-pf-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Process/thread ownership graph",
+      "question": "How do OpenBSD process records, thread records, parent links, and credentials compose during fork and thread creation?",
+      "assumptions": [
+        "Processes and threads are distinct typed nodes.",
+        "The view abstracts architecture-specific context setup and scheduler details."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["openbsd-fork-source"]
+    },
+    {
+      "model": "Capability and path policy lattice",
+      "question": "How do pledge promise reductions and unveil path permissions constrain a process over time?",
+      "assumptions": [
+        "Policies only lose permissions after establishment.",
+        "Operation and path policies are modeled as intersecting capability sets, not as complete security proofs."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "openbsd-pledge",
+        "openbsd-unveil",
+        "openbsd-pledge-source",
+        "openbsd-unveil-source"
+      ]
+    },
+    {
+      "model": "Packet state transition system",
+      "question": "How do PF rules and state records determine packet treatment over a flow lifetime?",
+      "assumptions": [
+        "Flows have state records and packet observations.",
+        "The view abstracts device and protocol-specific details and does not claim policy correctness."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["openbsd-pf-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "process-thread-kernel-boundary",
+      "benefits": [
+        "Provides a Unix process API while supporting kernel-managed threads and explicit parent-child lifecycle state."
+      ],
+      "costs": [
+        "The monolithic kernel shares privileged address space and subsystem state, so process isolation does not remove kernel-wide fault impact."
+      ]
+    },
+    {
+      "feature_id": "pledge-capability-reduction",
+      "benefits": [
+        "Makes intended syscall capability reduction explicit and composable with process lifecycle."
+      ],
+      "costs": [
+        "Programs must know their future operation set, and irreversible reduction can expose integration failures when assumptions are incomplete."
+      ]
+    },
+    {
+      "feature_id": "unveil-path-visibility",
+      "benefits": [
+        "Adds a path-oriented boundary complementary to operation-level pledge restrictions."
+      ],
+      "costs": [
+        "Path rules, directory matching, and post-exec behavior require careful configuration; the mechanism is advisory to application design rather than automatic policy synthesis."
+      ]
+    },
+    {
+      "feature_id": "pf-stateful-filtering",
+      "benefits": ["Provides an in-kernel policy and state boundary for network traffic."],
+      "costs": [
+        "Rule evaluation, state tracking, and kernel integration create substantial policy and concurrency complexity."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "OpenBSD source at 2114d7b7c8fb",
+      "uri": "https://github.com/openbsd/src/commit/2114d7b7c8fbfd8d285dd7b5b5eb44e1f6b70f55",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed official OpenBSD source revision used for kernel claims."
+    },
+    {
+      "id": "openbsd-platforms",
+      "kind": "official-doc",
+      "title": "OpenBSD supported platforms",
+      "uri": "https://www.openbsd.org/plat.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official platform policy describing supported architectures and self-hosted compilation."
+    },
+    {
+      "id": "openbsd-faq",
+      "kind": "official-doc",
+      "title": "OpenBSD Frequently Asked Questions",
+      "uri": "https://www.openbsd.org/faq/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official overview and administration documentation including source builds, releases, and security-oriented system operation."
+    },
+    {
+      "id": "openbsd-pledge",
+      "kind": "official-doc",
+      "title": "OpenBSD pledge(2)",
+      "uri": "https://man.openbsd.org/pledge.2",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official system-call documentation for irreversible per-process subsystem restriction."
+    },
+    {
+      "id": "openbsd-unveil",
+      "kind": "official-doc",
+      "title": "OpenBSD unveil(2)",
+      "uri": "https://man.openbsd.org/unveil.2",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official system-call documentation for path and filesystem visibility restriction."
+    },
+    {
+      "id": "openbsd-fork-source",
+      "kind": "source-code",
+      "title": "OpenBSD process and thread creation source at 2114d7b7c8fb",
+      "uri": "https://github.com/openbsd/src/blob/2114d7b7c8fbfd8d285dd7b5b5eb44e1f6b70f55/sys/kern/kern_fork.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "openbsd-pledge-source",
+      "kind": "source-code",
+      "title": "OpenBSD pledge implementation at 2114d7b7c8fb",
+      "uri": "https://github.com/openbsd/src/blob/2114d7b7c8fbfd8d285dd7b5b5eb44e1f6b70f55/sys/kern/kern_pledge.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "openbsd-unveil-source",
+      "kind": "source-code",
+      "title": "OpenBSD unveil implementation at 2114d7b7c8fb",
+      "uri": "https://github.com/openbsd/src/blob/2114d7b7c8fbfd8d285dd7b5b5eb44e1f6b70f55/sys/kern/kern_unveil.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "openbsd-pf-source",
+      "kind": "source-code",
+      "title": "OpenBSD PF implementation at 2114d7b7c8fb",
+      "uri": "https://github.com/openbsd/src/blob/2114d7b7c8fbfd8d285dd7b5b5eb44e1f6b70f55/sys/net/pf.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    }
+  ],
+  "related_systems": ["linux", "freebsd"]
+}

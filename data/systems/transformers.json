@@ -1,0 +1,267 @@
+{
+  "id": "transformers",
+  "name": "Hugging Face Transformers",
+  "version_context": "commit 6b6792ff3b1a434913dc59659d4461acc9c3a51a",
+  "summary": "A Python model library that separates pretrained configuration, model modules, tokenization, generation, and checkpoint persistence behind shared loading and saving protocols.",
+  "scope": [
+    "pretrained configuration",
+    "model and forward interfaces",
+    "tokenizer and processor boundaries",
+    "generation and checkpoint loading"
+  ],
+  "features": [
+    {
+      "id": "pretrained-config-model-boundary",
+      "name": "Pretrained configuration and model boundary",
+      "category": "model-definition",
+      "claim_type": "fact",
+      "description": "PreTrainedConfig stores serializable model settings and provides save_pretrained/from_pretrained, while PreTrainedModel is a torch module associated with a config class and common loading, saving, and input conventions.",
+      "benefits": [
+        "Separates architecture parameters from executable model modules",
+        "Allows model families to share tooling while specializing configuration and forward behavior"
+      ],
+      "costs": [
+        "Configuration compatibility and validation become cross-version contracts",
+        "A matching config does not itself guarantee compatible weights or task outputs"
+      ],
+      "evidence_ids": [
+        "transformers-config-source",
+        "transformers-model-source",
+        "transformers-model-doc"
+      ]
+    },
+    {
+      "id": "tokenizer-model-input-boundary",
+      "name": "Tokenizer and model input boundary",
+      "category": "data-contract",
+      "claim_type": "fact",
+      "description": "PreTrainedTokenizerBase provides pretrained loading and saving for tokenization state, while model classes declare main input names such as input_ids, pixel_values, or input_values. This forms a serialized preprocessing-to-forward contract.",
+      "benefits": [
+        "Makes text, vision, audio, and multimodal input preparation reusable",
+        "Keeps tokenization artifacts separate from model weights"
+      ],
+      "costs": [
+        "Tokenizer vocabulary, special tokens, padding, and model expectations must remain aligned",
+        "Different model families expose different input and output conventions"
+      ],
+      "evidence_ids": [
+        "transformers-tokenizer-source",
+        "transformers-model-source",
+        "transformers-tokenizer-doc"
+      ]
+    },
+    {
+      "id": "generation-mixin-loop",
+      "name": "Generation mixin and decoding loop",
+      "category": "inference-model",
+      "claim_type": "fact",
+      "description": "GenerationMixin exposes generate as a reusable inference boundary that coordinates model forward calls with logits processing, stopping criteria, caches, and search or sampling strategies.",
+      "benefits": [
+        "Standardizes autoregressive decoding across many model families",
+        "Allows decoding policy to vary independently from base forward implementations"
+      ],
+      "costs": [
+        "Generation state and cache behavior can be memory-intensive",
+        "Search, stopping, and model-specific constraints create a broad interaction surface"
+      ],
+      "evidence_ids": [
+        "transformers-generation-source",
+        "transformers-generation-doc"
+      ]
+    },
+    {
+      "id": "pretrained-checkpoint-loading",
+      "name": "Pretrained checkpoint loading and persistence",
+      "category": "persistence-model",
+      "claim_type": "fact",
+      "description": "PreTrainedModel.from_pretrained accepts model identifiers or local saved directories, resolves configuration and weight files, loads state dictionaries, reports missing or unexpected keys, and defaults models to evaluation mode; save_pretrained writes reusable model artifacts.",
+      "benefits": [
+        "Makes large pretrained artifacts portable across local and hosted repositories",
+        "Provides a common restoration path for model families and downstream fine-tuning"
+      ],
+      "costs": [
+        "Remote artifacts, revisions, formats, and device placement affect reproducibility and resource use",
+        "Partial or mismatched checkpoints require explicit interpretation of loading diagnostics"
+      ],
+      "evidence_ids": [
+        "transformers-model-source",
+        "transformers-hub-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed model configuration relation",
+      "question": "How does a serialized configuration select and parameterize an executable model class?",
+      "assumptions": [
+        "A model class declares a compatible configuration class",
+        "Configuration fields are sufficient for the modeled architecture but not necessarily task semantics",
+        "Serialization and validation are treated as boundary operations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "transformers-config-source",
+        "transformers-model-source"
+      ]
+    },
+    {
+      "model": "Preprocessing-to-forward contract",
+      "question": "How do tokenizer outputs map into the named input interface of a model?",
+      "assumptions": [
+        "Tokenizer artifacts define a stable vocabulary and special-token mapping",
+        "The model's main input names identify expected primary modalities",
+        "The view abstracts framework tensor types and model-specific optional arguments"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "transformers-tokenizer-source",
+        "transformers-model-source"
+      ]
+    },
+    {
+      "model": "Autoregressive generation transition system",
+      "question": "How do model outputs, logits processors, caches, and stopping criteria produce a generated sequence?",
+      "assumptions": [
+        "Generation repeatedly invokes a compatible model forward interface",
+        "Search or sampling policy defines the next-token transition",
+        "The view abstracts beam data structures and accelerator execution"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "transformers-generation-source",
+        "transformers-generation-doc"
+      ]
+    },
+    {
+      "model": "Checkpoint restoration relation",
+      "question": "Which configuration, code, and weight artifacts are required to reconstruct a pretrained model instance?",
+      "assumptions": [
+        "The requested revision identifies a reproducible artifact version",
+        "State-dictionary key matching is an observable compatibility relation",
+        "Successful loading does not establish that the weights are semantically appropriate for every task"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "transformers-model-source",
+        "transformers-hub-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "pretrained-config-model-boundary",
+      "benefits": [
+        "Shared tooling across many architectures"
+      ],
+      "costs": [
+        "Configuration and model compatibility must be maintained across versions"
+      ]
+    },
+    {
+      "feature_id": "tokenizer-model-input-boundary",
+      "benefits": [
+        "Reusable serialized preprocessing contracts"
+      ],
+      "costs": [
+        "Vocabulary and modality mismatches can fail at runtime or degrade results"
+      ]
+    },
+    {
+      "feature_id": "generation-mixin-loop",
+      "benefits": [
+        "Common decoding API with pluggable policies"
+      ],
+      "costs": [
+        "Caches and search state increase memory and control-flow complexity"
+      ]
+    },
+    {
+      "feature_id": "pretrained-checkpoint-loading",
+      "benefits": [
+        "Portable restoration and distribution of large models"
+      ],
+      "costs": [
+        "Artifact revision, format, and loading diagnostics create operational complexity"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "transformers-repository-commit",
+      "kind": "source-code",
+      "title": "Transformers source at 6b6792ff3b1a",
+      "uri": "https://github.com/huggingface/transformers/commit/6b6792ff3b1a434913dc59659d4461acc9c3a51a",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision inspected locally for this card."
+    },
+    {
+      "id": "transformers-config-source",
+      "kind": "source-code",
+      "title": "Transformers PreTrainedConfig at fixed commit",
+      "uri": "https://github.com/huggingface/transformers/blob/6b6792ff3b1a434913dc59659d4461acc9c3a51a/src/transformers/configuration_utils.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for configuration serialization, validation, and pretrained loading."
+    },
+    {
+      "id": "transformers-model-source",
+      "kind": "source-code",
+      "title": "Transformers PreTrainedModel at fixed commit",
+      "uri": "https://github.com/huggingface/transformers/blob/6b6792ff3b1a434913dc59659d4461acc9c3a51a/src/transformers/modeling_utils.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for model/config association, forward conventions, checkpoint loading, and saving."
+    },
+    {
+      "id": "transformers-tokenizer-source",
+      "kind": "source-code",
+      "title": "Transformers tokenizer base at fixed commit",
+      "uri": "https://github.com/huggingface/transformers/blob/6b6792ff3b1a434913dc59659d4461acc9c3a51a/src/transformers/tokenization_utils_base.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for tokenizer pretrained loading and persistence boundaries."
+    },
+    {
+      "id": "transformers-generation-source",
+      "kind": "source-code",
+      "title": "Transformers GenerationMixin at fixed commit",
+      "uri": "https://github.com/huggingface/transformers/blob/6b6792ff3b1a434913dc59659d4461acc9c3a51a/src/transformers/generation/utils.py",
+      "accessed": "2026-10-23",
+      "notes": "Source for generation loop, logits processing, stopping, and cache coordination."
+    },
+    {
+      "id": "transformers-model-doc",
+      "kind": "official-doc",
+      "title": "Transformers model classes documentation",
+      "uri": "https://huggingface.co/docs/transformers/main/en/main_classes/model",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for model loading, configuration, and saving."
+    },
+    {
+      "id": "transformers-generation-doc",
+      "kind": "official-doc",
+      "title": "Transformers generation documentation",
+      "uri": "https://huggingface.co/docs/transformers/main/en/main_classes/text_generation",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for generation configuration and decoding APIs."
+    },
+    {
+      "id": "transformers-tokenizer-doc",
+      "kind": "official-doc",
+      "title": "Transformers tokenizer documentation",
+      "uri": "https://huggingface.co/docs/transformers/main/en/main_classes/tokenizer",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for tokenizer loading, saving, and model inputs."
+    },
+    {
+      "id": "transformers-hub-doc",
+      "kind": "official-doc",
+      "title": "Transformers pretrained model and Hub workflow",
+      "uri": "https://huggingface.co/docs/transformers/main/en/models",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for pretrained model artifacts and repository revisions."
+    }
+  ],
+  "related_systems": [
+    "pytorch",
+    "jax",
+    "tensorflow"
+  ]
+}
