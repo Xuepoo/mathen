@@ -376,6 +376,17 @@
         "sqlite-architecture"
       ],
       "notes": "Both provide embedded database execution, but their workload and execution models differ; this is a structural comparison, not historical influence."
+    },
+    {
+      "type": "resembles",
+      "target": "postgresql",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "sqlite-appropriate-uses",
+        "sqlite-architecture"
+      ],
+      "notes": "Both expose relational query execution, while SQLite is an embedded/local engine and PostgreSQL is a client/server engine with a broader extension and multi-client boundary; this is a structural comparison, not historical influence or equivalence."
     }
   ]
 }
