@@ -37,7 +37,7 @@ These entries are already present in the repository at different review levels:
 | `duckdb` | DuckDB | analytical database | `reviewed` | Compare with SQLite and columnar engines |
 | `firecracker` | Firecracker | microvirtualization | `reviewed` | Compare with QEMU and container isolation |
 | `supabase` | Supabase | backend platform | `reviewed` | Model platform composition and lineage |
-| `sqlite` | SQLite | embedded database | `draft` | Review semantic card and promote when ready |
+| `sqlite` | SQLite | embedded database | `reviewed` | Compare with DuckDB and columnar engines |
 | `postgresql` | PostgreSQL | relational database | `draft` | Deepen extensibility, MVCC, and extension relations |
 | `redis` | Redis | in-memory data service | `draft` | Review event loop, data structures, and persistence |
 | `elasticsearch` | Elasticsearch | search engine | `draft` | Review inverted indexes, shards, and query execution |
