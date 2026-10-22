@@ -83,6 +83,22 @@ class CardValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(CardValidationError, "duplicate composition input"):
             validate_card(card)
 
+    def test_composition_validation_gaps_need_known_evidence(self) -> None:
+        card = self._evolution_fixture()
+        card["composition"]["validation_gaps"] = [
+            {
+                "description": "The integration needs an end-to-end prototype.",
+                "claim_type": "hypothesis",
+                "claim_status": "proposed",
+                "evidence_ids": ["spec"],
+            }
+        ]
+        validate_card(card)
+
+        card["composition"]["validation_gaps"][0]["evidence_ids"] = ["missing"]
+        with self.assertRaisesRegex(CardValidationError, "unknown evidence ids"):
+            validate_card(card)
+
     def test_repository_manifest_is_valid(self) -> None:
         specs = load_manifest(ROOT / "data" / "repositories" / "representative.json")
         self.assertGreaterEqual(len(specs), 15)

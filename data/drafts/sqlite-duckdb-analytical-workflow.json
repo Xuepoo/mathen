@@ -1,0 +1,181 @@
+{
+  "id": "sqlite-duckdb-analytical-workflow",
+  "name": "SQLite and DuckDB analytical workflow",
+  "version_context": "candidate composition from reviewed cards",
+  "summary": "A candidate local workflow that keeps SQLite as the transactional source and uses DuckDB for analytical processing over an explicitly refreshed derived snapshot.",
+  "scope": [
+    "local transactional storage",
+    "analytical query processing",
+    "snapshot export and refresh"
+  ],
+  "features": [
+    {
+      "id": "transactional-source-analytical-reader",
+      "name": "Transactional source with analytical reader",
+      "category": "composition-model",
+      "claim_type": "hypothesis",
+      "description": "The proposed boundary keeps SQLite responsible for transactional state and gives DuckDB a refreshed derived snapshot for analytical queries.",
+      "claim_status": "proposed",
+      "evidence_ids": ["sqlite-appropriate-uses", "sqlite-wal", "duckdb-why"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Snapshot handoff between embedded engines",
+      "question": "Under what refresh and visibility conditions can an analytical reader consume a derived SQLite state without being mistaken for the transactional authority?",
+      "assumptions": [
+        "SQLite remains the only write authority for the source state",
+        "The handoff exports a defined committed snapshot rather than sharing undocumented file state",
+        "DuckDB analytical results are interpreted relative to the snapshot version and refresh time"
+      ],
+      "claim_type": "hypothesis",
+      "claim_status": "proposed",
+      "evidence_ids": ["sqlite-wal", "sqlite-atomic-commit", "duckdb-why"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "transactional-source-analytical-reader",
+      "benefits": [
+        "Separates transactional write concerns from analytical execution concerns",
+        "Allows each embedded engine to retain its documented workload focus"
+      ],
+      "costs": [
+        "Introduces snapshot refresh, freshness, and duplicate-storage coordination",
+        "The host process must budget resources for both engines"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "sqlite-appropriate-uses",
+      "kind": "official-doc",
+      "title": "Appropriate Uses For SQLite",
+      "uri": "https://www.sqlite.org/whentouse.html",
+      "notes": "Reviewed SQLite evidence for embedded/local deployment and concurrency boundaries."
+    },
+    {
+      "id": "sqlite-wal",
+      "kind": "official-doc",
+      "title": "Write-Ahead Logging",
+      "uri": "https://www.sqlite.org/wal.html",
+      "notes": "Reviewed SQLite evidence for reader snapshots, writer concurrency, and checkpoint behavior."
+    },
+    {
+      "id": "sqlite-atomic-commit",
+      "kind": "official-doc",
+      "title": "Atomic Commit In SQLite",
+      "uri": "https://www.sqlite.org/atomiccommit.html",
+      "notes": "Reviewed SQLite evidence for atomic commit, recovery, and filesystem assumptions."
+    },
+    {
+      "id": "duckdb-why",
+      "kind": "official-doc",
+      "title": "Why DuckDB",
+      "uri": "https://duckdb.org/why_duckdb.html",
+      "notes": "Reviewed DuckDB evidence for embedded operation and vectorized analytical execution."
+    }
+  ],
+  "composition": {
+    "inputs": [
+      {
+        "system_id": "sqlite",
+        "role": "transactional source of record",
+        "version_context": "commit 4242856e539471ce7b7fc7f7d93679df7f0edd25",
+        "claim_status": "accepted",
+        "evidence_ids": [
+          "sqlite-appropriate-uses",
+          "sqlite-wal",
+          "sqlite-atomic-commit"
+        ]
+      },
+      {
+        "system_id": "duckdb",
+        "role": "analytical reader over a derived snapshot",
+        "version_context": "Embedded analytical database design",
+        "claim_status": "accepted",
+        "evidence_ids": ["duckdb-why"]
+      }
+    ],
+    "constraints": [
+      {
+        "description": "SQLite remains the sole write authority; the DuckDB side must consume a defined exported or copied snapshot rather than assuming undocumented concurrent writes to SQLite storage.",
+        "claim_type": "hypothesis",
+        "claim_status": "proposed",
+        "evidence_ids": [
+          "sqlite-appropriate-uses",
+          "sqlite-wal",
+          "sqlite-atomic-commit",
+          "duckdb-why"
+        ]
+      },
+      {
+        "description": "Each analytical result must carry the source snapshot identity or refresh boundary so consumers can distinguish current transactional state from derived analytical state.",
+        "claim_type": "hypothesis",
+        "claim_status": "proposed",
+        "evidence_ids": ["sqlite-wal", "sqlite-atomic-commit"]
+      },
+      {
+        "description": "The host must provision enough process memory, I/O, and scheduling capacity for both embedded engines; the composition does not create an isolation boundary.",
+        "claim_type": "inference",
+        "claim_status": "under-review",
+        "evidence_ids": ["sqlite-appropriate-uses", "duckdb-why"]
+      }
+    ],
+    "preserved_properties": [
+      {
+        "description": "SQLite's documented transaction and crash-recovery behavior remains the source-of-record durability contract under its filesystem and synchronization assumptions.",
+        "claim_type": "inference",
+        "claim_status": "under-review",
+        "evidence_ids": ["sqlite-atomic-commit", "sqlite-wal"]
+      },
+      {
+        "description": "DuckDB retains its documented embedded, vectorized analytical execution role for queries against the derived snapshot.",
+        "claim_type": "inference",
+        "claim_status": "under-review",
+        "evidence_ids": ["duckdb-why"]
+      }
+    ],
+    "conflicts": [
+      {
+        "description": "A refresh boundary can make DuckDB results stale relative to SQLite commits, so the workflow cannot promise read-after-write equivalence without an explicit synchronization protocol.",
+        "claim_type": "hypothesis",
+        "claim_status": "under-review",
+        "evidence_ids": ["sqlite-wal", "sqlite-atomic-commit"]
+      },
+      {
+        "description": "Running analytical work in the same host environment can compete with SQLite for CPU, memory, and I/O, especially for large scans.",
+        "claim_type": "hypothesis",
+        "claim_status": "under-review",
+        "evidence_ids": ["sqlite-appropriate-uses", "duckdb-why"]
+      }
+    ],
+    "validation_gaps": [
+      {
+        "description": "The reviewed evidence does not establish a supported SQLite-to-DuckDB snapshot connector or interchange path for the selected versions.",
+        "claim_type": "hypothesis",
+        "claim_status": "proposed",
+        "evidence_ids": ["sqlite-appropriate-uses", "duckdb-why"]
+      },
+      {
+        "description": "An end-to-end prototype is needed to test snapshot creation, refresh atomicity, freshness reporting, and behavior while SQLite readers and writers are active.",
+        "claim_type": "hypothesis",
+        "claim_status": "proposed",
+        "evidence_ids": ["sqlite-wal", "sqlite-atomic-commit", "duckdb-why"]
+      },
+      {
+        "description": "A workload benchmark is needed to measure refresh cost and host-resource interference across transactional writes and analytical scans.",
+        "claim_type": "hypothesis",
+        "claim_status": "proposed",
+        "evidence_ids": ["sqlite-appropriate-uses", "duckdb-why"]
+      }
+    ],
+    "claim_status": "proposed",
+    "evidence_ids": [
+      "sqlite-appropriate-uses",
+      "sqlite-wal",
+      "sqlite-atomic-commit",
+      "duckdb-why"
+    ]
+  }
+}

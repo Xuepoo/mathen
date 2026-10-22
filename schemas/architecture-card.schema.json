@@ -170,6 +170,10 @@
           "type": "array",
           "items": { "$ref": "#/$defs/claimEvidence" }
         },
+        "validation_gaps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/claimEvidence" }
+        },
         "claim_status": { "$ref": "#/$defs/claimStatus" },
         "evidence_ids": {
           "type": "array",

@@ -142,7 +142,14 @@ def _validate_composition(
         _check_claim_status(label, input_label, item.get("claim_status"))
         _check_evidence_ids(label, input_label, item.get("evidence_ids"), evidence_ids)
 
-    for field in ("constraints", "preserved_properties", "conflicts"):
+    for field in (
+        "constraints",
+        "preserved_properties",
+        "conflicts",
+        "validation_gaps",
+    ):
+        if field not in composition:
+            continue
         claims = composition.get(field)
         if not isinstance(claims, list):
             raise CardValidationError(f"{label}: composition.{field} must be a list")
