@@ -1,0 +1,77 @@
+{
+  "id": "clickhouse-operator",
+  "name": "ClickHouse Operator",
+  "version_context": "commit a89fa9e2edc2f1516af988bf34df7a3bfb5013b5",
+  "summary": "A Kubernetes operator that observes ClickHouseInstallation and ClickHouseKeeperInstallation resources, reconciles StatefulSet-based clusters, and coordinates lifecycle changes through status and worker tasks.",
+  "scope": ["Kubernetes custom resources", "reconciliation workers", "StatefulSet lifecycle", "ClickHouse cluster topology", "backup and storage configuration"],
+  "features": [
+    {
+      "id": "custom-resource-desired-state",
+      "name": "Custom-resource desired state",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "The operator uses ClickHouseInstallation and related custom resources as declarative inputs for cluster, host, configuration, storage, and lifecycle settings.",
+      "benefits": ["Makes database topology and configuration inspectable through Kubernetes APIs", "Allows users to express changes without directly managing every generated workload"],
+      "costs": ["CRD schema and compatibility constrain the operator contract", "Desired state remains separate from the readiness of generated resources"],
+      "evidence_ids": ["clickhouse-operator-introduction", "clickhouse-operator-cr-source"]
+    },
+    {
+      "id": "hierarchical-reconciliation-workers",
+      "name": "Hierarchical reconciliation workers",
+      "category": "control-loop",
+      "claim_type": "fact",
+      "description": "Reconciliation decomposes an installation into cluster, shard, and host work, with controller and worker code applying changes and updating status across generated Kubernetes resources.",
+      "benefits": ["Separates topology-level decisions from host-level operations", "Supports incremental retries and status reporting for long-running changes"],
+      "costs": ["Partial progress and retries create intermediate states", "Ordering across workers and Kubernetes resources affects convergence"],
+      "evidence_ids": ["clickhouse-operator-architecture", "clickhouse-operator-controller-source", "clickhouse-operator-worker-source"]
+    },
+    {
+      "id": "stateful-storage-and-database-lifecycle",
+      "name": "Stateful storage and database lifecycle",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "The operator materializes ClickHouse hosts as StatefulSet-backed pods with persistent volumes and coordinates version, scaling, replication, backup, and recovery settings through reconciliation.",
+      "benefits": ["Preserves stable pod identity and persistent storage for database hosts", "Centralizes operational lifecycle policy in the custom-resource model"],
+      "costs": ["Database changes are constrained by StatefulSet and storage semantics", "Scaling, rolling changes, and backups require coordination with live data state"],
+      "evidence_ids": ["clickhouse-operator-architecture", "clickhouse-operator-storage-doc", "clickhouse-operator-backup-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Desired/observed resource feedback system",
+      "question": "How does a custom-resource specification and observed Kubernetes state drive repeated actions toward a ClickHouse installation target?",
+      "assumptions": ["The CRD specification is the desired state", "Generated resources and statuses provide observations", "Actions are sufficiently idempotent for retries"],
+      "claim_type": "inference",
+      "evidence_ids": ["clickhouse-operator-introduction", "clickhouse-operator-controller-source"]
+    },
+    {
+      "model": "Hierarchical reconciliation state machine",
+      "question": "How can installation, cluster, shard, and host transitions be composed while preserving ordering and status invariants?",
+      "assumptions": ["Higher-level reconciliation gates lower-level work", "A failed child transition can prevent parent completion", "The model abstracts Kubernetes controller scheduling"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["clickhouse-operator-architecture", "clickhouse-operator-worker-source"]
+    },
+    {
+      "model": "Stable-identity resource mapping",
+      "question": "Which mapping between database hosts, StatefulSet pods, persistent volumes, and cluster roles is preserved across rescheduling or controlled scale changes?",
+      "assumptions": ["StatefulSet identity and volume claims remain stable under supported operations", "Cluster topology names identify the intended host roles", "The view abstracts ClickHouse internal replication protocol"],
+      "claim_type": "inference",
+      "evidence_ids": ["clickhouse-operator-architecture", "clickhouse-operator-storage-doc"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "custom-resource-desired-state", "benefits": ["Declarative and auditable database topology"], "costs": ["CRD evolution and generated-resource drift add coordination overhead"]},
+    {"feature_id": "hierarchical-reconciliation-workers", "benefits": ["Decomposed convergence and retryable operations"], "costs": ["Eventual convergence and partial failure complicate diagnosis"]},
+    {"feature_id": "stateful-storage-and-database-lifecycle", "benefits": ["Stable storage identity for stateful database hosts"], "costs": ["Safe scale, upgrade, and backup operations require workload-aware sequencing"]}
+  ],
+  "evidence": [
+    {"id": "clickhouse-operator-repository-commit", "kind": "source-code", "title": "ClickHouse Operator source at a89fa9e2edc2", "uri": "https://github.com/Altinity/clickhouse-operator/commit/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5", "accessed": "2026-10-23", "notes": "Fixed source revision used for this reviewed card."},
+    {"id": "clickhouse-operator-introduction", "kind": "official-doc", "title": "ClickHouse Operator introduction", "uri": "https://github.com/Altinity/clickhouse-operator/blob/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/docs/introduction.md", "accessed": "2026-10-23", "notes": "Official operator documentation for Kubernetes resources and installation management."},
+    {"id": "clickhouse-operator-architecture", "kind": "official-doc", "title": "ClickHouse Operator architecture", "uri": "https://github.com/Altinity/clickhouse-operator/blob/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/docs/architecture.md", "accessed": "2026-10-23", "notes": "Official architecture documentation for StatefulSet identity and the reconciliation hierarchy."},
+    {"id": "clickhouse-operator-cr-source", "kind": "source-code", "title": "ClickHouse Operator custom-resource source", "uri": "https://github.com/Altinity/clickhouse-operator/tree/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/pkg/apis/clickhouse.altinity.com", "accessed": "2026-10-23", "notes": "Pinned API and CRD implementation boundary."},
+    {"id": "clickhouse-operator-controller-source", "kind": "source-code", "title": "ClickHouse Operator installation controller", "uri": "https://github.com/Altinity/clickhouse-operator/blob/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/pkg/controller/chi/controller.go", "accessed": "2026-10-23", "notes": "Pinned ClickHouseInstallation controller implementation."},
+    {"id": "clickhouse-operator-worker-source", "kind": "source-code", "title": "ClickHouse Operator reconciliation worker", "uri": "https://github.com/Altinity/clickhouse-operator/blob/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/pkg/controller/chi/worker-reconciler-chi.go", "accessed": "2026-10-23", "notes": "Pinned hierarchical reconciliation implementation."},
+    {"id": "clickhouse-operator-storage-doc", "kind": "official-doc", "title": "ClickHouse Operator storage", "uri": "https://github.com/Altinity/clickhouse-operator/blob/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/docs/storage.md", "accessed": "2026-10-23", "notes": "Official documentation for persistent volumes, pods, and StatefulSets."},
+    {"id": "clickhouse-operator-backup-doc", "kind": "official-doc", "title": "ClickHouse Operator security and backup configuration", "uri": "https://github.com/Altinity/clickhouse-operator/blob/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/docs/security_hardening.md", "accessed": "2026-10-23", "notes": "Official documentation covering secret references and backup-related operational configuration."}
+  ]
+}

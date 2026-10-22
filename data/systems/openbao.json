@@ -1,0 +1,74 @@
+{
+  "id": "openbao",
+  "name": "OpenBao",
+  "version_context": "commit 81004113331f2dea8e05f571faa5e14fe31371ba",
+  "summary": "An open-source secret-management service that protects an untrusted storage backend behind a barrier, routes policy-authorized requests to mounted engines, and manages expiring credentials.",
+  "scope": ["barrier encryption", "sealed and unsealed states", "auth and ACL policies", "secrets engines", "leases and revocation"],
+  "features": [
+    {
+      "id": "barrier-encrypted-storage",
+      "name": "Barrier-encrypted storage",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "OpenBao encrypts data before sending it to a durable storage backend treated as untrusted, then loads audit devices, auth methods, and secrets engines after unseal.",
+      "benefits": ["Separates durable storage from plaintext secret access", "Allows supported storage backends to share one protected service model"],
+      "costs": ["Unseal and key-management state gates availability", "Encryption and storage failures are coupled to service recovery"],
+      "evidence_ids": ["openbao-architecture-doc", "openbao-core-source"]
+    },
+    {
+      "id": "policy-mounted-engine-routing",
+      "name": "Policy-authorized mounted-engine routing",
+      "category": "authorization-model",
+      "claim_type": "fact",
+      "description": "OpenBao authenticates clients, resolves policies, and routes authorized requests to mounted secrets engines while emitting request and response events to configured audit devices.",
+      "benefits": ["Composes authentication, ACL policy, and engine implementations behind a common core", "Makes secret-engine placement and policy scope explicit"],
+      "costs": ["Policy, mount, and audit configuration must remain consistent", "A request path crosses security and backend routing boundaries"],
+      "evidence_ids": ["openbao-architecture-doc", "openbao-core-source"]
+    },
+    {
+      "id": "lease-based-revocation",
+      "name": "Lease-based expiration and revocation",
+      "category": "credential-lifecycle",
+      "claim_type": "fact",
+      "description": "OpenBao attaches lease identities to leased secrets and tokens, permits renewal or revocation, and automatically revokes a secret when its lease expires.",
+      "benefits": ["Supports dynamic, time-bounded credentials", "Makes revocation a first-class lifecycle operation"],
+      "costs": ["Clients must renew before expiry or recover from revocation", "Expiration management introduces timing and background-work state"],
+      "evidence_ids": ["openbao-readme", "openbao-architecture-doc", "openbao-lease-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Barrier and seal operational state machine",
+      "question": "How do sealed, unsealed, and post-unseal states constrain access to protected state and mounted services?",
+      "assumptions": ["The encryption key cannot be recovered while sealed", "The configured unseal procedure establishes the unsealed transition", "Seal-provider implementation details are abstracted"],
+      "claim_type": "inference",
+      "evidence_ids": ["openbao-architecture-doc", "openbao-core-source"]
+    },
+    {
+      "model": "Authenticated request routing graph",
+      "question": "How does a client request flow from authentication through policy evaluation, engine routing, lease registration, and audit emission?",
+      "assumptions": ["Policies determine allowed actions on paths", "Mounted engines implement the selected operation", "Audit delivery is modeled as an observation edge rather than a request precondition"],
+      "claim_type": "inference",
+      "evidence_ids": ["openbao-architecture-doc", "openbao-core-source"]
+    },
+    {
+      "model": "Expiring credential transition system",
+      "question": "Which transitions preserve a credential's validity, renew it, revoke it, or move it to an expired state?",
+      "assumptions": ["Lease duration and renewal rules are authoritative", "Revocation is applied according to engine and token-store contracts", "Clock and scheduler behavior are abstracted"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["openbao-readme", "openbao-lease-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "barrier-encrypted-storage", "benefits": ["Protects persisted state across storage backends"], "costs": ["Key custody and unseal operations become availability dependencies"]},
+    {"feature_id": "policy-mounted-engine-routing", "benefits": ["Extensible secret and auth engine composition"], "costs": ["Routing and ACL configuration require careful lifecycle management"]},
+    {"feature_id": "lease-based-revocation", "benefits": ["Bounded credential lifetime and explicit revocation"], "costs": ["Renewal and expiration handling adds application complexity"]}
+  ],
+  "evidence": [
+    {"id": "openbao-repository-commit", "kind": "source-code", "title": "OpenBao source at 81004113331f", "uri": "https://github.com/openbao/openbao/commit/81004113331f2dea8e05f571faa5e14fe31371ba", "accessed": "2026-10-23", "notes": "Fixed source revision used for this reviewed card."},
+    {"id": "openbao-readme", "kind": "official-doc", "title": "OpenBao project overview", "uri": "https://github.com/openbao/openbao/blob/81004113331f2dea8e05f571faa5e14fe31371ba/README.md", "accessed": "2026-10-23", "notes": "Official project documentation for storage, dynamic secrets, leases, renewal, and revocation."},
+    {"id": "openbao-architecture-doc", "kind": "official-doc", "title": "OpenBao architecture", "uri": "https://openbao.org/docs/internals/architecture/", "accessed": "2026-10-23", "notes": "Official architecture documentation for the barrier, seal state, core request flow, policies, engines, leases, and audit."},
+    {"id": "openbao-core-source", "kind": "source-code", "title": "OpenBao core implementation", "uri": "https://github.com/openbao/openbao/blob/81004113331f2dea8e05f571faa5e14fe31371ba/internal/vault/core.go", "accessed": "2026-10-23", "notes": "Pinned core implementation used for barrier, seal, storage, router, and backend boundaries."},
+    {"id": "openbao-lease-source", "kind": "source-code", "title": "OpenBao lease API source", "uri": "https://github.com/openbao/openbao/blob/81004113331f2dea8e05f571faa5e14fe31371ba/api/sys_leases.go", "accessed": "2026-10-23", "notes": "Pinned lease-management API boundary."}
+  ]
+}

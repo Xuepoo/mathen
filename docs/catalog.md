@@ -372,10 +372,10 @@ identifiers, not claims that the projects share the same architecture.
 | `dbt` | dbt Core | `P1` | Declarative resource DAGs, ref ordering, adapter execution, materialization strategies, and tests |
 | `dagster` | Dagster | `P1` | Software-defined asset dependencies, schedules, sensors, daemon coordination, and run state |
 | `minio` | MinIO | `P1` | S3 object namespace, erasure-coded fragment layout, quorum, and background healing |
-| `seaweedfs` | SeaweedFS | `P2` | Volume/filer/master separation, object API, replication, and topology |
-| `vault` | HashiCorp Vault | `P1` | Secret engines, leases, authentication backends, and seal/unseal state |
-| `openbao` | OpenBao | `P2` | Secret storage, auth methods, leases, plugins, and compatibility boundary |
-| `clickhouse-operator` | ClickHouse Operator | `P2` | Kubernetes reconciliation, database lifecycle, and backup/scale operations |
+| `seaweedfs` | SeaweedFS | `reviewed` | Compare volume/filer/master separation, direct volume routing, topology-aware replication, and object APIs using fixed-commit evidence |
+| `vault` | HashiCorp Vault | `reviewed` | Compare barrier-protected storage, mounted backend authorization, seal state, and leased credential lifecycle using fixed-commit evidence |
+| `openbao` | OpenBao | `reviewed` | Compare barrier encryption, policy-authorized engine routing, seal state, and lease-based revocation using fixed-commit evidence |
+| `clickhouse-operator` | ClickHouse Operator | `reviewed` | Compare custom-resource desired state, hierarchical reconciliation, StatefulSet identity, and database lifecycle using fixed-commit evidence |
 | `velero` | Velero | `reviewed` | Compare Kubernetes resource backup, object-storage archives, restore ordering, and plugin boundaries using fixed-commit evidence |
 
 ### Frontend, mobile, build, and testing ecosystems
