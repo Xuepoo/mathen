@@ -1,0 +1,102 @@
+{
+  "id": "nextjs",
+  "name": "Next.js",
+  "version_context": "commit e828f1e5dc7ba504621ff2a3ed7b3bf625c33e91",
+  "summary": "A React application framework that combines convention-based filesystem routing with server/client component boundaries, request handlers, and build output for multiple deployment modes.",
+  "scope": [
+    "App Router route and layout conventions",
+    "React Server and Client Component boundary",
+    "Route Handler request execution",
+    "prerendering, caching, and deployment output"
+  ],
+  "temporal_context": {
+    "version": "e828f1e5dc7ba504621ff2a3ed7b3bf625c33e91",
+    "status": "current",
+    "claim_status": "accepted",
+    "evidence_ids": ["nextjs-fixed-commit"]
+  },
+  "features": [
+    {
+      "id": "filesystem-route-segment-graph",
+      "name": "Filesystem route-segment graph",
+      "category": "routing-model",
+      "claim_type": "fact",
+      "description": "In the App Router, folders define URL segments and convention files such as page, layout, loading, error, and route expose or compose route behavior; dynamic, grouped, parallel, and intercepted segments refine that graph.",
+      "benefits": ["Makes route structure visible in the source tree", "Allows layouts and route segments to be composed by convention"],
+      "costs": ["File naming and segment constraints become part of the application contract", "The route graph must account for special-file conflicts and dynamic segments"],
+      "evidence_ids": ["nextjs-project-structure", "nextjs-fixed-route-utils"]
+    },
+    {
+      "id": "server-client-component-boundary",
+      "name": "Server/client component boundary",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "App Router layouts and pages are Server Components by default; a use-client boundary places a component and its imported module graph on the client, while server-rendered output and references form the React Server Component Payload used for hydration.",
+      "benefits": ["Keeps server-only data access and secrets out of the client module graph", "Limits browser JavaScript to interactive subgraphs and supports progressive rendering"],
+      "costs": ["Props crossing the boundary must satisfy serialization and composition constraints", "Developers must reason about two execution environments and hydration"],
+      "evidence_ids": ["nextjs-server-client", "nextjs-fixed-app-render"]
+    },
+    {
+      "id": "route-handler-request-adapter",
+      "name": "Web request/response route-handler adapter",
+      "category": "http-execution",
+      "claim_type": "fact",
+      "description": "A route.js/ts file defines Web Request/Response handlers for supported HTTP methods at an App Router segment; route handlers are distinct from page rendering at the same segment and can be configured for static or request-time behavior.",
+      "benefits": ["Provides an explicit API boundary beside UI routes", "Uses standard Web request and response abstractions across supported runtimes"],
+      "costs": ["A segment cannot expose page and route handlers in the same conflicting position", "Caching and runtime behavior must be selected with route and data-fetching configuration"],
+      "evidence_ids": ["nextjs-route-handlers", "nextjs-fixed-app-route"]
+    },
+    {
+      "id": "render-cache-deployment-artifact",
+      "name": "Render and cache deployment artifact",
+      "category": "deployment-model",
+      "claim_type": "inference",
+      "description": "The framework analyzes route and data dependencies to prerender or render at request time, emits client/server assets and manifests, and provides deployment modes including Node.js and Docker self-hosting.",
+      "benefits": ["Permits static output where dependencies allow it while retaining dynamic routes", "Packages routing and rendering metadata for a chosen deployment target"],
+      "costs": ["Build output and cache behavior are coupled to runtime and configuration assumptions", "Static/dynamic classification can change when request-time APIs or uncached data are introduced"],
+      "evidence_ids": ["nextjs-caching", "nextjs-deploying", "nextjs-fixed-build"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Rooted labeled route graph",
+      "question": "How do filesystem segments, special files, and dynamic parameters determine the public route set and nested layout composition?",
+      "assumptions": ["Folders and convention files are vertices or labels in a rooted tree", "A public route exists only when a supported page or route convention is present", "The view abstracts framework-specific route sorting and excludes undocumented deployment rewrites"],
+      "claim_type": "inference",
+      "evidence_ids": ["nextjs-project-structure", "nextjs-fixed-route-utils"]
+    },
+    {
+      "model": "Two-environment component graph with serialized boundary",
+      "question": "Which component subgraphs execute on the server, which hydrate on the client, and what information crosses the boundary?",
+      "assumptions": ["Modules are vertices and imports/rendered-child relations are edges", "use-client marks a client boundary and the RSC Payload is the boundary representation", "The model abstracts React reconciliation and does not claim arbitrary props are serializable"],
+      "claim_type": "inference",
+      "evidence_ids": ["nextjs-server-client", "nextjs-fixed-app-render"]
+    },
+    {
+      "model": "Route render state machine",
+      "question": "How does a route transition among build-time prerendering, request-time rendering, caching, and client hydration?",
+      "assumptions": ["A route state includes its data dependencies, cache policy, emitted payload, and runtime target", "Documented request-time APIs and route configuration trigger transitions", "This is an explanatory model rather than a proof of cache correctness or performance"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["nextjs-caching", "nextjs-route-handlers", "nextjs-deploying"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "filesystem-route-segment-graph", "benefits": ["Convention makes route topology discoverable"], "costs": ["Topology is constrained by framework file conventions"]},
+    {"feature_id": "server-client-component-boundary", "benefits": ["Reduced client bundle and server-only data access"], "costs": ["Cross-environment composition and serialization add reasoning overhead"]},
+    {"feature_id": "route-handler-request-adapter", "benefits": ["Co-located standard HTTP API handlers"], "costs": ["Route conflicts and cache/runtime configuration must be managed"]},
+    {"feature_id": "render-cache-deployment-artifact", "benefits": ["One build can encode static and dynamic delivery choices"], "costs": ["Artifacts and cache semantics depend on deployment assumptions"]}
+  ],
+  "evidence": [
+    {"id": "nextjs-fixed-commit", "kind": "source-code", "title": "Next.js source at e828f1e5dc7b", "uri": "https://github.com/vercel/next.js/commit/e828f1e5dc7ba504621ff2a3ed7b3bf625c33e91", "accessed": "2026-10-23", "notes": "Resolved HEAD of the official repository and fixed source revision for this card."},
+    {"id": "nextjs-project-structure", "kind": "official-doc", "title": "Next.js project structure and routing", "uri": "https://nextjs.org/docs/app/getting-started/project-structure", "accessed": "2026-10-23", "notes": "Official documentation for folders, route segments, layouts, pages, and special files."},
+    {"id": "nextjs-server-client", "kind": "official-doc", "title": "Next.js Server and Client Components", "uri": "https://nextjs.org/docs/app/getting-started/server-and-client-components", "accessed": "2026-10-23", "notes": "Official documentation for default Server Components, use-client boundaries, RSC Payload, and hydration."},
+    {"id": "nextjs-route-handlers", "kind": "official-doc", "title": "Next.js Route Handlers", "uri": "https://nextjs.org/docs/app/getting-started/route-handlers", "accessed": "2026-10-23", "notes": "Official documentation for route.js/ts handlers, methods, conflicts, and caching."},
+    {"id": "nextjs-caching", "kind": "official-doc", "title": "Next.js caching and revalidation", "uri": "https://nextjs.org/docs/app/getting-started/caching", "accessed": "2026-10-23", "notes": "Official documentation for prerendering, request-time data, cache components, and revalidation."},
+    {"id": "nextjs-deploying", "kind": "official-doc", "title": "Next.js deploying", "uri": "https://nextjs.org/docs/app/getting-started/deploying", "accessed": "2026-10-23", "notes": "Official documentation for Node.js, Docker, and deployment support."},
+    {"id": "nextjs-fixed-route-utils", "kind": "source-code", "title": "Next.js route utilities at e828f1e5dc7b", "uri": "https://github.com/vercel/next.js/blob/e828f1e5dc7ba504621ff2a3ed7b3bf625c33e91/packages/next/src/shared/lib/router/utils/sorted-routes.ts", "accessed": "2026-10-23", "notes": "Fixed source path for route sorting and route graph normalization."},
+    {"id": "nextjs-fixed-app-render", "kind": "source-code", "title": "Next.js App Router rendering source at e828f1e5dc7b", "uri": "https://github.com/vercel/next.js/blob/e828f1e5dc7ba504621ff2a3ed7b3bf625c33e91/packages/next/src/server/app-render/app-render.tsx", "accessed": "2026-10-23", "notes": "Fixed source provenance for App Router render orchestration and server/client payload handling."},
+    {"id": "nextjs-fixed-app-route", "kind": "source-code", "title": "Next.js App Route module at e828f1e5dc7b", "uri": "https://github.com/vercel/next.js/blob/e828f1e5dc7ba504621ff2a3ed7b3bf625c33e91/packages/next/src/server/route-modules/app-route/module.ts", "accessed": "2026-10-23", "notes": "Fixed source provenance for App Router route-handler execution."},
+    {"id": "nextjs-fixed-build", "kind": "source-code", "title": "Next.js build source at e828f1e5dc7b", "uri": "https://github.com/vercel/next.js/tree/e828f1e5dc7ba504621ff2a3ed7b3bf625c33e91/packages/next/src/build", "accessed": "2026-10-23", "notes": "Fixed source provenance for build analysis and deployment artifacts."}
+  ],
+  "related_systems": ["react", "node"]
+}

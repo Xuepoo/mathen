@@ -297,10 +297,10 @@ identifiers, not claims that the projects share the same architecture.
 | `vue` | Vue | `reviewed` | Compare proxy/ref reactivity, component effects, compiler-informed rendering, and host patching using fixed-commit evidence |
 | `svelte` | Svelte | `reviewed` | Compare component-file compilation, generated DOM updates, and reactive dependency analysis using fixed-commit evidence |
 | `angular` | Angular | `reviewed` | Compare compiled templates, hierarchical dependency injection, change detection, and signals using fixed-commit evidence |
-| `nextjs` | Next.js | `P1` | Server/client component boundaries, routing, data fetching, and deployment output |
-| `express` | Express | `P1` | Middleware composition, request lifecycle, routing, and adapter boundaries |
-| `fastapi` | FastAPI | `P1` | Typed request validation, dependency injection, async handlers, and OpenAPI generation |
-| `django` | Django | `P1` | Model/view/template boundaries, middleware, ORM, and application configuration |
+| `nextjs` | Next.js | `reviewed` | Compare server/client component boundaries, filesystem routing, route handlers, caching, and deployment artifacts using fixed-commit evidence |
+| `express` | Express | `reviewed` | Compare ordered middleware, router dispatch, Node HTTP adapters, mounted applications, and view boundaries using fixed-commit evidence |
+| `fastapi` | FastAPI | `reviewed` | Compare typed path operations, dependency DAGs, validation boundaries, and OpenAPI projection using fixed-commit evidence |
+| `django` | Django | `reviewed` | Compare application registry, URL resolution, adaptive middleware, ORM model metadata, and template response boundaries using fixed-commit evidence |
 | `rails` | Ruby on Rails | `reviewed` | Engine composition, ordered initialization, autoloading, routing, and middleware |
 | `laravel` | Laravel | `reviewed` | Service container, provider bootstrap, deferred resolution, routing, and middleware pipeline |
 | `spring-boot` | Spring Boot | `reviewed` | Application-context lifecycle, conditional auto-configuration, environment binding, and embedded web deployment |
