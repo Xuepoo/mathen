@@ -1,0 +1,199 @@
+{
+  "id": "wireguard",
+  "name": "WireGuard",
+  "version_context": "commit 2631ce99a06f27120d581611cf125d68bc6aa565",
+  "summary": "A compact UDP secure tunnel implementation that maintains per-peer Noise handshake and key state, queues encryption and handshake work, and rejects replayed transport counters through a sliding window.",
+  "scope": [
+    "secure network tunnel",
+    "Noise IK handshake",
+    "per-peer key state",
+    "UDP transport",
+    "anti-replay filtering"
+  ],
+  "features": [
+    {
+      "id": "per-peer-noise-handshake-state",
+      "name": "Per-peer Noise handshake state",
+      "category": "security-protocol",
+      "claim_type": "fact",
+      "description": "WireGuard maintains a handshake object for each peer and implements the Noise_IKpsk2_25519_ChaChaPoly_BLAKE2s exchange. Initiation and response transitions update chain keys, hashes, ephemeral keys, indices, timestamps, and handshake state before deriving transport keys.",
+      "benefits": [
+        "Provides authenticated key establishment with forward-secret session keys",
+        "Keeps peer identity and ephemeral handshake state separate from device-wide routing state",
+        "Makes handshake transitions and key derivation explicit in the implementation"
+      ],
+      "costs": [
+        "Handshake state has ordered transitions and concurrency protection requirements",
+        "Rekey timers and packet loss require retry and queue behavior",
+        "The security properties depend on correct cryptographic and timestamp handling"
+      ],
+      "evidence_ids": [
+        "wireguard-protocol-doc",
+        "wireguard-noise-source",
+        "wireguard-device-source"
+      ]
+    },
+    {
+      "id": "bounded-encryption-and-handshake-queues",
+      "name": "Bounded encryption and handshake work queues",
+      "category": "concurrency-model",
+      "claim_type": "fact",
+      "description": "The Go implementation separates outbound encryption, inbound decryption, and handshake queues as bounded channels with wait-group lifetime accounting. Device startup creates worker routines for encryption, packet handling, and handshake processing.",
+      "benefits": [
+        "Separates cryptographic work from network and tunnel I/O",
+        "Bounds queued work and makes shutdown closure explicit",
+        "Allows multiple encryption workers while preserving per-device queue ownership"
+      ],
+      "costs": [
+        "Queue capacity and worker counts affect latency and memory under load",
+        "Shutdown requires all producers and consumers to coordinate with queue references",
+        "Backpressure and packet drops must be understood separately from cryptographic validity"
+      ],
+      "evidence_ids": [
+        "wireguard-queue-source",
+        "wireguard-device-source"
+      ]
+    },
+    {
+      "id": "session-keypair-replay-window",
+      "name": "Rotating session keypairs with replay window",
+      "category": "transport-security",
+      "claim_type": "fact",
+      "description": "After a handshake, a peer holds current, previous, and next keypair slots. Each keypair has send and receive AEAD state, a monotonically increasing send nonce, and a replay filter that accepts counters only once within a bounded sliding window and below the protocol limit.",
+      "benefits": [
+        "Supports key rotation while retaining a previous receive key during transition",
+        "Rejects duplicate and stale transport packets without requiring in-order UDP delivery",
+        "Binds packet acceptance to authenticated counter state"
+      ],
+      "costs": [
+        "Multiple keypair generations increase transition and cleanup state",
+        "The replay window consumes per-peer memory and rejects packets outside its bound",
+        "Nonce and key lifetime limits remain protocol-critical operational constraints"
+      ],
+      "evidence_ids": [
+        "wireguard-protocol-doc",
+        "wireguard-keypair-source",
+        "wireguard-replay-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Peer handshake transition system",
+      "question": "How do authenticated initiation and response messages move a peer from zeroed handshake state to a transport-key state?",
+      "assumptions": [
+        "A peer handshake has explicit states for initiation creation/consumption and response creation/consumption",
+        "Each transition consumes validated message fields and updates cryptographic state",
+        "The view abstracts primitive internals while retaining key and timestamp dependencies"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "wireguard-protocol-doc",
+        "wireguard-noise-source"
+      ]
+    },
+    {
+      "model": "Device-peer work-queue graph",
+      "question": "How do device-wide queues and workers route tunnel packets, encryption work, and handshakes to per-peer state?",
+      "assumptions": [
+        "The device is a coordinator vertex and peers are state vertices",
+        "Bounded channels represent work edges with explicit close and reference lifetimes",
+        "The graph does not infer fairness from channel order or worker scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "wireguard-queue-source",
+        "wireguard-device-source"
+      ]
+    },
+    {
+      "model": "Sliding-window transport acceptance relation",
+      "question": "Which authenticated transport counters are accepted, rejected as duplicates, or rejected as too old?",
+      "assumptions": [
+        "Counters are checked after authenticated decryption",
+        "The receiver stores a greatest counter and a finite ring of prior bits",
+        "The relation models anti-replay acceptance and not end-to-end delivery"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "wireguard-protocol-doc",
+        "wireguard-replay-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "per-peer-noise-handshake-state",
+      "benefits": ["Small explicit state machine for authenticated rotating sessions"],
+      "costs": ["Handshake ordering, timers, and cryptographic state require careful synchronization"]
+    },
+    {
+      "feature_id": "bounded-encryption-and-handshake-queues",
+      "benefits": ["Separates packet I/O from cryptographic worker execution"],
+      "costs": ["Bounded capacity and shutdown accounting constrain overload behavior"]
+    },
+    {
+      "feature_id": "session-keypair-replay-window",
+      "benefits": ["Forward progress over unordered UDP with replay rejection"],
+      "costs": ["Key generations, counters, and finite windows add per-peer state and limits"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "wireguard-repository-commit",
+      "kind": "source-code",
+      "title": "wireguard-go source at 2631ce99a06f",
+      "uri": "https://git.zx2c4.com/wireguard-go/commit/?id=2631ce99a06f27120d581611cf125d68bc6aa565",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision resolved from the target manifest row; all implementation evidence in this card is pinned to this commit."
+    },
+    {
+      "id": "wireguard-protocol-doc",
+      "kind": "official-doc",
+      "title": "WireGuard protocol and cryptography",
+      "uri": "https://www.wireguard.com/protocol/",
+      "accessed": "2026-10-23",
+      "notes": "Official protocol description for primitives, Noise handshake, key derivation, timers, replay handling, and DoS mitigation."
+    },
+    {
+      "id": "wireguard-queue-source",
+      "kind": "source-code",
+      "title": "wireguard-go device queues at 2631ce99a06f",
+      "uri": "https://git.zx2c4.com/wireguard-go/tree/device/channels.go?id=2631ce99a06f27120d581611cf125d68bc6aa565",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for bounded inbound, outbound, and handshake channels and wait-group closure accounting."
+    },
+    {
+      "id": "wireguard-device-source",
+      "kind": "source-code",
+      "title": "wireguard-go device state at 2631ce99a06f",
+      "uri": "https://git.zx2c4.com/wireguard-go/tree/device/device.go?id=2631ce99a06f27120d581611cf125d68bc6aa565",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for device state, per-peer map, queues, worker startup, and lifecycle synchronization."
+    },
+    {
+      "id": "wireguard-noise-source",
+      "kind": "source-code",
+      "title": "wireguard-go Noise handshake at 2631ce99a06f",
+      "uri": "https://git.zx2c4.com/wireguard-go/tree/device/noise-protocol.go?id=2631ce99a06f27120d581611cf125d68bc6aa565",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for handshake states, Noise key derivation, initiation and response processing, replay and flood checks."
+    },
+    {
+      "id": "wireguard-keypair-source",
+      "kind": "source-code",
+      "title": "wireguard-go keypair state at 2631ce99a06f",
+      "uri": "https://git.zx2c4.com/wireguard-go/tree/device/keypair.go?id=2631ce99a06f27120d581611cf125d68bc6aa565",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for current, previous, and next keypair slots, AEAD state, send nonces, and replay filters."
+    },
+    {
+      "id": "wireguard-replay-source",
+      "kind": "source-code",
+      "title": "wireguard-go replay filter at 2631ce99a06f",
+      "uri": "https://git.zx2c4.com/wireguard-go/tree/replay/replay.go?id=2631ce99a06f27120d581611cf125d68bc6aa565",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for RFC 6479-style bounded sliding-window counter acceptance."
+    }
+  ]
+}

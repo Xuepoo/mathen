@@ -1,0 +1,225 @@
+{
+  "id": "caddy",
+  "name": "Caddy",
+  "version_context": "commit f355b8687d5582ea9fcc99f71598109d1e5b6ced",
+  "summary": "A self-contained Go web server whose core loads and swaps JSON configurations, composes registered modules through lifecycle contexts, and provides automatic HTTPS as a standard application capability.",
+  "scope": [
+    "web server",
+    "JSON configuration",
+    "module and plugin architecture",
+    "atomic reload lifecycle",
+    "automatic HTTPS"
+  ],
+  "features": [
+    {
+      "id": "module-registered-core",
+      "name": "Module-registered extensible core",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Caddy's core manages configuration while modules provide applications, handlers, commands, storage, and other capabilities. A module registers a namespaced ID and constructor; importing a package registers the module in the static binary without dynamic linking.",
+      "benefits": [
+        "Keeps deployment to one self-contained binary",
+        "Allows independently developed modules to extend configuration and behavior",
+        "Provides a stable namespace and constructor boundary for extension discovery"
+      ],
+      "costs": [
+        "Extensions must be compiled into the binary and versioned together",
+        "Module IDs and interface contracts become compatibility boundaries",
+        "Static composition moves plugin selection into the build process"
+      ],
+      "evidence_ids": [
+        "caddy-architecture-doc",
+        "caddy-modules-source"
+      ]
+    },
+    {
+      "id": "provision-validate-use-cleanup-lifecycle",
+      "name": "Provision, validate, use, and cleanup lifecycle",
+      "category": "resource-lifecycle",
+      "claim_type": "fact",
+      "description": "When Caddy loads a module, it constructs and decodes the module, provisions it, validates it, uses it through the host interface, and invokes cleanup when the containing context is canceled. Failed provisioning or validation also triggers cleanup for resources already acquired.",
+      "benefits": [
+        "Makes initialization and resource release phases explicit",
+        "Lets modules reject invalid configuration before serving traffic",
+        "Provides cleanup on partial setup failures"
+      ],
+      "costs": [
+        "Module authors must make provisioning and cleanup safe across failure paths",
+        "Nested host and guest modules expand lifecycle ordering concerns",
+        "Configuration validity can depend on interactions among modules"
+      ],
+      "evidence_ids": [
+        "caddy-architecture-doc",
+        "caddy-context-source",
+        "caddy-modules-source"
+      ]
+    },
+    {
+      "id": "atomic-configuration-swap",
+      "name": "Atomic configuration replacement",
+      "category": "configuration-model",
+      "claim_type": "fact",
+      "description": "Caddy provisions a new configuration before replacing the current one. Once the new configuration starts successfully, the active context is swapped and the old applications are stopped and cleaned up; configuration is treated as an immutable unit for reload rather than being mutated in place on the hot path.",
+      "benefits": [
+        "Allows granular API edits to produce a whole validated configuration",
+        "Avoids interruption when the new configuration can be provisioned and started",
+        "Concentrates synchronization around configuration replacement"
+      ],
+      "costs": [
+        "For a brief interval old and new configurations may both be operational",
+        "Reload success depends on complete provisioning and startup of the new graph",
+        "State that must survive reload needs explicit global or usage-pool ownership"
+      ],
+      "evidence_ids": [
+        "caddy-architecture-doc",
+        "caddy-config-source"
+      ]
+    },
+    {
+      "id": "automatic-https-application",
+      "name": "Automatic HTTPS as application behavior",
+      "category": "security-and-operations",
+      "claim_type": "fact",
+      "description": "Caddy's HTTP application integrates automatic HTTPS behavior, including certificate acquisition and renewal workflows, as part of the server's standard application configuration rather than as a separate daemon.",
+      "benefits": [
+        "Makes certificate lifecycle part of the server configuration model",
+        "Reduces manual setup for common HTTPS deployments",
+        "Allows TLS automation to participate in the same module and storage boundaries"
+      ],
+      "costs": [
+        "Certificate issuance and renewal introduce external availability dependencies",
+        "TLS defaults and automation must be understood when deploying a server",
+        "Certificate state requires durable storage and careful reload behavior"
+      ],
+      "evidence_ids": [
+        "caddy-https-doc",
+        "caddy-repository-commit"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed module composition graph",
+      "question": "How do JSON module IDs, host-child relationships, constructors, and interface assertions form a runnable Caddy application graph?",
+      "assumptions": [
+        "Registered module IDs identify vertices in namespaces",
+        "Host modules create and use guest modules through interface boundaries",
+        "The graph abstracts Go type details while retaining registration and lifecycle edges"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "caddy-architecture-doc",
+        "caddy-modules-source",
+        "caddy-context-source"
+      ]
+    },
+    {
+      "model": "Configuration replacement state machine",
+      "question": "When does a candidate configuration become active, and how are the old applications retired?",
+      "assumptions": [
+        "A candidate passes decode, provision, validation, and startup transitions",
+        "The active pointer changes only after the candidate starts successfully",
+        "The model does not infer durability or zero-downtime behavior for failed external dependencies"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "caddy-architecture-doc",
+        "caddy-config-source"
+      ]
+    },
+    {
+      "model": "Configuration-scoped resource ownership graph",
+      "question": "Which state is owned by a configuration context, and which state must be shared or retained across reloads?",
+      "assumptions": [
+        "Most module state is associated with the configuration context that provisions it",
+        "Explicit global facilities such as usage pools represent state intended to survive local changes",
+        "The view distinguishes ownership structure from a proof of leak freedom"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "caddy-architecture-doc",
+        "caddy-usagepool-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "module-registered-core",
+      "benefits": ["Self-contained deployment with broad compile-time extension points"],
+      "costs": ["Plugin selection and compatibility are coupled to the built binary"]
+    },
+    {
+      "feature_id": "provision-validate-use-cleanup-lifecycle",
+      "benefits": ["Explicit validation and cleanup boundaries for nested modules"],
+      "costs": ["Every extension must implement failure-safe lifecycle behavior"]
+    },
+    {
+      "feature_id": "atomic-configuration-swap",
+      "benefits": ["Consistent whole-configuration reloads with a small synchronization boundary"],
+      "costs": ["Concurrent old/new lifetimes and cross-reload state require resource discipline"]
+    },
+    {
+      "feature_id": "automatic-https-application",
+      "benefits": ["Integrated certificate automation for common HTTPS deployments"],
+      "costs": ["External issuance, renewal, and durable certificate state affect availability"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "caddy-repository-commit",
+      "kind": "source-code",
+      "title": "Caddy source at f355b8687d55",
+      "uri": "https://github.com/caddyserver/caddy/commit/f355b8687d5582ea9fcc99f71598109d1e5b6ced",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision resolved from the target manifest row; all source evidence in this card is pinned to this commit."
+    },
+    {
+      "id": "caddy-architecture-doc",
+      "kind": "official-doc",
+      "title": "Caddy architecture",
+      "uri": "https://caddyserver.com/docs/architecture",
+      "accessed": "2026-10-23",
+      "notes": "Official architecture documentation for the command/core/modules split, module lifecycle, plugins, configuration contexts, and atomic reloads."
+    },
+    {
+      "id": "caddy-https-doc",
+      "kind": "official-doc",
+      "title": "Caddy automatic HTTPS",
+      "uri": "https://caddyserver.com/docs/automatic-https",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for automatic HTTPS behavior, certificate management, and deployment configuration."
+    },
+    {
+      "id": "caddy-modules-source",
+      "kind": "source-code",
+      "title": "Caddy module registry at f355b8687d55",
+      "uri": "https://github.com/caddyserver/caddy/blob/f355b8687d5582ea9fcc99f71598109d1e5b6ced/modules.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for module IDs, constructors, registration, and Provisioner, Validator, and CleanerUpper interfaces."
+    },
+    {
+      "id": "caddy-context-source",
+      "kind": "source-code",
+      "title": "Caddy module loading context at f355b8687d55",
+      "uri": "https://github.com/caddyserver/caddy/blob/f355b8687d5582ea9fcc99f71598109d1e5b6ced/context.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for module decoding, provisioning, validation, and cleanup on errors or context cancellation."
+    },
+    {
+      "id": "caddy-config-source",
+      "kind": "source-code",
+      "title": "Caddy configuration lifecycle at f355b8687d55",
+      "uri": "https://github.com/caddyserver/caddy/blob/f355b8687d5582ea9fcc99f71598109d1e5b6ced/caddy.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for Run, Load, candidate startup, active-context swap, and old-application shutdown."
+    },
+    {
+      "id": "caddy-usagepool-source",
+      "kind": "source-code",
+      "title": "Caddy usage pool at f355b8687d55",
+      "uri": "https://github.com/caddyserver/caddy/blob/f355b8687d5582ea9fcc99f71598109d1e5b6ced/usagepool.go",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for thread-safe shared state with reference-counted values intended for reuse across configuration changes."
+    }
+  ]
+}

@@ -126,6 +126,42 @@
     "priority": "extended"
   },
   {
+    "id": "envoy",
+    "name": "Envoy",
+    "category": "network-proxy",
+    "repository": "https://github.com/envoyproxy/envoy.git",
+    "documentation": "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "haproxy",
+    "name": "HAProxy",
+    "category": "network-proxy",
+    "repository": "https://github.com/haproxy/haproxy.git",
+    "documentation": "https://docs.haproxy.org/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "caddy",
+    "name": "Caddy",
+    "category": "web-server",
+    "repository": "https://github.com/caddyserver/caddy.git",
+    "documentation": "https://caddyserver.com/docs/architecture",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "wireguard",
+    "name": "WireGuard",
+    "category": "secure-tunnel",
+    "repository": "https://git.zx2c4.com/wireguard-go",
+    "documentation": "https://www.wireguard.com/protocol/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
     "id": "llvm",
     "name": "LLVM",
     "category": "compiler-infrastructure",

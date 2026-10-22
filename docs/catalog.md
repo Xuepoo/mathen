@@ -77,8 +77,12 @@ These entries are already present in the repository at different review levels:
 | `node` | Node.js | JavaScript runtime | `reviewed` | Compare event-loop scheduling, module loading, and native extension boundaries |
 | `deno` | Deno | JavaScript runtime | `reviewed` | Compare permission-scoped execution and module graph boundaries |
 | `v8` | V8 | JavaScript engine | `reviewed` | Compare isolate/context state, handles, and managed heap boundaries |
+| `envoy` | Envoy | network proxy | `reviewed` | Compare worker dispatchers, filter chains, and control/data plane propagation using fixed-commit evidence |
+| `haproxy` | HAProxy | network proxy | `reviewed` | Compare polling, task scheduling, layered connection state, and reload topology using fixed-commit evidence |
+| `caddy` | Caddy | web server | `reviewed` | Compare module lifecycle, atomic configuration swaps, and automatic HTTPS using fixed-commit evidence |
+| `wireguard` | WireGuard | secure tunnel | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
 
-The operational manifest now contains 44 repositories. The following entries
+The operational manifest now contains 48 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
 deterministic analysis, but they do not yet have reviewed Architecture Cards:
 
@@ -217,12 +221,12 @@ identifiers, not claims that the projects share the same architecture.
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
 | `nginx` | NGINX | `P0` | Event-driven I/O and worker-process architecture |
-| `envoy` | Envoy | `P1` | Extensible proxy filters and control/data plane separation |
-| `haproxy` | HAProxy | `P1` | Event loop, load balancing, and connection state |
-| `caddy` | Caddy | `P2` | Configurable server, automatic TLS, and plugin boundary |
+| `envoy` | Envoy | `reviewed` | Compare worker dispatchers, filter chains, and control/data plane propagation using fixed-commit evidence |
+| `haproxy` | HAProxy | `reviewed` | Compare polling, task scheduling, layered connection state, and reload topology using fixed-commit evidence |
+| `caddy` | Caddy | `reviewed` | Compare module lifecycle, atomic configuration swaps, and automatic HTTPS using fixed-commit evidence |
 | `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
 | `openssl` | OpenSSL | `P0` | Cryptographic primitives, protocol state, and provider boundary |
-| `wireguard` | WireGuard | `P1` | Minimal secure tunnel protocol and key state |
+| `wireguard` | WireGuard | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
 | `quiche` | quiche | `P2` | QUIC and HTTP/3 protocol implementation |
 | `libp2p` | libp2p | `P2` | Modular peer-to-peer transports and identity |
 

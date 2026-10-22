@@ -1,0 +1,197 @@
+{
+  "id": "envoy",
+  "name": "Envoy",
+  "version_context": "commit 865e57ac6b8db48544cfd99fe367dae96175bd95",
+  "summary": "A high-concurrency proxy that separates main-thread coordination from worker-local event loops, composes protocol behavior through filter chains, and distributes dynamic configuration to worker state.",
+  "scope": [
+    "network proxy",
+    "worker-thread event loops",
+    "HTTP and network filters",
+    "upstream clusters",
+    "dynamic configuration"
+  ],
+  "features": [
+    {
+      "id": "main-worker-dispatcher-topology",
+      "name": "Main and worker dispatcher topology",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Envoy uses one main thread for coordination and a configurable set of worker threads for listening, filtering, and forwarding traffic. Each main or worker thread runs an Event::Dispatcher, and an accepted connection remains bound to one worker for its lifetime.",
+      "benefits": [
+        "Keeps high-volume connection work on parallel worker event loops",
+        "Gives configuration and administration a distinct coordination thread",
+        "Reduces locking on the common connection path through worker affinity"
+      ],
+      "costs": [
+        "Cross-thread posting and worker-local state require explicit synchronization rules",
+        "Long-lived connections can create uneven work distribution",
+        "Blocking extensions must be isolated from non-blocking dispatchers"
+      ],
+      "evidence_ids": [
+        "envoy-threading-doc",
+        "envoy-dispatcher-source"
+      ]
+    },
+    {
+      "id": "protocol-filter-chain",
+      "name": "Protocol-independent filter chains",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Envoy composes network and HTTP processing as ordered filter chains. HTTP decoder and encoder filters can operate without knowing the underlying HTTP protocol, pause and resume iteration, and share state within a request stream.",
+      "benefits": [
+        "Adds policy and transformation stages without coupling each filter to wire protocols",
+        "Makes ordering and terminal behavior explicit in configuration",
+        "Allows filters to participate in routing, authorization, buffering, and observability"
+      ],
+      "costs": [
+        "Filter ordering becomes part of request semantics and security review",
+        "Pausing iteration introduces backpressure and lifecycle states",
+        "Route mutation can invalidate decisions made by earlier filters"
+      ],
+      "evidence_ids": [
+        "envoy-http-filters-doc",
+        "envoy-filter-manager-source"
+      ]
+    },
+    {
+      "id": "worker-local-upstream-state",
+      "name": "Worker-local upstream state with batched updates",
+      "category": "upstream-model",
+      "claim_type": "fact",
+      "description": "The cluster manager maintains upstream cluster state on the main thread and posts updates to worker dispatchers. Worker-local load balancers can rebuild from a batched priority-set update, while connection pools and async clients use the worker dispatcher.",
+      "benefits": [
+        "Keeps request-path upstream decisions close to the worker that serves them",
+        "Publishes coherent configuration batches instead of partial mutations",
+        "Separates control-plane discovery from data-plane connection work"
+      ],
+      "costs": [
+        "Updates must cross thread boundaries before every worker observes new state",
+        "Worker-local copies consume memory and can briefly differ during propagation",
+        "Cluster and connection-pool lifecycles add coordination complexity"
+      ],
+      "evidence_ids": [
+        "envoy-cluster-manager-source",
+        "envoy-upstream-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Thread-affine event-dispatch graph",
+      "question": "How do main-thread coordination, worker dispatchers, timers, and thread-affine connections advance proxy work?",
+      "assumptions": [
+        "Each dispatcher is modeled as a non-blocking event-loop vertex",
+        "An accepted connection remains associated with one worker unless an explicit balancing mechanism intervenes",
+        "Posted callbacks are modeled as cross-thread edges rather than shared arbitrary mutation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "envoy-threading-doc",
+        "envoy-dispatcher-source"
+      ]
+    },
+    {
+      "model": "Ordered filter pipeline",
+      "question": "Which filter callbacks and route decisions are applied to a request or response stream, and in what order?",
+      "assumptions": [
+        "Filters are ordered nodes with decoder and encoder directions",
+        "A filter may stop iteration and later continue it",
+        "The model abstracts protocol framing while retaining route and filter-state mutations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "envoy-http-filters-doc",
+        "envoy-filter-manager-source"
+      ]
+    },
+    {
+      "model": "Control-plane to worker-state propagation",
+      "question": "When does a dynamic upstream update become a coherent worker-local routing and connection state?",
+      "assumptions": [
+        "Main-thread discovery produces an update batch",
+        "Worker dispatchers apply the batch through posted callbacks",
+        "The view does not infer convergence latency or availability guarantees"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "envoy-cluster-manager-source",
+        "envoy-upstream-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "main-worker-dispatcher-topology",
+      "benefits": ["Parallel non-blocking connection processing with a clear coordination boundary"],
+      "costs": ["Thread affinity and cross-thread work publication complicate extension design"]
+    },
+    {
+      "feature_id": "protocol-filter-chain",
+      "benefits": ["Composable protocol policy and transformation stages"],
+      "costs": ["Filter order, pausing, and route mutation expand the request state space"]
+    },
+    {
+      "feature_id": "worker-local-upstream-state",
+      "benefits": ["Fast worker-local load balancing and connection-pool access"],
+      "costs": ["Batched propagation and duplicated state require update coordination"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "envoy-repository-commit",
+      "kind": "source-code",
+      "title": "Envoy source at 865e57ac6b8d",
+      "uri": "https://github.com/envoyproxy/envoy/commit/865e57ac6b8db48544cfd99fe367dae96175bd95",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision resolved from the target manifest row; all source evidence in this card is pinned to this commit."
+    },
+    {
+      "id": "envoy-threading-doc",
+      "kind": "official-doc",
+      "title": "Envoy threading model",
+      "uri": "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/intro/threading_model",
+      "accessed": "2026-10-23",
+      "notes": "Official architecture documentation for main and worker threads, dispatcher loops, connection affinity, and thread-local state."
+    },
+    {
+      "id": "envoy-http-filters-doc",
+      "kind": "official-doc",
+      "title": "Envoy HTTP filters",
+      "uri": "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/http/http_filters",
+      "accessed": "2026-10-23",
+      "notes": "Official architecture documentation for decoder/encoder filter chains, iteration, ordering, and route mutation."
+    },
+    {
+      "id": "envoy-upstream-doc",
+      "kind": "official-doc",
+      "title": "Envoy upstream clusters architecture",
+      "uri": "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/upstream",
+      "accessed": "2026-10-23",
+      "notes": "Official architecture documentation for upstream clusters, hosts, load balancing, and dynamic discovery."
+    },
+    {
+      "id": "envoy-dispatcher-source",
+      "kind": "source-code",
+      "title": "Envoy dispatcher implementation at 865e57ac6b8d",
+      "uri": "https://github.com/envoyproxy/envoy/blob/865e57ac6b8db48544cfd99fe367dae96175bd95/source/common/event/dispatcher_impl.cc",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for dispatcher-thread event processing, timers, posted callbacks, and deferred deletion."
+    },
+    {
+      "id": "envoy-filter-manager-source",
+      "kind": "source-code",
+      "title": "Envoy HTTP filter manager at 865e57ac6b8d",
+      "uri": "https://github.com/envoyproxy/envoy/blob/865e57ac6b8db48544cfd99fe367dae96175bd95/source/common/http/filter_manager.cc",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for ordered filter iteration, decoder/encoder callbacks, and stream filter state."
+    },
+    {
+      "id": "envoy-cluster-manager-source",
+      "kind": "source-code",
+      "title": "Envoy cluster manager at 865e57ac6b8d",
+      "uri": "https://github.com/envoyproxy/envoy/blob/865e57ac6b8db48544cfd99fe367dae96175bd95/source/common/upstream/cluster_manager_impl.cc",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for main-thread cluster management, worker-local cluster managers, async clients, and batched update publication."
+    }
+  ]
+}
