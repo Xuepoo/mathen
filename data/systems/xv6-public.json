@@ -1,0 +1,188 @@
+{
+  "id": "xv6-public",
+  "name": "xv6",
+  "version_context": "commit eeb7b415dbcb12cc362d0783e41c3d1f44066b17",
+  "summary": "A compact x86 teaching operating system organized around processes, locks, paged address spaces, descriptor-based I/O, pipes, and an inode filesystem with a write-ahead log.",
+  "scope": [
+    "educational operating system",
+    "x86 process execution",
+    "paged virtual memory",
+    "descriptor and pipe I/O",
+    "inode filesystem and logging"
+  ],
+  "features": [
+    {
+      "id": "process-scheduler-and-locking",
+      "name": "Process scheduler and kernel locking",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "xv6 represents processes with kernel process records, selects runnable processes in a scheduler loop, switches contexts, and protects shared kernel state with spinlocks and sleep locks.",
+      "benefits": [
+        "Makes process creation, blocking, wakeup, and CPU scheduling concrete for teaching."
+      ],
+      "costs": [
+        "The small shared-kernel design couples protection, scheduling, and subsystem code; the x86 implementation is not a portable kernel contract."
+      ],
+      "evidence_ids": ["xv6-overview", "xv6-proc-source"]
+    },
+    {
+      "id": "paged-address-space-boundary",
+      "name": "Paged virtual-address spaces",
+      "category": "memory-model",
+      "claim_type": "fact",
+      "description": "The kernel creates and switches x86 page tables for process address spaces, maps user and kernel regions, and grows or copies address spaces through explicit virtual-memory routines.",
+      "benefits": [
+        "Separates user virtual addresses from kernel mappings and provides a direct teaching model of paging."
+      ],
+      "costs": [
+        "Address-space setup and hardware-specific page-table rules remain architecture and configuration dependent."
+      ],
+      "evidence_ids": ["xv6-overview", "xv6-vm-source"]
+    },
+    {
+      "id": "inode-log-filesystem",
+      "name": "Inode filesystem with write-ahead log",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "xv6 stores files through inodes, directories, block allocation, buffer-cache operations, and a filesystem log that brackets filesystem updates in transactions.",
+      "benefits": [
+        "Provides a compact composition of names, file metadata, blocks, and crash-recovery intent."
+      ],
+      "costs": [
+        "The fixed-size educational filesystem and log impose capacity and concurrency limits compared with production filesystems."
+      ],
+      "evidence_ids": ["xv6-overview", "xv6-fs-source"]
+    },
+    {
+      "id": "file-descriptor-pipes",
+      "name": "File descriptors and pipes as process interfaces",
+      "category": "resource-interface",
+      "claim_type": "fact",
+      "description": "The process file-descriptor table refers to kernel file objects, and pipes provide bounded buffered byte streams with sleep/wakeup synchronization between readers and writers.",
+      "benefits": [
+        "Composes ordinary files, inherited descriptors, and interprocess byte streams behind one small interface."
+      ],
+      "costs": [
+        "Descriptor and pipe lifetime rules require coordinated close and wakeup behavior, and the pipe buffer is intentionally limited."
+      ],
+      "evidence_ids": ["xv6-pipe-source", "xv6-proc-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Process state transition system",
+      "question": "How do xv6 processes move among allocation, runnable, running, sleeping, and zombie states?",
+      "assumptions": [
+        "Process records have a finite set of observable states.",
+        "Scheduler and sleep/wakeup paths are abstracted from instruction-level context switching."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["xv6-proc-source", "xv6-overview"]
+    },
+    {
+      "model": "Layered virtual-memory map",
+      "question": "How are user virtual addresses translated to physical pages while kernel mappings remain available?",
+      "assumptions": [
+        "Page tables are modeled as mappings from virtual ranges to physical frames.",
+        "The view abstracts x86 paging flags and allocator details."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["xv6-vm-source"]
+    },
+    {
+      "model": "Transactional filesystem graph",
+      "question": "How do descriptors, inodes, directories, cached blocks, and log transactions compose a filesystem operation?",
+      "assumptions": [
+        "Descriptors and filesystem objects are typed nodes.",
+        "Log commit is modeled as a transaction boundary rather than a proof of full crash durability."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["xv6-fs-source", "xv6-pipe-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "process-scheduler-and-locking",
+      "benefits": [
+        "Makes process creation, blocking, wakeup, and CPU scheduling concrete for teaching."
+      ],
+      "costs": [
+        "The small shared-kernel design couples protection, scheduling, and subsystem code; the x86 implementation is not a portable kernel contract."
+      ]
+    },
+    {
+      "feature_id": "paged-address-space-boundary",
+      "benefits": [
+        "Separates user virtual addresses from kernel mappings and provides a direct teaching model of paging."
+      ],
+      "costs": [
+        "Address-space setup and hardware-specific page-table rules remain architecture and configuration dependent."
+      ]
+    },
+    {
+      "feature_id": "inode-log-filesystem",
+      "benefits": [
+        "Provides a compact composition of names, file metadata, blocks, and crash-recovery intent."
+      ],
+      "costs": [
+        "The fixed-size educational filesystem and log impose capacity and concurrency limits compared with production filesystems."
+      ]
+    },
+    {
+      "feature_id": "file-descriptor-pipes",
+      "benefits": [
+        "Composes ordinary files, inherited descriptors, and interprocess byte streams behind one small interface."
+      ],
+      "costs": [
+        "Descriptor and pipe lifetime rules require coordinated close and wakeup behavior, and the pipe buffer is intentionally limited."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "xv6 source at eeb7b415dbcb",
+      "uri": "https://github.com/mit-pdos/xv6-public/commit/eeb7b415dbcb12cc362d0783e41c3d1f44066b17",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed official repository revision used for source claims."
+    },
+    {
+      "id": "xv6-overview",
+      "kind": "official-doc",
+      "title": "MIT xv6 overview and source guide",
+      "uri": "https://pdos.csail.mit.edu/6.828/2014/xv6.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official MIT teaching documentation describing xv6 scope, x86 multiprocessor target, scheduler, filesystem, and QEMU workflow."
+    },
+    {
+      "id": "xv6-proc-source",
+      "kind": "source-code",
+      "title": "xv6 process and scheduler source at eeb7b415dbcb",
+      "uri": "https://github.com/mit-pdos/xv6-public/blob/eeb7b415dbcb12cc362d0783e41c3d1f44066b17/proc.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "xv6-vm-source",
+      "kind": "source-code",
+      "title": "xv6 virtual-memory source at eeb7b415dbcb",
+      "uri": "https://github.com/mit-pdos/xv6-public/blob/eeb7b415dbcb12cc362d0783e41c3d1f44066b17/vm.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "xv6-fs-source",
+      "kind": "source-code",
+      "title": "xv6 filesystem and log source at eeb7b415dbcb",
+      "uri": "https://github.com/mit-pdos/xv6-public/blob/eeb7b415dbcb12cc362d0783e41c3d1f44066b17/fs.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "xv6-pipe-source",
+      "kind": "source-code",
+      "title": "xv6 pipe source at eeb7b415dbcb",
+      "uri": "https://github.com/mit-pdos/xv6-public/blob/eeb7b415dbcb12cc362d0783e41c3d1f44066b17/pipe.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    }
+  ],
+  "related_systems": ["linux", "coreutils"]
+}

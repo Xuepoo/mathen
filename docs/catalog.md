@@ -102,7 +102,13 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | `go` | Go | language toolchain | `reviewed` | Compare goroutine/channel ordering, package interfaces, and toolchain integration using fixed-commit evidence |
 | `ruby` | Ruby | language runtime | `reviewed` | Compare dynamic object dispatch, VM frames, GC, and the C extension boundary using fixed-commit evidence |
 | `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
+<<<<<<< HEAD
 | `xv6-public` | xv6 | educational operating system | `P1` |
+=======
+| `freebsd` | FreeBSD | operating system | `P2` |
+| `systemd` | systemd | init system | `P1` |
+| `xv6-public` | xv6 | educational operating system | `reviewed` | Compare process scheduling, paging, descriptor I/O, and logged filesystems using fixed-commit evidence |
+>>>>>>> 99ae486 (feat(data): promote operating system architecture cards)
 | `libuv` | libuv | asynchronous I/O library | `reviewed` | Compare event-loop, handle/request, cross-platform, and thread-pool boundaries using fixed-commit evidence |
 | `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
 | `openssl` | OpenSSL | cryptography library | `reviewed` |
@@ -126,12 +132,21 @@ identifiers, not claims that the projects share the same architecture.
 | --- | --- | --- | --- |
 | `unix` | Unix history and interfaces | `P0` | Process, file, pipe, and permission abstractions |
 | `linux` | Linux Kernel | `P0` | Kernel resource model, syscalls, scheduling, and modules |
+<<<<<<< HEAD
 | `freebsd` | FreeBSD | `reviewed` | Compare kernel subsystems, jails, networking, and GEOM storage using fixed-commit evidence |
 | `openbsd` | OpenBSD | `P2` | Security-oriented defaults and audited system design |
 | `plan9` | Plan 9 | `P1` | Uniform namespace, distributed resources, and 9P |
 | `minix` | MINIX 3 | `P2` | Microkernel services and fault isolation |
 | `systemd` | systemd | `reviewed` | Compare typed units, dependency transactions, service supervision, and activation using fixed-commit evidence |
 | `busybox` | BusyBox | `reviewed` | Compare multi-call dispatch, configurable applet sets, and shared userland support using fixed-commit evidence |
+=======
+| `freebsd` | FreeBSD | `P1` | Unix kernel, networking, jails, and ports |
+| `openbsd` | OpenBSD | `reviewed` | Compare process/thread boundaries, pledge/unveil restrictions, and stateful packet filtering using fixed-commit evidence |
+| `plan9` | Plan 9 | `reviewed` | Compare local namespace composition, 9P file services, and selective process resource sharing using fixed-commit evidence |
+| `minix` | MINIX 3 | `reviewed` | Compare microkernel IPC, user-mode service isolation, reincarnation recovery, and server-mediated resources using fixed-commit evidence |
+| `systemd` | systemd | `P1` | Service supervision, dependency graph, and lifecycle state |
+| `busybox` | BusyBox | `P2` | Multi-call binary and minimal userland composition |
+>>>>>>> 99ae486 (feat(data): promote operating system architecture cards)
 | `coreutils` | GNU Coreutils | `P2` | Unix command algebra and composable process interfaces |
 | `musl` | musl libc | `reviewed` | Compare portable interfaces, static/dynamic linking, and thread-local runtime boundaries using fixed-commit evidence |
 | `glibc` | GNU C Library | `reviewed` | Compare ABI versioning, dynamic loading, and process/thread runtime boundaries using fixed-commit evidence |

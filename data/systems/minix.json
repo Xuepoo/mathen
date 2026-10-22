@@ -1,0 +1,192 @@
+{
+  "id": "minix",
+  "name": "MINIX 3",
+  "version_context": "commit 4db99f4012570a577414fe2a43697b2f239b699e",
+  "summary": "A microkernel-based operating system that places most services and device drivers in protected user-mode processes, coordinates them through IPC, and uses the reincarnation server for component recovery.",
+  "scope": [
+    "microkernel operating system",
+    "message IPC and scheduling",
+    "user-mode services and drivers",
+    "fault recovery",
+    "server-mediated filesystem and VM"
+  ],
+  "features": [
+    {
+      "id": "tiny-kernel-ipc-boundary",
+      "name": "Tiny kernel IPC and scheduling boundary",
+      "category": "microkernel-model",
+      "claim_type": "fact",
+      "description": "MINIX keeps a small kernel responsible for process scheduling, address-space and privilege support, interrupts, and synchronous or asynchronous message IPC; most operating-system services run outside it.",
+      "benefits": [
+        "Reduces the privileged kernel surface and makes service communication explicit."
+      ],
+      "costs": [
+        "Message paths and kernel/user coordination add latency and system-wide protocol complexity."
+      ],
+      "evidence_ids": ["minix-features", "minix-kernel-proc-source", "minix-system-source"]
+    },
+    {
+      "id": "user-mode-service-and-driver-isolation",
+      "name": "User-mode services and driver isolation",
+      "category": "fault-isolation",
+      "claim_type": "fact",
+      "description": "MINIX places filesystem, process management, virtual memory, networking, and device drivers in protected user-mode processes with restricted privileges and communication.",
+      "benefits": [
+        "Contains many component faults outside the kernel and limits direct resource access."
+      ],
+      "costs": [
+        "Cross-service operations require IPC contracts and coordination; isolation does not eliminate bugs in shared protocols or the microkernel."
+      ],
+      "evidence_ids": ["minix-features", "minix-kernel-proc-source", "minix-vfs-source"]
+    },
+    {
+      "id": "reincarnation-service-recovery",
+      "name": "Reincarnation-server recovery",
+      "category": "reliability-model",
+      "claim_type": "fact",
+      "description": "The reincarnation server starts system services, monitors their status, and can restart failed services; official documentation describes transparent recovery for stateless components.",
+      "benefits": ["Turns selected service failure into a recoverable component lifecycle event."],
+      "costs": [
+        "Recovery is service- and state-dependent, and stateful recovery may require explicit transfer or reconstruction."
+      ],
+      "evidence_ids": ["minix-research", "minix-rs-source"]
+    },
+    {
+      "id": "server-oriented-filesystem-boundary",
+      "name": "Server-oriented filesystem and VM boundary",
+      "category": "resource-abstraction",
+      "claim_type": "fact",
+      "description": "MINIX exposes virtual memory and filesystem behavior through separate servers and filesystem implementations, with a VFS server coordinating filesystem requests and worker activity.",
+      "benefits": [
+        "Separates resource managers into replaceable user-space components and supports multiple filesystem implementations."
+      ],
+      "costs": [
+        "File and memory operations cross IPC and server boundaries, increasing coordination and failure-path surface."
+      ],
+      "evidence_ids": ["minix-features", "minix-vfs-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Microkernel service graph",
+      "question": "How are kernel primitives, protected servers, drivers, and applications connected by IPC?",
+      "assumptions": [
+        "Kernel, servers, drivers, and applications are typed nodes.",
+        "Edges represent permitted message operations rather than unrestricted calls."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["minix-features", "minix-kernel-proc-source", "minix-system-source"]
+    },
+    {
+      "model": "Component fault-recovery state machine",
+      "question": "How does a service move from started to monitored, failed, restarted, and recovered states?",
+      "assumptions": [
+        "The reincarnation server observes service lifecycle events.",
+        "The view models recovery policy and does not guarantee transparent recovery for stateful services."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["minix-research", "minix-rs-source"]
+    },
+    {
+      "model": "Server-mediated resource graph",
+      "question": "How do application requests traverse VFS, filesystem, VM, and kernel boundaries?",
+      "assumptions": [
+        "Servers and resource objects are separate graph nodes.",
+        "IPC and implementation-specific scheduling are abstracted to request/reply edges."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["minix-features", "minix-vfs-source", "minix-system-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "tiny-kernel-ipc-boundary",
+      "benefits": [
+        "Reduces the privileged kernel surface and makes service communication explicit."
+      ],
+      "costs": [
+        "Message paths and kernel/user coordination add latency and system-wide protocol complexity."
+      ]
+    },
+    {
+      "feature_id": "user-mode-service-and-driver-isolation",
+      "benefits": [
+        "Contains many component faults outside the kernel and limits direct resource access."
+      ],
+      "costs": [
+        "Cross-service operations require IPC contracts and coordination; isolation does not eliminate bugs in shared protocols or the microkernel."
+      ]
+    },
+    {
+      "feature_id": "reincarnation-service-recovery",
+      "benefits": ["Turns selected service failure into a recoverable component lifecycle event."],
+      "costs": [
+        "Recovery is service- and state-dependent, and stateful recovery may require explicit transfer or reconstruction."
+      ]
+    },
+    {
+      "feature_id": "server-oriented-filesystem-boundary",
+      "benefits": [
+        "Separates resource managers into replaceable user-space components and supports multiple filesystem implementations."
+      ],
+      "costs": [
+        "File and memory operations cross IPC and server boundaries, increasing coordination and failure-path surface."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "MINIX 3 source at 4db99f401257",
+      "uri": "https://github.com/Stichting-MINIX-Research-Foundation/minix/commit/4db99f4012570a577414fe2a43697b2f239b699e",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed official MINIX Research Foundation repository revision used for source claims."
+    },
+    {
+      "id": "minix-features",
+      "kind": "official-doc",
+      "title": "MINIX 3 features",
+      "uri": "https://wiki.minix3.org/doku.php?id=www:documentation:features",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official MINIX documentation describing the microkernel, user-mode services, drivers, virtual memory, VFS, and reincarnation server."
+    },
+    {
+      "id": "minix-research",
+      "kind": "official-doc",
+      "title": "MINIX 3 research and recovery",
+      "uri": "https://wiki.minix3.org/doku.php?id=www:documentation:research",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation describing service isolation, component crash recovery, and the reincarnation server."
+    },
+    {
+      "id": "minix-kernel-proc-source",
+      "kind": "source-code",
+      "title": "MINIX kernel IPC and scheduler source at 4db99f401257",
+      "uri": "https://github.com/Stichting-MINIX-Research-Foundation/minix/blob/4db99f4012570a577414fe2a43697b2f239b699e/minix/kernel/proc.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "minix-system-source",
+      "kind": "source-code",
+      "title": "MINIX kernel system-call dispatch at 4db99f401257",
+      "uri": "https://github.com/Stichting-MINIX-Research-Foundation/minix/blob/4db99f4012570a577414fe2a43697b2f239b699e/minix/kernel/system.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "minix-rs-source",
+      "kind": "source-code",
+      "title": "MINIX reincarnation server at 4db99f401257",
+      "uri": "https://github.com/Stichting-MINIX-Research-Foundation/minix/blob/4db99f4012570a577414fe2a43697b2f239b699e/minix/servers/rs/main.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "minix-vfs-source",
+      "kind": "source-code",
+      "title": "MINIX VFS server at 4db99f401257",
+      "uri": "https://github.com/Stichting-MINIX-Research-Foundation/minix/blob/4db99f4012570a577414fe2a43697b2f239b699e/minix/servers/vfs/main.c",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    }
+  ],
+  "related_systems": ["plan9", "linux"]
+}
