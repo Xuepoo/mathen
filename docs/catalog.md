@@ -204,11 +204,11 @@ identifiers, not claims that the projects share the same architecture.
 | `duckdb` | DuckDB | `P0` | Embedded OLAP, columnar storage, and vectorization |
 | `redis` | Redis | `P0` | In-memory structures, event loop, and persistence |
 | `rocksdb` | RocksDB | `P0` | LSM tree, compaction, write buffers, and snapshots |
-| `cockroachdb` | CockroachDB | `P1` | Distributed SQL, ranges, consensus, and serializability |
-| `tidb` | TiDB | `P2` | Distributed SQL, coprocessors, and separated storage |
-| `tikv` | TiKV | `P2` | Distributed transactional key-value storage and Raft |
+| `cockroachdb` | CockroachDB | `reviewed` | Compare distributed SQL layering, range replication, leases, and serializable MVCC transactions using fixed-commit evidence |
+| `tidb` | TiDB | `reviewed` | Compare stateless SQL compute, PD scheduling and timestamps, key-value mapping, and coprocessor pushdown using fixed-commit evidence |
+| `tikv` | TiKV | `reviewed` | Compare Region partitioning, Raft replication, RocksDB persistence, and MVCC transactional APIs using fixed-commit evidence |
 | `clickhouse` | ClickHouse | `reviewed` | Compare columnar parts, vectorized execution, and background merges with DuckDB and PostgreSQL using fixed-commit evidence |
-| `influxdb` | InfluxDB | `P2` | Time-series layout, retention, and compaction |
+| `influxdb` | InfluxDB | `reviewed` | Compare timestamp/tag-set identity, WAL and Parquet persistence, queryable buffers, and retention using fixed-commit evidence |
 | `neo4j` | Neo4j | `P2` | Property graph storage and traversal execution |
 
 ### Distributed systems, messaging, and coordination

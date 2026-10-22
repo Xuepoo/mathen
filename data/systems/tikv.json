@@ -1,0 +1,27 @@
+{
+  "id": "tikv",
+  "name": "TiKV",
+  "version_context": "commit b3995dab28308f09cbb7c125bf32f789dbc203fe",
+  "summary": "A distributed transactional key-value store that partitions ordered keys into Regions, replicates each Region with Raft, stores data locally in RocksDB, and exposes raw and transactional APIs.",
+  "scope": ["transactional key-value storage", "Regions", "Raft replication", "MVCC", "RocksDB local storage"],
+  "features": [
+    {"id": "region-sharded-keyspace", "name": "Region-sharded ordered keyspace", "category": "data-model", "claim_type": "fact", "description": "TiKV treats storage as an ordered key-value map partitioned into contiguous left-closed, right-open Regions; Regions are the unit of movement, distribution, and replication.", "benefits": ["Supports horizontal capacity and range-oriented scans", "Provides a bounded unit for scheduling, replication, and rebalancing"], "costs": ["Hot keys and uneven Region sizes require scheduling and splitting", "Clients and control-plane metadata must locate the relevant Region"], "evidence_ids": ["tikv-architecture", "tikv-storage", "tikv-repository-commit"]},
+    {"id": "raft-replicated-regions", "name": "Raft-replicated Regions", "category": "replication-model", "claim_type": "fact", "description": "Each Region has replicas forming a Raft group; writes pass through Raft log replication and become durable after the group reaches the required majority, rather than writing directly to RocksDB.", "benefits": ["Provides failure-tolerant replicated state with leader election", "Separates consensus ordering from local engine persistence"], "costs": ["Majority quorum and leader coordination add write latency", "Replica repair, membership, and log management consume resources"], "evidence_ids": ["tikv-storage", "tikv-architecture", "tikv-repository-commit"]},
+    {"id": "mvcc-transactional-api", "name": "MVCC transactional API", "category": "consistency-model", "claim_type": "fact", "description": "TiKV offers raw single-key and transactional multi-key APIs; the transactional model uses MVCC versions and Percolator-inspired locking to provide ACID distributed transactions and snapshot isolation.", "benefits": ["Offers a clear choice between raw access and multi-key transactions", "Allows readers at earlier logical times to observe prior versions"], "costs": ["Locks, versions, and distributed commit add storage and coordination state", "Transaction behavior requires explicit handling of conflicts and liveness"], "evidence_ids": ["tikv-architecture", "tikv-storage", "tikv-repository-commit"]}
+  ],
+  "mathematical_views": [
+    {"model": "Region interval partition", "question": "How does an ordered keyspace partition into Region intervals while preserving lookup, scan, and movement boundaries?", "assumptions": ["Region intervals are non-overlapping and cover the modeled keyspace", "Region metadata identifies the replica group serving each interval", "The view abstracts local RocksDB file layout"], "claim_type": "inference", "evidence_ids": ["tikv-storage", "tikv-architecture"]},
+    {"model": "Raft and MVCC transition system", "question": "How do Raft-ordered mutations and MVCC timestamps produce durable, snapshot-isolated transactional observations?", "assumptions": ["A committed Raft log is the authoritative order for a Region", "MVCC version selection follows the transaction timestamp rules", "The view abstracts network timing and recovery implementation details"], "claim_type": "hypothesis", "evidence_ids": ["tikv-storage", "tikv-architecture", "tikv-repository-commit"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "region-sharded-keyspace", "benefits": ["Elastic range-based distribution and scheduling"], "costs": ["Region placement, splitting, and hotspot management add control-plane work"]},
+    {"feature_id": "raft-replicated-regions", "benefits": ["Quorum durability and automatic replica failover"], "costs": ["Consensus traffic and quorum availability constrain write throughput"]},
+    {"feature_id": "mvcc-transactional-api", "benefits": ["Snapshot reads and multi-key ACID semantics"], "costs": ["Version retention, locks, and conflict resolution increase complexity"]}
+  ],
+  "evidence": [
+    {"id": "tikv-repository-commit", "kind": "source-code", "title": "TiKV source at b3995dab2830", "uri": "https://github.com/tikv/tikv/commit/b3995dab28308f09cbb7c125bf32f789dbc203fe", "accessed": "2026-10-23", "notes": "Fixed source revision used as the provenance boundary for this card."},
+    {"id": "tikv-architecture", "kind": "official-doc", "title": "TiKV architecture", "uri": "https://tikv.org/docs/4.0/concepts/architecture/", "accessed": "2026-10-23", "notes": "Official TiKV documentation for APIs, PD, Stores, Regions, transaction model, and Raft."},
+    {"id": "tikv-storage", "kind": "official-doc", "title": "TiDB storage and TiKV concepts", "uri": "https://docs.pingcap.com/tidb/stable/tidb-storage/", "accessed": "2026-10-23", "notes": "Official PingCAP documentation for ordered key-value storage, RocksDB, Raft, Regions, MVCC, and distributed transactions."}
+  ],
+  "related_systems": ["tidb", "rocksdb", "etcd"]
+}

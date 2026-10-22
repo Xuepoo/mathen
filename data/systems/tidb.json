@@ -1,0 +1,29 @@
+{
+  "id": "tidb",
+  "name": "TiDB",
+  "version_context": "commit 69d1aac23d4c33ff119332846fc8b7d5f4ac1f9c",
+  "summary": "A distributed SQL system with stateless MySQL-compatible compute nodes, a Placement Driver for cluster metadata and timestamps, and TiKV-backed transactional storage with coprocessor pushdown.",
+  "scope": ["distributed SQL", "stateless compute", "Placement Driver", "TiKV storage", "coprocessor execution"],
+  "features": [
+    {"id": "stateless-sql-compute", "name": "Stateless distributed SQL compute", "category": "execution-model", "claim_type": "fact", "description": "TiDB Server exposes the MySQL protocol, parses and optimizes SQL, builds distributed plans, sends key-value work to storage, and assembles results without storing table data locally.", "benefits": ["Compute nodes scale horizontally behind a load balancer", "Separates SQL planning and execution from persistent storage"], "costs": ["Distributed plans and RPCs add network coordination", "Compute capacity and storage capacity must be scaled and tuned separately"], "evidence_ids": ["tidb-architecture", "tidb-computing", "tidb-repository-commit"]},
+    {"id": "pd-coordinated-storage", "name": "Placement Driver coordinated storage", "category": "coordination-model", "claim_type": "fact", "description": "The Placement Driver stores cluster and TiKV distribution metadata, allocates transaction timestamps, and schedules data according to the reported state of storage nodes.", "benefits": ["Centralizes placement knowledge and scheduling decisions", "Provides a timestamp oracle for MVCC transaction ordering"], "costs": ["PD availability and metadata freshness constrain cluster coordination", "Scheduling and timestamp services add a control-plane dependency"], "evidence_ids": ["tidb-architecture", "tidb-tso", "tidb-repository-commit"]},
+    {"id": "kv-mapping-and-coprocessors", "name": "Ordered key-value mapping with coprocessors", "category": "data-model", "claim_type": "fact", "description": "TiDB maps table rows and indexes to ordered TiKV key ranges and can push predicates and partial aggregations toward storage nodes to reduce result transfer.", "benefits": ["Preserves range-scan access to relational rows and indexes", "Reduces network transfer for selective and aggregate distributed queries"], "costs": ["Key encoding couples relational access paths to the storage keyspace", "Pushdown support and plan shape affect performance and semantics"], "evidence_ids": ["tidb-computing", "tidb-architecture", "tidb-repository-commit"]}
+  ],
+  "mathematical_views": [
+    {"model": "Relational-to-keyspace refinement", "question": "How does a table and its indexes refine into ordered key ranges while preserving point lookup and scan semantics?", "assumptions": ["Table, row, and index identifiers are stable within the modeled schema version", "Key encoding preserves the intended ordering for range scans", "The view abstracts TiKV replication and RocksDB layout"], "claim_type": "inference", "evidence_ids": ["tidb-computing", "tidb-repository-commit"]},
+    {"model": "Timestamp-ordered distributed transaction system", "question": "How do PD timestamps, TiKV transactions, and SQL-layer commit modes constrain the observable order of distributed changes?", "assumptions": ["TSO physical and logical components are monotonic for the modeled allocation path", "Transaction isolation and commit mode are explicit inputs", "The view does not infer stronger guarantees than the selected mode documents"], "claim_type": "hypothesis", "evidence_ids": ["tidb-tso", "tidb-transactions", "tidb-architecture"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "stateless-sql-compute", "benefits": ["Independent horizontal scaling of SQL compute"], "costs": ["Network plans and remote storage calls add latency and failure modes"]},
+    {"feature_id": "pd-coordinated-storage", "benefits": ["Explicit placement, scheduling, and timestamp control plane"], "costs": ["Control-plane health and coordination are prerequisites for some operations"]},
+    {"feature_id": "kv-mapping-and-coprocessors", "benefits": ["Efficient ordered access and reduced distributed query transfer"], "costs": ["Storage key layout and pushdown capability constrain execution choices"]}
+  ],
+  "evidence": [
+    {"id": "tidb-repository-commit", "kind": "source-code", "title": "TiDB source at 69d1aac23d4c", "uri": "https://github.com/pingcap/tidb/commit/69d1aac23d4c33ff119332846fc8b7d5f4ac1f9c", "accessed": "2026-10-23", "notes": "Fixed source revision used as the provenance boundary for this card."},
+    {"id": "tidb-architecture", "kind": "official-doc", "title": "TiDB architecture", "uri": "https://docs.pingcap.com/tidb/stable/tidb-architecture/", "accessed": "2026-10-23", "notes": "Official documentation for stateless TiDB servers, PD, TiKV, regions, and replicas."},
+    {"id": "tidb-computing", "kind": "official-doc", "title": "TiDB computing", "uri": "https://docs.pingcap.com/tidb/stable/tidb-computing/", "accessed": "2026-10-23", "notes": "Official documentation for relational-to-key-value mapping, SQL execution, and coprocessor pushdown."},
+    {"id": "tidb-tso", "kind": "official-doc", "title": "TiDB Timestamp Oracle", "uri": "https://docs.pingcap.com/tidb/stable/tso/", "accessed": "2026-10-23", "notes": "Official documentation for physical/logical TSO components and transaction timestamps."},
+    {"id": "tidb-transactions", "kind": "official-doc", "title": "TiDB transactions", "uri": "https://docs.pingcap.com/tidb/stable/transaction-overview/", "accessed": "2026-10-23", "notes": "Official documentation for optimistic and pessimistic transactions, snapshots, and commit behavior."}
+  ],
+  "related_systems": ["tikv", "cockroachdb", "mysql-server"]
+}
