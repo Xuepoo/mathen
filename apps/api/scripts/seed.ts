@@ -5,6 +5,9 @@ type Card = {
   id: string;
   name: string;
   version_context?: string;
+  temporal_context?: Record<string, unknown>;
+  relations?: Array<Record<string, unknown>>;
+  composition?: Record<string, unknown>;
   summary: string;
   scope: string[];
   related_systems?: string[];
@@ -59,10 +62,11 @@ const statements = [
 ];
 
 await writeFile(output, `${statements.join("\n")}\n`, "utf8");
-const process = Bun.spawn(
-  ["wrangler", "d1", "execute", "mathen-db", "--local", "--file", output],
-  { cwd: resolve(import.meta.dir, ".."), stdout: "inherit", stderr: "inherit" },
-);
+const process = Bun.spawn(["wrangler", "d1", "execute", "mathen-db", "--local", "--file", output], {
+  cwd: resolve(import.meta.dir, ".."),
+  stdout: "inherit",
+  stderr: "inherit",
+});
 const exitCode = await process.exited;
 if (exitCode !== 0) {
   throw new Error(`Wrangler seed command failed with exit code ${exitCode}`);
@@ -76,14 +80,10 @@ async function loadCards() {
 }
 
 async function loadModelingBundles() {
-  const files = (await readdir(modelingRoot))
-    .filter((file) => file.endsWith(".json"))
-    .sort();
+  const files = (await readdir(modelingRoot)).filter((file) => file.endsWith(".json")).sort();
   return Promise.all(
     files.map(async (file) => {
-      const bundle = JSON.parse(
-        await readFile(resolve(modelingRoot, file), "utf8"),
-      ) as {
+      const bundle = JSON.parse(await readFile(resolve(modelingRoot, file), "utf8")) as {
         system?: { id?: string; commit?: string; provenance?: string };
       };
       if (!bundle.system?.id || !bundle.system.commit || !bundle.system.provenance) {
@@ -106,13 +106,21 @@ function toStatements(card: Card) {
       id: card.id,
       name: card.name,
       version_context: card.version_context ?? null,
+      temporal_context_json: card.temporal_context ? JSON.stringify(card.temporal_context) : null,
+      relations_json: card.relations ? JSON.stringify(card.relations) : null,
+      composition_json: card.composition ? JSON.stringify(card.composition) : null,
       summary: card.summary,
       scope_json: JSON.stringify(card.scope),
       related_systems_json: JSON.stringify(card.related_systems ?? []),
       source_path: `data/systems/${card.id}.json`,
     }),
     ...card.evidence.map((item) =>
-      insert("evidence", { system_id: card.id, ...item, accessed: item.accessed ?? null, notes: item.notes ?? null }),
+      insert("evidence", {
+        system_id: card.id,
+        ...item,
+        accessed: item.accessed ?? null,
+        notes: item.notes ?? null,
+      }),
     ),
     ...card.features.map((feature) =>
       insert("features", {

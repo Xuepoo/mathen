@@ -77,3 +77,8 @@ The machine-readable contract lives in
 [`schemas/architecture-card.schema.json`](../schemas/architecture-card.schema.json).
 The examples in `data/systems/` intentionally contain both facts and
 inferences so that later tooling can distinguish them.
+
+The optional temporal and composition extension is documented in
+[`temporal-composition-contract.md`](temporal-composition-contract.md). It
+adds version lifecycle context, typed relations, and evidence-backed
+composition claims without changing the required fields of existing cards.

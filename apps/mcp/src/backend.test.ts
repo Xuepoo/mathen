@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ApiBackend, UnsupportedBackendError } from "./backend.js";
+import { ApiBackend } from "./backend.js";
 
 test("API backend calls the Hono endpoints and preserves MCP result records", async () => {
   const requests: Array<{ url: string; init?: RequestInit }> = [];
@@ -18,6 +18,9 @@ test("API backend calls the Hono endpoints and preserves MCP result records", as
           mathematical_views: [],
           trade_offs: [],
           evidence: [],
+          temporal_context: { version: "2.0", claim_status: "accepted" },
+          relations: [{ type: "extends", target: "base-system" }],
+          composition: { inputs: [{ system_id: "base-system" }] },
         },
       });
     }
@@ -49,6 +52,12 @@ test("API backend calls the Hono endpoints and preserves MCP result records", as
 
   assert.equal(systems[0]?.id, "duckdb");
   assert.equal(card?.name, "DuckDB");
+  assert.equal(card?.temporal_context?.version, "2.0");
+  assert.equal(card?.relations?.[0]?.type, "extends");
+  assert.equal(
+    (card?.composition?.inputs as Array<{ system_id: string }> | undefined)?.[0]?.system_id,
+    "base-system",
+  );
   assert.equal(features[0]?.feature.name, "Embedded");
   assert.match(requests[0]?.url ?? "", /\/api\/systems$/);
   assert.match(requests[2]?.url ?? "", /claim_type=fact/);

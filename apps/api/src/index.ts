@@ -9,6 +9,9 @@ type SystemRow = {
   id: string;
   name: string;
   version_context: string | null;
+  temporal_context_json: string | null;
+  relations_json: string | null;
+  composition_json: string | null;
   summary: string;
   scope_json: string;
   related_systems_json: string;
@@ -45,7 +48,8 @@ app.get("/systems", async (c) => {
   const limit = boundedInteger(c.req.query("limit"), 50, 1, 100);
   const pattern = `%${query}%`;
   const result = await c.env.DB.prepare(
-    `SELECT id, name, version_context, summary, scope_json, related_systems_json, source_path
+    `SELECT id, name, version_context, summary, scope_json, related_systems_json,
+            temporal_context_json, relations_json, composition_json, source_path
      FROM systems
      WHERE (?1 = '' OR id LIKE ?2 OR name LIKE ?2 OR summary LIKE ?2)
      ORDER BY name
@@ -59,7 +63,8 @@ app.get("/systems", async (c) => {
 
 app.get("/systems/:id", async (c) => {
   const system = await c.env.DB.prepare(
-    `SELECT id, name, version_context, summary, scope_json, related_systems_json, source_path
+    `SELECT id, name, version_context, summary, scope_json, related_systems_json,
+               temporal_context_json, relations_json, composition_json, source_path
      FROM systems WHERE id = ?1`,
   )
     .bind(c.req.param("id"))
@@ -81,7 +86,13 @@ app.get("/systems/:id", async (c) => {
        FROM mathematical_views WHERE system_id = ?1 ORDER BY id`,
     )
       .bind(system.id)
-      .all<{ id: number; model: string; question: string; assumptions_json: string; claim_type: string }>(),
+      .all<{
+        id: number;
+        model: string;
+        question: string;
+        assumptions_json: string;
+        claim_type: string;
+      }>(),
     c.env.DB.prepare(
       `SELECT id, feature_id, benefits_json, costs_json
        FROM trade_offs WHERE system_id = ?1 ORDER BY id`,
@@ -171,9 +182,10 @@ app.get("/graph", async (c) => {
     id: string;
     name: string;
   }>();
-  const relations = await c.env.DB.prepare(
-    "SELECT id, related_systems_json FROM systems",
-  ).all<{ id: string; related_systems_json: string }>();
+  const relations = await c.env.DB.prepare("SELECT id, related_systems_json FROM systems").all<{
+    id: string;
+    related_systems_json: string;
+  }>();
   const edges = relations.results.flatMap((row) =>
     parseJson<string[]>(row.related_systems_json, [])
       .filter((target) => systems.results.some((system) => system.id === target))
@@ -194,6 +206,9 @@ function serializeSystem(system: SystemRow) {
     summary: system.summary,
     scope: parseJson<string[]>(system.scope_json, []),
     related_systems: parseJson<string[]>(system.related_systems_json, []),
+    temporal_context: parseJson<Record<string, unknown> | null>(system.temporal_context_json, null),
+    relations: parseJson<Array<Record<string, unknown>>>(system.relations_json, []),
+    composition: parseJson<Record<string, unknown> | null>(system.composition_json, null),
     source_path: system.source_path,
   };
 }
@@ -210,7 +225,8 @@ function serializeFeature(feature: FeatureRow) {
   };
 }
 
-function parseJson<T>(value: string, fallback: T): T {
+function parseJson<T>(value: string | null, fallback: T): T {
+  if (value === null) return fallback;
   try {
     return JSON.parse(value) as T;
   } catch {

@@ -51,6 +51,38 @@ class CardValidationTests(unittest.TestCase):
             with self.assertRaises(CardValidationError):
                 load_card(path)
 
+    def test_legacy_card_without_evolution_fields_remains_valid(self) -> None:
+        card = json.loads((ROOT / "data" / "systems" / "git.json").read_text())
+        self.assertNotIn("relations", card)
+        validate_card(card)
+
+    def test_temporal_relations_and_composition_contract_is_valid(self) -> None:
+        card = self._evolution_fixture()
+        validate_card(card)
+        self.assertEqual(card["relations"][0]["type"], "extends")
+        self.assertEqual(
+            card["composition"]["conflicts"][0]["claim_status"], "under-review"
+        )
+
+    def test_evolution_claims_need_known_evidence_and_status(self) -> None:
+        card = self._evolution_fixture()
+        card["relations"][0]["evidence_ids"] = ["missing"]
+        with self.assertRaisesRegex(CardValidationError, "unknown evidence ids"):
+            validate_card(card)
+
+        card = self._evolution_fixture()
+        card["composition"]["claim_status"] = "certain"
+        with self.assertRaisesRegex(
+            CardValidationError, "invalid composition claim status"
+        ):
+            validate_card(card)
+
+    def test_composition_rejects_duplicate_inputs(self) -> None:
+        card = self._evolution_fixture()
+        card["composition"]["inputs"].append(card["composition"]["inputs"][0].copy())
+        with self.assertRaisesRegex(CardValidationError, "duplicate composition input"):
+            validate_card(card)
+
     def test_repository_manifest_is_valid(self) -> None:
         specs = load_manifest(ROOT / "data" / "repositories" / "representative.json")
         self.assertGreaterEqual(len(specs), 15)
@@ -59,6 +91,93 @@ class CardValidationTests(unittest.TestCase):
                 spec.id for spec in specs
             )
         )
+
+    @staticmethod
+    def _evolution_fixture() -> dict:
+        return {
+            "id": "composed-system",
+            "name": "Composed system",
+            "summary": "A contract fixture.",
+            "scope": ["architecture"],
+            "version_context": "release 2",
+            "features": [
+                {
+                    "id": "feature",
+                    "name": "Feature",
+                    "category": "composition",
+                    "claim_type": "fact",
+                    "description": "A contract feature.",
+                    "evidence_ids": ["spec"],
+                }
+            ],
+            "mathematical_views": [],
+            "trade_offs": [],
+            "evidence": [
+                {
+                    "id": "spec",
+                    "kind": "official-doc",
+                    "title": "Contract specification",
+                    "uri": "https://example.com/spec",
+                }
+            ],
+            "temporal_context": {
+                "version": "2.0",
+                "status": "current",
+                "claim_status": "accepted",
+                "evidence_ids": ["spec"],
+            },
+            "relations": [
+                {
+                    "type": "extends",
+                    "target": "base-system",
+                    "claim_type": "inference",
+                    "claim_status": "under-review",
+                    "evidence_ids": ["spec"],
+                }
+            ],
+            "composition": {
+                "inputs": [
+                    {
+                        "system_id": "base-system",
+                        "role": "storage boundary",
+                        "claim_status": "accepted",
+                        "evidence_ids": ["spec"],
+                    },
+                    {
+                        "system_id": "worker-system",
+                        "role": "execution boundary",
+                        "claim_status": "proposed",
+                        "evidence_ids": ["spec"],
+                    },
+                ],
+                "constraints": [
+                    {
+                        "description": "Inputs must share an identity boundary.",
+                        "claim_type": "hypothesis",
+                        "claim_status": "proposed",
+                        "evidence_ids": ["spec"],
+                    }
+                ],
+                "preserved_properties": [
+                    {
+                        "description": "Storage remains durable.",
+                        "claim_type": "inference",
+                        "claim_status": "under-review",
+                        "evidence_ids": ["spec"],
+                    }
+                ],
+                "conflicts": [
+                    {
+                        "description": "Execution isolation may increase latency.",
+                        "claim_type": "hypothesis",
+                        "claim_status": "under-review",
+                        "evidence_ids": ["spec"],
+                    }
+                ],
+                "claim_status": "under-review",
+                "evidence_ids": ["spec"],
+            },
+        }
 
     def test_generated_draft_card_has_valid_references(self) -> None:
         spec = RepositorySpec(

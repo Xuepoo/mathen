@@ -31,6 +31,9 @@ export type ArchitectureCard = {
   evidence: Evidence[];
   related_systems?: string[];
   version_context?: string;
+  temporal_context?: Record<string, unknown>;
+  relations?: Array<Record<string, unknown>>;
+  composition?: Record<string, unknown>;
 };
 
 export type SystemSummary = Pick<
@@ -316,6 +319,9 @@ function normalizeCard(value: unknown): ArchitectureCard {
     evidence: Array.isArray(card.evidence) ? card.evidence.map(normalizeEvidence) : [],
     related_systems: stringArray(card.related_systems),
     version_context: optionalString(card.version_context),
+    temporal_context: optionalRecord(card.temporal_context),
+    relations: recordArray(card.relations),
+    composition: optionalRecord(card.composition),
   };
 }
 
@@ -366,6 +372,14 @@ function stringArray(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
+}
+
+function optionalRecord(value: unknown): Record<string, unknown> | undefined {
+  return isRecord(value) ? value : undefined;
+}
+
+function recordArray(value: unknown): Array<Record<string, unknown>> {
+  return Array.isArray(value) ? value.filter(isRecord) : [];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
