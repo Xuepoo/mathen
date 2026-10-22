@@ -159,8 +159,8 @@ identifiers, not claims that the projects share the same architecture.
 | `elixir` | Elixir | `P1` | BEAM abstractions, message passing, and supervision |
 | `haskell` | GHC/Haskell | `P1` | Laziness, type classes, purity, and compiler pipeline |
 | `ocaml` | OCaml | `P2` | Algebraic types, modules, and native compilation |
-| `zig` | Zig | `P2` | Explicit allocation, comptime, and systems toolchain |
-| `wasm` | WebAssembly | `P0` | Portable instruction format, sandboxing, and embedding |
+| `zig` | Zig | language toolchain | `reviewed` | Compare explicit allocation, comptime specialization, typed errors, and cross-target tooling using fixed-revision evidence |
+| `wasm` | WebAssembly | portable instruction format | `reviewed` | Compare validation, store/module instances, structured execution, and bounded linear memory using fixed-revision evidence |
 
 ### Compilers, interpreters, and language infrastructure
 
@@ -169,10 +169,10 @@ identifiers, not claims that the projects share the same architecture.
 | `gcc` | GCC | `P0` | Multi-language frontends, middle-end, and backends |
 | `llvm` | LLVM | `P0` | Intermediate representation and optimization passes |
 | `clang` | Clang | `P1` | C-family frontend and tooling architecture |
-| `rustc` | rustc | `P1` | Type checking, borrow checking, MIR, and code generation |
+| `rustc` | rustc | compiler infrastructure | `reviewed` | Compare typed IR lowering, MIR ownership analysis, query compilation, and LLVM backend boundaries using fixed-revision evidence |
 | `cpython` | CPython | `P1` | Bytecode VM, reference counting, and extension boundary |
 | `v8` | V8 | `P1` | JIT compilation, hidden classes, and managed heap |
-| `luajit` | LuaJIT | `P2` | Tracing JIT and embeddable runtime boundary |
+| `luajit` | LuaJIT | language runtime | `reviewed` | Compare interpreter/tracing-JIT transitions, FFI, and embeddable runtime boundaries using fixed-revision evidence |
 | `tree-sitter` | Tree-sitter | `P1` | Incremental parsing and concrete syntax trees |
 | `antlr` | ANTLR | `P2` | Grammar-driven parser and code-generation pipeline |
 | `protobuf` | Protocol Buffers | `P0` | Schema evolution, serialization, and compatibility |

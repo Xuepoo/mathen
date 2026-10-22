@@ -1,0 +1,154 @@
+{
+  "id": "zig",
+  "name": "Zig",
+  "version_context": "release 0.14.1, commit 795bf646b6be8a97b5e0c1f2a2eb320fa408dde8",
+  "summary": "A systems language and toolchain that makes allocation explicit at API boundaries, evaluates selected code at comptime, and integrates cross-target builds and C interoperability.",
+  "scope": [
+    "explicit memory allocation",
+    "comptime evaluation",
+    "error and optional values",
+    "cross-target toolchain"
+  ],
+  "features": [
+    {
+      "id": "explicit-allocator-boundary",
+      "name": "Explicit allocator boundary",
+      "category": "memory-model",
+      "claim_type": "fact",
+      "description": "Zig's language reference presents allocation as an explicit operation selected by the program: code can accept an allocator, allocate through it, and release resources according to the allocator's contract. The language does not impose one global heap allocator on all code.",
+      "benefits": [
+        "Makes allocation strategy and lifetime responsibility visible at API boundaries",
+        "Allows programs to select allocators appropriate to their environment"
+      ],
+      "costs": [
+        "Callers and callees must agree on allocator ownership and deallocation",
+        "Incorrect lifetime or allocator pairing remains a program-level failure mode"
+      ],
+      "evidence_ids": ["zig-language-reference", "zig-fixed-source"]
+    },
+    {
+      "id": "comptime-specialization",
+      "name": "Comptime evaluation and specialization",
+      "category": "compile-time-model",
+      "claim_type": "fact",
+      "description": "Zig supports comptime-known variables and expressions whose loads, stores, and control flow are evaluated during semantic analysis. The reference also describes generic data structures built with compile-time parameters and reflection.",
+      "benefits": [
+        "Moves selected computation and specialization before runtime",
+        "Provides generic and reflective abstractions without requiring a separate macro language"
+      ],
+      "costs": [
+        "Compile-time execution increases compiler work and can expose compile-time resource limits",
+        "The boundary between generated behavior and runtime behavior must remain understandable"
+      ],
+      "evidence_ids": ["zig-language-reference", "zig-fixed-source"]
+    },
+    {
+      "id": "typed-error-optional-values",
+      "name": "Typed error and optional values",
+      "category": "control-and-data-model",
+      "claim_type": "fact",
+      "description": "Zig represents recoverable failure with error sets and error-union types, and represents absence with optional types. The reference defines operators and control-flow forms for propagating or handling these values.",
+      "benefits": [
+        "Keeps common failure and absence cases in function and value types",
+        "Makes propagation and handling points explicit in source"
+      ],
+      "costs": [
+        "Callers must account for additional union cases at use sites",
+        "Error-set composition and optional unwrapping add type-checking and API design surface"
+      ],
+      "evidence_ids": ["zig-language-reference", "zig-fixed-source"]
+    },
+    {
+      "id": "cross-target-build-integration",
+      "name": "Cross-target build and C integration",
+      "category": "toolchain-model",
+      "claim_type": "fact",
+      "description": "The Zig reference documents a build system with target selection, build modes, WebAssembly targets, and C import/export facilities. These features make target and foreign-ABI choices part of the toolchain surface.",
+      "benefits": [
+        "Provides one toolchain surface for multiple target environments",
+        "Supports incremental adoption through C headers and ABI-compatible exports"
+      ],
+      "costs": [
+        "Target, linker, ABI, and platform configuration expand build complexity",
+        "C interoperability inherits the correctness and lifetime assumptions of the foreign interface"
+      ],
+      "evidence_ids": ["zig-language-reference", "zig-fixed-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Allocator ownership graph",
+      "question": "How do allocator selection, allocation, ownership transfer, and deallocation constrain a Zig program's memory transitions?",
+      "assumptions": [
+        "Allocated regions and allocator instances are vertices with explicit ownership or borrowing edges",
+        "A deallocation transition is valid only when the responsible allocator and lifetime contract permit it",
+        "The view abstracts allocator implementation details and platform-specific virtual memory"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["zig-language-reference", "zig-fixed-source"]
+    },
+    {
+      "model": "Comptime/runtime staged transition system",
+      "question": "Which parts of a Zig program are resolved during comptime, and which remain runtime transitions?",
+      "assumptions": [
+        "Comptime evaluation is modeled as a preprocessing or specialization transition over typed values and declarations",
+        "Runtime execution begins only for values and control flow not resolved by the selected comptime context",
+        "The view does not claim that every optimization or generated instruction is determined by comptime"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["zig-language-reference", "zig-fixed-source"]
+    },
+    {
+      "model": "Target/build dependency graph",
+      "question": "How might target, build-mode, and foreign-ABI choices alter the set of compilation and linking actions?",
+      "assumptions": [
+        "Build options and target descriptors are graph inputs, and compilation or linking actions are dependent vertices",
+        "The graph is a candidate analysis of documented toolchain structure rather than a complete build trace",
+        "Platform-specific behavior and package-manager policy are outside the view"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["zig-language-reference", "zig-fixed-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "explicit-allocator-boundary",
+      "benefits": ["Visible and selectable allocation policy"],
+      "costs": ["Ownership and allocator compatibility become API obligations"]
+    },
+    {
+      "feature_id": "comptime-specialization",
+      "benefits": ["Compile-time specialization and reflection"],
+      "costs": ["More compile-time work and a larger semantic boundary"]
+    },
+    {
+      "feature_id": "typed-error-optional-values",
+      "benefits": ["Explicit failure and absence handling"],
+      "costs": ["Additional union cases must be handled by callers"]
+    },
+    {
+      "feature_id": "cross-target-build-integration",
+      "benefits": ["Integrated target and foreign-language toolchain support"],
+      "costs": ["Target and ABI configuration increase build complexity"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "zig-fixed-source",
+      "kind": "source-code",
+      "title": "Zig source tree at fixed 0.14.1 revision",
+      "uri": "https://github.com/ziglang/zig/commit/795bf646b6be8a97b5e0c1f2a2eb320fa408dde8",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance selected for this review; the revision identifies the inspected Zig 0.14.1 source tree."
+    },
+    {
+      "id": "zig-language-reference",
+      "kind": "official-doc",
+      "title": "Zig Language Reference 0.14.1",
+      "uri": "https://ziglang.org/documentation/0.14.1/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official reference for comptime, memory and allocators, error unions, optionals, build modes, targets, WebAssembly, and C integration."
+    }
+  ],
+  "related_systems": ["rust", "wasmtime", "lua"]
+}

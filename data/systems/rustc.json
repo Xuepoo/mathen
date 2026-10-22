@@ -1,0 +1,178 @@
+{
+  "id": "rustc",
+  "name": "rustc",
+  "version_context": "Rust 1.89.0 source commit 8b14d85d4e1d87024385e70ac0e1996213c2030a",
+  "summary": "The Rust compiler lowers source through typed intermediate representations, performs ownership-aware analyses over MIR, and coordinates compilation through demand-driven queries and a code-generation backend.",
+  "scope": [
+    "source-to-IR lowering",
+    "type and borrow checking",
+    "query-driven compilation",
+    "LLVM code generation"
+  ],
+  "features": [
+    {
+      "id": "typed-ir-lowering-pipeline",
+      "name": "Typed intermediate-representation lowering",
+      "category": "compiler-pipeline",
+      "claim_type": "fact",
+      "description": "The Rust compiler development guide describes a sequence from tokens and AST through HIR, THIR, MIR, and LLVM IR. Each representation supports different analyses, with lowering and desugaring making source constructs more explicit.",
+      "benefits": [
+        "Matches analyses to representations with suitable abstraction and detail",
+        "Creates explicit boundaries for lowering, checking, optimization, and code generation"
+      ],
+      "costs": [
+        "Maintaining multiple representations and source correspondence increases compiler complexity",
+        "Lowering boundaries require preserving the language semantics relevant to later stages"
+      ],
+      "evidence_ids": ["rustc-overview", "rustc-fixed-source"]
+    },
+    {
+      "id": "mir-ownership-analysis",
+      "name": "MIR ownership and dataflow analysis",
+      "category": "static-analysis-model",
+      "claim_type": "fact",
+      "description": "rustc lowers typed HIR through THIR to MIR, a control-flow-oriented representation used for borrow checking, uninitialized-value checks, optimizations, and constant evaluation. MIR remains generic before monomorphization and code generation.",
+      "benefits": [
+        "Provides a common control-flow representation for ownership and dataflow analyses",
+        "Allows some optimizations and checks before target-specific code generation"
+      ],
+      "costs": [
+        "MIR construction and transformation add compiler maintenance surface",
+        "Borrow checking and dataflow invariants constrain transformations and diagnostics"
+      ],
+      "evidence_ids": ["rustc-overview", "rustc-borrow-check", "rustc-fixed-source"]
+    },
+    {
+      "id": "demand-driven-query-compilation",
+      "name": "Demand-driven query compilation",
+      "category": "incremental-build-model",
+      "claim_type": "fact",
+      "description": "rustc organizes major computations as queries that call one another, memoize results, and may load or store incremental data. Runtime query dependencies form a graph used to determine which work can be reused after input changes.",
+      "benefits": [
+        "Avoids repeating unchanged compiler computations when dependencies remain valid",
+        "Makes computation dependencies available to incremental compilation"
+      ],
+      "costs": [
+        "Dependency tracking, cache invalidation, and provider registration add complexity",
+        "The query model does not cover every compiler stage uniformly"
+      ],
+      "evidence_ids": ["rustc-overview", "rustc-queries", "rustc-fixed-source"]
+    },
+    {
+      "id": "llvm-backend-boundary",
+      "name": "LLVM backend boundary",
+      "category": "code-generation-model",
+      "claim_type": "fact",
+      "description": "The compiler guide states that rustc converts monomorphized MIR to LLVM IR and passes that IR to LLVM for further optimization and machine-code emission before linking the final binary.",
+      "benefits": [
+        "Reuses an established backend for optimization and target code emission",
+        "Separates Rust-specific analyses from lower-level target code generation"
+      ],
+      "costs": [
+        "Backend capabilities and constraints influence rustc code-generation design",
+        "The MIR-to-LLVM boundary introduces another representation and lowering step"
+      ],
+      "evidence_ids": ["rustc-overview", "rustc-codegen", "rustc-fixed-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed representation refinement chain",
+      "question": "How does a Rust source program move through representations suitable for parsing, type checking, borrow checking, optimization, and code generation?",
+      "assumptions": [
+        "Representations are nodes in a typed refinement relation and lowering operations are directed edges",
+        "Each lowering preserves the language semantics relevant to the next analysis stage",
+        "The view abstracts diagnostics, macro implementation details, and target-specific backend behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["rustc-overview", "rustc-fixed-source"]
+    },
+    {
+      "model": "Incremental query dependency graph",
+      "question": "Which compiler computations can be reused when source inputs or dependent crate metadata change?",
+      "assumptions": [
+        "Queries are vertices and runtime query dependencies are directed edges",
+        "A cached result is reusable only when the query system considers its relevant inputs unchanged",
+        "The graph does not imply that all compiler operations are cached or that reuse guarantees a particular wall-clock cost"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["rustc-queries", "rustc-fixed-source"]
+    },
+    {
+      "model": "MIR control-flow ownership analysis",
+      "question": "How can ownership and dataflow constraints be analyzed over a generic control-flow representation before monomorphization?",
+      "assumptions": [
+        "MIR basic blocks and statements form a control-flow graph with typed state",
+        "Borrow-checking and dataflow analyses are transitions or judgments over that graph",
+        "The view is a candidate mathematical abstraction and does not prove implementation soundness"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["rustc-borrow-check", "rustc-fixed-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "typed-ir-lowering-pipeline",
+      "benefits": ["Specialized representations for distinct compiler analyses"],
+      "costs": ["Multiple lowering boundaries increase implementation and source-mapping work"]
+    },
+    {
+      "feature_id": "mir-ownership-analysis",
+      "benefits": ["Shared control-flow basis for borrow and dataflow checks"],
+      "costs": ["MIR invariants and transformations constrain compiler evolution"]
+    },
+    {
+      "feature_id": "demand-driven-query-compilation",
+      "benefits": ["Potential reuse of unaffected compiler computations"],
+      "costs": ["Query dependencies, providers, cache storage, and invalidation complicate the compiler"]
+    },
+    {
+      "feature_id": "llvm-backend-boundary",
+      "benefits": ["Target code generation through a separate backend"],
+      "costs": ["LLVM's representation and backend constraints shape rustc lowering"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "rustc-fixed-source",
+      "kind": "source-code",
+      "title": "Rust source tree at fixed 1.89.0 revision",
+      "uri": "https://github.com/rust-lang/rust/commit/8b14d85d4e1d87024385e70ac0e1996213c2030a",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance selected for this review; the revision identifies the inspected Rust 1.89.0 source tree."
+    },
+    {
+      "id": "rustc-overview",
+      "kind": "official-doc",
+      "title": "Rust Compiler Development Guide: Overview",
+      "uri": "https://rustc-dev-guide.rust-lang.org/overview.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official compiler documentation for the representation pipeline, MIR, LLVM code generation, and compiler trade-offs."
+    },
+    {
+      "id": "rustc-borrow-check",
+      "kind": "official-doc",
+      "title": "Rust Compiler Development Guide: MIR borrow check",
+      "uri": "https://rustc-dev-guide.rust-lang.org/borrow_check.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official compiler documentation for MIR-based borrow checking."
+    },
+    {
+      "id": "rustc-queries",
+      "kind": "official-doc",
+      "title": "Rust Compiler Development Guide: Queries",
+      "uri": "https://rustc-dev-guide.rust-lang.org/query.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official compiler documentation for demand-driven queries, memoization, providers, and incremental dependencies."
+    },
+    {
+      "id": "rustc-codegen",
+      "kind": "official-doc",
+      "title": "Rust Compiler Development Guide: Code generation",
+      "uri": "https://rustc-dev-guide.rust-lang.org/backend/codegen.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official compiler documentation for MIR monomorphization, LLVM IR, and backend code generation."
+    }
+  ],
+  "related_systems": ["rust", "llvm", "gcc"]
+}
