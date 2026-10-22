@@ -1,0 +1,169 @@
+{
+  "id": "coreutils",
+  "name": "GNU Coreutils",
+  "version_context": "commit b919020cf53ec0bfc620e00d3405843d2ec84127",
+  "summary": "A family of Unix command-line utilities organized around common option, operand, stream, and exit-status conventions, with a documented multi-call program as an additional packaging form.",
+  "scope": [
+    "Unix command-line utilities",
+    "option and operand interfaces",
+    "stream composition",
+    "multi-call packaging"
+  ],
+  "features": [
+    {
+      "id": "common-option-and-operand-contract",
+      "name": "Common option and operand contract",
+      "category": "command-interface",
+      "claim_type": "fact",
+      "description": "The Coreutils manual documents common option handling, option terminators, operands such as standard input represented by '-', and shared --help and --version conventions across the utility family, with documented command-specific exceptions.",
+      "benefits": [
+        "Makes utilities predictable to invoke individually and from scripts",
+        "Allows generic command-line tooling to target a family of programs"
+      ],
+      "costs": [
+        "Common conventions still have command-specific exceptions",
+        "Compatibility requirements constrain interface evolution"
+      ],
+      "evidence_ids": [
+        "coreutils-manual",
+        "coreutils-fixed-source"
+      ]
+    },
+    {
+      "id": "stream-and-status-composition",
+      "name": "Stream and status composition",
+      "category": "process-interface",
+      "claim_type": "fact",
+      "description": "The documented utilities operate on files, standard input, and standard output, and nearly every invocation yields an integral exit status where zero generally indicates success and nonzero indicates failure.",
+      "benefits": [
+        "Supports composition through shell pipelines, redirection, and scripts",
+        "Exposes a small process boundary for success and failure propagation"
+      ],
+      "costs": [
+        "Text and status interfaces do not express all semantic distinctions",
+        "Locale, filesystem, and platform behavior remain external dependencies"
+      ],
+      "evidence_ids": [
+        "coreutils-manual",
+        "coreutils-toolbox",
+        "coreutils-fixed-source"
+      ]
+    },
+    {
+      "id": "multi-call-program-packaging",
+      "name": "Multi-call program packaging",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "The official manual documents a coreutils multi-call program alongside the individual utility interfaces, showing that the utility family can also be packaged behind a shared executable boundary.",
+      "benefits": [
+        "Can consolidate related utility entry points into one deployed program",
+        "Preserves the family-level command model while changing packaging"
+      ],
+      "costs": [
+        "Dispatch and packaging add another invocation mode to document and test",
+        "Shared packaging does not remove differences among utility semantics"
+      ],
+      "evidence_ids": [
+        "coreutils-multi-call",
+        "coreutils-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Partial command interface algebra",
+      "question": "How can utilities be composed when their principal boundary is streams, operands, and an exit status?",
+      "assumptions": [
+        "A command is modeled as a transformation from input streams and operands to output streams and status",
+        "Composition abstracts shell process creation, buffering, signals, and filesystem races",
+        "The model describes interface shape and does not imply that arbitrary utilities compose without semantic loss"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "coreutils-manual",
+        "coreutils-toolbox",
+        "coreutils-fixed-source"
+      ]
+    },
+    {
+      "model": "Command packaging equivalence view",
+      "question": "Which user-visible command interfaces can be preserved when a utility family moves between separate executables and a multi-call executable?",
+      "assumptions": [
+        "The dispatch name selects a utility behavior within the multi-call program",
+        "The view compares invocation boundaries and does not claim binary or performance equivalence",
+        "Filesystem, environment, and platform effects are held constant for the comparison"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "coreutils-multi-call",
+        "coreutils-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "common-option-and-operand-contract",
+      "benefits": [
+        "Predictable command-line automation"
+      ],
+      "costs": [
+        "Shared conventions must accommodate historical and command-specific behavior"
+      ]
+    },
+    {
+      "feature_id": "stream-and-status-composition",
+      "benefits": [
+        "Simple boundaries for shell and script composition"
+      ],
+      "costs": [
+        "Structured semantics often require conventions outside the stream and status contract"
+      ]
+    },
+    {
+      "feature_id": "multi-call-program-packaging",
+      "benefits": [
+        "Alternative deployment form for a related utility family"
+      ],
+      "costs": [
+        "Dispatch behavior and executable packaging increase operational variation"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "coreutils-fixed-source",
+      "kind": "source-code",
+      "title": "GNU Coreutils source tree at fixed commit b919020cf53e",
+      "uri": "https://github.com/coreutils/coreutils/commit/b919020cf53ec0bfc620e00d3405843d2ec84127",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance for this card; the commit page identifies the exact inspected GNU Coreutils revision. Semantic claims are bounded by the cited GNU manual."
+    },
+    {
+      "id": "coreutils-manual",
+      "kind": "official-doc",
+      "title": "GNU Coreutils Manual",
+      "uri": "https://www.gnu.org/software/coreutils/manual/coreutils.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official manual for common options, utility behavior, operands, and exit statuses."
+    },
+    {
+      "id": "coreutils-toolbox",
+      "kind": "official-doc",
+      "title": "Opening the Software Toolbox",
+      "uri": "https://www.gnu.org/software/coreutils/manual/html_node/Toolbox-introduction.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official tutorial section illustrating composition of the utilities."
+    },
+    {
+      "id": "coreutils-multi-call",
+      "kind": "official-doc",
+      "title": "coreutils: Multi-call program",
+      "uri": "https://www.gnu.org/software/coreutils/manual/html_node/Multi_002dcall-invocation.html",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    }
+  ],
+  "related_systems": [
+    "linux",
+    "busybox"
+  ]
+}

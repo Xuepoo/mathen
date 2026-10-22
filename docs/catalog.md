@@ -51,6 +51,10 @@ These entries are already present in the repository at different review levels:
 | `hadoop` | Apache Hadoop | distributed storage and compute | `cataloged` | Analyze HDFS, YARN, and batch computation |
 | `nginx` | NGINX | network server | `reviewed` | Analyze event-driven I/O and worker processes |
 | `llvm` | LLVM | compiler infrastructure | `reviewed` | Add temporal IR and pass-pipeline relations |
+| `gcc` | GCC | compiler | `reviewed` | Compare front-end, IR, pass, and target-backend boundaries with LLVM |
+| `tree-sitter` | tree-sitter | parser library | `reviewed` | Compare incremental concrete syntax trees with compiler front ends |
+| `coreutils` | GNU Coreutils | Unix system tools | `reviewed` | Compare command composition and multi-call packaging with BusyBox |
+| `boost` | Boost | C++ library | `reviewed` | Compare modular headers, binary components, and build configuration with Rust and LLVM |
 | `ffmpeg` | FFmpeg | media processing | `reviewed` | Compare format contexts, codec state machines, and filter graphs using fixed-commit evidence |
 | `protobuf` | Protocol Buffers | serialization protocol | `reviewed` | Compare numbered schema evolution and generated interfaces with gRPC using fixed-commit evidence |
 | `grpc` | gRPC | RPC framework | `reviewed` | Compare generated service boundaries and streaming lifecycle with Protocol Buffers using fixed-commit evidence |
@@ -76,10 +80,6 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | `freebsd` | FreeBSD | operating system | `P2` |
 | `systemd` | systemd | init system | `P1` |
 | `xv6-public` | xv6 | educational operating system | `P1` |
-| `coreutils` | GNU Coreutils | Unix system tools | `P2` |
-| `gcc` | GCC | compiler | `P1` |
-| `tree-sitter` | tree-sitter | parser library | `P1` |
-| `boost` | Boost | C++ library | `P2` |
 | `libuv` | libuv | asynchronous I/O library | `P1` |
 | `curl` | curl | network library | `P1` |
 | `openssl` | OpenSSL | cryptography library | `reviewed` |

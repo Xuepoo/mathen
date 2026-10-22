@@ -1,0 +1,174 @@
+{
+  "id": "gcc",
+  "name": "GCC",
+  "version_context": "commit 42df6e316f0a924ead4dce9dd9e26f8c07e53d8b",
+  "summary": "A multi-language compiler architecture with language front ends, shared GENERIC/GIMPLE and RTL representations, optimization passes, and target-specific back ends.",
+  "scope": [
+    "language front ends",
+    "compiler intermediate representations",
+    "optimization passes",
+    "target back ends"
+  ],
+  "features": [
+    {
+      "id": "language-front-end-boundary",
+      "name": "Language front-end boundary",
+      "category": "compiler-platform",
+      "claim_type": "fact",
+      "description": "GCC accommodates language front ends as separately organized components with language-specific source, configuration, driver integration, documentation, and preferably testsuites, which feed the common compiler infrastructure.",
+      "benefits": [
+        "Allows multiple source languages to share compiler infrastructure",
+        "Keeps language-specific parsing and lowering concerns localized"
+      ],
+      "costs": [
+        "Each front end must coordinate build, driver, documentation, runtime, and test integration",
+        "The shared boundary must preserve language-specific semantics"
+      ],
+      "evidence_ids": [
+        "gcc-front-ends",
+        "gcc-fixed-source"
+      ]
+    },
+    {
+      "id": "multi-stage-tree-and-rtl-representations",
+      "name": "Multi-stage tree and RTL representations",
+      "category": "intermediate-representation",
+      "claim_type": "fact",
+      "description": "The GCC internals documentation describes GENERIC and GIMPLE tree representations for language-independent and SSA-oriented processing, followed by RTL for lower-level instruction-oriented work.",
+      "benefits": [
+        "Gives analyses and transformations representations at different abstraction levels",
+        "Separates language-independent optimization from target-specific instruction work"
+      ],
+      "costs": [
+        "Lowering between representations increases compiler complexity",
+        "Information and invariants must be maintained across representation boundaries"
+      ],
+      "evidence_ids": [
+        "gcc-internals",
+        "gcc-fixed-source"
+      ]
+    },
+    {
+      "id": "pass-managed-optimization-and-target-lowering",
+      "name": "Pass-managed optimization and target lowering",
+      "category": "transformation-model",
+      "claim_type": "fact",
+      "description": "GCC documents parsing, gimplification, inter-procedural, Tree SSA, and RTL passes, while target back ends use machine descriptions and target-specific configuration to describe instruction selection and output.",
+      "benefits": [
+        "Supports reusable, inspectable compiler transformations",
+        "Allows target-specific code generation behind a common pass pipeline"
+      ],
+      "costs": [
+        "Pass ordering and invalidation affect optimization outcomes",
+        "Target descriptions add portability and maintenance obligations"
+      ],
+      "evidence_ids": [
+        "gcc-passes",
+        "gcc-back-ends",
+        "gcc-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed representation refinement chain",
+      "question": "How can source-language constructs be progressively lowered into forms suitable for shared optimization and target code generation?",
+      "assumptions": [
+        "Each representation is modeled as a typed relation to the preceding representation",
+        "Lowering preserves the relevant semantics for the selected language and target",
+        "The view abstracts diagnostics, ABI details, and implementation-specific pass conditions"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "gcc-internals",
+        "gcc-fixed-source"
+      ]
+    },
+    {
+      "model": "Pass dependency graph",
+      "question": "Which analyses and transformations can be composed before target-specific lowering, and which conditions constrain their ordering?",
+      "assumptions": [
+        "Passes are vertices and required ordering or data dependencies are directed edges",
+        "A pass may invalidate information computed by an earlier pass",
+        "The graph is a candidate explanatory model and does not prove equivalence of arbitrary pass sequences"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "gcc-passes",
+        "gcc-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "language-front-end-boundary",
+      "benefits": [
+        "Reuse of common middle-end and back-end infrastructure"
+      ],
+      "costs": [
+        "Front-end integration requires several coordinated repository interfaces"
+      ]
+    },
+    {
+      "feature_id": "multi-stage-tree-and-rtl-representations",
+      "benefits": [
+        "Specialized analyses over representations with appropriate abstraction"
+      ],
+      "costs": [
+        "Multiple lowering boundaries increase maintenance and source-mapping cost"
+      ]
+    },
+    {
+      "feature_id": "pass-managed-optimization-and-target-lowering",
+      "benefits": [
+        "Composable optimization and target support"
+      ],
+      "costs": [
+        "Pass invalidation, ordering, and target variation complicate global reasoning"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "gcc-fixed-source",
+      "kind": "source-code",
+      "title": "GCC source tree at fixed commit 42df6e316f0a",
+      "uri": "https://github.com/gcc-mirror/gcc/commit/42df6e316f0a924ead4dce9dd9e26f8c07e53d8b",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance for this card; the commit page identifies the exact inspected GCC revision. Semantic claims are bounded by the cited GCC internals documentation."
+    },
+    {
+      "id": "gcc-internals",
+      "kind": "official-doc",
+      "title": "GCC Internals Manual",
+      "uri": "https://gcc.gnu.org/onlinedocs/gccint/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation covering GCC source structure, representations, passes, and target support."
+    },
+    {
+      "id": "gcc-front-ends",
+      "kind": "official-doc",
+      "title": "Anatomy of a Language Front End",
+      "uri": "https://gcc.gnu.org/onlinedocs/gccint/Front-End.html",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "gcc-passes",
+      "kind": "official-doc",
+      "title": "Passes and Files of the Compiler",
+      "uri": "https://gcc.gnu.org/onlinedocs/gccint/Passes.html",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "gcc-back-ends",
+      "kind": "official-doc",
+      "title": "Anatomy of a Target Back End",
+      "uri": "https://gcc.gnu.org/onlinedocs/gccint/Back-End.html",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    }
+  ],
+  "related_systems": [
+    "llvm",
+    "rust"
+  ]
+}

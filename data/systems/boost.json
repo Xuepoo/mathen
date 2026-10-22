@@ -1,0 +1,170 @@
+{
+  "id": "boost",
+  "name": "Boost",
+  "version_context": "commit 13c4ed18ad591fcd758d09137e3ee325b7f9132b",
+  "summary": "A large C++ library distribution organized as independently documented libraries, combining header-only components with separately built binaries and a portable Boost.Build integration path.",
+  "scope": [
+    "C++ library distribution",
+    "modular library organization",
+    "header-only and compiled components",
+    "portable build integration"
+  ],
+  "features": [
+    {
+      "id": "modular-library-distribution",
+      "name": "Modular library distribution",
+      "category": "library-architecture",
+      "claim_type": "fact",
+      "description": "Boost organizes a broad set of libraries with public headers under boost/ and library-specific source, tests, and documentation under libs/, while the official library index describes them independently by function and category.",
+      "benefits": [
+        "Allows consumers to adopt focused library components",
+        "Provides a common distribution and documentation structure for varied C++ facilities"
+      ],
+      "costs": [
+        "Library dependencies and support policies vary across the distribution",
+        "The broad surface increases discovery and compatibility coordination cost"
+      ],
+      "evidence_ids": [
+        "boost-getting-started",
+        "boost-library-index",
+        "boost-fixed-source"
+      ]
+    },
+    {
+      "id": "header-only-and-compiled-components",
+      "name": "Header-only and separately compiled components",
+      "category": "linkage-model",
+      "claim_type": "fact",
+      "description": "The Boost getting-started documentation distinguishes libraries implemented entirely in headers from libraries that must be built separately, with some libraries offering optional binary components.",
+      "benefits": [
+        "Header-only components can be consumed without a library build step",
+        "Compiled components can provide facilities that require separately built binaries"
+      ],
+      "costs": [
+        "Template-heavy headers can increase compile-time and configuration coupling",
+        "Binary components require matching toolset, threading, ABI, and build settings"
+      ],
+      "evidence_ids": [
+        "boost-getting-started",
+        "boost-fixed-source"
+      ]
+    },
+    {
+      "id": "boost-build-toolset-configuration",
+      "name": "Boost.Build toolset configuration",
+      "category": "build-and-integration-model",
+      "claim_type": "fact",
+      "description": "Boost documents Boost.Build as a text-based build system for developing, testing, and installing software, with toolset, variant, architecture, address-model, and build-directory options that shape generated binaries.",
+      "benefits": [
+        "Provides a common build path across supported C++ toolsets",
+        "Makes important binary-compatibility choices explicit in build configuration"
+      ],
+      "costs": [
+        "The configuration space grows with toolsets, variants, platforms, and ABI options",
+        "Consumers must select binaries compatible with their application configuration"
+      ],
+      "evidence_ids": [
+        "boost-getting-started",
+        "boost-build",
+        "boost-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Library dependency graph",
+      "question": "How can a broad C++ distribution be decomposed into independently consumable libraries and their dependencies?",
+      "assumptions": [
+        "Libraries are vertices and include, link, or build dependencies are directed edges",
+        "The graph distinguishes header-only consumption from separately compiled artifacts",
+        "The view abstracts template instantiation cost and platform-specific dependency resolution"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "boost-library-index",
+        "boost-getting-started",
+        "boost-fixed-source"
+      ]
+    },
+    {
+      "model": "Build-configuration compatibility relation",
+      "question": "Under which toolset and ABI configurations can a generated Boost binary be linked into a consumer program?",
+      "assumptions": [
+        "A binary is modeled with attributes such as toolset, threading, variant, architecture, and address model",
+        "A consumer and binary are compatible only when required configuration attributes agree",
+        "The relation is a candidate model and does not establish compatibility for every platform or library"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "boost-getting-started",
+        "boost-build",
+        "boost-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "modular-library-distribution",
+      "benefits": [
+        "Reuse across a wide range of C++ application domains"
+      ],
+      "costs": [
+        "Large and heterogeneous library surface increases selection and dependency complexity"
+      ]
+    },
+    {
+      "feature_id": "header-only-and-compiled-components",
+      "benefits": [
+        "Flexible choice between direct inclusion and prebuilt binary linkage"
+      ],
+      "costs": [
+        "Consumers must manage compile-time and binary-compatibility trade-offs"
+      ]
+    },
+    {
+      "feature_id": "boost-build-toolset-configuration",
+      "benefits": [
+        "Portable, explicit build configuration"
+      ],
+      "costs": [
+        "Toolset and ABI variation expands the build and test matrix"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "boost-fixed-source",
+      "kind": "source-code",
+      "title": "Boost source tree at fixed commit 13c4ed18ad59",
+      "uri": "https://github.com/boostorg/boost/commit/13c4ed18ad591fcd758d09137e3ee325b7f9132b",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance for this card; the commit page identifies the exact inspected Boost revision. Semantic claims are bounded by the cited official Boost documentation."
+    },
+    {
+      "id": "boost-getting-started",
+      "kind": "official-doc",
+      "title": "Boost Getting Started on Unix Variants",
+      "uri": "https://www.boost.org/doc/libs/latest/more/getting_started/unix-variants.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for distribution layout, header-only versus compiled libraries, and binary/toolset configuration."
+    },
+    {
+      "id": "boost-build",
+      "kind": "official-doc",
+      "title": "Boost.Build Documentation",
+      "uri": "https://www.boost.org/doc/libs/latest/tools/build/doc/html/index.html",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "boost-library-index",
+      "kind": "official-doc",
+      "title": "Boost Libraries Index",
+      "uri": "https://www.boost.org/doc/libs/latest/libs/libraries.htm",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    }
+  ],
+  "related_systems": [
+    "rust",
+    "llvm"
+  ]
+}

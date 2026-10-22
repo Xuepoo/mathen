@@ -1,0 +1,174 @@
+{
+  "id": "tree-sitter",
+  "name": "tree-sitter",
+  "version_context": "commit e3d578032dec2e7042291864302714878315dbed",
+  "summary": "A parser generator and incremental parsing library that produces concrete syntax trees, reuses edited tree structure, and exposes a small embeddable C runtime.",
+  "scope": [
+    "grammar-driven parsing",
+    "concrete syntax trees",
+    "incremental editing",
+    "embedded parser runtime"
+  ],
+  "features": [
+    {
+      "id": "grammar-to-concrete-syntax-tree",
+      "name": "Grammar-to-concrete-syntax-tree generation",
+      "category": "parser-model",
+      "claim_type": "fact",
+      "description": "Tree-sitter grammars generate parsers whose concrete syntax tree nodes correspond to terminal and non-terminal grammar symbols, with precedence, associativity, conflicts, fields, and hidden rules available to shape the tree.",
+      "benefits": [
+        "Provides a structured representation closely connected to source syntax",
+        "Makes grammar-specific names and fields available to downstream tools"
+      ],
+      "costs": [
+        "Grammar design must balance readable trees against parsing conflicts",
+        "The generated tree remains language-grammar specific"
+      ],
+      "evidence_ids": [
+        "tree-sitter-grammar",
+        "tree-sitter-fixed-source"
+      ]
+    },
+    {
+      "id": "incremental-tree-reuse",
+      "name": "Incremental tree reuse after edits",
+      "category": "incremental-computation",
+      "claim_type": "fact",
+      "description": "An edited syntax tree can be given to the parser together with an input edit so that a new tree is produced while internally sharing structure with the old tree.",
+      "benefits": [
+        "Supports reparsing workflows such as editor updates",
+        "Can avoid rebuilding unchanged portions of a syntax tree"
+      ],
+      "costs": [
+        "Callers must keep byte and point ranges synchronized with edits",
+        "Individual tree instances are not thread safe and require copying for concurrent use"
+      ],
+      "evidence_ids": [
+        "tree-sitter-advanced-parsing",
+        "tree-sitter-fixed-source"
+      ]
+    },
+    {
+      "id": "embeddable-parser-runtime",
+      "name": "Embeddable parser runtime",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "The documented runtime is written in C11, has no runtime dependencies, and exposes parser, language, tree, and node objects through a C API that can be incorporated into another build.",
+      "benefits": [
+        "Permits use from editors and other host applications",
+        "Keeps the runtime boundary small for embedding"
+      ],
+      "costs": [
+        "Host applications must provide language grammars and manage object lifetimes",
+        "Bindings and language composition add integration-specific concerns"
+      ],
+      "evidence_ids": [
+        "tree-sitter-introduction",
+        "tree-sitter-getting-started",
+        "tree-sitter-fixed-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Incremental tree edit relation",
+      "question": "Which parts of a concrete syntax tree may be reused when a source range changes?",
+      "assumptions": [
+        "A tree is modeled as nodes with source ranges and parent-child relations",
+        "An input edit correctly describes old and new byte and point ranges",
+        "The model abstracts parser heuristics, allocator behavior, and exact reuse extent"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "tree-sitter-advanced-parsing",
+        "tree-sitter-fixed-source"
+      ]
+    },
+    {
+      "model": "Grammar-derived labeled tree",
+      "question": "How do grammar symbols and parser conflict-resolution rules determine the labels and shape exposed to syntax consumers?",
+      "assumptions": [
+        "Grammar rules are production descriptions and visible nodes are labels in the resulting tree",
+        "Precedence, associativity, and explicit conflicts determine one or more admissible parses",
+        "This is an explanatory model and does not claim a unique tree for every ambiguous grammar"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "tree-sitter-grammar",
+        "tree-sitter-fixed-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "grammar-to-concrete-syntax-tree",
+      "benefits": [
+        "Useful syntax structure without requiring a separate semantic model"
+      ],
+      "costs": [
+        "Grammar choices and conflict declarations affect tree usability"
+      ]
+    },
+    {
+      "feature_id": "incremental-tree-reuse",
+      "benefits": [
+        "Potentially reduces work for localized source changes"
+      ],
+      "costs": [
+        "Edit bookkeeping and concurrency rules become part of the host contract"
+      ]
+    },
+    {
+      "feature_id": "embeddable-parser-runtime",
+      "benefits": [
+        "Small portable runtime boundary"
+      ],
+      "costs": [
+        "Applications must integrate grammar generation, builds, and memory ownership"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "tree-sitter-fixed-source",
+      "kind": "source-code",
+      "title": "tree-sitter source tree at fixed commit e3d578032dec",
+      "uri": "https://github.com/tree-sitter/tree-sitter/commit/e3d578032dec2e7042291864302714878315dbed",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed source provenance for this card; the commit page identifies the exact inspected tree-sitter revision. Semantic claims are bounded by the cited official documentation."
+    },
+    {
+      "id": "tree-sitter-introduction",
+      "kind": "official-doc",
+      "title": "Tree-sitter Introduction",
+      "uri": "https://tree-sitter.github.io/tree-sitter/",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official overview of parser generation, incremental parsing, concrete syntax trees, robustness, and the C11 runtime."
+    },
+    {
+      "id": "tree-sitter-getting-started",
+      "kind": "official-doc",
+      "title": "Tree-sitter Getting Started",
+      "uri": "https://tree-sitter.github.io/tree-sitter/using-parsers/1-getting-started.html",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "tree-sitter-grammar",
+      "kind": "official-doc",
+      "title": "Tree-sitter Writing the Grammar",
+      "uri": "https://tree-sitter.github.io/tree-sitter/creating-parsers/3-writing-the-grammar.html",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    },
+    {
+      "id": "tree-sitter-advanced-parsing",
+      "kind": "official-doc",
+      "title": "Tree-sitter Advanced Parsing",
+      "uri": "https://tree-sitter.github.io/tree-sitter/using-parsers/3-advanced-parsing.html",
+      "accessed": "2026-10-23T00:00:00+00:00"
+    }
+  ],
+  "related_systems": [
+    "gcc",
+    "llvm"
+  ]
+}
