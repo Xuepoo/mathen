@@ -1,0 +1,255 @@
+{
+  "id": "ruby",
+  "name": "Ruby",
+  "version_context": "commit faefcb11050ea61ee011e3b73c929ff406d30b68",
+  "summary": "A dynamic object-oriented language runtime organized around object-valued data, late-bound methods, VM execution contexts, garbage collection, and a C extension boundary.",
+  "scope": [
+    "language execution",
+    "object and method model",
+    "VM frames, fibers, and threads",
+    "garbage collection and native extensions"
+  ],
+  "features": [
+    {
+      "id": "dynamic-object-method-model",
+      "name": "Dynamic object and method model",
+      "category": "language-model",
+      "claim_type": "fact",
+      "description": "Ruby values are objects whose methods can be defined on classes, modules, and individual objects. Method lookup, singleton methods, and overriding are runtime-visible parts of the language model.",
+      "benefits": [
+        "Supports late-bound polymorphism and object-specific behavior",
+        "Provides flexible composition through classes, modules, and method definitions"
+      ],
+      "costs": [
+        "Runtime method changes complicate static reasoning and optimization",
+        "Dispatch behavior depends on mutable object and class state"
+      ],
+      "evidence_ids": [
+        "ruby-methods",
+        "ruby-fixed-vm"
+      ]
+    },
+    {
+      "id": "vm-frame-fiber-execution",
+      "name": "VM frame and fiber execution contexts",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The MRI implementation represents execution through VM stack frames and supports fibers as resumable execution contexts. The fixed source contains VM and thread execution code used to manage calls and execution state.",
+      "benefits": [
+        "Makes call state and resumable computation explicit runtime boundaries",
+        "Supports cooperative decomposition of work without requiring an OS process per unit"
+      ],
+      "costs": [
+        "Frame, fiber, and thread lifecycle rules increase runtime complexity",
+        "Concurrency behavior depends on the selected execution context and implementation constraints"
+      ],
+      "evidence_ids": [
+        "ruby-vm-frames",
+        "ruby-concurrency",
+        "ruby-fixed-vm",
+        "ruby-fixed-thread"
+      ]
+    },
+    {
+      "id": "gc-managed-object-lifetime",
+      "name": "Garbage-collected object lifetime",
+      "category": "memory-model",
+      "claim_type": "fact",
+      "description": "Ruby manages ordinary object reachability through its garbage collector and exposes GC control and observation APIs. The fixed source contains the collector implementation and object-marking machinery.",
+      "benefits": [
+        "Removes ordinary manual reclamation from Ruby-level object management",
+        "Lets the runtime determine reachability across object graphs"
+      ],
+      "costs": [
+        "Collection work and heap behavior remain runtime concerns",
+        "Native integrations must preserve the collector's reachability assumptions"
+      ],
+      "evidence_ids": [
+        "ruby-gc",
+        "ruby-fixed-gc"
+      ]
+    },
+    {
+      "id": "gc-managed-c-extension-boundary",
+      "name": "GC-managed C extension boundary",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Ruby exposes objects to C extensions through the VALUE representation and requires extension code to use the runtime API. Typed native data supplies mark, free, size, and compaction callbacks that participate in object lifetime management.",
+      "benefits": [
+        "Allows native libraries to participate in the Ruby object model",
+        "Defines explicit hooks for native data reachability and cleanup"
+      ],
+      "costs": [
+        "Extensions must obey VALUE typing and garbage-collector reachability rules",
+        "Native callbacks and runtime object access add embedding and reentrancy constraints"
+      ],
+      "evidence_ids": [
+        "ruby-extension",
+        "ruby-fixed-gc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Dynamic object graph with late-bound dispatch",
+      "question": "How do object identity, class/module membership, and mutable method definitions determine a method call?",
+      "assumptions": [
+        "Objects and classes are vertices and references or lookup relations are edges",
+        "A method call is modeled as a lookup transition followed by execution",
+        "Inline caches and JIT details are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "ruby-methods",
+        "ruby-fixed-vm"
+      ]
+    },
+    {
+      "model": "Resumable execution state machine",
+      "question": "How do calls, frames, fibers, and threads transition while Ruby code runs and suspends?",
+      "assumptions": [
+        "Execution contexts have a current frame and may suspend or resume at defined boundaries",
+        "The model distinguishes language-level resumability from OS scheduling",
+        "The view describes MRI evidence and does not claim that all Ruby implementations share its internal layout"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "ruby-vm-frames",
+        "ruby-concurrency",
+        "ruby-fixed-vm",
+        "ruby-fixed-thread"
+      ]
+    },
+    {
+      "model": "Reachability graph with collector transitions",
+      "question": "How does Ruby determine which managed objects remain live and when native wrapped data can be released?",
+      "assumptions": [
+        "Managed objects are vertices and references are directed reachability edges",
+        "Collector phases are abstract transitions over the reachable subgraph",
+        "The model excludes collector timing, heap layout, and implementation-specific pause behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "ruby-gc",
+        "ruby-extension",
+        "ruby-fixed-gc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "dynamic-object-method-model",
+      "benefits": [
+        "Flexible late-bound object composition"
+      ],
+      "costs": [
+        "Mutable dispatch state increases analysis and optimization cost"
+      ]
+    },
+    {
+      "feature_id": "vm-frame-fiber-execution",
+      "benefits": [
+        "Explicit resumable execution contexts"
+      ],
+      "costs": [
+        "Suspension and scheduling rules complicate lifecycle reasoning"
+      ]
+    },
+    {
+      "feature_id": "gc-managed-object-lifetime",
+      "benefits": [
+        "Automatic object reclamation based on runtime reachability"
+      ],
+      "costs": [
+        "Heap and collection behavior are runtime-managed rather than directly scheduled by application code"
+      ]
+    },
+    {
+      "feature_id": "gc-managed-c-extension-boundary",
+      "benefits": [
+        "Native interoperability within managed lifetime rules"
+      ],
+      "costs": [
+        "C extensions carry strict ownership, marking, and reentrancy obligations"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Ruby source at faefcb11050e",
+      "uri": "https://github.com/ruby/ruby/commit/faefcb11050ea61ee011e3b73c929ff406d30b68",
+      "accessed": "2026-10-22T03:20:27+00:00",
+      "notes": "Fixed repository provenance inherited from the deterministic draft; the commit identifies the inspected source revision."
+    },
+    {
+      "id": "ruby-methods",
+      "kind": "official-doc",
+      "title": "Ruby documentation: Methods",
+      "uri": "https://docs.ruby-lang.org/en/master/syntax/methods_rdoc.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official Ruby language documentation for method definitions, overriding, scope, and singleton methods."
+    },
+    {
+      "id": "ruby-vm-frames",
+      "kind": "official-doc",
+      "title": "Ruby VM stack and frames",
+      "uri": "https://docs.ruby-lang.org/en/master/contributing/vm_stack_and_frames_md.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official implementation documentation for VM stack and frame concepts."
+    },
+    {
+      "id": "ruby-concurrency",
+      "kind": "official-doc",
+      "title": "Ruby concurrency guide",
+      "uri": "https://docs.ruby-lang.org/en/master/contributing/concurrency_guide_md.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official implementation documentation for Ruby thread and concurrency behavior."
+    },
+    {
+      "id": "ruby-gc",
+      "kind": "official-doc",
+      "title": "Ruby GC class documentation",
+      "uri": "https://docs.ruby-lang.org/en/master/GC.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official Ruby documentation for garbage-collection control and observation."
+    },
+    {
+      "id": "ruby-extension",
+      "kind": "official-doc",
+      "title": "Creating extension libraries for Ruby",
+      "uri": "https://docs.ruby-lang.org/en/master/extension_rdoc.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official C extension documentation for VALUE objects, typed data, and native callbacks."
+    },
+    {
+      "id": "ruby-fixed-vm",
+      "kind": "source-code",
+      "title": "Ruby VM source at faefcb11050e",
+      "uri": "https://github.com/ruby/ruby/blob/faefcb11050ea61ee011e3b73c929ff406d30b68/vm.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for VM execution and frame handling."
+    },
+    {
+      "id": "ruby-fixed-thread",
+      "kind": "source-code",
+      "title": "Ruby thread source at faefcb11050e",
+      "uri": "https://github.com/ruby/ruby/blob/faefcb11050ea61ee011e3b73c929ff406d30b68/thread.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for thread and execution-context behavior."
+    },
+    {
+      "id": "ruby-fixed-gc",
+      "kind": "source-code",
+      "title": "Ruby garbage collector source at faefcb11050e",
+      "uri": "https://github.com/ruby/ruby/blob/faefcb11050ea61ee011e3b73c929ff406d30b68/gc.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for garbage collection and native data callbacks."
+    }
+  ],
+  "related_systems": [
+    "cpython",
+    "rust"
+  ]
+}

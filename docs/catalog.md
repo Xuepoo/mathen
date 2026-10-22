@@ -74,14 +74,14 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | --- | --- | --- | --- |
 | `cpython` | CPython | language runtime | `P1` |
 | `rust` | Rust | language toolchain | `P1` |
-| `go` | Go | language toolchain | `P2` |
-| `ruby` | Ruby | language runtime | `P2` |
+| `go` | Go | language toolchain | `reviewed` | Compare goroutine/channel ordering, package interfaces, and toolchain integration using fixed-commit evidence |
+| `ruby` | Ruby | language runtime | `reviewed` | Compare dynamic object dispatch, VM frames, GC, and the C extension boundary using fixed-commit evidence |
 | `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
 | `freebsd` | FreeBSD | operating system | `P2` |
 | `systemd` | systemd | init system | `P1` |
 | `xv6-public` | xv6 | educational operating system | `P1` |
-| `libuv` | libuv | asynchronous I/O library | `P1` |
-| `curl` | curl | network library | `P1` |
+| `libuv` | libuv | asynchronous I/O library | `reviewed` | Compare event-loop, handle/request, cross-platform, and thread-pool boundaries using fixed-commit evidence |
+| `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
 | `openssl` | OpenSSL | cryptography library | `reviewed` |
 | `protobuf` | Protocol Buffers | serialization protocol | `P1` |
 | `grpc` | gRPC | RPC framework | `P1` |
@@ -120,14 +120,14 @@ identifiers, not claims that the projects share the same architecture.
 | `c` | C | `P0` | Manual memory, ABI, compilation, and systems interface |
 | `cpp` | C++ | `P0` | Zero-cost abstractions, ownership conventions, and templates |
 | `rust` | Rust | `P0` | Ownership, borrowing, algebraic types, and async runtimes |
-| `go` | Go | `P1` | Goroutines, channels, interfaces, and toolchain integration |
+| `go` | Go | language toolchain | `reviewed` | Compare goroutine/channel ordering, package interfaces, and toolchain integration using fixed-commit evidence |
 | `python` | Python | `P1` | Dynamic object model, interpreter, modules, and ecosystem |
 | `javascript` | JavaScript | `P1` | Dynamic language semantics and event-loop execution |
 | `typescript` | TypeScript | `P1` | Erased static typing and gradual boundary design |
 | `java` | Java | `P1` | Managed runtime, bytecode, GC, and virtual machine |
 | `kotlin` | Kotlin | `P2` | JVM language design, nullability, and multiplatform compilation |
 | `lua` | Lua | `P0` | Embeddable interpreter, minimal core, and extension API |
-| `ruby` | Ruby | `P2` | Dynamic object model and metaprogramming |
+| `ruby` | Ruby | language runtime | `reviewed` | Compare dynamic object dispatch, VM frames, GC, and the C extension boundary using fixed-commit evidence |
 | `erlang` | Erlang/OTP | `P0` | Actor processes, supervision trees, and fault tolerance |
 | `elixir` | Elixir | `P1` | BEAM abstractions, message passing, and supervision |
 | `haskell` | GHC/Haskell | `P1` | Laziness, type classes, purity, and compiler pipeline |
@@ -212,7 +212,7 @@ identifiers, not claims that the projects share the same architecture.
 | `envoy` | Envoy | `P1` | Extensible proxy filters and control/data plane separation |
 | `haproxy` | HAProxy | `P1` | Event loop, load balancing, and connection state |
 | `caddy` | Caddy | `P2` | Configurable server, automatic TLS, and plugin boundary |
-| `curl` | curl/libcurl | `P1` | Protocol abstraction and portable transfer state machine |
+| `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
 | `openssl` | OpenSSL | `P0` | Cryptographic primitives, protocol state, and provider boundary |
 | `wireguard` | WireGuard | `P1` | Minimal secure tunnel protocol and key state |
 | `quiche` | quiche | `P2` | QUIC and HTTP/3 protocol implementation |

@@ -1,0 +1,277 @@
+{
+  "id": "libuv",
+  "name": "libuv",
+  "version_context": "commit e36964a094fadba7926e88fe333dd1d6a6baf13c",
+  "summary": "A cross-platform asynchronous I/O library centered on a single-threaded event loop, long-lived handles, short-lived requests, and a worker pool for operations without portable nonblocking interfaces.",
+  "scope": [
+    "asynchronous I/O",
+    "event loop",
+    "handle and request lifecycle",
+    "thread-pool offload",
+    "cross-platform abstraction"
+  ],
+  "features": [
+    {
+      "id": "single-threaded-cross-platform-event-loop",
+      "name": "Single-threaded cross-platform event loop",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "libuv ties an event loop to a single thread, polls nonblocking network sockets through platform-specific mechanisms, and dispatches callbacks through a common loop lifecycle. The design keeps the application-facing execution model consistent while the poller varies by operating system.",
+      "benefits": [
+        "Provides a portable readiness and callback boundary across operating systems",
+        "Handles many network events without dedicating a blocking thread to each socket"
+      ],
+      "costs": [
+        "Loop and handle APIs are generally not thread-safe",
+        "Blocking work in the loop thread delays unrelated callbacks"
+      ],
+      "evidence_ids": [
+        "repository-commit",
+        "libuv-design",
+        "libuv-loop-api",
+        "libuv-loop-source"
+      ]
+    },
+    {
+      "id": "handle-request-lifecycle",
+      "name": "Handle and request lifecycle",
+      "category": "resource-lifecycle",
+      "claim_type": "fact",
+      "description": "libuv separates long-lived handles from short-lived requests. Initialized handles are closed asynchronously and their memory may be reclaimed after the close callback; requests carry operation context until completion or cancellation, with operation-specific cleanup where documented.",
+      "benefits": [
+        "Separates persistent event sources from individual operations",
+        "Makes callback ownership and cleanup points explicit"
+      ],
+      "costs": [
+        "Application memory must survive until the documented callback boundary",
+        "Different handle and request cleanup rules increase API lifecycle surface"
+      ],
+      "evidence_ids": [
+        "libuv-design",
+        "libuv-handle-api",
+        "libuv-request-api",
+        "libuv-common-source"
+      ]
+    },
+    {
+      "id": "threadpool-blocking-operation-offload",
+      "name": "Thread-pool blocking-operation offload",
+      "category": "I/O-model",
+      "claim_type": "fact",
+      "description": "libuv uses a global thread pool for filesystem operations, DNS functions, and user-supplied work, while network I/O remains on the loop's thread. Worker completion is reported back through the loop callback model.",
+      "benefits": [
+        "Provides asynchronous APIs for blocking filesystem and resolver operations",
+        "Keeps network I/O within the single-threaded event-loop model"
+      ],
+      "costs": [
+        "The global pool is a bounded shared resource across loops",
+        "Work completion and cancellation require coordination between worker and loop contexts"
+      ],
+      "evidence_ids": [
+        "libuv-design",
+        "libuv-threadpool-api",
+        "libuv-threadpool-source"
+      ]
+    },
+    {
+      "id": "opaque-handle-stream-abstraction",
+      "name": "Opaque handle and stream abstraction",
+      "category": "api-model",
+      "claim_type": "fact",
+      "description": "The public API represents event sources and resources with typed opaque handle structures, and represents many asynchronous operations with typed request structures. Stream APIs use callbacks and buffers to expose common read, write, and connection behavior across TCP, pipes, and related transports.",
+      "benefits": [
+        "Presents common application-facing operations across platform-specific resources",
+        "Carries callback context without exposing all internal platform state"
+      ],
+      "costs": [
+        "Typed lifecycle conventions must be learned for each handle and request family",
+        "Opaque internals limit direct control over platform-specific behavior"
+      ],
+      "evidence_ids": [
+        "libuv-design",
+        "libuv-guide-basics",
+        "libuv-public-header"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Event-loop transition system",
+      "question": "How do timers, pending callbacks, readiness polling, and close callbacks advance a libuv loop?",
+      "assumptions": [
+        "The loop has active, pending, polling, and closing state components",
+        "Callbacks are transitions that may create, stop, or close handles and requests",
+        "Platform poller details are abstracted behind readiness events"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "libuv-design",
+        "libuv-loop-api",
+        "libuv-loop-source"
+      ]
+    },
+    {
+      "model": "Resource ownership state machine",
+      "question": "When may handle and request memory be reclaimed or reused?",
+      "assumptions": [
+        "Handles and requests are distinct resource classes",
+        "Close and completion callbacks are ownership transition boundaries",
+        "The model excludes application-specific allocation strategies"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "libuv-design",
+        "libuv-handle-api",
+        "libuv-request-api",
+        "libuv-common-source"
+      ]
+    },
+    {
+      "model": "Event-loop and worker-pool composition",
+      "question": "Which operations remain on the loop thread and which are delegated to worker threads?",
+      "assumptions": [
+        "Network readiness operations are modeled as loop-thread transitions",
+        "Filesystem, DNS, and queued user work are modeled as worker-pool jobs whose completions re-enter the loop",
+        "The model abstracts pool sizing and operating-system scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "libuv-design",
+        "libuv-threadpool-api",
+        "libuv-threadpool-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "single-threaded-cross-platform-event-loop",
+      "benefits": [
+        "Portable high-concurrency network dispatch"
+      ],
+      "costs": [
+        "Loop affinity and nonblocking handlers constrain application code"
+      ]
+    },
+    {
+      "feature_id": "handle-request-lifecycle",
+      "benefits": [
+        "Explicit asynchronous lifecycle boundaries"
+      ],
+      "costs": [
+        "Callback-driven cleanup makes premature reuse errors possible"
+      ]
+    },
+    {
+      "feature_id": "threadpool-blocking-operation-offload",
+      "benefits": [
+        "Nonblocking facade for operations without portable readiness APIs"
+      ],
+      "costs": [
+        "Shared pool contention and cross-thread completion coordination"
+      ]
+    },
+    {
+      "feature_id": "opaque-handle-stream-abstraction",
+      "benefits": [
+        "Common transport and callback interfaces across operating systems"
+      ],
+      "costs": [
+        "Abstraction-specific lifecycle rules add API learning and integration cost"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "libuv source at e36964a094fa",
+      "uri": "https://github.com/libuv/libuv/commit/e36964a094fadba7926e88fe333dd1d6a6baf13c",
+      "accessed": "2026-10-22T06:07:29+00:00",
+      "notes": "Fixed repository provenance inherited from the deterministic draft; the commit identifies the inspected source revision."
+    },
+    {
+      "id": "libuv-design",
+      "kind": "official-doc",
+      "title": "libuv design overview",
+      "uri": "https://docs.libuv.org/en/v1.x/design.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official design documentation for handles, requests, the event loop, network I/O, and the thread pool."
+    },
+    {
+      "id": "libuv-loop-api",
+      "kind": "official-doc",
+      "title": "libuv event loop API",
+      "uri": "https://docs.libuv.org/en/v1.x/loop.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official API documentation for loop lifecycle and uv_run behavior."
+    },
+    {
+      "id": "libuv-handle-api",
+      "kind": "official-doc",
+      "title": "libuv handle API",
+      "uri": "https://docs.libuv.org/en/v1.x/handle.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official API documentation for handle activity, closing, and close callbacks."
+    },
+    {
+      "id": "libuv-request-api",
+      "kind": "official-doc",
+      "title": "libuv request API",
+      "uri": "https://docs.libuv.org/en/v1.x/request.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official API documentation for request lifecycle and cancellation."
+    },
+    {
+      "id": "libuv-threadpool-api",
+      "kind": "official-doc",
+      "title": "libuv thread pool work scheduling",
+      "uri": "https://docs.libuv.org/en/v1.x/threadpool.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official API documentation for queued worker-pool work and completion callbacks."
+    },
+    {
+      "id": "libuv-guide-basics",
+      "kind": "official-doc",
+      "title": "libuv basics guide",
+      "uri": "https://docs.libuv.org/en/v1.x/guide/basics.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official guide for asynchronous event loops, handles, requests, and callback context."
+    },
+    {
+      "id": "libuv-public-header",
+      "kind": "source-code",
+      "title": "libuv public header at e36964a094fa",
+      "uri": "https://github.com/libuv/libuv/blob/e36964a094fadba7926e88fe333dd1d6a6baf13c/include/uv.h",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for public handle, request, stream, and callback declarations."
+    },
+    {
+      "id": "libuv-loop-source",
+      "kind": "source-code",
+      "title": "libuv Unix loop at e36964a094fa",
+      "uri": "https://github.com/libuv/libuv/blob/e36964a094fadba7926e88fe333dd1d6a6baf13c/src/unix/core.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for Unix loop initialization and event-loop operations."
+    },
+    {
+      "id": "libuv-common-source",
+      "kind": "source-code",
+      "title": "libuv common lifecycle source at e36964a094fa",
+      "uri": "https://github.com/libuv/libuv/blob/e36964a094fadba7926e88fe333dd1d6a6baf13c/src/uv-common.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for common handle and request lifecycle support."
+    },
+    {
+      "id": "libuv-threadpool-source",
+      "kind": "source-code",
+      "title": "libuv thread pool at e36964a094fa",
+      "uri": "https://github.com/libuv/libuv/blob/e36964a094fadba7926e88fe333dd1d6a6baf13c/src/threadpool.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for worker queue and thread-pool execution."
+    }
+  ],
+  "related_systems": [
+    "nginx",
+    "curl"
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "id": "go",
+  "name": "Go",
+  "version_context": "commit d8b7594888df608969f1f0045088d02d6f95c982",
+  "summary": "A garbage-collected, strongly typed language and toolchain combining package dependencies with goroutine/channel concurrency, structural interfaces, and an integrated build command.",
+  "scope": [
+    "language execution",
+    "concurrency and memory ordering",
+    "package and interface model",
+    "toolchain integration"
+  ],
+  "features": [
+    {
+      "id": "package-dependency-and-build-boundary",
+      "name": "Package dependency and build boundary",
+      "category": "toolchain-model",
+      "claim_type": "fact",
+      "description": "Go programs are constructed from packages, and imports define package dependencies. The go command provides the standard entry point for building, testing, and installing packages; the fixed source contains the work package that orchestrates build actions.",
+      "benefits": [
+        "Makes dependency boundaries available to the compiler and build tool",
+        "Provides a consistent package-oriented build and test entry point"
+      ],
+      "costs": [
+        "Build behavior includes platform, configuration, and cache details beyond language semantics",
+        "The integrated toolchain is a substantial maintained subsystem"
+      ],
+      "evidence_ids": [
+        "go-spec",
+        "go-toolchain",
+        "go-build-source"
+      ]
+    },
+    {
+      "id": "goroutine-channel-concurrency",
+      "name": "Goroutine and channel concurrency",
+      "category": "concurrency-model",
+      "claim_type": "fact",
+      "description": "Go executions are composed from goroutines. Channel operations, mutexes, and atomic operations establish synchronization relations that constrain which writes can be observed by other goroutines; the fixed runtime source contains scheduler and channel implementations.",
+      "benefits": [
+        "Provides language-level coordination boundaries for concurrent work",
+        "Lets race-free programs rely on the documented sequential-consistency guarantee"
+      ],
+      "costs": [
+        "Unsynchronized shared data has race-dependent behavior",
+        "Scheduling, blocking, and channel coordination add runtime and reasoning overhead"
+      ],
+      "evidence_ids": [
+        "go-spec",
+        "go-memory-model",
+        "go-runtime-proc",
+        "go-runtime-chan"
+      ]
+    },
+    {
+      "id": "structural-interface-type-model",
+      "name": "Structural interface and type model",
+      "category": "language-model",
+      "claim_type": "fact",
+      "description": "Go interfaces define type sets through method specifications and, for constraint interfaces, embedded type terms. A non-interface type implements an interface when its method set satisfies the interface; the runtime source contains the representation and operations for interface values.",
+      "benefits": [
+        "Decouples interface consumers from explicit inheritance declarations",
+        "Supports small contracts that can be satisfied by independently declared types"
+      ],
+      "costs": [
+        "Method-set changes constrain API compatibility",
+        "Interface values carry dynamic type information that is resolved at runtime"
+      ],
+      "evidence_ids": [
+        "go-spec",
+        "go-runtime-interface"
+      ]
+    },
+    {
+      "id": "garbage-collected-value-model",
+      "name": "Garbage-collected value model",
+      "category": "memory-model",
+      "claim_type": "fact",
+      "description": "Go is specified as garbage-collected, and its language model defines typed values, variables, pointers, maps, slices, and interfaces independently of a manually managed object-lifetime API. The fixed runtime includes the garbage collector implementation.",
+      "benefits": [
+        "Removes ordinary manual reclamation from application-level value management",
+        "Provides a uniform typed value model across package APIs"
+      ],
+      "costs": [
+        "Collection work and allocation behavior remain runtime concerns",
+        "The language guarantee does not specify a particular collector schedule or latency"
+      ],
+      "evidence_ids": [
+        "go-spec",
+        "go-runtime-gc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Happens-before partial order",
+      "question": "When may a read in one goroutine observe a write performed by another goroutine?",
+      "assumptions": [
+        "Goroutine executions are sets of memory operations",
+        "Sequenced-before and synchronization edges form a partial order",
+        "The view concerns documented race-free guarantees and abstracts scheduler implementation details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "go-memory-model",
+        "go-runtime-proc",
+        "go-runtime-chan"
+      ]
+    },
+    {
+      "model": "Package dependency directed graph",
+      "question": "How do package imports constrain compilation and toolchain work?",
+      "assumptions": [
+        "Packages are vertices and imports are directed dependency edges",
+        "The graph describes dependency visibility and build ordering, not every generated or platform-specific action",
+        "Compiler implementation and cache invalidation details are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "go-spec",
+        "go-toolchain",
+        "go-build-source"
+      ]
+    },
+    {
+      "model": "Typed value and interface relation",
+      "question": "How do static types, interface method sets, and dynamic values relate at an assignment or call boundary?",
+      "assumptions": [
+        "Types and interface type sets are modeled as sets of permissible values or implementations",
+        "An interface value may carry a dynamic non-interface type at runtime",
+        "The model abstracts compiler representation details and does not treat every type-set operation as a runtime value operation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "go-spec",
+        "go-runtime-interface"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "package-dependency-and-build-boundary",
+      "benefits": [
+        "Analyzable dependency graph and standard build entry point"
+      ],
+      "costs": [
+        "Toolchain behavior and cache state expand the build model"
+      ]
+    },
+    {
+      "feature_id": "goroutine-channel-concurrency",
+      "benefits": [
+        "Language-level concurrency and explicit synchronization edges"
+      ],
+      "costs": [
+        "Race freedom and goroutine lifecycle coordination remain application responsibilities"
+      ]
+    },
+    {
+      "feature_id": "structural-interface-type-model",
+      "benefits": [
+        "Small implicit contracts and flexible package composition"
+      ],
+      "costs": [
+        "Method-set and dynamic-value behavior complicate compatibility reasoning"
+      ]
+    },
+    {
+      "feature_id": "garbage-collected-value-model",
+      "benefits": [
+        "Automatic reclamation for ordinary application values"
+      ],
+      "costs": [
+        "Allocation and collection costs are shifted into runtime behavior"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Go source at d8b7594888df",
+      "uri": "https://github.com/golang/go/commit/d8b7594888df608969f1f0045088d02d6f95c982",
+      "accessed": "2026-10-22T03:20:25+00:00",
+      "notes": "Fixed repository provenance inherited from the deterministic draft; the commit identifies the inspected source revision."
+    },
+    {
+      "id": "go-spec",
+      "kind": "official-doc",
+      "title": "Go Language Specification",
+      "uri": "https://go.dev/ref/spec",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official specification for packages, types, interfaces, goroutines, channels, variables, and garbage collection."
+    },
+    {
+      "id": "go-memory-model",
+      "kind": "official-doc",
+      "title": "The Go Memory Model",
+      "uri": "https://go.dev/ref/mem",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official memory ordering, synchronization, happens-before, and race semantics."
+    },
+    {
+      "id": "go-toolchain",
+      "kind": "official-doc",
+      "title": "Go Toolchains",
+      "uri": "https://go.dev/doc/toolchain",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official documentation for the go command and toolchain selection."
+    },
+    {
+      "id": "go-runtime-proc",
+      "kind": "source-code",
+      "title": "Go runtime scheduler at d8b7594888df",
+      "uri": "https://github.com/golang/go/blob/d8b7594888df608969f1f0045088d02d6f95c982/src/runtime/proc.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for scheduling and goroutine execution."
+    },
+    {
+      "id": "go-runtime-chan",
+      "kind": "source-code",
+      "title": "Go runtime channels at d8b7594888df",
+      "uri": "https://github.com/golang/go/blob/d8b7594888df608969f1f0045088d02d6f95c982/src/runtime/chan.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for channel operations and wait queues."
+    },
+    {
+      "id": "go-runtime-interface",
+      "kind": "source-code",
+      "title": "Go runtime interfaces at d8b7594888df",
+      "uri": "https://github.com/golang/go/blob/d8b7594888df608969f1f0045088d02d6f95c982/src/runtime/iface.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for interface representation and operations."
+    },
+    {
+      "id": "go-runtime-gc",
+      "kind": "source-code",
+      "title": "Go runtime garbage collector at d8b7594888df",
+      "uri": "https://github.com/golang/go/blob/d8b7594888df608969f1f0045088d02d6f95c982/src/runtime/mgc.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for the runtime garbage collector."
+    },
+    {
+      "id": "go-build-source",
+      "kind": "source-code",
+      "title": "Go build work package at d8b7594888df",
+      "uri": "https://github.com/golang/go/blob/d8b7594888df608969f1f0045088d02d6f95c982/src/cmd/go/internal/work/build.go",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-commit source provenance for go command build orchestration."
+    }
+  ],
+  "related_systems": [
+    "rust",
+    "cpython"
+  ]
+}
