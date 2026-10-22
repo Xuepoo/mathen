@@ -400,6 +400,7 @@ Mathen does not currently aim to:
 
 - [`docs/user-manual.md`](docs/user-manual.md) — schemas, data flow, and
   operating procedures
+- [`docs/catalog.md`](docs/catalog.md) — long-term Mathen catalog backlog
 - [`docs/vision.md`](docs/vision.md) — project motivation and modeling views
 - [`docs/methodology.md`](docs/methodology.md) — evidence and validation rules
 - [`docs/repository-catalog.md`](docs/repository-catalog.md) — repository
