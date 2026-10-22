@@ -260,9 +260,9 @@ identifiers, not claims that the projects share the same architecture.
 | --- | --- | --- | --- |
 | `threejs` | Three.js | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
 | `blender` | Blender | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
-| `webgl` | WebGL | `P0` | Browser graphics API and stateful command model |
-| `vulkan` | Vulkan | `P1` | Explicit GPU resources, commands, and synchronization |
-| `opengl` | OpenGL | `P1` | Stateful graphics pipeline and driver boundary |
+| `webgl` | WebGL | `reviewed` | Compare browser context state, typed GPU resources, shader submission, and security boundaries using fixed-commit evidence |
+| `vulkan` | Vulkan | `reviewed` | Compare explicit resources, command recording/submission, queue ownership, and synchronization using fixed-commit evidence |
+| `opengl` | OpenGL | `reviewed` | Compare context state, object bindings, programmable pipeline, and platform integration using fixed-commit evidence |
 | `sdl` | SDL | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
 | `godot` | Godot | `P1` | Scene tree, nodes, resources, and game runtime |
 | `react` | React | `P1` | Component tree, declarative rendering, and reconciliation |
@@ -271,7 +271,7 @@ identifiers, not claims that the projects share the same architecture.
 | `d3` | D3.js | `P1` | Data joins, declarative visualization, and DOM composition |
 | `ffmpeg` | FFmpeg | `P0` | Codec, filter, demuxer, muxer, and stream pipelines |
 | `gstreamer` | GStreamer | `P1` | Typed media elements, pads, and pipeline negotiation |
-| `imagemagick` | ImageMagick | `P2` | Image operators and format conversion pipelines |
+| `imagemagick` | ImageMagick | `reviewed` | Compare image state, ordered operators, coder dispatch, and format conversion pipelines using fixed-commit evidence |
 
 ### Observability, platform, and infrastructure tools
 

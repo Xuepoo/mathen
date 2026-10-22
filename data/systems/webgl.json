@@ -1,0 +1,29 @@
+{
+  "id": "webgl",
+  "name": "WebGL",
+  "version_context": "commit 3a65272e40f97c82de335825ea77c4da8e77a637",
+  "summary": "A browser graphics API that exposes an OpenGL ES-derived state machine through JavaScript contexts, typed resource objects, shader programs, and security-constrained framebuffer presentation.",
+  "scope": ["browser graphics context", "GPU resource objects", "shader pipeline", "stateful command model"],
+  "features": [
+    {"id": "context-owned-graphics-state", "name": "Context-owned graphics state machine", "category": "execution-model", "claim_type": "fact", "description": "A WebGLRenderingContext owns bindings, capabilities, programs, framebuffer state, and error state; commands mutate this context and subsequent commands observe the current bindings.", "benefits": ["Maps a portable JavaScript API onto ordered graphics operations"], "costs": ["Implicit state and context loss make ordering and lifecycle correctness difficult"] ,"evidence_ids": ["webgl-spec-source", "webgl-docs"]},
+    {"id": "typed-gpu-resource-handles", "name": "Typed GPU resource handles", "category": "resource-model", "claim_type": "fact", "description": "WebGL exposes typed opaque objects such as buffers, textures, shaders, programs, and framebuffers; creation, binding, configuration, and deletion occur through the context API.", "benefits": ["Separates resource identity from JavaScript object representation"], "costs": ["Applications must track bindings, compatibility, and deletion across asynchronous GPU work"], "evidence_ids": ["webgl-spec-source", "webgl2-docs"]},
+    {"id": "browser-security-boundary", "name": "Browser security and presentation boundary", "category": "deployment-model", "claim_type": "fact", "description": "WebGL integrates GPU rendering with a browser canvas and applies browser security, origin, context-creation, and context-loss rules around access to graphics resources and presented pixels.", "benefits": ["Makes GPU rendering available without granting native process privileges"], "costs": ["Browser policy and context loss constrain portability and determinism"], "evidence_ids": ["webgl-spec-source", "webgl-security-doc"]}
+  ],
+  "mathematical_views": [
+    {"model": "Labeled transition system for context state", "question": "Which graphics state results from an ordered sequence of WebGL commands, and which commands are valid in that state?", "assumptions": ["The context state is the complete modeled state", "Commands are ordered transitions with validation outcomes", "GPU execution details are abstracted behind command effects"], "claim_type": "inference", "evidence_ids": ["webgl-spec-source", "webgl-docs"]},
+    {"model": "Typed resource ownership graph", "question": "How do shader, buffer, texture, program, and framebuffer handles connect to context bindings and draw operations?", "assumptions": ["Opaque WebGL objects are resource nodes", "Bindings are labeled context edges", "The graph models API relationships rather than physical driver allocation"], "claim_type": "inference", "evidence_ids": ["webgl-spec-source", "webgl2-docs"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "context-owned-graphics-state", "benefits": ["Compact API for ordered graphics commands"], "costs": ["Hidden bindings create state leakage and ordering bugs"]},
+    {"feature_id": "typed-gpu-resource-handles", "benefits": ["Explicit resource categories and reusable handles"], "costs": ["Resource lifetime and binding compatibility remain application responsibilities"]},
+    {"feature_id": "browser-security-boundary", "benefits": ["Native-like GPU access within browser isolation"], "costs": ["Context loss, policy, and implementation differences reduce guarantees"]}
+  ],
+  "evidence": [
+    {"id": "webgl-repository-commit", "kind": "source-code", "title": "Khronos WebGL repository at fixed commit", "uri": "https://github.com/KhronosGroup/WebGL/commit/3a65272e40f97c82de335825ea77c4da8e77a637", "accessed": "2026-10-23", "notes": "Official WebGL working-group repository revision."},
+    {"id": "webgl-spec-source", "kind": "source-code", "title": "WebGL specification source", "uri": "https://github.com/KhronosGroup/WebGL/tree/3a65272e40f97c82de335825ea77c4da8e77a637/specs/latest", "accessed": "2026-10-23", "notes": "Official specification source for context state, resources, commands, and validation."},
+    {"id": "webgl-docs", "kind": "official-doc", "title": "WebGL official specification", "uri": "https://registry.khronos.org/webgl/specs/latest/", "accessed": "2026-10-23", "notes": "Published Khronos specification for WebGL API behavior."},
+    {"id": "webgl2-docs", "kind": "official-doc", "title": "WebGL 2.0 reference", "uri": "https://registry.khronos.org/webgl/specs/latest/2.0/", "accessed": "2026-10-23", "notes": "Official WebGL 2 resource and operation reference."},
+    {"id": "webgl-security-doc", "kind": "official-doc", "title": "WebGL security considerations", "uri": "https://www.khronos.org/webgl/security/", "accessed": "2026-10-23", "notes": "Khronos security boundary documentation."}
+  ],
+  "related_systems": ["opengl"]
+}

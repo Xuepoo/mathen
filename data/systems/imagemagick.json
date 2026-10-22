@@ -1,0 +1,31 @@
+{
+  "id": "imagemagick",
+  "name": "ImageMagick",
+  "version_context": "commit a0ac982c90383089ee41d126d0800df5e71781f6",
+  "summary": "An image-processing toolkit that represents images as mutable pixel and metadata structures, composes operators through command and API pipelines, and delegates format-specific I/O to coders.",
+  "scope": ["image representation", "image operators", "format coder boundary", "command-line pipeline"],
+  "features": [
+    {"id": "mutable-image-pixel-model", "name": "Mutable image pixel and metadata model", "category": "data-model", "claim_type": "fact", "description": "The MagickCore image structure carries pixel storage together with image metadata and sequence linkage, allowing operators to transform image state while retaining format-independent representation.", "benefits": ["Supports reuse of a common image model across operators and formats"], "costs": ["Large pixel buffers and metadata require explicit memory and lifecycle management"], "evidence_ids": ["imagemagick-core-source", "imagemagick-docs"]},
+    {"id": "operator-pipeline-composition", "name": "Composable image operator pipeline", "category": "execution-model", "claim_type": "fact", "description": "The command-line and MagickWand interfaces expose ordered image operations such as resize, colorspace conversion, compositing, and sequence processing; the resulting image state is the output of the applied operation sequence.", "benefits": ["Makes transformations scriptable and order-sensitive"], "costs": ["Intermediate representations and operation ordering can increase memory, CPU, and debugging cost"], "evidence_ids": ["imagemagick-cli-doc", "imagemagick-wand-source"]},
+    {"id": "format-coder-dispatch", "name": "Format coder dispatch boundary", "category": "integration-model", "claim_type": "fact", "description": "ImageMagick routes format-specific reading and writing through coder modules selected from image metadata, filename, or explicit format settings; format handling is separated from core image operators.", "benefits": ["Adds formats without changing every core operator"], "costs": ["Format capabilities, security policy, and coder-specific failure modes remain variable"], "evidence_ids": ["imagemagick-coder-source", "imagemagick-formats-doc"]}
+  ],
+  "mathematical_views": [
+    {"model": "Ordered endomorphism pipeline over image states", "question": "How does an ordered sequence of operators map an input image state to an output image state?", "assumptions": ["Each modeled operator is a partial transformation on image state", "Ordering is semantically significant", "I/O and resource failures are represented as rejected transitions"], "claim_type": "inference", "evidence_ids": ["imagemagick-cli-doc", "imagemagick-wand-source"]},
+    {"model": "Typed codec boundary graph", "question": "How are format-specific decoders and encoders connected to a format-independent image representation?", "assumptions": ["Coder modules are vertices attached to core image state", "A graph edge means an implementation integration point, not historical influence", "The model abstracts individual format syntax"], "claim_type": "inference", "evidence_ids": ["imagemagick-coder-source", "imagemagick-formats-doc"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "mutable-image-pixel-model", "benefits": ["One representation supports diverse operations and formats"], "costs": ["Memory footprint and mutation lifecycle are operational concerns"]},
+    {"feature_id": "operator-pipeline-composition", "benefits": ["Readable, reusable transformation workflows"], "costs": ["Pipeline order and intermediates affect performance and output"]},
+    {"feature_id": "format-coder-dispatch", "benefits": ["Extensible format support behind a stable core boundary"], "costs": ["Format-specific limits and security policy complicate uniform guarantees"]}
+  ],
+  "evidence": [
+    {"id": "imagemagick-repository-commit", "kind": "source-code", "title": "ImageMagick source at fixed commit", "uri": "https://github.com/ImageMagick/ImageMagick/commit/a0ac982c90383089ee41d126d0800df5e71781f6", "accessed": "2026-10-23", "notes": "Official repository revision used as the temporal anchor."},
+    {"id": "imagemagick-core-source", "kind": "source-code", "title": "ImageMagick MagickCore image structures", "uri": "https://github.com/ImageMagick/ImageMagick/blob/a0ac982c90383089ee41d126d0800df5e71781f6/MagickCore/image.h", "accessed": "2026-10-23", "notes": "Official source for image state and pixel/metadata representation."},
+    {"id": "imagemagick-wand-source", "kind": "source-code", "title": "ImageMagick MagickWand API", "uri": "https://github.com/ImageMagick/ImageMagick/blob/a0ac982c90383089ee41d126d0800df5e71781f6/MagickWand/magick-image.c", "accessed": "2026-10-23", "notes": "Official source for ordered image operations exposed through the wand API."},
+    {"id": "imagemagick-coder-source", "kind": "source-code", "title": "ImageMagick coder modules", "uri": "https://github.com/ImageMagick/ImageMagick/tree/a0ac982c90383089ee41d126d0800df5e71781f6/coders", "accessed": "2026-10-23", "notes": "Official format-specific coder boundary."},
+    {"id": "imagemagick-docs", "kind": "official-doc", "title": "ImageMagick Architecture", "uri": "https://imagemagick.org/script/architecture.php", "accessed": "2026-10-23", "notes": "Official architecture documentation for core image processing components."},
+    {"id": "imagemagick-cli-doc", "kind": "official-doc", "title": "ImageMagick command-line processing", "uri": "https://imagemagick.org/script/command-line-processing.php", "accessed": "2026-10-23", "notes": "Official documentation for command composition and image operation order."},
+    {"id": "imagemagick-formats-doc", "kind": "official-doc", "title": "ImageMagick image formats", "uri": "https://imagemagick.org/formats.html", "accessed": "2026-10-23", "notes": "Official format and coder capability inventory."}
+  ],
+  "related_systems": []
+}

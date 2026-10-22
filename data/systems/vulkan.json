@@ -1,0 +1,28 @@
+{
+  "id": "vulkan",
+  "name": "Vulkan",
+  "version_context": "Vulkan-Docs commit 6984aa088d1e7103832c7aa24379609f019fd7c0",
+  "summary": "An explicit graphics and compute API that separates device resources, command recording, queue submission, and synchronization so applications control much of execution and lifetime ordering.",
+  "scope": ["instance and device selection", "explicit resources", "command buffers and queues", "synchronization"],
+  "features": [
+    {"id": "explicit-device-resource-lifecycle", "name": "Explicit device and resource lifecycle", "category": "resource-model", "claim_type": "fact", "description": "Vulkan applications create and destroy instances, physical/logical devices, memory, images, buffers, descriptor objects, and pipelines through explicit handles and allocation decisions.", "benefits": ["Exposes resource and capability decisions needed for predictable performance"], "costs": ["Applications carry substantial lifetime, compatibility, and allocation bookkeeping"], "evidence_ids": ["vulkan-spec-source", "vulkan-guide"]},
+    {"id": "record-submit-command-separation", "name": "Record and submit command separation", "category": "execution-model", "claim_type": "fact", "description": "Vulkan records commands into command buffers and submits them to queues; recording and submission are distinct from execution, permitting application-controlled batching and multi-queue scheduling.", "benefits": ["Supports batching and explicit scheduling across queues"], "costs": ["Command-buffer reuse and queue ownership require careful synchronization"], "evidence_ids": ["vulkan-spec-source", "vulkan-guide"]},
+    {"id": "explicit-synchronization-contract", "name": "Explicit synchronization contract", "category": "coordination-model", "claim_type": "fact", "description": "Vulkan requires applications to describe relevant ordering and visibility through synchronization primitives and pipeline barriers, including resource layout and access transitions.", "benefits": ["Makes dependency and visibility costs explicit to implementations and tools"], "costs": ["Incorrect barriers cause races, validation failures, or unnecessary stalls"], "evidence_ids": ["vulkan-spec-source", "vulkan-synchronization-doc"]}
+  ],
+  "mathematical_views": [
+    {"model": "Dependency DAG of commands and resources", "question": "Which execution and memory dependencies must hold between recorded commands, resources, and queue submissions?", "assumptions": ["Commands and resource accesses are graph vertices and labeled edges", "Edges represent required ordering or visibility, not a complete driver schedule", "The graph is acyclic for the modeled submission segment"], "claim_type": "inference", "evidence_ids": ["vulkan-spec-source", "vulkan-synchronization-doc"]},
+    {"model": "Explicit lifecycle state machine", "question": "Which resource and command-buffer transitions are valid from creation through use and destruction?", "assumptions": ["Handle lifecycle states are modeled explicitly", "Host/device concurrency is represented only where the specification defines a synchronization requirement", "Implementation allocation internals are abstracted"], "claim_type": "inference", "evidence_ids": ["vulkan-spec-source", "vulkan-guide"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "explicit-device-resource-lifecycle", "benefits": ["Fine-grained control of capabilities, memory, and ownership"], "costs": ["More application code and more invalid states to prevent"]},
+    {"feature_id": "record-submit-command-separation", "benefits": ["Batchable work submission and queue-level scheduling"], "costs": ["Recorded work can become stale or expensive to coordinate"]},
+    {"feature_id": "explicit-synchronization-contract", "benefits": ["Predictable dependency visibility and lower hidden driver work"], "costs": ["Barrier correctness and tuning are difficult"]}
+  ],
+  "evidence": [
+    {"id": "vulkan-repository-commit", "kind": "source-code", "title": "Vulkan-Docs at fixed commit", "uri": "https://github.com/KhronosGroup/Vulkan-Docs/commit/6984aa088d1e7103832c7aa24379609f019fd7c0", "accessed": "2026-10-23", "notes": "Official Vulkan documentation repository revision."},
+    {"id": "vulkan-spec-source", "kind": "source-code", "title": "Vulkan specification source", "uri": "https://github.com/KhronosGroup/Vulkan-Docs/tree/6984aa088d1e7103832c7aa24379609f019fd7c0/chapters", "accessed": "2026-10-23", "notes": "Official specification chapters for objects, commands, queues, and synchronization."},
+    {"id": "vulkan-guide", "kind": "official-doc", "title": "Khronos Vulkan Guide", "uri": "https://github.khronos.org/Vulkan-Site/guide/latest/", "accessed": "2026-10-23", "notes": "Official guide for Vulkan application architecture and object lifecycle."},
+    {"id": "vulkan-synchronization-doc", "kind": "official-doc", "title": "Vulkan synchronization validation guide", "uri": "https://github.khronos.org/Vulkan-Site/guide/latest/synchronization_examples.html", "accessed": "2026-10-23", "notes": "Official synchronization examples and dependency guidance."}
+  ],
+  "related_systems": ["opengl", "webgl"]
+}
