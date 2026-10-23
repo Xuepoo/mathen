@@ -1,0 +1,295 @@
+{
+  "id": "ollama",
+  "name": "Ollama",
+  "version_context": "commit f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d",
+  "summary": "A local model-serving product that combines a CLI, HTTP API, model manifests and import tooling, and backend-specific runner processes behind a host daemon.",
+  "scope": [
+    "local model service",
+    "REST API and CLI",
+    "model manifest and import lifecycle",
+    "backend runner selection",
+    "host/device resource boundary"
+  ],
+  "features": [
+    {
+      "id": "daemon-api-service-boundary",
+      "name": "Daemon and API service boundary",
+      "category": "application-model",
+      "claim_type": "fact",
+      "description": "Ollama exposes a host service with REST operations for running and managing models. The fixed source separates API types/client code from server routing and request handling, while official documentation presents the API as a local endpoint.",
+      "benefits": [
+        "Allows multiple local clients and integrations to share one model service",
+        "Separates request protocol handling from model execution internals"
+      ],
+      "costs": [
+        "A daemon becomes a shared lifecycle, logging, and resource-management boundary",
+        "Local API compatibility must be maintained for CLI and external clients"
+      ],
+      "evidence_ids": [
+        "ollama-readme",
+        "ollama-api-doc",
+        "ollama-server-source",
+        "ollama-api-source"
+      ]
+    },
+    {
+      "id": "model-manifest-import-lifecycle",
+      "name": "Model manifest and import lifecycle",
+      "category": "model-definition",
+      "claim_type": "fact",
+      "description": "The repository contains model, manifest, create, and transfer packages, and the official Modelfile/import documentation defines model construction and import operations. This makes model identity and assembly a managed lifecycle above backend execution.",
+      "benefits": [
+        "Gives local models stable names and repeatable construction inputs",
+        "Separates model packaging and transfer from request execution"
+      ],
+      "costs": [
+        "Manifest, blob, and imported-weight compatibility create storage and migration obligations",
+        "Model metadata can select behavior that differs across backend capabilities"
+      ],
+      "evidence_ids": [
+        "ollama-model-source",
+        "ollama-manifest-source",
+        "ollama-create-source",
+        "ollama-import-doc",
+        "ollama-modelfile-doc"
+      ]
+    },
+    {
+      "id": "backend-runner-dispatch",
+      "name": "Backend-specific runner dispatch",
+      "category": "runtime-model",
+      "claim_type": "inference",
+      "description": "The fixed source separates LLM orchestration from llama.cpp and MLX-related backend directories, and the official project overview identifies supported backends. The product therefore dispatches model work through backend-specific runtime boundaries rather than one universal execution implementation.",
+      "benefits": [
+        "Adapts local inference to different operating-system and accelerator capabilities",
+        "Keeps backend-specific code behind a higher-level model-serving interface"
+      ],
+      "costs": [
+        "Backend differences can change memory use, supported features, and output behavior",
+        "Runner startup and process/resource coordination add latency and failure states"
+      ],
+      "evidence_ids": [
+        "ollama-llm-source",
+        "ollama-llama-tree",
+        "ollama-mlx-tree",
+        "ollama-readme"
+      ]
+    },
+    {
+      "id": "cli-api-client-boundary",
+      "name": "CLI and API client boundary",
+      "category": "control-model",
+      "claim_type": "fact",
+      "description": "Ollama provides a command-line surface for model operations and integrations while also publishing an HTTP API and Go client package. These are control clients over the service/model lifecycle, not separate inference runtimes.",
+      "benefits": [
+        "Supports interactive local use and programmatic automation over the same service",
+        "Allows integrations to avoid coupling directly to backend runners"
+      ],
+      "costs": [
+        "CLI, API, and client representations must remain semantically aligned",
+        "Control-plane errors can be confused with model or runner failures without explicit state reporting"
+      ],
+      "evidence_ids": [
+        "ollama-cli-source",
+        "ollama-api-source",
+        "ollama-cli-doc",
+        "ollama-api-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Model lifecycle state machine",
+      "question": "How does a model move from manifest/import inputs through creation, storage, availability, serving, and removal?",
+      "assumptions": [
+        "Manifest and blob state identify a model artifact",
+        "Import/create operations may fail before serving is possible",
+        "The model abstracts exact file formats, storage paths, and download scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "ollama-model-source",
+        "ollama-manifest-source",
+        "ollama-create-source",
+        "ollama-import-doc"
+      ]
+    },
+    {
+      "model": "Request-to-runner dispatch relation",
+      "question": "Which model runner and host resource boundary can satisfy an API request for a given model?",
+      "assumptions": [
+        "A request identifies a model and operation",
+        "Model metadata and host capabilities constrain runner selection",
+        "The view abstracts token scheduling and accelerator kernels"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "ollama-server-source",
+        "ollama-llm-source",
+        "ollama-llama-tree",
+        "ollama-mlx-tree"
+      ]
+    },
+    {
+      "model": "Service control boundary graph",
+      "question": "How do CLI commands, API clients, daemon routes, and backend runners compose into one local serving product?",
+      "assumptions": [
+        "CLI and API clients are control-plane vertices",
+        "The daemon mediates model and runner lifecycle",
+        "Structural composition does not imply that all clients expose identical semantics"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "ollama-cli-source",
+        "ollama-api-source",
+        "ollama-server-source",
+        "ollama-readme"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "daemon-api-service-boundary",
+      "benefits": ["One local service can serve CLI, library, and application clients"],
+      "costs": ["Daemon lifecycle and API compatibility become shared operational concerns"]
+    },
+    {
+      "feature_id": "model-manifest-import-lifecycle",
+      "benefits": ["Model packaging and naming are explicit and reusable"],
+      "costs": ["Artifact, manifest, and backend compatibility increase storage complexity"]
+    },
+    {
+      "feature_id": "backend-runner-dispatch",
+      "benefits": ["The service can select platform-appropriate inference implementations"],
+      "costs": ["Runner variation complicates performance and feature portability"]
+    },
+    {
+      "feature_id": "cli-api-client-boundary",
+      "benefits": ["Interactive and automated control paths share one service contract"],
+      "costs": ["Multiple control surfaces require consistent lifecycle and error semantics"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ollama-repository",
+      "kind": "source-code",
+      "title": "Ollama source at fixed commit f52b9e742d8c",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d",
+      "accessed": "2026-10-24",
+      "notes": "Official repository provenance fixed to a resolved commit."
+    },
+    {
+      "id": "ollama-readme",
+      "kind": "official-doc",
+      "title": "Ollama README at fixed commit",
+      "uri": "https://github.com/ollama/ollama/blob/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Official overview describing local/cloud access, REST API, CLI, and supported backends."
+    },
+    {
+      "id": "ollama-api-doc",
+      "kind": "official-doc",
+      "title": "Ollama API documentation",
+      "uri": "https://docs.ollama.com/api",
+      "accessed": "2026-10-24",
+      "notes": "Official REST API reference for running and managing models."
+    },
+    {
+      "id": "ollama-cli-doc",
+      "kind": "official-doc",
+      "title": "Ollama CLI documentation",
+      "uri": "https://docs.ollama.com/cli",
+      "accessed": "2026-10-24",
+      "notes": "Official command-line reference."
+    },
+    {
+      "id": "ollama-import-doc",
+      "kind": "official-doc",
+      "title": "Ollama model import documentation",
+      "uri": "https://docs.ollama.com/import",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for importing model files."
+    },
+    {
+      "id": "ollama-modelfile-doc",
+      "kind": "official-doc",
+      "title": "Ollama Modelfile reference",
+      "uri": "https://docs.ollama.com/modelfile",
+      "accessed": "2026-10-24",
+      "notes": "Official model construction and configuration reference."
+    },
+    {
+      "id": "ollama-server-source",
+      "kind": "source-code",
+      "title": "Ollama server package at fixed commit",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/server",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for daemon/server lifecycle and request handling."
+    },
+    {
+      "id": "ollama-api-source",
+      "kind": "source-code",
+      "title": "Ollama Go API package at fixed commit",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/api",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for API types and client operations."
+    },
+    {
+      "id": "ollama-model-source",
+      "kind": "source-code",
+      "title": "Ollama model package at fixed commit",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/model",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for model representation and metadata."
+    },
+    {
+      "id": "ollama-manifest-source",
+      "kind": "source-code",
+      "title": "Ollama manifest package at fixed commit",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/manifest",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for manifest representation."
+    },
+    {
+      "id": "ollama-create-source",
+      "kind": "source-code",
+      "title": "Ollama model creation package at fixed commit",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/create",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for model assembly and creation."
+    },
+    {
+      "id": "ollama-llm-source",
+      "kind": "source-code",
+      "title": "Ollama LLM orchestration package at fixed commit",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/llm",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for model runner orchestration."
+    },
+    {
+      "id": "ollama-llama-tree",
+      "kind": "source-code",
+      "title": "Ollama llama backend at fixed commit",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/llama",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for llama.cpp integration."
+    },
+    {
+      "id": "ollama-mlx-tree",
+      "kind": "source-code",
+      "title": "Ollama MLX backend at fixed commit",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/mlx",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for MLX-related backend integration."
+    },
+    {
+      "id": "ollama-cli-source",
+      "kind": "source-code",
+      "title": "Ollama CLI commands at fixed commit",
+      "uri": "https://github.com/ollama/ollama/tree/f52b9e742d8c9a308f7b23cd1f0ab52c7ddb694d/cmd",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for CLI commands and local control operations."
+    }
+  ],
+  "related_systems": ["transformers", "pytorch"]
+}

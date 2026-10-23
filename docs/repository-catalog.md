@@ -27,7 +27,8 @@ originality.
 | Protocol and messaging infrastructure | Protocol Buffers, gRPC, Eclipse Mosquitto | How are schemas, RPC boundaries, and publish/subscribe delivery represented? |
 | Mail and collaboration services | Stalwart Mail Server | How do SMTP transport/submission, IMAP mailbox sessions, and JMAP synchronization expose one shared mail state? |
 | Database engines | MySQL Server, RocksDB | How do server-oriented relational storage and embedded key-value storage organize state and durability? |
-| Graphics and multimedia libraries | Three.js, Blender, SDL | How do scene graphs, content tools, windows, input, and rendering abstractions compose? |
+| Graphics and multimedia libraries | Three.js, Blender, SDL, Unity, Chafa | How do scene graphs, content tools, terminal/image conversion, windows, input, and rendering abstractions compose? |
+| Generative AI applications and local model services | ComfyUI, Ollama | How do executable workflow graphs, node extensions, model lifecycles, API services, and backend runners compose? |
 
 ## Analysis policy
 

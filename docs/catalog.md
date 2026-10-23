@@ -107,6 +107,10 @@ These entries are already present in the repository at different review levels:
 | `glibc` | GNU C Library | C runtime | `reviewed` | Compare ABI versioning, dynamic loading, and process/thread runtime boundaries using fixed-commit evidence |
 | `threejs` | Three.js | 3D graphics library | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
 | `blender` | Blender | 3D graphics application | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
+| `unity` | Unity | game engine | `reviewed` | Compare public scene/component lifecycle, PlayerLoop scheduling, Scriptable Render Pipeline packages, and editor/build/runtime boundaries using fixed-source evidence; native engine internals remain out of scope |
+| `chafa` | Chafa | terminal image viewer | `reviewed` | Compare media loading, pixel-to-symbol canvases, terminal capability backends, and CLI stream boundaries using fixed-tag evidence |
+| `comfyui` | ComfyUI | generative AI application | `reviewed` | Compare workflow graphs, queued node execution, custom-node extensions, and API/UI boundaries using fixed-commit evidence |
+| `ollama` | Ollama | local model-serving product | `reviewed` | Compare daemon/API service, model manifest/import lifecycle, backend runner dispatch, and CLI control boundaries using fixed-commit evidence |
 | `sdl` | SDL | multimedia library | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
 | `wayland` | Wayland | display protocol | `reviewed` | Compare client/compositor protocol globals, surface commit state, typed message ordering, input capabilities, and per-client security boundaries using fixed-commit evidence |
 | `godot` | Godot | game engine | `planned` | Add a fixed-commit source bundle and draft before review; no evidence-backed card is present yet |
@@ -318,6 +322,8 @@ identifiers, not claims that the projects share the same architecture.
 | --- | --- | --- | --- |
 | `threejs` | Three.js | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
 | `blender` | Blender | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
+| `unity` | Unity | `reviewed` | Public scene/component lifecycle, PlayerLoop scheduling, Scriptable Render Pipeline packages, and editor/build/runtime boundaries; native engine internals remain out of scope |
+| `chafa` | Chafa | `reviewed` | Media loading, pixel-to-symbol canvases, terminal capability backends, and CLI stream boundaries |
 | `webgl` | WebGL | `reviewed` | Compare browser context state, typed GPU resources, shader submission, and security boundaries using fixed-commit evidence |
 | `vulkan` | Vulkan | `reviewed` | Compare explicit resources, command recording/submission, queue ownership, and synchronization using fixed-commit evidence |
 | `opengl` | OpenGL | `reviewed` | Compare context state, object bindings, programmable pipeline, and platform integration using fixed-commit evidence |
@@ -448,6 +454,13 @@ identifiers, not claims that the projects share the same architecture.
 | `transformers` | Hugging Face Transformers | `reviewed` | Compare model/config/tokenizer boundaries, generation loops, and checkpoint loading using fixed-commit evidence |
 | `mlflow` | MLflow | `P2` | Run/artifact provenance, flavor-aware model packaging, registry versions, aliases, and lifecycle |
 | `ray` | Ray | `P2` | Distributed task and actor execution |
+
+### Generative AI applications and local model services
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- |
+| `comfyui` | ComfyUI | `reviewed` | Workflow dependency graphs, queued node execution, custom-node extensions, and API/UI boundaries using fixed-commit evidence |
+| `ollama` | Ollama | `reviewed` | Local daemon/API service, model manifest/import lifecycle, backend runner dispatch, and CLI control boundaries using fixed-commit evidence |
 
 ### Storage, data platforms, and infrastructure services
 
