@@ -1,0 +1,369 @@
+{
+  "id": "dovecot",
+  "name": "Dovecot",
+  "version_context": "Development snapshot at commit 7b8041031d56b40e93eb794cb0b2e507ed1e9d7d; main documentation is rolling, and 2.3 design documents are historical context corroborated against this source",
+  "summary": "A security-oriented mail server that separates least-privilege protocol login from asynchronous authentication, user lookup, post-login mail processes, mailbox indexes, and pluggable storage backends.",
+  "scope": [
+    "IMAP and POP3 server",
+    "mailbox storage",
+    "authentication and user lookup",
+    "login process isolation",
+    "mailbox indexes and transactions",
+    "LMTP and mail delivery"
+  ],
+  "features": [
+    {
+      "id": "split-login-auth-mail-processes",
+      "name": "Split login, authentication, and mail processes",
+      "category": "process-model",
+      "claim_type": "fact",
+      "description": "Dovecot divides work among master, config, log, auth, protocol-specific login, and post-login mail processes. Login processes implement the minimum pre-authentication protocol surface, auth verifies credentials and performs userdb lookup, and mail processes handle post-login work with the logged-in user's privileges.",
+      "benefits": [
+        "Separates untrusted pre-authentication code from mailbox access",
+        "Allows process-specific privilege and resource limits",
+        "Keeps authentication and protocol handling reusable across IMAP, POP3, and related services"
+      ],
+      "costs": [
+        "UNIX-socket handoffs and final authentication checks add lifecycle complexity",
+        "A blocked or overloaded auth master can delay many logins",
+        "Process limits and service settings become part of capacity planning"
+      ],
+      "evidence_ids": [
+        "dovecot-processes-doc",
+        "dovecot-auth-process-doc",
+        "dovecot-repository-commit",
+        "dovecot-master-source",
+        "dovecot-auth-source"
+      ]
+    },
+    {
+      "id": "asynchronous-auth-and-userdb",
+      "name": "Asynchronous passdb and userdb authentication pipeline",
+      "category": "authentication-model",
+      "claim_type": "fact",
+      "description": "The auth process receives requests from login clients over its authentication protocol, selects a SASL mechanism, verifies credentials through passdb or credential lookup, and returns userdb information to the mail process. Long-running lookups and password-hash verification may use auth workers, while multiple requests can proceed asynchronously.",
+      "benefits": [
+        "Supports multiple authentication mechanisms and database backends",
+        "Prevents slow external lookups from blocking the auth master directly",
+        "Makes credential verification and user privilege data separate stages"
+      ],
+      "costs": [
+        "A successful credential check can still fail during userdb or final verification",
+        "Passdb, userdb, mechanism, and proxy settings create a large policy surface",
+        "Authentication protocol versioning and trust assumptions must remain aligned"
+      ],
+      "evidence_ids": [
+        "dovecot-auth-process-doc",
+        "dovecot-auth-overview-doc",
+        "dovecot-auth-protocol-doc",
+        "dovecot-auth-source"
+      ]
+    },
+    {
+      "id": "mailbox-index-storage-boundary",
+      "name": "Mailbox index and pluggable storage boundary",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "Dovecot exposes mailbox operations through mail-storage and mailbox abstractions, with storage backends implementing allocation, namespace attachment, mailbox allocation, purge, and related operations. IMAP state uses mail indexes and mailbox transactions so protocol-visible flags, UIDs, metadata, and message changes can be synchronized with backend storage.",
+      "benefits": [
+        "Allows mailbox formats and storage backends to share protocol-facing abstractions",
+        "Indexes accelerate mailbox state and synchronization operations",
+        "Transactions provide an explicit boundary for grouped mailbox changes"
+      ],
+      "costs": [
+        "Index and message-body consistency must be maintained across crashes and concurrent access",
+        "Backend-specific capabilities and locking behavior remain observable",
+        "Storage plugins expand the operational and compatibility surface"
+      ],
+      "evidence_ids": [
+        "dovecot-mail-storage-doc",
+        "dovecot-imap-state-source",
+        "dovecot-mailbox-transaction-source",
+        "dovecot-storage-source"
+      ]
+    },
+    {
+      "id": "protocol-login-and-session-limits",
+      "name": "Protocol-specific login isolation and session limits",
+      "category": "protocol-boundary",
+      "claim_type": "fact",
+      "description": "Dovecot uses separate login services for protocols such as IMAP, POP3, ManageSieve, and submission. Login processes run in restricted environments, can be bounded by service process and client limits, and transfer an authenticated connection to a post-login mail process; this implementation boundary is distinct from the IMAP or POP3 protocol specifications.",
+      "benefits": [
+        "Makes protocol admission and mailbox access separate trust zones",
+        "Bounds unauthenticated connection pressure and process resource use",
+        "Allows protocol-specific front ends to share auth and storage services"
+      ],
+      "costs": [
+        "Connection handoff and hibernation add state-transfer paths",
+        "Too-low limits reject or evict clients under load while too-high limits increase exposure",
+        "Protocol compliance does not determine storage durability or authentication policy"
+      ],
+      "evidence_ids": [
+        "dovecot-processes-doc",
+        "dovecot-login-processes-doc",
+        "dovecot-imap-doc",
+        "dovecot-imap-login-source"
+      ]
+    },
+    {
+      "id": "least-privilege-and-failure-separation",
+      "name": "Least-privilege boundaries and failure separation",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Dovecot's process split assigns different privileges and restricts protocol-facing code. Login services can run in a restricted chroot, auth verifies ordinary credential-based logins, and mail processes use authenticated user context. The trust boundary has exceptions: auth trusts connection metadata and client-certificate identity/trust reported by login processes, so isolation is not an unconditional guarantee against a compromised login process.",
+      "benefits": [
+        "Reduces the impact of vulnerabilities in pre-authentication and TLS code",
+        "Requires independent credential verification for ordinary password-based logins",
+        "Makes operational diagnosis distinguish auth, user lookup, protocol, and storage failures"
+      ],
+      "costs": [
+        "Privilege transitions and socket permissions must be configured coherently",
+        "Security isolation can add IPC, process, and debugging overhead",
+        "Failure diagnosis must follow state across multiple process classes",
+        "Client-certificate authentication inherits trust in the login process's certificate verification"
+      ],
+      "evidence_ids": [
+        "dovecot-processes-doc",
+        "dovecot-login-processes-doc",
+        "dovecot-auth-process-doc",
+        "dovecot-master-source"
+      ]
+    },
+    {
+      "id": "lmtp-recipient-delivery-results",
+      "name": "LMTP local delivery and recipient-specific failures",
+      "category": "delivery-model",
+      "claim_type": "fact",
+      "description": "Dovecot's LMTP local-delivery path looks up the recipient's storage user, optionally checks per-user concurrency through anvil, and invokes mail_deliver for each local recipient. It reports 250 Saved on success, temporary 451 replies for internal or delivery errors, 552 for rejection, and configurable temporary or permanent quota replies. These are delivery results returned to the upstream sender, distinct from IMAP mailbox access and from a durable MTA retry queue.",
+      "benefits": [
+        "Returns separate delivery outcomes for recipients sharing one transaction",
+        "Uses the mail user's storage and delivery settings at the delivery boundary",
+        "Exposes temporary failures and quota policy to the upstream queueing MTA"
+      ],
+      "costs": [
+        "The upstream sender must retain and retry temporary failures",
+        "Quota policy changes whether failure is retryable or permanent",
+        "A lost success reply can make a retry ambiguous; this path does not establish exactly-once delivery"
+      ],
+      "evidence_ids": ["dovecot-lmtp-local-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Authentication and session transition system",
+      "question": "How does a connection move from protocol login through SASL exchange, passdb verification, userdb lookup, final authorization, mail-process handoff, and session teardown?",
+      "assumptions": [
+        "A connection has unauthenticated, authenticating, authenticated, authorized, active, and terminated states",
+        "Passdb success and userdb success are separate transitions",
+        "Ordinary credential verification is independent of the login process; certificate identity and connection metadata are trusted exceptions",
+        "The view abstracts individual IMAP and POP3 wire commands"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "dovecot-auth-process-doc",
+        "dovecot-auth-protocol-doc",
+        "dovecot-processes-doc"
+      ]
+    },
+    {
+      "model": "Mailbox synchronization and transaction state machine",
+      "question": "How do mailbox indexes, UIDs, flags, metadata, transactions, commits, rollbacks, and backend storage changes produce a consistent protocol-visible mailbox state?",
+      "assumptions": [
+        "A mailbox is represented by backend content plus index and synchronization state",
+        "Mailbox operations occur inside explicit transaction contexts where applicable",
+        "Commit and rollback are modeled as distinct transitions with backend-dependent failure outcomes",
+        "The model does not claim that every storage backend provides identical crash guarantees",
+        "If mailbox IDs become inconsistent, recovery can require closing and reopening the mailbox, forcing an IMAP disconnect"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "dovecot-mail-storage-doc",
+        "dovecot-imap-state-source",
+        "dovecot-mailbox-transaction-source"
+      ]
+    },
+    {
+      "model": "Privilege and process trust graph",
+      "question": "How are master, login, auth, auth-worker, mail, storage, and logging processes connected, and which transitions cross a trust or privilege boundary?",
+      "assumptions": [
+        "Process classes and storage resources are distinct vertex types; storage libraries execute within mail processes rather than implying a dedicated storage daemon",
+        "Login-to-auth and login-to-mail handoffs are separate authorization boundaries",
+        "Chroot, user, group, and service limits are deployment-dependent labels",
+        "The graph distinguishes Dovecot's IMAP implementation from the IMAP protocol standard"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "dovecot-processes-doc",
+        "dovecot-login-processes-doc",
+        "dovecot-master-source",
+        "dovecot-auth-source"
+      ]
+    },
+    {
+      "model": "Per-recipient LMTP delivery outcome vector",
+      "question": "Which recipients completed mailbox delivery, which need upstream retry, and which have permanent failure after a shared LMTP transaction?",
+      "assumptions": [
+        "For recipients R, state is a vector o in {pending, saved, temporary-failure, permanent-failure}^R",
+        "User lookup and concurrency checks precede local delivery; each recipient result is determined independently by its delivery path",
+        "A 250 reply follows successful mail_deliver, while 4xx preserves the upstream sender's retry obligation",
+        "Observing no reply cannot distinguish a failed save from a successful save followed by connection loss; external deduplication is not assumed"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["dovecot-lmtp-local-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "split-login-auth-mail-processes",
+      "benefits": ["Protocol, authentication, and mailbox privileges are independently bounded"],
+      "costs": ["IPC handoffs and coordinated lifecycles increase complexity"]
+    },
+    {
+      "feature_id": "asynchronous-auth-and-userdb",
+      "benefits": ["Slow or parallel credential backends do not require blocking one auth request at a time"],
+      "costs": ["Multiple lookup and final-verification stages create more failure transitions"]
+    },
+    {
+      "feature_id": "mailbox-index-storage-boundary",
+      "benefits": ["Protocol state can share stable abstractions across mailbox formats"],
+      "costs": ["Index, transaction, lock, and backend semantics must remain coherent"]
+    },
+    {
+      "feature_id": "protocol-login-and-session-limits",
+      "benefits": ["Admission pressure and pre-authentication exposure are explicitly bounded"],
+      "costs": ["Capacity limits and handoff state can reject clients or add latency"]
+    },
+    {
+      "feature_id": "least-privilege-and-failure-separation",
+      "benefits": ["Compromise and failure domains are narrower than a single all-privileged server process"],
+      "costs": ["Cross-process debugging and configuration become more demanding"]
+    },
+    {
+      "feature_id": "lmtp-recipient-delivery-results",
+      "benefits": ["Mailbox delivery exposes recipient-specific success and retryable failure"],
+      "costs": ["Upstream retries and lost acknowledgements require end-to-end failure handling"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "dovecot-repository-commit",
+      "kind": "source-code",
+      "title": "Dovecot core source at fixed commit 7b8041031d56",
+      "uri": "https://github.com/dovecot/core/commit/7b8041031d56b40e93eb794cb0b2e507ed1e9d7d",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source revision for the reviewed Dovecot core implementation."
+    },
+    {
+      "id": "dovecot-processes-doc",
+      "kind": "official-doc",
+      "title": "Dovecot process architecture",
+      "uri": "https://doc.dovecot.org/main/developers/design/processes.html",
+      "accessed": "2026-10-23",
+      "notes": "Official Dovecot Community Edition documentation for master, auth, login, mail, worker, and logging process roles."
+    },
+    {
+      "id": "dovecot-auth-process-doc",
+      "kind": "official-doc",
+      "title": "Dovecot authentication process design",
+      "uri": "https://doc.dovecot.org/main/developers/design/auth_process.html",
+      "accessed": "2026-10-23",
+      "notes": "Official Dovecot documentation for auth-client sockets, SASL mechanism processing, passdb/userdb lookup, asynchronous requests, and final verification."
+    },
+    {
+      "id": "dovecot-auth-overview-doc",
+      "kind": "official-doc",
+      "title": "Dovecot authentication overview",
+      "uri": "https://doc.dovecot.org/main/core/config/auth/overview.html",
+      "accessed": "2026-10-23",
+      "notes": "Official Dovecot documentation distinguishing authentication mechanisms, password schemes, passdb, and userdb."
+    },
+    {
+      "id": "dovecot-auth-protocol-doc",
+      "kind": "official-doc",
+      "title": "Dovecot authentication protocol",
+      "uri": "https://doc.dovecot.org/2.3/developer_manual/design/auth_protocol",
+      "accessed": "2026-10-23",
+      "notes": "Official Dovecot developer documentation for auth-client/server handshakes, request continuation, cookies, and master verification."
+    },
+    {
+      "id": "dovecot-mail-storage-doc",
+      "kind": "official-doc",
+      "title": "Dovecot mail storage design",
+      "uri": "https://doc.dovecot.org/2.3/developer_manual/design/mail_storage/",
+      "accessed": "2026-10-23",
+      "notes": "Official Dovecot developer documentation for mail-storage, mailbox, namespace, backend, and index boundaries."
+    },
+    {
+      "id": "dovecot-login-processes-doc",
+      "kind": "official-doc",
+      "title": "Dovecot login processes",
+      "uri": "https://doc.dovecot.org/main/core/config/login_processes.html",
+      "accessed": "2026-10-23",
+      "notes": "Official Dovecot documentation for restricted login environments, per-connection processing, service limits, and unauthenticated connection controls."
+    },
+    {
+      "id": "dovecot-imap-doc",
+      "kind": "official-doc",
+      "title": "Dovecot IMAP configuration and behavior",
+      "uri": "https://doc.dovecot.org/main/core/config/imap.html",
+      "accessed": "2026-10-23",
+      "notes": "Official Dovecot documentation for IMAP extensions, indexes, and IMAP hibernation; protocol implementation evidence, not the IMAP standard."
+    },
+    {
+      "id": "dovecot-master-source",
+      "kind": "source-code",
+      "title": "Dovecot master service source",
+      "uri": "https://github.com/dovecot/core/blob/7b8041031d56b40e93eb794cb0b2e507ed1e9d7d/src/master/main.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of service setup, process supervision, and shared service pipes."
+    },
+    {
+      "id": "dovecot-auth-source",
+      "kind": "source-code",
+      "title": "Dovecot authentication service source",
+      "uri": "https://github.com/dovecot/core/blob/7b8041031d56b40e93eb794cb0b2e507ed1e9d7d/src/auth/auth.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of authentication service state and request processing."
+    },
+    {
+      "id": "dovecot-imap-login-source",
+      "kind": "source-code",
+      "title": "Dovecot IMAP login source",
+      "uri": "https://github.com/dovecot/core/blob/7b8041031d56b40e93eb794cb0b2e507ed1e9d7d/src/imap-login/client-authenticate.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of IMAP login authentication handoff; this is Dovecot's IMAP implementation boundary, not the IMAP protocol definition."
+    },
+    {
+      "id": "dovecot-imap-state-source",
+      "kind": "source-code",
+      "title": "Dovecot IMAP state source",
+      "uri": "https://github.com/dovecot/core/blob/7b8041031d56b40e93eb794cb0b2e507ed1e9d7d/src/imap/imap-state.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of IMAP mailbox refresh, UID, flag, transaction, and synchronization state."
+    },
+    {
+      "id": "dovecot-mailbox-transaction-source",
+      "kind": "source-code",
+      "title": "Dovecot mailbox transaction API sources",
+      "uri": "https://github.com/dovecot/core/blob/7b8041031d56b40e93eb794cb0b2e507ed1e9d7d/src/lib-storage/mail-storage.h#L670-L740",
+      "accessed": "2026-10-23",
+      "notes": "Local fixed-revision inspection of mailbox_is_inconsistent, mailbox synchronization, and transaction begin/commit/rollback declarations. Inconsistent IDs can require reopening and forced IMAP disconnection."
+    },
+    {
+      "id": "dovecot-storage-source",
+      "kind": "source-code",
+      "title": "Dovecot storage and index source",
+      "uri": "https://github.com/dovecot/core/tree/7b8041031d56b40e93eb794cb0b2e507ed1e9d7d/src/lib-storage",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of pluggable storage, mailbox, namespace, and index integration."
+    },
+    {
+      "id": "dovecot-lmtp-local-source",
+      "kind": "source-code",
+      "title": "Dovecot LMTP local recipient delivery and result mapping",
+      "uri": "https://github.com/dovecot/core/blob/7b8041031d56b40e93eb794cb0b2e507ed1e9d7d/src/lmtp/lmtp-local.c#L125-L135",
+      "accessed": "2026-10-23",
+      "notes": "Local fixed-revision inspection of lmtp_local_rcpt (lines 297-379), lmtp_local_default_do_deliver (lines 524-562), and quota reply mapping (lines 125-135): storage-user lookup, concurrency checks, 250 Saved, 451 temporary/internal failures, 552 rejection, and configurable 452/552 quota replies."
+    }
+  ]
+}

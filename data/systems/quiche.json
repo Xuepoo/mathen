@@ -1,0 +1,325 @@
+{
+  "id": "quiche",
+  "name": "quiche",
+  "version_context": "commit 89d1850f66d479c5d08f22ca3300a6bcc74049f9",
+  "summary": "A Rust implementation of QUIC and HTTP/3 that keeps packet processing and connection state in a low-level library while delegating sockets, timers, and event-loop integration to the application.",
+  "scope": [
+    "QUIC transport implementation",
+    "HTTP/3 and QPACK",
+    "TLS-backed handshake",
+    "stream and connection state",
+    "application I/O boundary"
+  ],
+  "features": [
+    {
+      "id": "application-driven-packet-engine",
+      "name": "Application-driven packet engine",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "quiche exposes connection methods that process received packets and generate outgoing packets, while the embedding application supplies sockets, packet I/O, an event loop, and timers.",
+      "benefits": [
+        "Keeps the protocol core independent of a particular socket or async runtime",
+        "Allows applications to integrate QUIC progress with existing event loops"
+      ],
+      "costs": [
+        "Applications must correctly provide I/O, timer, pacing, and retry driving",
+        "Incorrect event-loop integration can prevent protocol progress"
+      ],
+      "evidence_ids": [
+        "quiche-lib-source",
+        "quiche-readme"
+      ]
+    },
+    {
+      "id": "configured-connection-state",
+      "name": "Configured connection state",
+      "category": "configuration-model",
+      "claim_type": "fact",
+      "description": "A shared Config establishes the QUIC version, ALPN identifiers, stream and connection flow-control limits, congestion-control algorithm, idle timeout, and TLS settings used to create client or server connections.",
+      "benefits": [
+        "Concentrates transport and security policy before connection creation",
+        "Allows one configuration to be reused across multiple connections"
+      ],
+      "costs": [
+        "Applications must choose limits appropriate to their workload",
+        "Configuration errors can surface only when a connection is created or driven"
+      ],
+      "evidence_ids": [
+        "quiche-lib-source",
+        "quiche-config-doc"
+      ]
+    },
+    {
+      "id": "stream-multiplexed-transport",
+      "name": "Stream-multiplexed transport",
+      "category": "transport-model",
+      "claim_type": "fact",
+      "description": "The QUIC connection exposes independent bidirectional and unidirectional streams for ordered application bytes, with per-stream and connection-level flow control and stream reset operations.",
+      "benefits": [
+        "Allows concurrent application exchanges within one connection",
+        "Bounds sender progress through stream and connection credit"
+      ],
+      "costs": [
+        "Out-of-order packet delivery requires buffering until stream offsets can be reassembled",
+        "Stream and connection limits constrain concurrency and memory use"
+      ],
+      "evidence_ids": [
+        "quic-transport-rfc",
+        "quiche-lib-source"
+      ]
+    },
+    {
+      "id": "tls-integrated-handshake",
+      "name": "TLS-integrated handshake",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "quiche integrates TLS configuration and handshake progress into QUIC connection state; the application negotiates the application protocol through ALPN and drives the resulting encrypted packet exchange.",
+      "benefits": [
+        "Combines transport establishment and authenticated key negotiation",
+        "Provides confidentiality and integrity for QUIC packets"
+      ],
+      "costs": [
+        "TLS configuration and certificate policy remain deployment responsibilities",
+        "Handshake failures cross the transport and cryptographic boundaries"
+      ],
+      "evidence_ids": [
+        "quic-transport-rfc",
+        "http3-rfc",
+        "quiche-lib-source"
+      ]
+    },
+    {
+      "id": "http3-over-quic-module",
+      "name": "HTTP/3 over QUIC module",
+      "category": "protocol-composition",
+      "claim_type": "fact",
+      "description": "The h3 module builds an HTTP/3 connection over a QUIC transport, opens control and QPACK streams during setup, and exposes request, response, body, and event polling APIs over QUIC streams.",
+      "benefits": [
+        "Maps HTTP request/response exchanges onto independent QUIC streams",
+        "Provides QPACK and HTTP/3 frame processing above the transport core"
+      ],
+      "costs": [
+        "HTTP/3 setup depends on a suitable QUIC state and stream capacity",
+        "QPACK state and blocked header processing add ordering and resource concerns"
+      ],
+      "evidence_ids": [
+        "http3-rfc",
+        "quiche-h3-source",
+        "quiche-h3-doc"
+      ]
+    },
+    {
+      "id": "loss-recovery-and-pacing",
+      "name": "Loss recovery and pacing boundary",
+      "category": "reliability-model",
+      "claim_type": "fact",
+      "description": "quiche generates retransmission and congestion-control work through connection state and exposes timeout and pacing information for the application to schedule subsequent packet transmission.",
+      "benefits": [
+        "Preserves reliable stream delivery over UDP datagrams",
+        "Makes timer and pacing decisions observable to the host integration"
+      ],
+      "costs": [
+        "Reliable progress depends on the host honoring timeout and pacing signals",
+        "Loss recovery and congestion control add state and scheduling complexity"
+      ],
+      "evidence_ids": [
+        "quic-recovery-rfc",
+        "quiche-lib-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "QUIC connection state machine",
+      "question": "How does a quiche connection move from configuration and handshake through packet processing, stream service, timeout work, and termination?",
+      "assumptions": [
+        "A connection is a stateful endpoint whose transitions are driven by application calls, received packets, and timer events",
+        "The view describes protocol behavior and does not prove liveness under arbitrary host scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "quic-transport-rfc",
+        "quiche-lib-source"
+      ]
+    },
+    {
+      "model": "Ordered protocol operation graph",
+      "question": "Which operations must occur in order for an embedding application to establish QUIC and then exchange HTTP/3 data?",
+      "assumptions": [
+        "Configuration precedes connection creation, packet receive/send driving, and HTTP/3 connection setup",
+        "HTTP/3 control and QPACK streams are established before normal request events are processed",
+        "The graph models ordering constraints rather than a single event-loop implementation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "quiche-lib-source",
+        "quiche-h3-source",
+        "http3-rfc"
+      ]
+    },
+    {
+      "model": "Hierarchical resource budget",
+      "question": "How do connection, stream, header, and QPACK limits bound protocol resource consumption?",
+      "assumptions": [
+        "Connection-level limits aggregate stream data and stream counts",
+        "Per-stream limits prevent one stream from consuming the whole receive budget",
+        "Header and QPACK limits are implementation policies and do not establish a universal memory bound"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "quic-transport-rfc",
+        "quiche-config-doc",
+        "quiche-h3-doc"
+      ]
+    },
+    {
+      "model": "Protocol evolution compatibility relation",
+      "question": "Which layers can evolve independently while retaining a compatible QUIC and HTTP/3 integration boundary?",
+      "assumptions": [
+        "QUIC version negotiation, ALPN, HTTP/3 settings, and extension frame rules are explicit compatibility surfaces",
+        "The view identifies candidate evolution boundaries and is not a claim that all versions interoperate"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "quic-transport-rfc",
+        "http3-rfc",
+        "quiche-lib-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "application-driven-packet-engine",
+      "benefits": [
+        "Runtime-neutral integration with explicit packet and timer control"
+      ],
+      "costs": [
+        "The host application owns correctness of I/O and event-loop driving"
+      ]
+    },
+    {
+      "feature_id": "configured-connection-state",
+      "benefits": [
+        "Centralized transport, security, and resource policy"
+      ],
+      "costs": [
+        "Workload-specific settings make connection setup policy-heavy"
+      ]
+    },
+    {
+      "feature_id": "stream-multiplexed-transport",
+      "benefits": [
+        "Independent concurrent streams over one secure connection"
+      ],
+      "costs": [
+        "Buffering, flow-control, and stream lifecycle state grow with concurrency"
+      ]
+    },
+    {
+      "feature_id": "tls-integrated-handshake",
+      "benefits": [
+        "Authenticated encryption is part of transport establishment"
+      ],
+      "costs": [
+        "TLS policy and transport failure handling must be coordinated"
+      ]
+    },
+    {
+      "feature_id": "http3-over-quic-module",
+      "benefits": [
+        "HTTP/3 semantics reuse QUIC multiplexing and security"
+      ],
+      "costs": [
+        "HTTP/QPACK state adds another protocol layer and error surface"
+      ]
+    },
+    {
+      "feature_id": "loss-recovery-and-pacing",
+      "benefits": [
+        "Reliable delivery and congestion response over UDP"
+      ],
+      "costs": [
+        "Timer, pacing, retransmission, and congestion state require host cooperation"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "quiche-repository-commit",
+      "kind": "source-code",
+      "title": "quiche source at 89d1850f66d4",
+      "uri": "https://github.com/cloudflare/quiche/commit/89d1850f66d479c5d08f22ca3300a6bcc74049f9",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository revision used for the implementation card."
+    },
+    {
+      "id": "quiche-readme",
+      "kind": "official-doc",
+      "title": "quiche project README",
+      "uri": "https://github.com/cloudflare/quiche/blob/89d1850f66d479c5d08f22ca3300a6bcc74049f9/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Official project description of the QUIC and HTTP/3 implementation and application-owned I/O/event-loop boundary."
+    },
+    {
+      "id": "quiche-lib-source",
+      "kind": "source-code",
+      "title": "quiche transport API at 89d1850f66d4",
+      "uri": "https://github.com/cloudflare/quiche/blob/89d1850f66d479c5d08f22ca3300a6bcc74049f9/quiche/src/lib.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for Config, connect/accept, packet receive/send, timers, streams, congestion control, and TLS configuration."
+    },
+    {
+      "id": "quiche-h3-source",
+      "kind": "source-code",
+      "title": "quiche HTTP/3 module at 89d1850f66d4",
+      "uri": "https://github.com/cloudflare/quiche/blob/89d1850f66d479c5d08f22ca3300a6bcc74049f9/quiche/src/h3/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for HTTP/3 configuration, control/QPACK stream setup, request/response APIs, and event polling."
+    },
+    {
+      "id": "quiche-config-doc",
+      "kind": "official-doc",
+      "title": "quiche Config API",
+      "uri": "https://docs.quic.tech/quiche/struct.Config.html",
+      "accessed": "2026-10-23",
+      "notes": "Official API documentation for QUIC version, ALPN, flow-control, timeout, congestion-control, and TLS-related configuration."
+    },
+    {
+      "id": "quiche-h3-doc",
+      "kind": "official-doc",
+      "title": "quiche HTTP/3 module API",
+      "uri": "https://docs.quic.tech/quiche/h3/index.html",
+      "accessed": "2026-10-23",
+      "notes": "Official API documentation for HTTP/3 connection setup, request/response events, QPACK, and settings limits."
+    },
+    {
+      "id": "quic-transport-rfc",
+      "kind": "official-doc",
+      "title": "RFC 9000: QUIC: A UDP-Based Multiplexed and Secure Transport",
+      "uri": "https://www.rfc-editor.org/rfc/rfc9000",
+      "accessed": "2026-10-23",
+      "notes": "IETF specification for QUIC streams, flow control, handshake integration, packet processing, migration, and termination."
+    },
+    {
+      "id": "quic-recovery-rfc",
+      "kind": "official-doc",
+      "title": "RFC 9002: QUIC Loss Detection and Congestion Control",
+      "uri": "https://www.rfc-editor.org/rfc/rfc9002",
+      "accessed": "2026-10-23",
+      "notes": "IETF specification for loss detection, retransmission, congestion control, and pacing considerations."
+    },
+    {
+      "id": "http3-rfc",
+      "kind": "official-doc",
+      "title": "RFC 9114: HTTP/3",
+      "uri": "https://www.rfc-editor.org/rfc/rfc9114",
+      "accessed": "2026-10-23",
+      "notes": "IETF specification for mapping HTTP semantics, framing, QPACK, control streams, and connection lifecycle over QUIC."
+    }
+  ],
+  "related_systems": [
+    "openssl",
+    "curl",
+    "nginx"
+  ]
+}

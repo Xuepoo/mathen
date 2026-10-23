@@ -2,12 +2,15 @@
   "id": "systemd",
   "name": "systemd",
   "version_context": "commit 558da3129cce0f4ab52cc03d7444d12355300daa",
-  "summary": "A system and service manager that models boot and runtime work as typed units, dependency transactions, supervised services, and activation-driven lifecycle state.",
+  "summary": "A system and service manager that models boot and runtime work as typed units, dependency transactions, supervised services, activation triggers, cgroup resource hierarchies, structured journals, and configurable execution boundaries.",
   "scope": [
     "init and service manager",
     "unit dependency graph",
     "service supervision",
-    "socket and bus activation"
+    "activation-driven lifecycle",
+    "cgroups and resource control",
+    "journaling, boot, and recovery",
+    "service isolation boundaries"
   ],
   "features": [
     {
@@ -66,6 +69,111 @@
         "systemd-service-doc",
         "systemd-service-source"
       ]
+    },
+    {
+      "id": "activation-trigger-units",
+      "name": "Activation trigger units",
+      "category": "activation-model",
+      "claim_type": "fact",
+      "description": "Socket units listen on IPC or network endpoints and queue their associated service on activity; timer units schedule a configured unit from monotonic or calendar expressions; path units monitor filesystem conditions through inotify and queue a configured unit when those conditions become true.",
+      "benefits": [
+        "Defers service process creation until an external event or schedule requires it",
+        "Uses typed trigger units with explicit ordering and rate-limit behavior"
+      ],
+      "costs": [
+        "Triggered services must implement the corresponding socket, timer, or path contract",
+        "Trigger rate limits and event semantics can turn repeated activity into unit failure"
+      ],
+      "evidence_ids": [
+        "systemd-socket-doc",
+        "systemd-timer-doc",
+        "systemd-path-doc",
+        "systemd-socket-source",
+        "systemd-timer-source",
+        "systemd-path-source"
+      ]
+    },
+    {
+      "id": "cgroup-resource-hierarchy",
+      "name": "Cgroup resource hierarchy",
+      "category": "resource-control",
+      "claim_type": "fact",
+      "description": "systemd places services, sockets, scopes, and slices in a hierarchical cgroup tree and applies controller-backed accounting and limits such as CPU, memory, I/O, task, device, and network controls through unit configuration.",
+      "benefits": [
+        "Provides hierarchical resource accounting and control for related units",
+        "Associates process lifetime and resource ownership with unit and slice state"
+      ],
+      "costs": [
+        "Effective limits depend on parent hierarchy, kernel controller support, and delegation",
+        "Controller interactions and nested slices add operational complexity"
+      ],
+      "evidence_ids": [
+        "systemd-resource-control-doc",
+        "systemd-cgroup-source",
+        "systemd-execute-source"
+      ]
+    },
+    {
+      "id": "structured-journal-observability",
+      "name": "Structured journal observability",
+      "category": "observability-model",
+      "claim_type": "fact",
+      "description": "systemd-journald collects kernel, syslog, native journal, service standard-output, and audit inputs into structured indexed journals, adding trusted metadata such as process identity, unit, cgroup, boot, and invocation identifiers.",
+      "benefits": [
+        "Correlates logs with unit lifecycle, process, cgroup, boot, and invocation context",
+        "Supports volatile or persistent storage and independent journal namespaces"
+      ],
+      "costs": [
+        "Persistence, retention, namespace, and access policy remain deployment choices",
+        "Stopping journald terminates service stream connections until affected services restart"
+      ],
+      "evidence_ids": [
+        "systemd-journald-doc",
+        "systemd-journal-fields-doc",
+        "systemd-journald-manager-source",
+        "systemd-journald-socket-source"
+      ]
+    },
+    {
+      "id": "boot-recovery-targets",
+      "name": "Boot and recovery targets",
+      "category": "boot-recovery-model",
+      "claim_type": "fact",
+      "description": "The system manager composes boot and shutdown through special targets including sysinit.target, basic.target, default.target, shutdown.target, emergency.target, and rescue.target; failure to start the default target falls back to rescue.target, while emergency.target provides a minimal recovery shell.",
+      "benefits": [
+        "Makes boot milestones, shutdown ordering, and recovery modes explicit in the unit graph",
+        "Allows staged recovery with either minimal emergency or basic rescue services"
+      ],
+      "costs": [
+        "Boot behavior depends on generated units, enabled dependencies, and target selection",
+        "Recovery targets expose powerful administrative capabilities and require careful access control"
+      ],
+      "evidence_ids": [
+        "systemd-special-doc",
+        "systemd-manager-source",
+        "systemd-main-source"
+      ]
+    },
+    {
+      "id": "per-unit-isolation-boundaries",
+      "name": "Per-unit isolation boundaries",
+      "category": "security-boundary",
+      "claim_type": "fact",
+      "description": "Service execution can establish private mount, network, IPC, PID, user, and cgroup namespaces, restrict filesystem views and capabilities, and expose selected journal or credential paths through unit-specific namespace setup.",
+      "benefits": [
+        "Reduces the resources and kernel-facing views visible to a service process",
+        "Makes identity, capability, filesystem, namespace, and credential policy declarative per unit"
+      ],
+      "costs": [
+        "Isolation settings can break services that require shared namespaces or host filesystem access",
+        "Security strength depends on kernel support and the completeness of the configured restrictions"
+      ],
+      "evidence_ids": [
+        "systemd-exec-doc",
+        "systemd-namespace-source",
+        "systemd-execute-source",
+        "systemd-resource-control-doc"
+      ]
     }
   ],
   "mathematical_views": [
@@ -106,6 +214,65 @@
       "evidence_ids": [
         "systemd-service-doc",
         "systemd-service-source"
+      ]
+    },
+    {
+      "model": "Activation trigger graph",
+      "question": "How do socket, timer, and path units add event-triggered edges and rate limits to the unit dependency graph?",
+      "assumptions": [
+        "Trigger units and their configured target units are modeled as typed graph nodes",
+        "Implicit ordering and explicit requirement edges remain distinct"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "systemd-socket-doc",
+        "systemd-timer-doc",
+        "systemd-path-doc",
+        "systemd-socket-source",
+        "systemd-timer-source",
+        "systemd-path-source"
+      ]
+    },
+    {
+      "model": "Hierarchical resource allocation model",
+      "question": "How do slices, scopes, services, and cgroup controllers distribute accounting and resource constraints through a unit hierarchy?",
+      "assumptions": [
+        "The cgroup tree and controller settings are the modeled resource state",
+        "Parent and delegated-controller effects are represented as inherited constraints"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "systemd-resource-control-doc",
+        "systemd-cgroup-source",
+        "systemd-execute-source"
+      ]
+    },
+    {
+      "model": "Boot and recovery state machine",
+      "question": "How do special targets and manager crash/reboot policies move the system between initialization, normal operation, shutdown, and recovery states?",
+      "assumptions": [
+        "Special targets are synchronization and transition states rather than a complete boot proof",
+        "Generated units and deployment-specific target dependencies are external inputs"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "systemd-special-doc",
+        "systemd-manager-source",
+        "systemd-main-source"
+      ]
+    },
+    {
+      "model": "Unit isolation boundary model",
+      "question": "Which process, filesystem, namespace, capability, credential, and cgroup boundaries are established for a configured service unit?",
+      "assumptions": [
+        "The unit execution context and namespace mount plan are the modeled boundary inputs",
+        "Kernel and container-manager support limits the effective boundary"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "systemd-exec-doc",
+        "systemd-namespace-source",
+        "systemd-execute-source"
       ]
     }
   ],
@@ -149,6 +316,142 @@
       "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/service.c",
       "accessed": "2026-10-23T00:00:00+00:00",
       "notes": "Fixed-revision source provenance for service state transitions, readiness, and restart handling."
+    },
+    {
+      "id": "systemd-socket-doc",
+      "kind": "official-doc",
+      "title": "systemd.socket manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for socket-based activation, service association, ordering, and trigger limits."
+    },
+    {
+      "id": "systemd-timer-doc",
+      "kind": "official-doc",
+      "title": "systemd.timer manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for monotonic and calendar timer activation, persistence, and ordering."
+    },
+    {
+      "id": "systemd-path-doc",
+      "kind": "official-doc",
+      "title": "systemd.path manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd.path.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for inotify-backed path activation and trigger limits."
+    },
+    {
+      "id": "systemd-resource-control-doc",
+      "kind": "official-doc",
+      "title": "systemd.resource-control manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for cgroup hierarchy, controllers, accounting, delegation, and unit resource settings."
+    },
+    {
+      "id": "systemd-journald-doc",
+      "kind": "official-doc",
+      "title": "systemd-journald.service manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd-journald.service.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for journal inputs, structured storage, persistence, namespaces, and access control."
+    },
+    {
+      "id": "systemd-journal-fields-doc",
+      "kind": "official-doc",
+      "title": "systemd.journal-fields manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd.journal-fields.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for trusted journal metadata including unit, cgroup, boot, and invocation fields."
+    },
+    {
+      "id": "systemd-special-doc",
+      "kind": "official-doc",
+      "title": "systemd.special manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd.special.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for boot, shutdown, emergency, rescue, target, and slice semantics."
+    },
+    {
+      "id": "systemd-exec-doc",
+      "kind": "official-doc",
+      "title": "systemd.exec manual",
+      "uri": "https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Official systemd documentation for execution identity, namespaces, filesystem restrictions, capabilities, credentials, and journal integration."
+    },
+    {
+      "id": "systemd-socket-source",
+      "kind": "source-code",
+      "title": "systemd socket unit source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/socket.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for socket listeners, service activation jobs, accepted connections, and socket cgroup setup."
+    },
+    {
+      "id": "systemd-timer-source",
+      "kind": "source-code",
+      "title": "systemd timer unit source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/timer.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for timer scheduling, trigger jobs, persistence timestamps, and time-change handling."
+    },
+    {
+      "id": "systemd-path-source",
+      "kind": "source-code",
+      "title": "systemd path unit source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/path.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for path watches, condition checks, trigger jobs, and path trigger rate limiting."
+    },
+    {
+      "id": "systemd-cgroup-source",
+      "kind": "source-code",
+      "title": "systemd cgroup resource source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/cgroup.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for cgroup contexts, controller attributes, accounting, delegation, and unit resource state."
+    },
+    {
+      "id": "systemd-execute-source",
+      "kind": "source-code",
+      "title": "systemd execution source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/execute.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for process placement, credentials, capabilities, cgroup setup, and execution context handling."
+    },
+    {
+      "id": "systemd-namespace-source",
+      "kind": "source-code",
+      "title": "systemd namespace source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/namespace.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for per-unit mount, cgroup, journal, filesystem, and other namespace boundaries."
+    },
+    {
+      "id": "systemd-journald-manager-source",
+      "kind": "source-code",
+      "title": "systemd journald manager source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/journal/journald-manager.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for journald manager lifecycle, storage, namespaces, and journal event handling."
+    },
+    {
+      "id": "systemd-journald-socket-source",
+      "kind": "source-code",
+      "title": "systemd journald socket source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/journal/journald-socket.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for journald socket transports and service stream connections."
+    },
+    {
+      "id": "systemd-main-source",
+      "kind": "source-code",
+      "title": "systemd main manager source at 558da3129cce",
+      "uri": "https://github.com/systemd/systemd/blob/558da3129cce0f4ab52cc03d7444d12355300daa/src/core/main.c",
+      "accessed": "2026-10-23T00:00:00+00:00",
+      "notes": "Fixed-revision source provenance for manager boot configuration, watchdogs, crash actions, reload limits, and security defaults."
     }
   ],
   "related_systems": [
@@ -181,6 +484,51 @@
       ],
       "costs": [
         "Service behavior must conform to selected supervision protocol"
+      ]
+    },
+    {
+      "feature_id": "activation-trigger-units",
+      "benefits": [
+        "Defers work until socket, schedule, or filesystem activity requires it"
+      ],
+      "costs": [
+        "Event-triggered behavior introduces timing, readiness, and rate-limit interactions"
+      ]
+    },
+    {
+      "feature_id": "cgroup-resource-hierarchy",
+      "benefits": [
+        "Makes resource ownership and limits visible in the same hierarchy as unit lifecycle"
+      ],
+      "costs": [
+        "Hierarchical controller inheritance can make effective limits non-local"
+      ]
+    },
+    {
+      "feature_id": "structured-journal-observability",
+      "benefits": [
+        "Provides structured records linked to trusted runtime identity and boot context"
+      ],
+      "costs": [
+        "Storage and access policy require capacity and privilege decisions"
+      ]
+    },
+    {
+      "feature_id": "boot-recovery-targets",
+      "benefits": [
+        "Provides explicit normal, shutdown, emergency, and rescue transitions"
+      ],
+      "costs": [
+        "Target composition varies with generated units and administrator configuration"
+      ]
+    },
+    {
+      "feature_id": "per-unit-isolation-boundaries",
+      "benefits": [
+        "Allows least-privilege and reduced-view execution without changing the service binary"
+      ],
+      "costs": [
+        "Sandboxing may conflict with legitimate host integration requirements"
       ]
     }
   ]

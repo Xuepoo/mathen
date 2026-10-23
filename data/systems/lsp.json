@@ -1,0 +1,262 @@
+{
+  "id": "lsp",
+  "name": "Language Server Protocol",
+  "version_context": "LSP 3.17 specification as preserved at microsoft/language-server-protocol commit baf2db31b5fb314a8f358f9a839d3c66e9d98734; this is a version-bounded protocol contract, not a claim about the latest protocol or any particular server implementation.",
+  "summary": "A capability-negotiated JSON-RPC contract between development tools and language servers that separates language-feature execution from editor integration while synchronizing client-owned document state.",
+  "scope": [
+    "Client/server components and framed JSON-RPC interfaces",
+    "Initialization, shutdown, and document ownership state",
+    "Request ordering, cancellation, and partial-result failure semantics",
+    "Capability and position-encoding evolution in the 3.17 contract; server internals and deployment transport selection are outside scope"
+  ],
+  "features": [
+    {
+      "id": "editor-language-service-boundary",
+      "name": "Editor and language-service component boundary",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "The client represents the development tool and advertises client capabilities; the server returns its language-service capabilities in InitializeResult. Subsequent methods use JSON-RPC requests with correlated responses or notifications without responses. The protocol standardizes the interaction boundary rather than prescribing a parser, compiler, index, or server scheduling implementation.",
+      "benefits": [
+        "Language services and editor integrations can evolve behind a common message contract"
+      ],
+      "costs": [
+        "Each endpoint must map its own document and feature representations to the negotiated contract"
+      ],
+      "evidence_ids": ["lsp-initialize", "lsp-base"]
+    },
+    {
+      "id": "framed-json-rpc-interface",
+      "name": "Byte-framed JSON-RPC with explicit coordinate encoding",
+      "category": "interface-model",
+      "claim_type": "fact",
+      "description": "Base messages have ASCII headers, a required Content-Length measured in bytes, and UTF-8 JSON-RPC 2.0 content. Document positions instead use zero-based line and character offsets whose units are negotiated through PositionEncodingKind. UTF-16 is the default and must be supported by servers; content byte lengths and document character offsets are distinct quantities.",
+      "benefits": [
+        "Provides an interoperable framing and addressing contract across host languages"
+      ],
+      "costs": [
+        "Incorrect byte counts or coordinate conversion can corrupt framing or target the wrong document range"
+      ],
+      "evidence_ids": ["lsp-base", "lsp-position", "lsp-initialize"]
+    },
+    {
+      "id": "negotiated-session-lifecycle",
+      "name": "Initialization and two-step shutdown lifecycle",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "initialize is the first client request and may be sent only once; ordinary traffic is gated on its response, with enumerated initialization-time exceptions. initialized marks client readiness for server capability registration. shutdown requests termination of service without immediate process exit so its response can be delivered; exit subsequently asks the process to terminate. Requests after shutdown should receive InvalidRequest, and exit distinguishes prior orderly shutdown through its recommended exit code.",
+      "benefits": ["Makes readiness and orderly teardown explicit at the service boundary"],
+      "costs": [
+        "Endpoints must retain lifecycle state and handle early, late, and exceptional messages"
+      ],
+      "evidence_ids": ["lsp-initialize", "lsp-initialized", "lsp-shutdown", "lsp-exit"]
+    },
+    {
+      "id": "client-owned-versioned-document-mirror",
+      "name": "Client-owned versioned document mirrors",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "didOpen transfers content management to the client, so the server must not read that open document through its URI. Open and close notifications are balanced with at most one active open per document. didChange supplies the version after its changes and either full text or ordered range edits; both notifications and edits within one notification must be applied in received order. didClose returns the master content to the URI-backed location. Clients must synchronize content before requesting information about it.",
+      "benefits": [
+        "Language services can operate on unsaved editor content using full or incremental updates"
+      ],
+      "costs": [
+        "Lost ordering, stale mirrors, or wrong offset units undermine answers even when JSON-RPC messages are well formed"
+      ],
+      "evidence_ids": ["lsp-open", "lsp-change", "lsp-close", "lsp-position"]
+    },
+    {
+      "id": "correlated-cancellation-and-response-order",
+      "name": "Correlated failures and cooperative cancellation",
+      "category": "failure-model",
+      "claim_type": "fact",
+      "description": "Responses correlate to request IDs and return either a result or an error. Servers may execute requests in parallel and reorder responses only when correctness is unaffected. $/cancelRequest identifies the request to cancel, but a canceled request still requires a response and can return partial results; cancellation is not permission to abandon the response lifecycle. Error codes distinguish protocol errors and conditions such as RequestCancelled and ContentModified.",
+      "benefits": [
+        "Allows responsive clients to supersede work while maintaining request accounting"
+      ],
+      "costs": [
+        "Cancellation races and dependency-sensitive ordering remain endpoint responsibilities; cancellation does not establish a hard execution deadline"
+      ],
+      "evidence_ids": ["lsp-base"]
+    },
+    {
+      "id": "tokenized-partial-results",
+      "name": "Tokenized progress and incremental result delivery",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "Clients opt into partial results for a supported request by providing partialResultToken. The server then reports the entire result as appending $/progress notifications and leaves the final response empty of result values. Partial results after RequestCancelled may be used if their incompleteness is made clear; after other errors they should be discarded. Work-done progress and partial-result progress have separate tokens and purposes.",
+      "benefits": [
+        "Supports incremental consumption instead of waiting for one complete result payload"
+      ],
+      "costs": [
+        "Consumers track result accumulation and final status; these messages alone do not impose a memory bound or backpressure policy"
+      ],
+      "evidence_ids": ["lsp-partial-results", "lsp-base"]
+    },
+    {
+      "id": "capability-driven-contract-evolution",
+      "name": "Capability-driven contract evolution",
+      "category": "evolution-model",
+      "claim_type": "fact",
+      "description": "Client and server capabilities determine supported optional features, and dynamic registration is available only where the client advertises support. Unknown capability properties should be ignored; absent optional client capabilities denote lack of support, without removing older mandatory client functionality such as text synchronization. The 3.17 specification annotates additions with since versions, including position-encoding negotiation and notebook support.",
+      "benefits": [
+        "Permits feature-by-feature interoperability between endpoints with different implementation coverage"
+      ],
+      "costs": [
+        "Compatibility depends on the capability combination and baseline obligations rather than a single protocol-version comparison"
+      ],
+      "evidence_ids": ["lsp-initialize", "lsp-registration", "lsp-base", "lsp-position"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Product state machine for session phase, document ownership, and outstanding requests",
+      "question": "Which messages are admissible given lifecycle phase, document state, and pending request IDs?",
+      "assumptions": [
+        "State is (phase, document map, pending requests); phase abstracts initialization, ready service, shutdown, and exit.",
+        "Document entries contain ownership, version, text, and negotiated position encoding; open/close are balanced and didChange preserves specified order.",
+        "A cancellation marks pending work but does not itself remove the obligation to send a response.",
+        "Initialization-time exceptions are explicit transitions; the model does not prove transport delivery or crash recovery."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "lsp-initialize",
+        "lsp-shutdown",
+        "lsp-exit",
+        "lsp-open",
+        "lsp-change",
+        "lsp-close",
+        "lsp-base"
+      ]
+    },
+    {
+      "model": "Ordered document-edit fold with dependency-constrained request scheduling",
+      "question": "When can a server mirror a document and reorder computation without changing the answer?",
+      "assumptions": [
+        "Client and server start from the same text; each edit is interpreted against the state produced by preceding edits using the same position encoding.",
+        "The mirror is fold(apply, initial text, ordered edits); this is sequential state replication, not a commutative merge or CRDT.",
+        "Only computations independent of intervening state mutations may be reordered; version identifiers alone do not repair missing updates.",
+        "For a simple contiguous-string implementation, k edits on documents of maximum size n can cost O(k*n) time and O(n) working space; this is a model assumption, not an LSP implementation guarantee."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["lsp-change", "lsp-open", "lsp-position", "lsp-base"]
+    },
+    {
+      "model": "Token-indexed append stream with terminal acceptance conditions",
+      "question": "When can accumulated partial results be presented as complete, incomplete, or unusable?",
+      "assumptions": [
+        "Each token belongs to the intended request and each received chunk appends to its result; the final response does not repeat the payload.",
+        "Successful termination accepts the accumulated stream; RequestCancelled permits explicitly incomplete use; other errors invalidate the partial results.",
+        "Materializing R result items requires O(R) space and O(R) append work with amortized constant-time appends; incremental display can reduce retention only if application semantics permit it.",
+        "No throughput, latency, queue capacity, or server memory bound follows from the protocol alone."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["lsp-partial-results", "lsp-base"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "editor-language-service-boundary",
+      "benefits": ["Reuses one service contract across editors and language implementations"],
+      "costs": ["Adds serialization, coordinate conversion, and synchronization obligations"]
+    },
+    {
+      "feature_id": "client-owned-versioned-document-mirror",
+      "benefits": ["Supports unsaved buffers and incremental updates"],
+      "costs": ["Requires consistent ownership and ordered edits instead of simply rereading files"]
+    },
+    {
+      "feature_id": "tokenized-partial-results",
+      "benefits": ["Enables useful results before the complete computation finishes"],
+      "costs": [
+        "Adds accumulation, cancellation, and invalidation state without automatic resource bounds"
+      ]
+    },
+    {
+      "feature_id": "capability-driven-contract-evolution",
+      "benefits": ["Allows incremental feature adoption"],
+      "costs": ["Expands the interoperability matrix and requires fallback behavior"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "lsp-base",
+      "kind": "official-doc",
+      "title": "LSP 3.17 base protocol, ordering, and version notes at fixed commit",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_specifications/lsp/3.17/specification.md",
+      "accessed": "2026-10-23",
+      "notes": "Inspected the pinned specification source: What's new in 3.17, Base Protocol, Response Message, Cancellation Support, Progress Support, and Request, Notification and Response Ordering. Included sections are separately cited below. This revision labels 3.17 as a previous version."
+    },
+    {
+      "id": "lsp-initialize",
+      "kind": "official-doc",
+      "title": "Initialize request and client/server capabilities",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_specifications/lsp/3.17/general/initialize.md",
+      "accessed": "2026-10-23",
+      "notes": "First-request restriction, once-only initialization, permitted exceptions, InitializeResult, missing/unknown capabilities, and positionEncodings."
+    },
+    {
+      "id": "lsp-initialized",
+      "kind": "official-doc",
+      "title": "Initialized notification",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_includes/messages/3.17/initialized.md",
+      "accessed": "2026-10-23"
+    },
+    {
+      "id": "lsp-shutdown",
+      "kind": "official-doc",
+      "title": "Shutdown request",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_includes/messages/3.17/shutdown.md",
+      "accessed": "2026-10-23"
+    },
+    {
+      "id": "lsp-exit",
+      "kind": "official-doc",
+      "title": "Exit notification",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_includes/messages/3.17/exit.md",
+      "accessed": "2026-10-23"
+    },
+    {
+      "id": "lsp-open",
+      "kind": "official-doc",
+      "title": "Document open and client content ownership",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_specifications/lsp/3.17/textDocument/didOpen.md",
+      "accessed": "2026-10-23"
+    },
+    {
+      "id": "lsp-change",
+      "kind": "official-doc",
+      "title": "Versioned full and incremental document changes",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_specifications/lsp/3.17/textDocument/didChange.md",
+      "accessed": "2026-10-23",
+      "notes": "Explicit pre-request synchronization and ordered application of notifications and their individual changes."
+    },
+    {
+      "id": "lsp-close",
+      "kind": "official-doc",
+      "title": "Document close and URI-backed content ownership",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_specifications/lsp/3.17/textDocument/didClose.md",
+      "accessed": "2026-10-23"
+    },
+    {
+      "id": "lsp-position",
+      "kind": "official-doc",
+      "title": "Position and PositionEncodingKind",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_specifications/lsp/3.17/types/position.md",
+      "accessed": "2026-10-23"
+    },
+    {
+      "id": "lsp-partial-results",
+      "kind": "official-doc",
+      "title": "Partial-result tokens, accumulation, and terminal errors",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_specifications/lsp/3.17/types/partialResults.md",
+      "accessed": "2026-10-23"
+    },
+    {
+      "id": "lsp-registration",
+      "kind": "official-doc",
+      "title": "Dynamic capability registration",
+      "uri": "https://github.com/microsoft/language-server-protocol/blob/baf2db31b5fb314a8f358f9a839d3c66e9d98734/_includes/messages/3.17/registerCapability.md",
+      "accessed": "2026-10-23"
+    }
+  ]
+}

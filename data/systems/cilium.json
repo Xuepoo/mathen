@@ -181,5 +181,28 @@
       "accessed": "2026-10-23",
       "notes": "Fixed source for service translation and load-balancing state."
     }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "linux",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "cilium-ebpf-doc"
+      ],
+      "notes": "Cilium documents eBPF as a Linux kernel technology used for its programmable networking datapath."
+    },
+    {
+      "type": "uses",
+      "target": "kubernetes",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "cilium-network-policy-doc",
+        "cilium-services-doc"
+      ],
+      "notes": "Cilium documents Kubernetes-native network policy, service routing, and cluster integration as supported operating boundaries."
+    }
   ]
 }

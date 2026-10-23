@@ -195,5 +195,18 @@
       "accessed": "2026-10-23",
       "notes": "Fixed source for RFC 6479-style bounded sliding-window counter acceptance."
     }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "go",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "wireguard-repository-commit",
+        "wireguard-device-source"
+      ],
+      "notes": "The reviewed WireGuard implementation is wireguard-go, and its official project page identifies it as an implementation in Go."
+    }
   ]
 }

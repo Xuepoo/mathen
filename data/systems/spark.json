@@ -207,5 +207,28 @@
             "accessed": "2026-10-23",
             "notes": "Fixed-commit source for executor task launch, task execution, and application-scoped worker state."
         }
-    ]
+    ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "kubernetes",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "spark-cluster-overview"
+      ],
+      "notes": "Spark documents Kubernetes as a supported cluster manager that allocates resources for Spark application executors."
+    },
+    {
+      "type": "resembles",
+      "target": "flink",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "spark-cluster-overview",
+        "spark-rdd-guide"
+      ],
+      "notes": "Both are distributed data-processing engines that schedule computations over partitioned or operator dataflows; their state, time, and execution semantics differ, so this is only a bounded structural analogy."
+    }
+  ]
 }

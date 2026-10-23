@@ -165,5 +165,27 @@
       "accessed": "2026-10-23",
       "notes": "Fixed source for application target/live state and sync status types."
     }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "kubernetes",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "argo-cd-core-concepts-doc"
+      ],
+      "notes": "Argo CD is documented as a Kubernetes controller that compares and synchronizes application state in Kubernetes target environments."
+    },
+    {
+      "type": "uses",
+      "target": "helm",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "argo-cd-overview-doc"
+      ],
+      "notes": "Argo CD documents Helm charts as one supported manifest/configuration source; this does not claim every Argo CD application uses Helm."
+    }
   ]
 }

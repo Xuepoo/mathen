@@ -25,6 +25,7 @@ originality.
 | Compiler and parser infrastructure | GCC, tree-sitter | How do front ends, syntax trees, intermediate representations, and code-generation pipelines differ? |
 | Systems and networking libraries | Boost, libuv, curl, OpenSSL | How do reusable libraries package concurrency, transport, protocol, and cryptographic primitives? |
 | Protocol and messaging infrastructure | Protocol Buffers, gRPC, Eclipse Mosquitto | How are schemas, RPC boundaries, and publish/subscribe delivery represented? |
+| Mail and collaboration services | Stalwart Mail Server | How do SMTP transport/submission, IMAP mailbox sessions, and JMAP synchronization expose one shared mail state? |
 | Database engines | MySQL Server, RocksDB | How do server-oriented relational storage and embedded key-value storage organize state and durability? |
 | Graphics and multimedia libraries | Three.js, Blender, SDL | How do scene graphs, content tools, windows, input, and rendering abstractions compose? |
 

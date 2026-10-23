@@ -73,5 +73,29 @@
     {"id": "angular-di-doc", "kind": "official-doc", "title": "Angular dependency injection", "uri": "https://angular.dev/guide/di", "accessed": "2026-10-23", "notes": "Official documentation for providers, injectors, and injection contexts."},
     {"id": "angular-signals-doc", "kind": "official-doc", "title": "Angular signals", "uri": "https://angular.dev/guide/signals", "accessed": "2026-10-23", "notes": "Official documentation for signal reads, writes, and dependent views."}
   ],
-  "related_systems": []
+  "related_systems": [],
+  "relations": [
+    {
+      "type": "resembles",
+      "target": "vue",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "angular-component-doc",
+        "angular-render3-source"
+      ],
+      "notes": "Both define component-oriented declarative UI boundaries and update rendered host output, but Angular uses its own templates, dependency injection, and change-detection model while Vue uses a different compiler/runtime reactivity model."
+    },
+    {
+      "type": "resembles",
+      "target": "svelte",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "angular-component-doc",
+        "angular-render3-source"
+      ],
+      "notes": "Both treat components and templates as primary UI boundaries, but Angular retains a framework runtime/change-detection model while Svelte compiles component source into JavaScript."
+    }
+  ]
 }

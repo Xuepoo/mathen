@@ -1,0 +1,90 @@
+{
+  "id": "sway",
+  "name": "Sway",
+  "version_context": "commit 1652c54b73f67df17b7b4ab0b0f7048204aa8104",
+  "summary": "A wlroots-based Wayland compositor and i3-compatible tiling window manager that combines protocol surfaces, a hierarchical container tree, seat input, output management, IPC, and explicit lifecycle handling.",
+  "scope": [
+    "Wayland compositor",
+    "wlroots backend integration",
+    "i3-compatible container layout",
+    "seat, output, and IPC state"
+  ],
+  "features": [
+    {
+      "id": "wlroots-wayland-compositor",
+      "name": "wlroots-backed Wayland compositor",
+      "category": "protocol-and-backend",
+      "claim_type": "fact",
+      "description": "Sway builds a Wayland compositor around wlroots, handling client protocols, surfaces, outputs, input seats, and backend events while applying Sway's policy and configuration.",
+      "benefits": ["Reuses common Wayland backend and protocol implementations", "Keeps compositor policy and client resource ownership explicit"],
+      "costs": ["Sway behavior depends on wlroots lifecycle and backend contracts", "A compositor failure can terminate the managed session"],
+      "evidence_ids": ["sway-source-commit", "sway-wlroots-source", "sway-wayland-doc"]
+    },
+    {
+      "id": "hierarchical-container-tree",
+      "name": "Hierarchical container tree",
+      "category": "layout-model",
+      "claim_type": "fact",
+      "description": "Sway represents views, containers, workspaces, and outputs in a hierarchical tree with split orientations, tabbed or stacked arrangements, floating containers, focus, and geometry managed by tree operations.",
+      "benefits": ["Makes placement and focus composable through nested containers", "Preserves i3-compatible layout and command concepts on Wayland"],
+      "costs": ["Tree mutation must maintain parent, focus, geometry, and workspace invariants", "Nested layouts make failure and configuration diagnosis more involved"],
+      "evidence_ids": ["sway-tree-doc", "sway-source-commit", "sway-tree-source"]
+    },
+    {
+      "id": "seat-input-binding-routing",
+      "name": "Seat input and binding routing",
+      "category": "input-model",
+      "claim_type": "fact",
+      "description": "Sway models keyboards, pointers, touch devices, and seats, applies input configuration and bindings, and routes events or commands to the focused container, workspace, or output.",
+      "benefits": ["Unifies device configuration, focus, and command dispatch", "Allows input actions to manipulate the same tree used for rendering and IPC"],
+      "costs": ["Device hotplug and seat focus add asynchronous state transitions", "Binding precedence and input configuration can make actions difficult to debug"],
+      "evidence_ids": ["sway-input-doc", "sway-source-commit", "sway-input-source"]
+    },
+    {
+      "id": "output-render-resource-management",
+      "name": "Output and render-resource management",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "Sway manages outputs, workspaces, views, surfaces, frame scheduling, and wlroots render resources; output geometry and visibility are derived from the container tree and output configuration.",
+      "benefits": ["Provides per-output workspace and geometry policy", "Lets the compositor coordinate frame presentation with surface damage and layout changes"],
+      "costs": ["Output hotplug, scaling, and render failures require coordinated tree and focus updates", "Backend resource constraints can limit otherwise valid layouts"],
+      "evidence_ids": ["sway-output-doc", "sway-source-commit", "sway-output-source", "sway-wlroots-source"]
+    },
+    {
+      "id": "ipc-command-lifecycle-failure",
+      "name": "IPC command and lifecycle failure boundary",
+      "category": "state-and-failure-model",
+      "claim_type": "inference",
+      "description": "Sway exposes a command and event IPC protocol over compositor state and handles view, output, input, and backend lifecycle events; an individual client or output can disappear while the tree and compositor remain active, subject to backend failure handling.",
+      "benefits": ["Makes automation and status observation explicit at a stable command boundary", "Separates many resource disconnects from global compositor lifecycle"],
+      "costs": ["IPC clients must handle event ordering and command errors", "Not every backend or protocol failure is isolated from the compositor process"],
+      "evidence_ids": ["sway-ipc-doc", "sway-source-commit", "sway-ipc-source", "sway-output-source"]
+    }
+  ],
+  "mathematical_views": [
+    {"model": "Hierarchical container tree", "question": "Which focus, split, workspace, floating, and output arrangements are reachable after tree commands and view lifecycle events?", "assumptions": ["Containers are nodes with parent and child relations", "Commands and lifecycle events are state transitions", "Renderer details are abstracted from geometry derivation"], "claim_type": "inference", "evidence_ids": ["sway-tree-doc", "sway-tree-source", "sway-ipc-source"]},
+    {"model": "Wayland seat/output resource graph", "question": "How do clients, views, surfaces, seats, outputs, and wlroots backend resources connect during input and frame presentation?", "assumptions": ["Seats and outputs are typed compositor resources", "Protocol and backend callbacks are graph edges", "The graph abstracts synchronization internals"], "claim_type": "inference", "evidence_ids": ["sway-wlroots-source", "sway-input-source", "sway-output-source"]},
+    {"model": "Compositor lifecycle state machine", "question": "How do view, output, input, IPC, and backend events move Sway between configured, active, disconnected, and failed states?", "assumptions": ["Resource lifecycles are distinct from the process lifecycle", "IPC errors are modeled as command-level outcomes", "This view does not prove recovery from backend-wide faults"], "claim_type": "hypothesis", "evidence_ids": ["sway-source-commit", "sway-output-source", "sway-ipc-source"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "wlroots-wayland-compositor", "benefits": ["Common backend primitives reduce compositor implementation duplication"], "costs": ["Sway inherits backend and protocol coupling through wlroots"]},
+    {"feature_id": "hierarchical-container-tree", "benefits": ["Nested tiling and familiar i3-compatible operations are explicit"], "costs": ["Tree invariants and nested focus behavior increase mutation complexity"]},
+    {"feature_id": "seat-input-binding-routing", "benefits": ["Input policy and layout commands share one focus model"], "costs": ["Hotplug and binding precedence create asynchronous edge cases"]},
+    {"feature_id": "output-render-resource-management", "benefits": ["Output geometry and frame resources are coordinated with layout"], "costs": ["Output and render failures complicate state consistency"]},
+    {"feature_id": "ipc-command-lifecycle-failure", "benefits": ["Automation observes and controls compositor state through a protocol"], "costs": ["Event ordering and command errors become client responsibilities"]}
+  ],
+  "evidence": [
+    {"id": "sway-source-commit", "kind": "source-code", "title": "Sway source at 1652c54b73f6", "uri": "https://github.com/swaywm/sway/commit/1652c54b73f67df17b7b4ab0b0f7048204aa8104", "accessed": "2026-10-23", "notes": "Fixed official Sway repository revision used for compositor, tree, input, output, IPC, and lifecycle claims."},
+    {"id": "sway-wlroots-source", "kind": "source-code", "title": "Sway wlroots integration at fixed revision", "uri": "https://github.com/swaywm/sway/tree/1652c54b73f67df17b7b4ab0b0f7048204aa8104/sway", "accessed": "2026-10-23", "notes": "Pinned source location for compositor and backend integration."},
+    {"id": "sway-tree-source", "kind": "source-code", "title": "Sway tree and container source at fixed revision", "uri": "https://github.com/swaywm/sway/tree/1652c54b73f67df17b7b4ab0b0f7048204aa8104/sway/tree", "accessed": "2026-10-23", "notes": "Pinned source location for container, workspace, focus, and layout state."},
+    {"id": "sway-input-source", "kind": "source-code", "title": "Sway input source at fixed revision", "uri": "https://github.com/swaywm/sway/tree/1652c54b73f67df17b7b4ab0b0f7048204aa8104/sway/input", "accessed": "2026-10-23", "notes": "Pinned source location for seats, devices, bindings, and input routing."},
+    {"id": "sway-output-source", "kind": "source-code", "title": "Sway output source at fixed revision", "uri": "https://github.com/swaywm/sway/tree/1652c54b73f67df17b7b4ab0b0f7048204aa8104/sway", "accessed": "2026-10-23", "notes": "Pinned source location for output lifecycle, geometry, and rendering coordination."},
+    {"id": "sway-ipc-source", "kind": "source-code", "title": "Sway IPC source at fixed revision", "uri": "https://github.com/swaywm/sway/tree/1652c54b73f67df17b7b4ab0b0f7048204aa8104/sway", "accessed": "2026-10-23", "notes": "Pinned source location for IPC command and event handling."},
+    {"id": "sway-wayland-doc", "kind": "official-doc", "title": "Sway documentation", "uri": "https://man.archlinux.org/man/sway.5.en", "accessed": "2026-10-23", "notes": "Official Sway manual reference for compositor configuration and protocol-facing behavior."},
+    {"id": "sway-tree-doc", "kind": "official-doc", "title": "Sway Wiki: Tree concepts", "uri": "https://github.com/swaywm/sway/wiki#the-tree", "accessed": "2026-10-23", "notes": "Official project documentation for outputs, workspaces, containers, and views."},
+    {"id": "sway-input-doc", "kind": "official-doc", "title": "Sway Wiki: Input configuration", "uri": "https://github.com/swaywm/sway/wiki#input-configuration", "accessed": "2026-10-23", "notes": "Official project documentation for input devices and seats."},
+    {"id": "sway-output-doc", "kind": "official-doc", "title": "Sway Wiki: Output configuration", "uri": "https://github.com/swaywm/sway/wiki#output-configuration", "accessed": "2026-10-23", "notes": "Official project documentation for output geometry and configuration."},
+    {"id": "sway-ipc-doc", "kind": "official-doc", "title": "Sway IPC protocol", "uri": "https://github.com/swaywm/sway/wiki/IPC", "accessed": "2026-10-23", "notes": "Official project documentation for command, event, and subscription IPC."}
+  ],
+  "related_systems": ["i3", "hyprland", "niri", "linux"]
+}

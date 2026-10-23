@@ -79,5 +79,18 @@
     {"id": "apisix-source-commit", "kind": "source-code", "title": "Apache APISIX source at c4f09e1f8297", "uri": "https://github.com/apache/apisix/commit/c4f09e1f8297f5d825c26b9de310688b0fc127a8", "accessed": "2026-10-23", "notes": "Fixed official repository revision used as the provenance boundary for this card."},
     {"id": "apisix-architecture-doc", "kind": "official-doc", "title": "Apache APISIX architecture design", "uri": "https://apisix.apache.org/docs/apisix/architecture-design/", "accessed": "2026-10-23", "notes": "Official architecture documentation for the gateway, route processing, plugin execution, and etcd configuration model."},
     {"id": "apisix-plugin-doc", "kind": "official-doc", "title": "Apache APISIX plugin development", "uri": "https://apisix.apache.org/docs/apisix/plugin-develop/", "accessed": "2026-10-23", "notes": "Official documentation for plugin lifecycle and request-processing phases."}
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "nginx",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "apisix-architecture-doc",
+        "apisix-source-commit"
+      ],
+      "notes": "APISIX runs on the OpenResty platform, which provides an NGINX-based request-processing boundary; this relation names the reviewed NGINX target and does not equate APISIX with upstream NGINX."
+    }
   ]
 }

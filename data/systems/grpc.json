@@ -63,5 +63,18 @@
     {"id": "grpc-source-cpp-generator", "kind": "source-code", "title": "gRPC C++ code generator", "uri": "https://github.com/grpc/grpc/blob/e2542a83cc3626c2dda4cc9426cb4e4d271dc0e5/src/compiler/cpp_generator.cc", "accessed": "2026-10-23", "notes": "Fixed revision lines 193-375 and 450-805 generate interfaces; lines 2105-2115 classify normal and three streaming shapes."},
     {"id": "grpc-core-concepts", "kind": "official-doc", "title": "gRPC Core concepts, architecture and lifecycle", "uri": "https://grpc.io/docs/what-is-grpc/core-concepts/", "accessed": "2026-10-23", "notes": "Documents service definitions, generated APIs, RPC shapes, ordering, deadlines, cancellation, and asymmetric termination."}
   ],
-  "related_systems": ["protobuf"]
+  "related_systems": ["protobuf"],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "protobuf",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "grpc-core-concepts",
+        "grpc-source-cpp-generator"
+      ],
+      "notes": "gRPC documents Protocol Buffers as its default service and message definition format and generates APIs from those definitions; this does not claim every deployment uses Protobuf."
+    }
+  ]
 }

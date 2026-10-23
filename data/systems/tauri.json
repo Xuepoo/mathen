@@ -35,5 +35,18 @@
     {"id": "tauri-cli-template", "kind": "source-code", "title": "Tauri application template at fixed commit", "uri": "https://github.com/tauri-apps/tauri/tree/ba1e205f3bfba19a9cbe6032bb4ece3068429d04/crates/tauri-cli/templates/app", "accessed": "2026-10-23", "notes": "Fixed template showing native source, frontend assets, and default capabilities."},
     {"id": "tauri-packaging-doc", "kind": "official-doc", "title": "Tauri distribution documentation", "uri": "https://v2.tauri.app/distribute/", "accessed": "2026-10-23", "notes": "Official documentation for packaging native applications and platform runtime dependencies."}
   ],
-  "related_systems": []
+  "related_systems": [],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "rust",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "tauri-commands-doc",
+        "repository-commit"
+      ],
+      "notes": "Tauri documents native command handlers in Rust and its reviewed source contains the Rust application/runtime backend."
+    }
+  ]
 }

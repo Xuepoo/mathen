@@ -1,0 +1,154 @@
+{
+  "id": "firefox",
+  "name": "Firefox",
+  "version_context": "commit cfa0508a3bcffb86d3f4a5dadf3f97199e025a6e",
+  "summary": "A multi-process Gecko browser that separates browser, content, GPU, socket, and media roles, transforms web documents through DOM/style/layout and WebRender boundaries, and uses IPDL plus sandbox policies for controlled communication and failure handling.",
+  "scope": [
+    "Gecko process hierarchy",
+    "DOM, style, layout, and WebRender pipeline",
+    "IPDL process and thread communication",
+    "network and storage services",
+    "sandboxing, shutdown, and crash boundaries"
+  ],
+  "features": [
+    {
+      "id": "gecko-process-hierarchy",
+      "name": "Gecko process hierarchy and isolation",
+      "category": "isolation-model",
+      "claim_type": "fact",
+      "description": "Firefox documents a parent process that creates content, GPU, socket, data-decoder, and other child process types. Content processes separate web HTML and JavaScript from browser authority, while process selection and sandboxing vary by role and platform.",
+      "benefits": [
+        "Separates web content and unstable system components from browser control",
+        "Allows role-specific sandbox and resource policies"
+      ],
+      "costs": [
+        "More processes increase memory and launch coordination cost",
+        "Platform-specific process availability complicates lifecycle reasoning"
+      ],
+      "evidence_ids": ["firefox-processes-doc", "firefox-process-source", "firefox-sandbox-doc"]
+    },
+    {
+      "id": "gecko-document-layout-webrender-pipeline",
+      "name": "Gecko DOM, style, layout, and WebRender pipeline",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "Gecko separates DOM and style data from layout evaluation and graphics composition. The layout and graphics documentation describes derived geometry and display structures that feed compositor and WebRender paths, rather than treating the DOM as final pixels.",
+      "benefits": [
+        "Makes document structure, computed style, geometry, and display work separable",
+        "Allows graphics backends to consume derived display representations"
+      ],
+      "costs": [
+        "Invalidation across DOM, style, layout, and graphics stages is expensive to coordinate",
+        "Backend and platform differences remain visible at the rendering boundary"
+      ],
+      "evidence_ids": ["firefox-layout-doc", "firefox-graphics-doc", "firefox-layout-source", "firefox-webrender-source"]
+    },
+    {
+      "id": "ipdl-actor-protocol-boundary",
+      "name": "IPDL actor protocol boundary",
+      "category": "communication-model",
+      "claim_type": "fact",
+      "description": "Firefox uses IPDL to describe typed parent/child actors and asynchronous inter-thread or inter-process messages. Top-level actors establish process connections, while endpoints and actor lifetimes make communication ownership explicit.",
+      "benefits": [
+        "Provides generated protocol structure for process and thread communication",
+        "Makes actor ownership, message direction, and shutdown behavior reviewable"
+      ],
+      "costs": [
+        "Protocol evolution and actor teardown add lifecycle complexity",
+        "Incorrect synchronous or re-entrant communication can threaten responsiveness or deadlock safety"
+      ],
+      "evidence_ids": ["firefox-ipdl-doc", "firefox-processes-doc", "firefox-content-source"]
+    },
+    {
+      "id": "gecko-network-storage-service-boundaries",
+      "name": "Browser-owned network and storage service boundaries",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "Firefox gives networking and persistent web storage dedicated service and process boundaries. Socket-process communication, DOM storage/Quota ownership, and content-to-parent actors keep renderer-like content from directly owning all network or profile state.",
+      "benefits": [
+        "Centralizes profile, quota, network, and policy decisions",
+        "Provides explicit boundaries for asynchronous I/O and durable web state"
+      ],
+      "costs": [
+        "Actors and service processes add latency and failure propagation paths",
+        "Storage partitioning, quota, and profile lifecycle require coordinated ownership"
+      ],
+      "evidence_ids": ["firefox-processes-doc", "firefox-networking-doc", "firefox-storage-doc", "firefox-storage-source"]
+    },
+    {
+      "id": "gecko-sandbox-shutdown-failure-model",
+      "name": "Sandboxed process shutdown and crash model",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Firefox assigns sandbox policies to process roles and documents explicit process shutdown handling. Parent actors observe child exits and IPC failure, allowing browser state to distinguish normal teardown from crashed or disconnected content and service processes.",
+      "benefits": [
+        "Reduces authority of content and specialized child processes",
+        "Makes crash, channel closure, and orderly shutdown part of process lifecycle handling"
+      ],
+      "costs": [
+        "Sandbox policy and brokered access are platform-specific maintenance surfaces",
+        "Recovering from child loss can discard in-flight work and require state reconstruction"
+      ],
+      "evidence_ids": ["firefox-sandbox-doc", "firefox-shutdown-doc", "firefox-process-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Role-labeled Gecko process graph",
+      "question": "How do parent, content, GPU, socket, and media processes connect, and which roles may create or communicate with one another?",
+      "assumptions": [
+        "Process roles are graph nodes and IPDL actors are labeled edges",
+        "Sandbox policies constrain node capabilities",
+        "Platform-specific process folding is represented as a graph variation rather than ignored"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["firefox-processes-doc", "firefox-ipdl-doc", "firefox-sandbox-doc"]
+    },
+    {
+      "model": "Document-to-display transition system",
+      "question": "Which transitions transform DOM and style changes into layout geometry, display structures, and compositor/WebRender work?",
+      "assumptions": [
+        "DOM, style, layout, and display representations are distinct states",
+        "Invalidation and refresh scheduling are labeled transitions",
+        "The model abstracts GPU commands and pixel-level rendering behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["firefox-layout-doc", "firefox-graphics-doc", "firefox-layout-source", "firefox-webrender-source"]
+    },
+    {
+      "model": "Actor protocol and failure transition system",
+      "question": "How do IPDL actor creation, message delivery, channel closure, child crash, and shutdown alter browser state?",
+      "assumptions": [
+        "Actors and endpoints define communication state",
+        "Message delivery and actor destruction are observable transitions",
+        "The model abstracts OS-specific crash reporting and restart policy"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["firefox-ipdl-doc", "firefox-shutdown-doc", "firefox-process-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "gecko-process-hierarchy", "benefits": ["Role-specific isolation and fault containment"], "costs": ["Process count and platform-specific lifecycle complexity"]},
+    {"feature_id": "gecko-document-layout-webrender-pipeline", "benefits": ["Separable document and display representations"], "costs": ["Cross-stage invalidation and backend variation"]},
+    {"feature_id": "ipdl-actor-protocol-boundary", "benefits": ["Typed and reviewable IPC contracts"], "costs": ["Actor lifetime and protocol evolution burden"]},
+    {"feature_id": "gecko-network-storage-service-boundaries", "benefits": ["Centralized profile and asynchronous I/O authority"], "costs": ["Service latency and ownership coordination"]},
+    {"feature_id": "gecko-sandbox-shutdown-failure-model", "benefits": ["Reduced child authority and explicit recovery states"], "costs": ["Platform-specific policies and state reconstruction"]}
+  ],
+  "evidence": [
+    {"id": "firefox-repository-commit", "kind": "source-code", "title": "Firefox source at fixed commit cfa0508a3bcf", "uri": "https://github.com/mozilla-firefox/firefox/commit/cfa0508a3bcffb86d3f4a5dadf3f97199e025a6e", "accessed": "2026-10-23", "notes": "Official Firefox repository revision resolved from the main branch."},
+    {"id": "firefox-processes-doc", "kind": "official-doc", "title": "Gecko processes", "uri": "https://firefox-source-docs.mozilla.org/ipc/processes.html", "accessed": "2026-10-23", "notes": "Official Mozilla documentation for process hierarchy, isolation, process creation, and sandbox considerations."},
+    {"id": "firefox-ipdl-doc", "kind": "official-doc", "title": "IPDL inter-thread and inter-process message passing", "uri": "https://firefox-source-docs.mozilla.org/ipc/ipdl.html", "accessed": "2026-10-23", "notes": "Official Mozilla documentation for typed actor protocols and message passing."},
+    {"id": "firefox-layout-doc", "kind": "official-doc", "title": "Gecko layout overview", "uri": "https://firefox-source-docs.mozilla.org/layout/LayoutOverview.html", "accessed": "2026-10-23", "notes": "Official Mozilla documentation for style and layout stages."},
+    {"id": "firefox-graphics-doc", "kind": "official-doc", "title": "Gecko graphics overview", "uri": "https://firefox-source-docs.mozilla.org/gfx/GraphicsOverview.html", "accessed": "2026-10-23", "notes": "Official Mozilla documentation for graphics and compositor boundaries."},
+    {"id": "firefox-networking-doc", "kind": "official-doc", "title": "Firefox networking source documentation", "uri": "https://firefox-source-docs.mozilla.org/networking/index.html", "accessed": "2026-10-23", "notes": "Official Mozilla networking documentation for networking components and service boundaries."},
+    {"id": "firefox-storage-doc", "kind": "official-doc", "title": "Firefox database bindings and storage documentation", "uri": "https://firefox-source-docs.mozilla.org/storage/index.html", "accessed": "2026-10-23", "notes": "Official Mozilla documentation index for persistent storage and database bindings."},
+    {"id": "firefox-sandbox-doc", "kind": "official-doc", "title": "Firefox sandboxing documentation", "uri": "https://firefox-source-docs.mozilla.org/rlbox/index.html", "accessed": "2026-10-23", "notes": "Official Mozilla security documentation for sandboxed component boundaries; process sandbox details are linked from the process documentation."},
+    {"id": "firefox-shutdown-doc", "kind": "official-doc", "title": "Firefox process shutdown handling", "uri": "https://firefox-source-docs.mozilla.org/ipc/proc_shutdown.html", "accessed": "2026-10-23", "notes": "Official Mozilla documentation for orderly and abnormal child-process shutdown handling."},
+    {"id": "firefox-process-source", "kind": "source-code", "title": "Firefox child-process host at fixed commit", "uri": "https://github.com/mozilla-firefox/firefox/blob/cfa0508a3bcffb86d3f4a5dadf3f97199e025a6/ipc/glue/GeckoChildProcessHost.cpp", "accessed": "2026-10-23", "notes": "Pinned source for process launch, sandbox setup, and child-process lifecycle."},
+    {"id": "firefox-content-source", "kind": "source-code", "title": "Firefox content parent at fixed commit", "uri": "https://github.com/mozilla-firefox/firefox/blob/cfa0508a3bcffb86d3f4a5dadf3f97199e025a6/dom/ipc/ContentParent.cpp", "accessed": "2026-10-23", "notes": "Pinned source for parent-side content process actors and lifecycle."},
+    {"id": "firefox-layout-source", "kind": "source-code", "title": "Firefox PresShell at fixed commit", "uri": "https://github.com/mozilla-firefox/firefox/blob/cfa0508a3bcffb86d3f4a5dadf3f97199e025a6/layout/base/PresShell.cpp", "accessed": "2026-10-23", "notes": "Pinned source for document presentation and layout lifecycle."},
+    {"id": "firefox-webrender-source", "kind": "source-code", "title": "Firefox WebRender bridge at fixed commit", "uri": "https://github.com/mozilla-firefox/firefox/blob/cfa0508a3bcffb86d3f4a5dadf3f97199e025a6/gfx/webrender_bindings/WebRenderAPI.cpp", "accessed": "2026-10-23", "notes": "Pinned source for Gecko-to-WebRender display and compositor integration."},
+    {"id": "firefox-storage-source", "kind": "source-code", "title": "Firefox Quota manager actors at fixed commit", "uri": "https://github.com/mozilla-firefox/firefox/blob/cfa0508a3bcffb86d3f4a5dadf3f97199e025a6/dom/quota/ActorsParent.cpp", "accessed": "2026-10-23", "notes": "Pinned source for browser-side quota and persistent storage ownership."}
+  ],
+  "related_systems": ["playwright", "v8", "webgl"]
+}

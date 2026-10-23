@@ -25,10 +25,13 @@ typescript-check:
 api-test:
     bun run test:api
 
+web-test:
+    bun run test:web
+
 mcp-test:
     bun test apps/mcp/src/*.test.ts
 
-test: python-test api-test mcp-test
+test: python-test api-test web-test mcp-test
 
 build:
     bun run build

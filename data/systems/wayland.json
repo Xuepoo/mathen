@@ -1,0 +1,310 @@
+{
+  "id": "wayland",
+  "name": "Wayland",
+  "version_context": "Wayland 1.24.0 tag, resolved commit 736d12ac67c20c60dc406dc49bb06be878501f86",
+  "summary": "A client/compositor display protocol and libwayland implementation in which clients discover versioned globals, create typed object resources, submit double-buffered surface state, and exchange ordered requests, events, file descriptors, and protocol errors over a compositor connection.",
+  "scope": [
+    "client/compositor protocol contract",
+    "global discovery and versioned object binding",
+    "surface buffer and input state",
+    "ordered message and event transport",
+    "libwayland client/server boundary and security hooks"
+  ],
+  "features": [
+    {
+      "id": "versioned-global-object-contract",
+      "name": "Versioned global discovery and object binding",
+      "category": "protocol-contract",
+      "claim_type": "fact",
+      "description": "The core protocol exposes wl_display.get_registry; the registry announces available globals, interface names, and supported versions, and clients bind a selected global to a new object ID. Globals can be added or removed for hotplug and reconfiguration. The protocol XML defines the contract, while libwayland provides client proxies and server resources; a compositor implementation supplies the actual globals and policy.",
+      "benefits": [
+        "Allows clients to negotiate capabilities without a fixed server-side object inventory",
+        "Makes protocol evolution explicit through interface versions and extension globals",
+        "Separates the stable wire contract from compositor-specific surface and device policy"
+      ],
+      "costs": [
+        "Clients must handle discovery, version limits, global removal, and optional interfaces",
+        "Behavior above the core contract depends on compositor and protocol-extension support"
+      ],
+      "evidence_ids": [
+        "wayland-protocol-xml",
+        "wayland-client-core",
+        "wayland-server-core"
+      ]
+    },
+    {
+      "id": "double-buffered-surface-state",
+      "name": "Double-buffered surface state and commit",
+      "category": "presentation-model",
+      "claim_type": "fact",
+      "description": "wl_surface requests update pending buffer, damage, opaque-region, input-region, transform, and scale state. wl_surface.commit atomically creates a content update that is queued until applied by the compositor; wl_buffer.release tells the client when the compositor no longer accesses a committed buffer. A surface receives a permanent role, such as a shell window, cursor, drag icon, or subsurface, and cannot switch to another role during its lifetime.",
+      "benefits": [
+        "Provides atomic application of related content and interaction state",
+        "Permits clients to render into their own buffers while the compositor controls presentation",
+        "Makes buffer reuse and surface-role lifecycle constraints explicit"
+      ],
+      "costs": [
+        "Clients must retain backing storage until release and coordinate pending versus active state",
+        "A role is an irreversible lifetime choice and shell behavior is outside the core surface contract",
+        "Compositor scheduling, visibility, and output policy remain implementation-specific"
+      ],
+      "evidence_ids": [
+        "wayland-protocol-xml",
+        "wayland-readme",
+        "wayland-protocol-doc"
+      ]
+    },
+    {
+      "id": "ordered-proxy-resource-messaging",
+      "name": "Ordered typed requests, events, and object lifetimes",
+      "category": "message-model",
+      "claim_type": "fact",
+      "description": "Protocol interfaces define typed requests and events with object IDs, new IDs, file descriptors, strings, arrays, and fixed-width values. wl_display.sync provides an in-order callback barrier; clients marshal requests through wl_proxy objects, while servers dispatch resources and post or queue events. Object destruction and wl_display.delete_id coordinate ID reuse across the connection.",
+      "benefits": [
+        "Gives generated bindings a machine-readable message schema",
+        "Supports asynchronous event delivery while preserving per-connection request/event ordering",
+        "Provides explicit object creation, destruction, callback, and buffer-release lifecycles"
+      ],
+      "costs": [
+        "Applications must manage asynchronous queues, callbacks, object IDs, and destruction ordering",
+        "Protocol errors are connection-fatal in the core contract and malformed or unsupported requests cannot be ignored safely",
+        "File-descriptor and shared-memory arguments extend correctness beyond ordinary value serialization"
+      ],
+      "evidence_ids": [
+        "wayland-protocol-xml",
+        "wayland-client-core",
+        "wayland-server-core",
+        "wayland-client-source",
+        "wayland-server-source"
+      ]
+    },
+    {
+      "id": "compositor-mediated-input-and-capabilities",
+      "name": "Compositor-mediated input and capability exposure",
+      "category": "interaction-model",
+      "claim_type": "fact",
+      "description": "wl_seat groups pointer, keyboard, and touch capabilities and reports capability changes; the compositor delivers input events to the relevant client and manages focus and implicit-grab serials. wl_surface.set_input_region constrains where a surface can receive pointer and touch events. Data devices and shell protocols mediate selection, drag-and-drop, popup, and window-management interactions.",
+      "benefits": [
+        "Centralizes focus, device capability, and routing decisions in the compositor",
+        "Lets clients declare input regions and consume typed device events without owning the display server",
+        "Carries serials that bind privileged interactions such as grabs and selection changes to compositor events"
+      ],
+      "costs": [
+        "Input behavior depends on compositor policy and the currently advertised protocol extensions",
+        "Clients must react to capability removal and avoid requests made without a valid serial or capability",
+        "Core Wayland does not define a universal desktop shell or complete window-management policy"
+      ],
+      "evidence_ids": [
+        "wayland-protocol-xml",
+        "wayland-protocol-doc",
+        "wayland-readme"
+      ]
+    },
+    {
+      "id": "per-client-global-visibility-boundary",
+      "name": "Per-client global visibility and credential boundary",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "The libwayland server API can filter which globals are advertised and bound for each client, and it exposes the client's operating-system credentials. The protocol documentation states that authentication and transport setup are environment-dependent; the core contract routes a client through a compositor connection but does not by itself define a complete authorization model, sandbox, or trusted compositor policy.",
+      "benefits": [
+        "Allows a compositor to hide or expose capabilities per client",
+        "Provides a server-side hook for credential-aware policy at the global boundary",
+        "Keeps authentication and deployment policy outside the minimal wire protocol"
+      ],
+      "costs": [
+        "Security depends on the compositor, socket/session setup, operating-system credentials, and extension policy",
+        "A protocol client cannot infer that an advertised global is safe or trustworthy solely from its interface name",
+        "The core library hook is an enforcement point for a compositor, not a proof of isolation between clients"
+      ],
+      "evidence_ids": [
+        "wayland-server-core",
+        "wayland-server-source",
+        "wayland-protocol-security"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Versioned object-capability transition system",
+      "question": "Which client-visible object states and capabilities are reachable as globals are announced, bound at a negotiated version, extended with child objects, and removed?",
+      "assumptions": [
+        "A client connection, global registry, proxy/resource, and interface version are state components",
+        "Requests, global announcements, removals, and protocol errors are labeled transitions",
+        "Compositor-specific global inventory and policy are parameters rather than universal protocol state"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "wayland-protocol-xml",
+        "wayland-client-core",
+        "wayland-server-core"
+      ]
+    },
+    {
+      "model": "Double-buffered surface commit state machine",
+      "question": "How do attach, damage, input/opaque-region, scale, role, commit, compositor application, and buffer release transitions constrain a surface's visible content and reusable buffers?",
+      "assumptions": [
+        "Pending state and active compositor state are distinct records",
+        "A commit atomically enqueues a content update, but the model abstracts when the compositor applies it",
+        "Buffer access and release are modeled as ownership transitions rather than physical GPU operations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "wayland-protocol-xml",
+        "wayland-protocol-doc"
+      ]
+    },
+    {
+      "model": "Typed message/event trace with causal barriers",
+      "question": "Which request, event, callback, file-descriptor, and object-lifetime traces are valid under Wayland's ordered connection and event-queue rules?",
+      "assumptions": [
+        "Messages are typed labels generated from protocol interface definitions",
+        "The trace preserves the ordering guarantees stated by the core protocol and client library",
+        "Multiple client event queues are modeled as scheduled dispatch domains, not as a global total order of callbacks"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "wayland-protocol-xml",
+        "wayland-client-core",
+        "wayland-client-source",
+        "wayland-server-core"
+      ]
+    },
+    {
+      "model": "Per-client capability visibility relation",
+      "question": "Which compositor globals and protocol capabilities are visible and bindable for a client under credential- and policy-dependent filtering?",
+      "assumptions": [
+        "Clients, globals, credentials, and visibility decisions are relation nodes",
+        "The filter relation describes an implementation hook, not a mandatory policy shared by all compositors",
+        "Transport authentication and operating-system isolation are external assumptions"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "wayland-server-core",
+        "wayland-server-source",
+        "wayland-protocol-security"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "versioned-global-object-contract",
+      "benefits": [
+        "Extensible capability discovery without requiring a monolithic protocol revision"
+      ],
+      "costs": [
+        "Optional globals and version negotiation increase compatibility paths"
+      ]
+    },
+    {
+      "feature_id": "double-buffered-surface-state",
+      "benefits": [
+        "Atomic content updates and explicit buffer ownership improve presentation correctness"
+      ],
+      "costs": [
+        "Pending/active state and release timing require careful client-side lifecycle management"
+      ]
+    },
+    {
+      "feature_id": "ordered-proxy-resource-messaging",
+      "benefits": [
+        "Generated typed bindings and asynchronous queues provide a compact IPC contract"
+      ],
+      "costs": [
+        "Connection-fatal errors and asynchronous object lifetimes raise debugging and recovery costs"
+      ]
+    },
+    {
+      "feature_id": "compositor-mediated-input-and-capabilities",
+      "benefits": [
+        "One compositor can coordinate device focus, serial validation, and cross-client interaction"
+      ],
+      "costs": [
+        "Desktop semantics and capability availability vary across compositor implementations"
+      ]
+    },
+    {
+      "feature_id": "per-client-global-visibility-boundary",
+      "benefits": [
+        "Compositors can enforce deployment-specific capability exposure at a defined boundary"
+      ],
+      "costs": [
+        "The protocol/library does not replace operating-system authentication or compositor security policy"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "wayland-repository-commit",
+      "kind": "source-code",
+      "title": "Wayland 1.24.0 source at fixed commit",
+      "uri": "https://gitlab.freedesktop.org/wayland/wayland/-/commit/736d12ac67c20c60dc406dc49bb06be878501f86",
+      "accessed": "2026-10-23",
+      "notes": "Official Wayland repository tag 1.24.0 resolved locally to this fixed commit; the commit is the temporal anchor for protocol and libwayland source claims."
+    },
+    {
+      "id": "wayland-protocol-xml",
+      "kind": "source-code",
+      "title": "Wayland core protocol XML at fixed commit",
+      "uri": "https://gitlab.freedesktop.org/wayland/wayland/-/blob/736d12ac67c20c60dc406dc49bb06be878501f86/protocol/wayland.xml",
+      "accessed": "2026-10-23",
+      "notes": "Local checkout: protocol/wayland.xml. Defines wl_display, wl_registry, wl_surface, wl_buffer, wl_seat, messages, versions, roles, errors, and commit semantics."
+    },
+    {
+      "id": "wayland-client-core",
+      "kind": "source-code",
+      "title": "Wayland client API headers at fixed commit",
+      "uri": "https://gitlab.freedesktop.org/wayland/wayland/-/blob/736d12ac67c20c60dc406dc49bb06be878501f86/src/wayland-client-core.h",
+      "accessed": "2026-10-23",
+      "notes": "Local checkout: src/wayland-client-core.h. Documents proxies, display connections, flushing, event queues, dispatch, roundtrips, and protocol errors."
+    },
+    {
+      "id": "wayland-server-core",
+      "kind": "source-code",
+      "title": "Wayland server API headers at fixed commit",
+      "uri": "https://gitlab.freedesktop.org/wayland/wayland/-/blob/736d12ac67c20c60dc406dc49bb06be878501f86/src/wayland-server-core.h",
+      "accessed": "2026-10-23",
+      "notes": "Local checkout: src/wayland-server-core.h. Defines event loops, displays, sockets, globals, global filters, clients, credentials, resources, dispatch, and event/error APIs."
+    },
+    {
+      "id": "wayland-client-source",
+      "kind": "source-code",
+      "title": "Wayland client implementation at fixed commit",
+      "uri": "https://gitlab.freedesktop.org/wayland/wayland/-/blob/736d12ac67c20c60dc406dc49bb06be878501f86/src/wayland-client.c",
+      "accessed": "2026-10-23",
+      "notes": "Local checkout: src/wayland-client.c. Implements connection, proxy, event-queue, read/dispatch, roundtrip, flush, and protocol-error behavior."
+    },
+    {
+      "id": "wayland-server-source",
+      "kind": "source-code",
+      "title": "Wayland server implementation at fixed commit",
+      "uri": "https://gitlab.freedesktop.org/wayland/wayland/-/blob/736d12ac67c20c60dc406dc49bb06be878501f86/src/wayland-server.c",
+      "accessed": "2026-10-23",
+      "notes": "Local checkout: src/wayland-server.c. Implements clients, resources, global visibility filters, credentials, sockets, dispatch, and server-side error handling."
+    },
+    {
+      "id": "wayland-readme",
+      "kind": "official-doc",
+      "title": "Wayland project README",
+      "uri": "https://gitlab.freedesktop.org/wayland/wayland/-/blob/736d12ac67c20c60dc406dc49bb06be878501f86/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Official project description explicitly distinguishes the compositor/client protocol from libwayland and states that Wayland handles input and buffer management rather than rendering."
+    },
+    {
+      "id": "wayland-protocol-doc",
+      "kind": "official-doc",
+      "title": "Wayland protocol specification",
+      "uri": "https://wayland.freedesktop.org/docs/html/",
+      "accessed": "2026-10-23",
+      "notes": "Official generated protocol documentation for the core object model, request/event ordering, surface state, input, and compositor/client responsibilities."
+    },
+    {
+      "id": "wayland-protocol-security",
+      "kind": "official-doc",
+      "title": "Wayland protocol security and authentication documentation",
+      "uri": "https://wayland.freedesktop.org/docs/html/apa.html#sect-Protocol-Security-and-Authentication",
+      "accessed": "2026-10-23",
+      "notes": "Official protocol documentation describing authentication/session setup and the boundary between the protocol and compositor or environment policy."
+    }
+  ],
+  "related_systems": []
+}

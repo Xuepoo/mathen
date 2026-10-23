@@ -1,0 +1,264 @@
+{
+  "id": "kitty",
+  "name": "Kitty",
+  "version_context": "commit 34eda431940fc8d66ffd0ada7d4a6451fdbd6699",
+  "summary": "A GPU-accelerated terminal emulator that binds PTY-supervised child processes to protocol-driven screen state, session/tab/window composition, input and rendering loops, and configurable remote control.",
+  "scope": [
+    "PTY and child supervision",
+    "terminal screen and protocol state",
+    "session, tab, and window composition",
+    "keyboard, mouse, events, and GPU rendering",
+    "remote-control authority"
+  ],
+  "features": [
+    {
+      "id": "pty-child-lifecycle",
+      "name": "PTY-backed child lifecycle",
+      "category": "process-model",
+      "claim_type": "fact",
+      "description": "kitty creates and supervises shell child processes through PTYs, with process groups, signal handling, exit tracking, and nonblocking I/O forming the boundary between terminal state and the operating system.",
+      "benefits": [
+        "Provides conventional shell compatibility through a real PTY",
+        "Makes child exit and signal transitions observable to the terminal window"
+      ],
+      "costs": [
+        "PTY behavior, process groups, and platform signal semantics vary by host",
+        "Each child adds kernel process and buffer resources"
+      ],
+      "evidence_ids": ["kitty-pty-source", "kitty-monitor-source", "repository-commit"]
+    },
+    {
+      "id": "screen-state-and-terminal-protocol",
+      "name": "Screen state and terminal protocol interpreter",
+      "category": "terminal-model",
+      "claim_type": "fact",
+      "description": "kitty maintains screen buffers, cursor and mode state, and applies terminal control sequences to mutate cells, scrollback, selection, and rendering-relevant state.",
+      "benefits": [
+        "Separates byte-stream interpretation from window drawing",
+        "Supports rich terminal protocols and persistent scrollback state"
+      ],
+      "costs": [
+        "Large scrollback and graphics state consume memory",
+        "Protocol compatibility and state transitions are complex"
+      ],
+      "evidence_ids": ["kitty-screen-source", "kitty-protocol-doc"]
+    },
+    {
+      "id": "session-tab-window-composition",
+      "name": "Session, tab, and window composition",
+      "category": "session-model",
+      "claim_type": "fact",
+      "description": "kitty composes OS windows from tabs and terminal windows, with session definitions and layout policies controlling shell placement and restoration.",
+      "benefits": [
+        "Provides reusable multi-window layouts and session restoration",
+        "Keeps shell processes associated with explicit terminal windows"
+      ],
+      "costs": [
+        "Layout and process restoration can create lifecycle coupling",
+        "More panes increase input focus and resource-management complexity"
+      ],
+      "evidence_ids": ["kitty-session-source", "kitty-sessions-doc"]
+    },
+    {
+      "id": "event-input-and-render-boundary",
+      "name": "Event, input, and GPU rendering boundary",
+      "category": "input-render-model",
+      "claim_type": "fact",
+      "description": "kitty separates child I/O from the main loop through ChildMonitor's I/O thread, per-screen buffers, wakeups, and parsing callbacks. Window handling routes input and selection actions while the shader implementation manages GPU textures and drawing. Child-output readiness and frame scheduling must coordinate without treating every PTY read as a separate frame.",
+      "benefits": [
+        "Integrates input dispatch, damage/redraw, and terminal output in one interactive loop",
+        "Supports GPU-accelerated text and image rendering"
+      ],
+      "costs": [
+        "Backend and compositor behavior remains platform-specific",
+        "Rendering and input responsiveness compete with child-output volume"
+      ],
+      "evidence_ids": [
+        "kitty-window-source",
+        "kitty-monitor-source",
+        "kitty-render-source",
+        "kitty-screen-source",
+        "kitty-protocol-doc"
+      ]
+    },
+    {
+      "id": "remote-control-authority",
+      "name": "Remote-control command authority",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "kitty remote control can inspect windows, inject text, and create or close windows. It is disabled by default; password mode authorizes TTY/socket requests, while socket-only accepts socket requests and denies TTY requests. Clipboard policy is separate: writes are allowed and reads require confirmation by default, with a configurable maximum buffered clipboard size.",
+      "benefits": [
+        "Allows automation without embedding application logic in every shell",
+        "Makes terminal/session operations scriptable"
+      ],
+      "costs": [
+        "A reachable control endpoint can affect processes, input, or displayed data",
+        "Security depends on transport and permission configuration"
+      ],
+      "evidence_ids": ["kitty-remote-source", "kitty-remote-doc", "kitty-options-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "PTY-to-screen transition system",
+      "question": "How does child output transition through PTY reads, escape-sequence parsing, screen state, and redraw?",
+      "assumptions": [
+        "PTY reads produce ordered byte streams",
+        "Parser transitions mutate screen/cursor/mode state",
+        "Rendering observes screen state after event-loop scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["kitty-pty-source", "kitty-screen-source", "kitty-window-source"]
+    },
+    {
+      "model": "Session containment graph",
+      "question": "How do OS windows, tabs, terminal windows, child processes, and layouts compose and terminate?",
+      "assumptions": [
+        "Tabs and windows are explicit containment nodes",
+        "A terminal window owns or supervises a child process",
+        "Layout restoration is a configuration relation, not proof of process persistence"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["kitty-session-source", "kitty-sessions-doc", "kitty-pty-source"]
+    },
+    {
+      "model": "Control-authority relation",
+      "question": "Which remote-control operations can reach which session and process resources?",
+      "assumptions": [
+        "Commands are protocol requests",
+        "Permission and transport policy determine authority edges",
+        "Reachability does not prove a command is safe"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["kitty-remote-source", "kitty-remote-doc"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "pty-child-lifecycle",
+      "benefits": ["Provides conventional shell compatibility through a real PTY"],
+      "costs": ["PTY behavior, process groups, and platform signal semantics vary by host"]
+    },
+    {
+      "feature_id": "screen-state-and-terminal-protocol",
+      "benefits": ["Separates byte-stream interpretation from window drawing"],
+      "costs": ["Large scrollback and graphics state consume memory"]
+    },
+    {
+      "feature_id": "session-tab-window-composition",
+      "benefits": ["Provides reusable multi-window layouts and session restoration"],
+      "costs": ["Layout and process restoration can create lifecycle coupling"]
+    },
+    {
+      "feature_id": "event-input-and-render-boundary",
+      "benefits": [
+        "Integrates input dispatch, damage/redraw, and terminal output in one interactive loop"
+      ],
+      "costs": ["Backend and compositor behavior remains platform-specific"]
+    },
+    {
+      "feature_id": "remote-control-authority",
+      "benefits": ["Allows automation without embedding application logic in every shell"],
+      "costs": ["A reachable control endpoint can affect processes, input, or displayed data"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "kitty source at fixed commit",
+      "uri": "https://github.com/kovidgoyal/kitty/commit/34eda431940fc8d66ffd0ada7d4a6451fdbd6699",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "kitty-pty-source",
+      "kind": "source-code",
+      "title": "kitty child process and PTY source at fixed commit",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/kitty/child.c",
+      "accessed": "2026-10-23",
+      "notes": "spawn implements fork, setsid, terminal attachment, signal reset, and exec. ChildMonitor provides ongoing I/O and exit supervision."
+    },
+    {
+      "id": "kitty-monitor-source",
+      "kind": "source-code",
+      "title": "kitty child I/O, parsing, and render scheduling",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/kitty/child-monitor.c",
+      "accessed": "2026-10-23",
+      "notes": "ChildMonitor, Child, I/O thread, per-screen buffer locks, child exit notifications, and main-loop parsing/wakeup boundaries."
+    },
+    {
+      "id": "kitty-render-source",
+      "kind": "source-code",
+      "title": "kitty GPU texture and shader rendering",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/kitty/shaders.c",
+      "accessed": "2026-10-23",
+      "notes": "GPU texture limits, sprite resources, framebuffer operations, and rendering implementation."
+    },
+    {
+      "id": "kitty-options-source",
+      "kind": "source-code",
+      "title": "kitty control, clipboard, and resource policies",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/kitty/options/definition.py",
+      "accessed": "2026-10-23",
+      "notes": "allow_remote_control, listen_on, clipboard_control, clipboard_max_size, and scrollback_lines definitions and policy documentation."
+    },
+    {
+      "id": "kitty-screen-source",
+      "kind": "source-code",
+      "title": "kitty screen and terminal state source at fixed commit",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/kitty/screen.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for terminal screen buffers, cursor state, modes, and escape-sequence effects."
+    },
+    {
+      "id": "kitty-session-source",
+      "kind": "source-code",
+      "title": "kitty session and window source at fixed commit",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/kitty/session.py",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for sessions, tabs, windows, layouts, and shell startup state."
+    },
+    {
+      "id": "kitty-window-source",
+      "kind": "source-code",
+      "title": "kitty window and rendering source at fixed commit",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/kitty/window.py",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for window event handling, input, redraw, selection, and child I/O integration."
+    },
+    {
+      "id": "kitty-remote-source",
+      "kind": "source-code",
+      "title": "kitty remote-control source at fixed commit",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/kitty/remote_control.py",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for authenticated/authorized remote-control command dispatch and serialization."
+    },
+    {
+      "id": "kitty-sessions-doc",
+      "kind": "official-doc",
+      "title": "kitty sessions documentation",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/docs/sessions.rst",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for session files, tabs, windows, and layouts."
+    },
+    {
+      "id": "kitty-remote-doc",
+      "kind": "official-doc",
+      "title": "kitty remote control documentation",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/docs/remote-control.rst",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for remote control, command permissions, and transport."
+    },
+    {
+      "id": "kitty-protocol-doc",
+      "kind": "official-doc",
+      "title": "kitty graphics and terminal protocol documentation",
+      "uri": "https://github.com/kovidgoyal/kitty/blob/34eda431940fc8d66ffd0ada7d4a6451fdbd6699/docs/graphics-protocol.rst",
+      "accessed": "2026-10-23",
+      "notes": "Official fixed-revision documentation for terminal graphics and protocol behavior."
+    }
+  ],
+  "related_systems": []
+}

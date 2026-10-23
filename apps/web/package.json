@@ -8,9 +8,13 @@
     "check": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/bun": "^1.4.3",
     "@types/node": "^24.10.0",
-    "cytoscape": "^3.33.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "3d-force-graph": "1.80.1",
+    "three-spritetext": "1.10.0"
   }
 }

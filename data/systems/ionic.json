@@ -290,5 +290,40 @@
       "accessed": "2026-10-23",
       "notes": "Official documentation for browser/native cross-platform behavior."
     }
+  ],
+  "relations": [
+    {
+      "type": "composes",
+      "target": "angular",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "ionic-angular-package",
+        "ionic-docs"
+      ],
+      "notes": "Ionic publishes an Angular integration package that adapts its web components and application primitives for Angular applications."
+    },
+    {
+      "type": "composes",
+      "target": "react",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "ionic-react-package",
+        "ionic-docs"
+      ],
+      "notes": "Ionic publishes a React integration package that adapts its web components and application primitives for React applications."
+    },
+    {
+      "type": "composes",
+      "target": "vue",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "ionic-vue-package",
+        "ionic-docs"
+      ],
+      "notes": "Ionic publishes a Vue integration package that adapts its web components and application primitives for Vue applications."
+    }
   ]
 }

@@ -71,5 +71,18 @@
     {"id": "vue-reactivity-doc", "kind": "official-doc", "title": "Vue reactivity in depth", "uri": "https://vuejs.org/guide/extras/reactivity-in-depth.html", "accessed": "2026-10-23", "notes": "Official documentation for tracking, triggering, refs, effects, and runtime versus compile-time trade-offs."},
     {"id": "vue-rendering-doc", "kind": "official-doc", "title": "Vue rendering mechanism", "uri": "https://vuejs.org/guide/extras/rendering-mechanism.html", "accessed": "2026-10-23", "notes": "Official documentation for compiler-informed virtual DOM rendering."}
   ],
-  "related_systems": []
+  "related_systems": [],
+  "relations": [
+    {
+      "type": "resembles",
+      "target": "svelte",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "vue-rendering-doc",
+        "vue-reactivity-doc"
+      ],
+      "notes": "Both compile or transform component-oriented declarative source toward DOM updates, but Vue uses a reactive runtime renderer and Svelte performs more work at compile time."
+    }
+  ]
 }

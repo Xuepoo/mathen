@@ -1,0 +1,30 @@
+diff --git a/dist/3d-force-graph.mjs b/dist/3d-force-graph.mjs
+index a1ba7323e2436d858d69e669b9d9849bbc490457..68f515de4899562f56c658238da539136deffcb4 100644
+--- a/dist/3d-force-graph.mjs
++++ b/dist/3d-force-graph.mjs
+@@ -376,11 +376,20 @@ var _3dForceGraph = Kapsule({
+ 
+             controls._status && controls._onPointerCancel?.(); // cancel pressed status on fly controls
+ 
+-            controls.domElement && controls.domElement.ownerDocument && controls.domElement.ownerDocument.dispatchEvent(
+-            // simulate mouseup to ensure the controls don't take over after dragend
+-            new PointerEvent('pointerup', {
+-              pointerType: 'touch'
+-            }));
++            // End the pointers actually owned by the navigation controls. A
++            // fabricated touch pointer with ID 0 leaves the mouse tracked and
++            // makes OrbitControls resume a touch with no recorded position.
++            // Orbit stores IDs; Trackball stores the original pointer events.
++            [...(controls._pointers || [])].forEach(pointer => {
++              const pointerId = typeof pointer === 'number' ? pointer : pointer.pointerId;
++              const position = controls._pointerPositions?.[pointerId];
++              controls.domElement.ownerDocument.dispatchEvent(new PointerEvent('pointerup', {
++                pointerId,
++                pointerType: pointer.pointerType || (position ? 'touch' : 'mouse'),
++                clientX: position?.x ?? pointer.clientX ?? 0,
++                clientY: position?.y ?? pointer.clientY ?? 0
++              }));
++            });
+           }
+ 
+           // clear cursor

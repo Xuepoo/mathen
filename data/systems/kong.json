@@ -194,5 +194,18 @@
       "accessed": "2026-10-23",
       "notes": "Pinned source for clustering initialization and control/data-plane coordination."
     }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "nginx",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "kong-repository-commit",
+        "kong-runloop-source"
+      ],
+      "notes": "Kong Gateway uses the OpenResty runtime and its NGINX request/proxy boundary; this is a runtime dependency, not an equivalence claim with NGINX."
+    }
   ]
 }

@@ -66,11 +66,19 @@ These entries are already present in the repository at different review levels:
 | `linux` | Linux Kernel | operating system | `reviewed` | Analyze system calls, scheduling, memory, and modules |
 | `freebsd` | FreeBSD | operating system | `reviewed` | Compare kernel subsystems, jails, networking, and GEOM storage using fixed-commit evidence |
 | `systemd` | systemd | init system | `reviewed` | Compare typed units, dependency transactions, service supervision, and activation using fixed-commit evidence |
+| `hyprland` | Hyprland | Wayland compositor | `reviewed` | Compare Wayland protocol resources, dynamic tiling, input routing, output rendering, and compositor failure boundaries using fixed-commit evidence |
+| `niri` | Niri | Wayland compositor | `reviewed` | Compare scrollable columns, Smithay protocol resources, IPC/input actions, output lifecycle, and rendering failure boundaries using fixed-commit evidence |
+| `sway` | Sway | Wayland compositor | `reviewed` | Compare wlroots protocol/backend boundaries, i3-compatible container trees, seat input, output resources, and IPC lifecycle using fixed-commit evidence |
+| `i3` | i3 | X11 window manager | `reviewed` | Compare X11 reparenting, hierarchical containers, keyboard routing, workspaces, resources, and IPC failure boundaries using fixed-commit evidence |
 | `hadoop` | Apache Hadoop | distributed storage and compute | `reviewed` | Compare HDFS metadata, replicated blocks, YARN arbitration, and batch computation using fixed-commit evidence |
 | `nginx` | NGINX | network server | `reviewed` | Analyze event-driven I/O and worker processes |
+| `postfix` | Postfix | mail transfer agent | `reviewed` | Compare SMTP admission, cleanup, address rewriting, bounded queue scheduling, transport delivery, and retry failure state using fixed-commit evidence |
+| `dovecot` | Dovecot | mail server | `reviewed` | Compare IMAP/POP3 login isolation, asynchronous authentication, mailbox indexes, storage transactions, and least-privilege process boundaries using fixed-commit evidence |
 | `llvm` | LLVM | compiler infrastructure | `reviewed` | Add temporal IR and pass-pipeline relations |
 | `gcc` | GCC | compiler | `reviewed` | Compare front-end, IR, pass, and target-backend boundaries with LLVM |
 | `tree-sitter` | tree-sitter | parser library | `reviewed` | Compare incremental concrete syntax trees with compiler front ends |
+| `lsp` | Language Server Protocol | language tooling protocol | `reviewed` | Compare negotiated capabilities, document mirrors, request lifecycle, and partial-result boundaries using the pinned 3.17 specification |
+| `ast-grep` | ast-grep | structural code tooling | `reviewed` | Compare Tree-sitter document state, capture-aware rules, diff interfaces, and parallel scan resources using fixed-commit evidence |
 | `coreutils` | GNU Coreutils | Unix system tools | `reviewed` | Compare command composition and multi-call packaging with BusyBox |
 | `boost` | Boost | C++ library | `reviewed` | Compare modular headers, binary components, and build configuration with Rust and LLVM |
 | `ffmpeg` | FFmpeg | media processing | `reviewed` | Compare format contexts, codec state machines, and filter graphs using fixed-commit evidence |
@@ -83,6 +91,8 @@ These entries are already present in the repository at different review levels:
 | `node` | Node.js | JavaScript runtime | `reviewed` | Compare event-loop scheduling, module loading, and native extension boundaries |
 | `deno` | Deno | JavaScript runtime | `reviewed` | Compare permission-scoped execution and module graph boundaries |
 | `v8` | V8 | JavaScript engine | `reviewed` | Compare isolate/context state, handles, and managed heap boundaries |
+| `chromium` | Chromium | browser engine | `reviewed` | Compare browser/renderer process isolation, Blink parsing and rendering, Mojo IPC, partitioned storage/networking, and sandbox failure boundaries using fixed-commit evidence |
+| `firefox` | Firefox | browser engine | `reviewed` | Compare Gecko process isolation, DOM/style/layout/WebRender stages, IPDL IPC, storage/networking, and sandbox/crash boundaries using fixed-commit evidence |
 | `envoy` | Envoy | network proxy | `reviewed` | Compare worker dispatchers, filter chains, and control/data plane propagation using fixed-commit evidence |
 | `haproxy` | HAProxy | network proxy | `reviewed` | Compare polling, task scheduling, layered connection state, and reload topology using fixed-commit evidence |
 | `caddy` | Caddy | web server | `reviewed` | Compare module lifecycle, atomic configuration swaps, and automatic HTTPS using fixed-commit evidence |
@@ -93,15 +103,21 @@ These entries are already present in the repository at different review levels:
 | `threejs` | Three.js | 3D graphics library | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
 | `blender` | Blender | 3D graphics application | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
 | `sdl` | SDL | multimedia library | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
+| `wayland` | Wayland | display protocol | `reviewed` | Compare client/compositor protocol globals, surface commit state, typed message ordering, input capabilities, and per-client security boundaries using fixed-commit evidence |
 | `godot` | Godot | game engine | `planned` | Add a fixed-commit source bundle and draft before review; no evidence-backed card is present yet |
 | `electron` | Electron | desktop application framework | `reviewed` | Compare main/renderer process isolation, IPC, preload capabilities, and utility processes using fixed-commit evidence |
 | `tauri` | Tauri | desktop application framework | `reviewed` | Compare native shell/webview composition, command IPC, capabilities, and packaging using fixed-commit evidence |
 | `qt` | Qt | desktop application framework | `reviewed` | Compare QObject ownership, event dispatch, signals/slots, widgets, and platform abstraction using fixed-commit evidence |
 | `gtk` | GTK | desktop application framework | `reviewed` | Compare GObject types, event controllers, widget trees, and GDK backend boundaries using fixed-commit evidence |
+| `kitty` | Kitty | terminal emulator | `reviewed` | Compare PTY child supervision, terminal screen state, session/tab/window composition, GPU rendering, input, and remote-control authority using fixed-commit evidence |
+| `wezterm` | WezTerm | terminal emulator | `reviewed` | Compare PTY domains, terminal parsing, mux pane/tab/workspace state, GPU rendering, input, and control APIs using fixed-commit evidence |
+| `alacritty` | Alacritty | terminal emulator | `reviewed` | Compare PTY event loops, terminal grid/parser state, GPU window rendering, input/clipboard, and IPC boundaries using fixed-commit evidence |
+| `ghostty` | Ghostty | terminal emulator | `reviewed` | Compare PTY processes, VT parser/screen state, native renderer backends, input routing, and surface/runtime boundaries using fixed-commit evidence |
 | `rails` | Ruby on Rails | web framework | `reviewed` | Compare engine composition, ordered initialization, autoloading, and Rack middleware using fixed-commit evidence |
 | `laravel` | Laravel | web framework | `reviewed` | Compare service-container resolution, provider bootstrap, deferred services, and middleware pipelines using fixed-commit evidence |
 | `spring-boot` | Spring Boot | web framework | `reviewed` | Compare application-context startup, conditional auto-configuration, environment binding, and embedded web deployment using fixed-commit evidence |
 | `nestjs` | NestJS | web framework | `reviewed` | Compare module graph scanning, provider resolution, initialization phases, and transport adapters using fixed-commit evidence |
+| `stalwart` | Stalwart Mail Server | mail server | `reviewed` | Compare SMTP envelope/queue delivery, IMAP mailbox sessions, JMAP stateful synchronization, and shared store adapters using fixed-commit evidence |
 
 The operational manifest now contains 52 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
@@ -180,8 +196,12 @@ identifiers, not claims that the projects share the same architecture.
 | `rustc` | rustc | compiler infrastructure | `reviewed` | Compare typed IR lowering, MIR ownership analysis, query compilation, and LLVM backend boundaries using fixed-revision evidence |
 | `cpython` | CPython | `P1` | Bytecode VM, reference counting, and extension boundary |
 | `v8` | V8 | `P1` | JIT compilation, hidden classes, and managed heap |
+| `chromium` | Chromium | `P0` | Browser/renderer process isolation, Blink pipeline, Mojo, partitioned services, and sandboxing |
+| `firefox` | Firefox | `P0` | Gecko process hierarchy, DOM/layout/WebRender, IPDL, storage/networking, and sandboxing |
 | `luajit` | LuaJIT | language runtime | `reviewed` | Compare interpreter/tracing-JIT transitions, FFI, and embeddable runtime boundaries using fixed-revision evidence |
 | `tree-sitter` | Tree-sitter | `P1` | Incremental parsing and concrete syntax trees |
+| `lsp` | Language Server Protocol | `reviewed` | Capability negotiation, versioned document synchronization, cancellation, and protocol evolution |
+| `ast-grep` | ast-grep | `reviewed` | Tree-sitter composition, structural matchers, declarative rules, and parallel rewrite preparation |
 | `antlr` | ANTLR | `P2` | Grammar-driven parser and code-generation pipeline |
 | `protobuf` | Protocol Buffers | `P0` | Schema evolution, serialization, and compatibility |
 | `grpc` | gRPC | `P1` | RPC contracts, streaming, and generated clients |
@@ -255,8 +275,19 @@ identifiers, not claims that the projects share the same architecture.
 | `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
 | `openssl` | OpenSSL | `P0` | Cryptographic primitives, protocol state, and provider boundary |
 | `wireguard` | WireGuard | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
-| `quiche` | quiche | `P2` | QUIC and HTTP/3 protocol implementation |
+| `quiche` | quiche | `reviewed` | Compare QUIC connection state, application-driven packet I/O, HTTP/3 streams, QPACK, and loss recovery using fixed-commit evidence |
+| `http` | HTTP | `planned` | Protocol semantics, message ordering, intermediaries, and version evolution; blocker: no single authoritative HTTP implementation or fixed repository revision selected |
+| `dns` | DNS | `planned` | Name resolution, delegation, caching, and transport/security evolution; blocker: no authoritative DNS implementation or fixed repository revision selected |
+| `tcp` | TCP | `planned` | Reliable ordered byte streams, congestion control, retransmission, and connection state; blocker: no standalone protocol repository selected, use a fixed OS implementation card instead |
+| `tls` | TLS | `planned` | Handshake state, authenticated key exchange, record protection, and version evolution; blocker: protocol-only card lacks a repository boundary, use OpenSSL or another fixed implementation |
 | `libp2p` | libp2p | `P2` | Modular peer-to-peer transports and identity |
+
+### Mail and messaging services
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- | --- |
+| `postfix` | Postfix | `reviewed` | Compare SMTP admission, cleanup, address rewriting, bounded queue scheduling, transport delivery, and retry failure state using fixed-commit evidence |
+| `dovecot` | Dovecot | `reviewed` | Compare IMAP/POP3 login isolation, asynchronous authentication, mailbox indexes, storage transactions, and least-privilege process boundaries using fixed-commit evidence |
 
 ### Graphics, frontend, and media libraries
 
@@ -267,6 +298,7 @@ identifiers, not claims that the projects share the same architecture.
 | `webgl` | WebGL | `reviewed` | Compare browser context state, typed GPU resources, shader submission, and security boundaries using fixed-commit evidence |
 | `vulkan` | Vulkan | `reviewed` | Compare explicit resources, command recording/submission, queue ownership, and synchronization using fixed-commit evidence |
 | `opengl` | OpenGL | `reviewed` | Compare context state, object bindings, programmable pipeline, and platform integration using fixed-commit evidence |
+| `wayland` | Wayland | `reviewed` | Compare client/compositor protocol globals, surface commit state, typed message ordering, input capabilities, and per-client security boundaries using fixed-commit evidence |
 | `sdl` | SDL | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
 | `godot` | Godot | `P1` | Scene tree, nodes, resources, and game runtime |
 | `react` | React | `reviewed` | Compare component trees, hooks, reconciliation, and host commit boundaries using fixed-commit evidence |
@@ -318,6 +350,15 @@ identifiers, not claims that the projects share the same architecture.
 | `javafx` | JavaFX | `reviewed` | Compare constrained scene graphs, observable property dependencies, and pulse-driven rendering using fixed-commit evidence |
 | `flutter` | Flutter | `reviewed` | Compare immutable widget reconciliation, render-object pipelines, and engine/embedder boundaries using fixed-commit evidence |
 | `wails` | Wails | `reviewed` | Compare Go/webview shells, generated typed bindings, runtime events, and native window bridges using fixed-commit evidence |
+
+### Terminal emulators
+
+| ID | Target | Status | Modeling focus |
+| --- | --- | --- | --- |
+| `kitty` | Kitty | `reviewed` | Compare PTY child supervision, terminal screen state, session/tab/window composition, GPU rendering, input, and remote-control authority using fixed-commit evidence |
+| `wezterm` | WezTerm | `reviewed` | Compare PTY domains, terminal parsing, mux pane/tab/workspace state, GPU rendering, input, and control APIs using fixed-commit evidence |
+| `alacritty` | Alacritty | `reviewed` | Compare PTY event loops, terminal grid/parser state, GPU window rendering, input/clipboard, and IPC boundaries using fixed-commit evidence |
+| `ghostty` | Ghostty | `reviewed` | Compare PTY processes, VT parser/screen state, native renderer backends, input routing, and surface/runtime boundaries using fixed-commit evidence |
 
 ### CLI and developer tools
 

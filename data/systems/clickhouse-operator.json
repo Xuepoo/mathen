@@ -73,5 +73,29 @@
     {"id": "clickhouse-operator-worker-source", "kind": "source-code", "title": "ClickHouse Operator reconciliation worker", "uri": "https://github.com/Altinity/clickhouse-operator/blob/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/pkg/controller/chi/worker-reconciler-chi.go", "accessed": "2026-10-23", "notes": "Pinned hierarchical reconciliation implementation."},
     {"id": "clickhouse-operator-storage-doc", "kind": "official-doc", "title": "ClickHouse Operator storage", "uri": "https://github.com/Altinity/clickhouse-operator/blob/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/docs/storage.md", "accessed": "2026-10-23", "notes": "Official documentation for persistent volumes, pods, and StatefulSets."},
     {"id": "clickhouse-operator-backup-doc", "kind": "official-doc", "title": "ClickHouse Operator security and backup configuration", "uri": "https://github.com/Altinity/clickhouse-operator/blob/a89fa9e2edc2f1516af988bf34df7a3bfb5013b5/docs/security_hardening.md", "accessed": "2026-10-23", "notes": "Official documentation covering secret references and backup-related operational configuration."}
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "kubernetes",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "clickhouse-operator-introduction",
+        "clickhouse-operator-controller-source"
+      ],
+      "notes": "The operator watches Kubernetes custom resources and reconciles ClickHouse deployments through Kubernetes controller machinery."
+    },
+    {
+      "type": "uses",
+      "target": "clickhouse",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "clickhouse-operator-introduction",
+        "clickhouse-operator-cr-source"
+      ],
+      "notes": "The operator manages ClickHouseInstallation resources and ClickHouse cluster lifecycle."
+    }
   ]
 }

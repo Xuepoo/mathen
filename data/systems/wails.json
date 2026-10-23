@@ -26,5 +26,18 @@
     {"id": "wails-runtime-doc", "kind": "official-doc", "title": "Wails runtime reference", "uri": "https://wails.io/docs/reference/runtime/intro", "accessed": "2026-10-23", "notes": "Official runtime API documentation for events and native window operations."},
     {"id": "wails-runtime-source", "kind": "source-code", "title": "Wails runtime implementation at fixed commit", "uri": "https://github.com/wailsapp/wails/tree/a90f7e7f50bf3d7db5552fcaf9eeec6fd3d4e626/v2/pkg/runtime", "accessed": "2026-10-23", "notes": "Fixed source boundary for frontend runtime bridge operations."}
   ],
-  "related_systems": []
+  "related_systems": [],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "go",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "wails-architecture-doc",
+        "wails-binding-source"
+      ],
+      "notes": "Wails documents an application as a standard Go application and generates bindings for bound Go methods."
+    }
+  ]
 }

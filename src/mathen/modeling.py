@@ -85,18 +85,112 @@ def build_modeling_bundle(
                 "evidence-backed architecture model."
             ),
             "questions": [
-                "What are the system's core abstractions and state components?",
-                "Which operations change state, and what invariants do they preserve?",
-                "Which reusable architecture features are supported by evidence?",
-                "Which mathematical views explain those features, under "
-                "which assumptions?",
-                "What benefits, costs, failure modes, and counterexamples apply?",
+                {
+                    "dimension": "domains and components",
+                    "question": (
+                        "What user-facing domains, services, subsystems, and "
+                        "deployment roles exist, and how do they interact?"
+                    ),
+                },
+                {
+                    "dimension": "state and lifecycle",
+                    "question": (
+                        "What are the durable, mutable, cached, and ephemeral "
+                        "state components; what transitions change them; and "
+                        "what invariants are observable?"
+                    ),
+                },
+                {
+                    "dimension": "interfaces and dependencies",
+                    "question": (
+                        "Which APIs, protocols, queues, storage interfaces, "
+                        "plugins, and external dependencies connect the "
+                        "components, and which direction does each dependency "
+                        "flow?"
+                    ),
+                },
+                {
+                    "dimension": "consistency and ordering",
+                    "question": (
+                        "Where are ordering, ownership, isolation, consistency, "
+                        "concurrency, or idempotency rules enforced, and what "
+                        "is explicitly left eventual or unspecified?"
+                    ),
+                },
+                {
+                    "dimension": "security and boundaries",
+                    "question": (
+                        "Which boundaries concern namespace, tenant, identity, "
+                        "authorization, transport, or process isolation, and "
+                        "what configuration is required for the security claim "
+                        "to hold?"
+                    ),
+                },
+                {
+                    "dimension": "failure and recovery",
+                    "question": (
+                        "How do failures, timeouts, retries, redelivery, replay, "
+                        "failover, repair, and operator actions affect state and "
+                        "progress?"
+                    ),
+                },
+                {
+                    "dimension": "resources and scale",
+                    "question": (
+                        "Which queues, shards, caches, limits, timers, "
+                        "backpressure mechanisms, and resource costs constrain "
+                        "throughput, latency, or cardinality?"
+                    ),
+                },
+                {
+                    "dimension": "evolution and compatibility",
+                    "question": (
+                        "How do versions, migrations, rolling upgrades, schema or "
+                        "protocol compatibility, and deprecation affect existing "
+                        "state and clients?"
+                    ),
+                },
+                {
+                    "dimension": "transferable architecture",
+                    "question": (
+                        "Which structures are independently meaningful reusable "
+                        "patterns, and which observations remain product-specific, "
+                        "implementation detail, or only analogy?"
+                    ),
+                },
             ],
+            "coverage_protocol": {
+                "for_each_dimension": [
+                    "cite the supporting evidence IDs",
+                    "record a concise supported claim",
+                    "record what is unknown or out of scope when evidence is "
+                    "insufficient",
+                ],
+                "review_questions": [
+                    "Does every component or domain named in the source evidence "
+                    "have a differentiated role rather than a generic scope label?",
+                    "Does each mathematical view answer one concrete question and "
+                    "state assumptions, limits, and counterexamples?",
+                    "Are source relations supported by evidence of the relationship "
+                    "itself, rather than shared vocabulary or co-occurrence?",
+                    "Was the evidence checked against the requested fixed revision, "
+                    "with later documentation marked as current-doc context?",
+                ],
+            },
             "required_claim_types": ["fact", "inference", "hypothesis", "analogy"],
             "evidence_rules": [
                 "Do not promote a path name or file count into a semantic fact.",
                 "Every feature and mathematical view must cite evidence IDs.",
                 "Use only evidence IDs already present in existing_structural_draft.",
+                "For every coverage dimension, label the result supported, unknown, "
+                "or out-of-scope; absence of evidence is not evidence of absence.",
+                "Do not add features to satisfy a quota: each feature must identify "
+                "a distinct boundary, mechanism, state transition, or trade-off.",
+                "Differentiate shared architecture patterns from vague scope labels "
+                "and product-specific names.",
+                "Treat current documentation as documenting its access date; do not "
+                "apply a later guarantee to the pinned source revision without source "
+                "evidence.",
                 "Use hypothesis or analogy when the mathematical "
                 "correspondence is not established.",
                 "Keep product-specific facts separate from transferable feature names.",

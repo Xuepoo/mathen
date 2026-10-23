@@ -80,5 +80,17 @@
       "notes": "Primary design documentation for the VMM architecture and threading model."
     }
   ],
-  "related_systems": ["qemu", "docker"]
+  "related_systems": ["qemu", "docker"],
+  "relations": [
+    {
+      "type": "resembles",
+      "target": "qemu",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "firecracker-design"
+      ],
+      "notes": "Both are virtual machine monitors, but Firecracker deliberately narrows the device model while QEMU provides broad machine and device emulation; this is a structural comparison, not reuse or equivalence."
+    }
+  ]
 }
