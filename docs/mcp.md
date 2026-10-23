@@ -33,11 +33,15 @@ failures are returned as concise JSON tool errors. Draft cards are
 filesystem-only, so `include_drafts: true` returns an explicit
 unsupported-backend error when `MATHEN_API_URL` is set.
 
+The Hono API also exposes `GET /api/feature-relations` for focused relation
+queries; system detail responses include the source card's relation array.
+
 ## Tools
 
 - `list_systems`: list reviewed cards, or include drafts explicitly;
 - `get_system`: retrieve one reviewed card or explicitly requested draft;
 - `search_features`: find reusable features by text and optional category;
+- `get_system`: includes source-card-owned feature relations when present;
 - `list_compositions`: find reviewed composition proposals by input system or claim status;
   each result includes the cited `evidence` records resolved from the owning card;
 - `get_modeling_bundle`: retrieve a fixed-commit evidence bundle for semantic

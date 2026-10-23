@@ -21,6 +21,17 @@ export type Feature = {
   evidence_ids: string[];
 };
 
+export type FeatureRelation = {
+  source_feature_id: string;
+  target_system_id: string;
+  target_feature_id: string;
+  type: string;
+  claim_type: string;
+  claim_status: string;
+  evidence_ids: string[];
+  notes?: string;
+};
+
 export type ArchitectureCard = {
   id: string;
   name: string;
@@ -34,6 +45,7 @@ export type ArchitectureCard = {
   version_context?: string;
   temporal_context?: Record<string, unknown>;
   relations?: Array<Record<string, unknown>>;
+  feature_relations?: FeatureRelation[];
   composition?: Record<string, unknown>;
 };
 
@@ -160,18 +172,16 @@ export class FilesystemBackend implements Backend {
       .flatMap((card) => {
         const composition = card.composition;
         if (!isCompositionRecord(composition)) return [];
-        if (
-          inputSystem &&
-          !composition.inputs.some((input) => input.system_id === inputSystem)
-        ) {
+        if (inputSystem && !composition.inputs.some((input) => input.system_id === inputSystem)) {
           return [];
         }
         if (claimStatus && composition.claim_status !== claimStatus) return [];
         return [toCompositionResult(card, composition)];
       })
-      .sort((left, right) =>
-        left.system_name.localeCompare(right.system_name) ||
-        left.system_id.localeCompare(right.system_id),
+      .sort(
+        (left, right) =>
+          left.system_name.localeCompare(right.system_name) ||
+          left.system_id.localeCompare(right.system_id),
       )
       .slice(0, limit);
   }
@@ -379,6 +389,7 @@ function normalizeCard(value: unknown): ArchitectureCard {
     version_context: optionalString(card.version_context),
     temporal_context: optionalRecord(card.temporal_context),
     relations: recordArray(card.relations),
+    feature_relations: relationArray(card.feature_relations),
     composition: optionalRecord(card.composition),
   };
 }
@@ -404,9 +415,7 @@ function normalizeCompositionResult(value: unknown): CompositionSearchResult {
     system_name: requiredString(result.system_name, "system_name", "/api/compositions"),
     version_context: optionalString(result.version_context) ?? null,
     composition: asRecord(result.composition),
-    evidence: Array.isArray(result.evidence)
-      ? result.evidence.map(normalizeEvidence)
-      : [],
+    evidence: Array.isArray(result.evidence) ? result.evidence.map(normalizeEvidence) : [],
   };
 }
 
@@ -455,13 +464,40 @@ function recordArray(value: unknown): Array<Record<string, unknown>> {
   return Array.isArray(value) ? value.filter(isRecord) : [];
 }
 
+function relationArray(value: unknown): FeatureRelation[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isRecord).map((relation) => ({
+    source_feature_id: requiredString(
+      relation.source_feature_id,
+      "source_feature_id",
+      "/api/systems/:id",
+    ),
+    target_system_id: requiredString(
+      relation.target_system_id,
+      "target_system_id",
+      "/api/systems/:id",
+    ),
+    target_feature_id: requiredString(
+      relation.target_feature_id,
+      "target_feature_id",
+      "/api/systems/:id",
+    ),
+    type: requiredString(relation.type, "type", "/api/systems/:id"),
+    claim_type: requiredString(relation.claim_type, "claim_type", "/api/systems/:id"),
+    claim_status: requiredString(relation.claim_status, "claim_status", "/api/systems/:id"),
+    evidence_ids: stringArray(relation.evidence_ids),
+    ...(optionalString(relation.notes) ? { notes: optionalString(relation.notes) } : {}),
+  }));
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function isCompositionRecord(
-  value: Record<string, unknown> | undefined,
-): value is Record<string, unknown> & {
+function isCompositionRecord(value: Record<string, unknown> | undefined): value is Record<
+  string,
+  unknown
+> & {
   inputs: Array<Record<string, unknown> & { system_id: string }>;
   claim_status: string;
   constraints: unknown[];
@@ -482,10 +518,7 @@ function isCompositionRecord(
     return false;
   }
   return value.inputs.every(
-    (input) =>
-      isRecord(input) &&
-      typeof input.system_id === "string" &&
-      input.system_id.length > 0,
+    (input) => isRecord(input) && typeof input.system_id === "string" && input.system_id.length > 0,
   );
 }
 

@@ -5,7 +5,12 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .cards import CardValidationError, discover_cards, load_card
+from .cards import (
+    CardValidationError,
+    discover_cards,
+    load_card,
+    validate_card_collection,
+)
 from .llm import LLMModelError, client_from_environment, model_bundles
 from .modeling import (
     ModelingBundleError,
@@ -176,9 +181,17 @@ def validate_command(path: Path) -> int:
     if not cards:
         print(f"No cards found in {path}")
         return 1
+    loaded_cards = []
     for card_path in cards:
-        load_card(card_path)
+        loaded_cards.append(load_card(card_path))
         print(f"valid  {card_path}")
+    if path.is_dir():
+        resolved_path = path.resolve()
+        drafts_root = DEFAULT_DRAFTS.resolve()
+        is_drafts = resolved_path == drafts_root or drafts_root in resolved_path.parents
+        validate_card_collection(
+            loaded_cards, require_feature_relation_targets=not is_drafts
+        )
     return 0
 
 

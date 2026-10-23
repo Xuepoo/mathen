@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import math
+import re
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +22,16 @@ REQUIRED_TOP_LEVEL = {
 CLAIM_TYPES = {"fact", "inference", "hypothesis", "analogy"}
 CLAIM_STATUSES = {"proposed", "under-review", "accepted", "rejected", "deprecated"}
 RELATION_TYPES = {"uses", "extends", "composes", "resembles", "influenced-by"}
+FEATURE_RELATION_TYPES = {
+    "implements",
+    "refines",
+    "requires",
+    "supports",
+    "conflicts-with",
+    "composes",
+    "resembles",
+}
+ID_PATTERN = re.compile(r"^[a-z0-9-]+$")
 EXPERIMENT_REQUIRED_FIELDS = (
     "protocol",
     "system_commit",
@@ -129,6 +141,137 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
 
     if "composition" in card:
         _validate_composition(label, card["composition"], evidence_ids)
+
+    if "feature_relations" in card:
+        _validate_feature_relations(
+            label, card["feature_relations"], feature_ids, evidence_ids
+        )
+
+
+def validate_card_collection(
+    cards: Iterable[dict[str, Any]], require_feature_relation_targets: bool = True
+) -> None:
+    """Validate cross-card references after each card passes local validation."""
+
+    cards = list(cards)
+    card_by_id: dict[str, dict[str, Any]] = {}
+    for card in cards:
+        validate_card(card)
+        card_id = card.get("id")
+        if isinstance(card_id, str):
+            if card_id in card_by_id:
+                raise CardValidationError(f"duplicate card id: {card_id}")
+            card_by_id[card_id] = card
+
+    if not require_feature_relation_targets:
+        return
+
+    for card in cards:
+        source_id = card.get("id", "card")
+        for index, relation in enumerate(card.get("feature_relations", [])):
+            target_system_id = relation["target_system_id"]
+            target_card = card_by_id.get(target_system_id)
+            if target_card is None:
+                raise CardValidationError(
+                    f"{source_id}: feature_relation[{index}] references unknown "
+                    f"target system: {target_system_id}"
+                )
+            target_features = {
+                feature.get("id")
+                for feature in target_card.get("features", [])
+                if isinstance(feature, dict)
+            }
+            if relation["target_feature_id"] not in target_features:
+                raise CardValidationError(
+                    f"{source_id}: feature_relation[{index}] references unknown "
+                    "target feature: "
+                    f"{target_system_id}:{relation['target_feature_id']}"
+                )
+
+
+def _validate_feature_relations(
+    label: str,
+    relations: Any,
+    feature_ids: set[str],
+    evidence_ids: set[str | None],
+) -> None:
+    if not isinstance(relations, list):
+        raise CardValidationError(f"{label}: feature_relations must be a list")
+
+    seen: set[tuple[str, str, str, str]] = set()
+    required = {
+        "source_feature_id",
+        "target_system_id",
+        "target_feature_id",
+        "type",
+        "claim_type",
+        "claim_status",
+        "evidence_ids",
+    }
+    allowed = required | {"notes"}
+    for index, relation in enumerate(relations):
+        relation_label = f"feature_relation[{index}]"
+        relation = _require_object(label, relation_label, relation)
+        missing = required - relation.keys()
+        if missing:
+            raise CardValidationError(
+                f"{label}: {relation_label} missing fields: {sorted(missing)}"
+            )
+        unexpected = relation.keys() - allowed
+        if unexpected:
+            raise CardValidationError(
+                f"{label}: {relation_label} has unexpected fields: {sorted(unexpected)}"
+            )
+        source_feature_id = relation["source_feature_id"]
+        if not isinstance(source_feature_id, str) or not ID_PATTERN.fullmatch(
+            source_feature_id
+        ):
+            raise CardValidationError(
+                f"{label}: invalid {relation_label} source feature id"
+            )
+        if source_feature_id not in feature_ids:
+            raise CardValidationError(
+                f"{label}: {relation_label} references unknown source feature: "
+                f"{source_feature_id}"
+            )
+        target_system_id = relation["target_system_id"]
+        target_feature_id = relation["target_feature_id"]
+        for field, value in (
+            ("target system", target_system_id),
+            ("target feature", target_feature_id),
+        ):
+            if not isinstance(value, str) or not ID_PATTERN.fullmatch(value):
+                raise CardValidationError(
+                    f"{label}: invalid {relation_label} {field} id"
+                )
+        if relation["type"] not in FEATURE_RELATION_TYPES:
+            raise CardValidationError(f"{label}: invalid {relation_label} type")
+        if relation["claim_type"] not in CLAIM_TYPES:
+            raise CardValidationError(f"{label}: invalid {relation_label} claim type")
+        _check_claim_status(label, relation_label, relation["claim_status"])
+        if "notes" in relation and not isinstance(relation["notes"], str):
+            raise CardValidationError(
+                f"{label}: {relation_label} notes must be a string"
+            )
+        relation_evidence_ids = relation["evidence_ids"]
+        if not isinstance(relation_evidence_ids, list) or not relation_evidence_ids:
+            raise CardValidationError(f"{label}: {relation_label} needs evidence_ids")
+        if not all(
+            isinstance(evidence_id, str) for evidence_id in relation_evidence_ids
+        ):
+            raise CardValidationError(
+                f"{label}: {relation_label} evidence_ids must contain strings"
+            )
+        _check_evidence_ids(label, relation_label, relation_evidence_ids, evidence_ids)
+        identity = (
+            source_feature_id,
+            target_system_id,
+            target_feature_id,
+            relation["type"],
+        )
+        if identity in seen:
+            raise CardValidationError(f"{label}: duplicate {relation_label} identity")
+        seen.add(identity)
 
 
 def _validate_composition(

@@ -6,6 +6,7 @@ import {
   buildCompositions,
   buildGraph,
   serializeFeature,
+  serializeFeatureRelation,
   serializeMathematicalView,
 } from "./index.js";
 
@@ -106,6 +107,91 @@ test("serializes feature and mathematical-view evidence references", () => {
       evidence_ids: ["architecture"],
     },
   );
+});
+
+test("serializes feature relation evidence and optional notes", () => {
+  assert.deepEqual(
+    serializeFeatureRelation({
+      id: 1,
+      source_system_id: "alpha",
+      source_feature_id: "embedded",
+      target_system_id: "beta",
+      target_feature_id: "embedded",
+      type: "resembles",
+      claim_type: "analogy",
+      claim_status: "proposed",
+      notes: "Bounded comparison.",
+      evidence_ids_json: '["architecture"]',
+    }),
+    {
+      source_feature_id: "embedded",
+      target_system_id: "beta",
+      target_feature_id: "embedded",
+      type: "resembles",
+      claim_type: "analogy",
+      claim_status: "proposed",
+      evidence_ids: ["architecture"],
+      notes: "Bounded comparison.",
+    },
+  );
+});
+
+test("GET /api/feature-relations returns bounded, filtered relation rows", async () => {
+  const calls: { sql: string; bindings: unknown[] }[] = [];
+  const db = {
+    prepare(sql: string) {
+      return {
+        bind(...bindings: unknown[]) {
+          calls.push({ sql, bindings });
+          return {
+            all<T>() {
+              return Promise.resolve({
+                results: [
+                  {
+                    id: 1,
+                    source_system_id: "alpha",
+                    source_feature_id: "embedded",
+                    target_system_id: "beta",
+                    target_feature_id: "embedded",
+                    type: "resembles",
+                    claim_type: "analogy",
+                    claim_status: "proposed",
+                    notes: null,
+                    evidence_ids_json: '["architecture"]',
+                  },
+                ] as T[],
+              });
+            },
+          };
+        },
+      };
+    },
+  } as unknown as D1Database;
+
+  const response = await app.request(
+    "/api/feature-relations?system_id=alpha&type=resembles&limit=999",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    data: [
+      {
+        source_system_id: "alpha",
+        source_feature_id: "embedded",
+        target_system_id: "beta",
+        target_feature_id: "embedded",
+        type: "resembles",
+        claim_type: "analogy",
+        claim_status: "proposed",
+        evidence_ids: ["architecture"],
+      },
+    ],
+  });
+  assert.deepEqual(calls[0]?.bindings, ["alpha", "resembles", 200]);
+  assert.match(calls[0]?.sql ?? "", /ORDER BY fr\.source_system_id/);
+  assert.match(calls[0]?.sql ?? "", /LIMIT \?3/);
 });
 
 test("buildCompositions filters valid proposals by input and status", () => {
@@ -388,6 +474,7 @@ test("system detail view keys match graph identity across database ids", async (
         claim_type: string;
         evidence_ids: string[];
       }>;
+      feature_relations: unknown[];
     };
   };
   assert.equal(body.data.mathematical_views[0]?.id, 42);
@@ -397,6 +484,7 @@ test("system detail view keys match graph identity across database ids", async (
   );
   assert.equal(body.data.mathematical_views[0]?.claim_type, "hypothesis");
   assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, ["architecture"]);
+  assert.deepEqual(body.data.feature_relations, []);
 });
 
 function systemRow(index: number) {

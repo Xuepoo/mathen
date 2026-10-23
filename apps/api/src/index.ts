@@ -40,6 +40,19 @@ type EvidenceRow = {
   notes: string | null;
 };
 
+type FeatureRelationRow = {
+  id: number;
+  source_system_id: string;
+  source_feature_id: string;
+  target_system_id: string;
+  target_feature_id: string;
+  type: string;
+  claim_type: string;
+  claim_status: string;
+  notes: string | null;
+  evidence_ids_json: string;
+};
+
 type GraphSystem = Pick<SystemRow, "id" | "name" | "related_systems_json" | "relations_json">;
 
 type CompositionSystem = Pick<SystemRow, "id" | "name" | "version_context" | "composition_json"> & {
@@ -99,7 +112,7 @@ app.get("/systems/:id", async (c) => {
     return c.json({ error: "System not found" }, 404);
   }
 
-  const [features, views, tradeOffs, evidence] = await Promise.all([
+  const [features, views, tradeOffs, evidence, featureRelations] = await Promise.all([
     c.env.DB.prepare(
       `SELECT id, name, category, claim_type, description, benefits_json, costs_json
               , COALESCE((
@@ -148,6 +161,9 @@ app.get("/systems/:id", async (c) => {
     )
       .bind(system.id)
       .all<EvidenceRow>(),
+    c.env.DB.prepare(featureRelationQuery("source_system_id = ?1"))
+      .bind(system.id)
+      .all<FeatureRelationRow>(),
   ]);
 
   return c.json({
@@ -170,7 +186,38 @@ app.get("/systems/:id", async (c) => {
         costs: parseJson<string[]>(tradeOff.costs_json, []),
       })),
       evidence: evidence.results,
+      feature_relations: featureRelations.results.map(serializeFeatureRelation),
     },
+  });
+});
+
+app.get("/feature-relations", async (c) => {
+  const filters: string[] = [];
+  const bindings: unknown[] = [];
+  for (const [name, column] of [
+    ["system_id", "source_system_id"],
+    ["feature_id", "source_feature_id"],
+    ["target_system_id", "target_system_id"],
+    ["type", "type"],
+  ] as const) {
+    const value = c.req.query(name)?.trim();
+    if (value) {
+      bindings.push(value);
+      filters.push(`${column} = ?${bindings.length}`);
+    }
+  }
+  const limit = boundedInteger(c.req.query("limit"), 100, 1, 200);
+  bindings.push(limit);
+  const where = filters.length ? filters.join(" AND ") : "1 = 1";
+  const result = await c.env.DB.prepare(featureRelationQuery(where, `LIMIT ?${bindings.length}`))
+    .bind(...bindings)
+    .all<FeatureRelationRow>();
+
+  return c.json({
+    data: result.results.map((relation) => ({
+      source_system_id: relation.source_system_id,
+      ...serializeFeatureRelation(relation),
+    })),
   });
 });
 
@@ -408,6 +455,36 @@ export function serializeFeature(feature: FeatureRow) {
     costs: parseJson<string[]>(feature.costs_json, []),
     evidence_ids: parseJsonArray<string>(feature.evidence_ids_json),
   };
+}
+
+export function serializeFeatureRelation(relation: FeatureRelationRow) {
+  return {
+    source_feature_id: relation.source_feature_id,
+    target_system_id: relation.target_system_id,
+    target_feature_id: relation.target_feature_id,
+    type: relation.type,
+    claim_type: relation.claim_type,
+    claim_status: relation.claim_status,
+    evidence_ids: parseJsonArray<string>(relation.evidence_ids_json),
+    ...(relation.notes === null ? {} : { notes: relation.notes }),
+  };
+}
+
+function featureRelationQuery(where: string, limit = "") {
+  return `SELECT fr.id, fr.source_system_id, fr.source_feature_id,
+                 fr.target_system_id, fr.target_feature_id, fr.type,
+                 fr.claim_type, fr.claim_status, fr.notes,
+                 COALESCE((
+                   SELECT json_group_array(substr(fre.evidence_id, length(fr.source_system_id) + 2))
+                   FROM feature_relation_evidence fre
+                   WHERE fre.relation_id = fr.id
+                   ORDER BY fre.evidence_id
+                 ), '[]') AS evidence_ids_json
+          FROM feature_relations fr
+          WHERE ${where}
+          ORDER BY fr.source_system_id, fr.source_feature_id,
+                   fr.target_system_id, fr.target_feature_id, fr.type
+          ${limit}`;
 }
 
 export function serializeMathematicalView(view: {

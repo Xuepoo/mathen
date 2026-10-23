@@ -74,6 +74,7 @@ The top-level object has these fields:
 | `related_systems`    | no       | string array           | IDs of related cards                            |
 | `temporal_context`   | no       | object                 | Version lifecycle and temporal claims           |
 | `relations`          | no       | object array           | Typed, directed architecture relations          |
+| `feature_relations`  | no       | object array           | Evidence-backed directed feature relations     |
 | `composition`        | no       | object                 | Proposed or reviewed system composition         |
 
 ### 3.1 Feature fields
@@ -130,6 +131,13 @@ Each evidence item contains:
 | `notes`    | no       | Scope, excerpt, or provenance notes                                  |
 
 Every feature and mathematical view must reference existing evidence IDs.
+
+The optional `feature_relations` array is owned by the source card. Each item
+references a source feature in that card, a target system and feature, a
+feature-relation type, claim metadata, and evidence IDs from the source card.
+Target feature existence is checked when validating the reviewed card
+collection. Structural comparisons should use `resembles` with a bounded
+`analogy` claim; relation records do not add nodes to the system graph.
 
 For `kind: "experiment"`, the evidence item additionally requires `protocol`,
 `system_commit`, `environment`, `command`, `dataset`, `repetitions`, `metrics`,
@@ -297,6 +305,7 @@ The Cloudflare API stores reviewed cards in normalized tables:
 systems
 ├── evidence
 ├── features ── feature_evidence ──> evidence
+├── feature_relations ── feature_relation_evidence ──> evidence
 ├── mathematical_views ── mathematical_view_evidence ──> evidence
 └── trade_offs ──> features
 
@@ -323,6 +332,14 @@ detail projections also return `evidence_ids` resolved from
 ### `feature_evidence`
 
 Resolves the many-to-many relationship between features and evidence.
+
+### `feature_relations` and `feature_relation_evidence`
+
+Store source-card-owned directed relations between features, including the
+target system and feature, claim metadata, and optional notes. The evidence join
+table keeps relation evidence local to the source card and exposes card-local
+IDs in API projections. These tables are intentionally separate from the
+system-only graph tables.
 
 ### `mathematical_views`
 
@@ -359,6 +376,7 @@ The Hono Worker uses the `/api` base path. Successful responses use a
 | `GET /api/systems?query=&limit=&offset=`                   | Search reviewed system summaries in stable name/id order                |
 | `GET /api/systems/:id`                                     | Retrieve one reviewed card projection                                   |
 | `GET /api/features?query=&category=&claim_type=&limit=`    | Search reviewed features                                                |
+| `GET /api/feature-relations?system_id=&feature_id=&target_system_id=&type=&limit=` | Search reviewed feature relations |
 | `GET /api/compositions?input_system=&claim_status=&limit=` | Search reviewed composition proposals, including cited evidence records |
 | `GET /api/modeling/:id`                                    | Retrieve one fixed-commit modeling bundle                               |
 | `GET /api/graph`                                           | Return current system nodes and valid typed or legacy edges             |

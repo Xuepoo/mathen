@@ -20,6 +20,17 @@ test("API backend calls the Hono endpoints and preserves MCP result records", as
           evidence: [],
           temporal_context: { version: "2.0", claim_status: "accepted" },
           relations: [{ type: "extends", target: "base-system" }],
+          feature_relations: [
+            {
+              source_feature_id: "embedded",
+              target_system_id: "base-system",
+              target_feature_id: "embedded",
+              type: "resembles",
+              claim_type: "analogy",
+              claim_status: "proposed",
+              evidence_ids: ["architecture"],
+            },
+          ],
           composition: { inputs: [{ system_id: "base-system" }] },
         },
       });
@@ -54,6 +65,7 @@ test("API backend calls the Hono endpoints and preserves MCP result records", as
   assert.equal(card?.name, "DuckDB");
   assert.equal(card?.temporal_context?.version, "2.0");
   assert.equal(card?.relations?.[0]?.type, "extends");
+  assert.equal(card?.feature_relations?.[0]?.target_system_id, "base-system");
   assert.equal(
     (card?.composition?.inputs as Array<{ system_id: string }> | undefined)?.[0]?.system_id,
     "base-system",
