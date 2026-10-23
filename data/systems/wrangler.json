@@ -1,0 +1,154 @@
+{
+  "id": "wrangler",
+  "name": "Cloudflare Wrangler",
+  "version_context": "workers-sdk commit e651d7c0dd8e171dcc1820679f9f46601971d876, wrangler 4.152.0",
+  "summary": "A Cloudflare Workers command-line interface that discovers project configuration, runs local development workflows, and coordinates deployment and resource operations against the Cloudflare platform.",
+  "scope": [
+    "CLI command and namespace dispatch",
+    "Workers project configuration",
+    "local development and simulation",
+    "Cloudflare deployment and resource APIs"
+  ],
+  "features": [
+    {
+      "id": "config-driven-command-surface",
+      "name": "Configuration-driven command surface",
+      "category": "deployment-interface",
+      "claim_type": "fact",
+      "description": "Wrangler exposes command namespaces such as dev and deploy and resolves a Workers project configuration to determine the application and bindings those commands operate on.",
+      "benefits": [
+        "Gives project automation a versioned, scriptable CLI boundary",
+        "Keeps deployment inputs close to the project configuration"
+      ],
+      "costs": [
+        "Configuration discovery and environment selection can change command behavior",
+        "The CLI surface must track platform API and configuration evolution"
+      ],
+      "evidence_ids": ["wrangler-cli-source", "wrangler-config-doc"]
+    },
+    {
+      "id": "local-edge-development-loop",
+      "name": "Local edge development loop",
+      "category": "development-model",
+      "claim_type": "fact",
+      "description": "Wrangler provides a dev workflow and programmatic development helpers that start a local Workers execution environment while translating configured bindings and environment data for local use.",
+      "benefits": [
+        "Shortens the edit-run-observe loop for Workers applications",
+        "Allows local testing before a remote deployment"
+      ],
+      "costs": [
+        "Local behavior depends on simulator and compatibility support",
+        "A local environment is not identical to every managed platform service"
+      ],
+      "evidence_ids": ["wrangler-dev-source", "wrangler-dev-doc"]
+    },
+    {
+      "id": "platform-operation-adapters",
+      "name": "Platform operation adapters",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "Wrangler organizes commands and helpers for deploying Workers and managing platform resources, using Cloudflare APIs behind a CLI-oriented adapter boundary.",
+      "benefits": [
+        "Provides one automation entry point for application and platform operations",
+        "Makes remote operations composable with CI workflows"
+      ],
+      "costs": [
+        "Credentials, network access, and remote API availability are required",
+        "Resource semantics remain governed by Cloudflare rather than the CLI"
+      ],
+      "evidence_ids": ["wrangler-cli-source", "wrangler-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Configuration-to-command graph",
+      "question": "How do a project configuration, selected environment, command namespace, and platform operation form a valid execution path?",
+      "assumptions": [
+        "Configuration fields are modeled as inputs to command nodes",
+        "Bindings and credentials are abstracted as validated edges",
+        "The graph describes dispatch and dependencies, not remote success"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["wrangler-cli-source", "wrangler-config-doc"]
+    },
+    {
+      "model": "Local-to-edge refinement",
+      "question": "Which local execution and binding steps refine a Workers project toward a remotely deployed edge workload?",
+      "assumptions": [
+        "Local simulation and remote execution share a relevant Worker contract",
+        "Platform services may have behavior not represented locally",
+        "The model does not assert behavioral equivalence"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["wrangler-dev-doc", "wrangler-doc"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "config-driven-command-surface",
+      "benefits": ["Repeatable project automation"],
+      "costs": ["Configuration and CLI version coupling"]
+    },
+    {
+      "feature_id": "local-edge-development-loop",
+      "benefits": ["Fast local feedback"],
+      "costs": ["Simulator/platform fidelity gap"]
+    },
+    {
+      "feature_id": "platform-operation-adapters",
+      "benefits": ["Broad Cloudflare workflow coverage"],
+      "costs": ["Remote credentials and API availability"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "wrangler-repository-commit",
+      "kind": "source-code",
+      "title": "Cloudflare Workers SDK at e651d7c0dd8e",
+      "uri": "https://github.com/cloudflare/workers-sdk/commit/e651d7c0dd8e171dcc1820679f9f46601971d876",
+      "accessed": "2026-10-24",
+      "notes": "Fixed upstream revision containing the reviewed Wrangler package."
+    },
+    {
+      "id": "wrangler-cli-source",
+      "kind": "source-code",
+      "title": "Wrangler CLI entry and command registry at pinned commit",
+      "uri": "https://github.com/cloudflare/workers-sdk/blob/e651d7c0dd8e171dcc1820679f9f46601971d876/packages/wrangler/src/index.ts",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for CLI dispatch, configuration options, dev, and deploy command registration."
+    },
+    {
+      "id": "wrangler-config-doc",
+      "kind": "official-doc",
+      "title": "Wrangler configuration",
+      "uri": "https://developers.cloudflare.com/workers/wrangler/configuration/",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for Wrangler project configuration and environment selection."
+    },
+    {
+      "id": "wrangler-dev-source",
+      "kind": "source-code",
+      "title": "Wrangler local development binding adapter",
+      "uri": "https://github.com/cloudflare/workers-sdk/blob/e651d7c0dd8e171dcc1820679f9f46601971d876/packages/wrangler/src/dev/miniflare/index.ts",
+      "accessed": "2026-10-24",
+      "notes": "Pinned local development implementation translates Worker bindings into Miniflare options; remote bindings remain explicit platform dependencies."
+    },
+    {
+      "id": "wrangler-dev-doc",
+      "kind": "official-doc",
+      "title": "Wrangler development and testing",
+      "uri": "https://developers.cloudflare.com/workers/wrangler/commands/",
+      "accessed": "2026-10-24",
+      "notes": "Official command documentation covering local development and deployment workflows; rolling documentation accessed at review time."
+    },
+    {
+      "id": "wrangler-doc",
+      "kind": "official-doc",
+      "title": "Wrangler CLI documentation",
+      "uri": "https://developers.cloudflare.com/workers/wrangler/",
+      "accessed": "2026-10-24",
+      "notes": "Official overview of Wrangler as the Workers command-line tool and platform operations client."
+    }
+  ],
+  "related_systems": ["deno", "supabase", "terraform"]
+}

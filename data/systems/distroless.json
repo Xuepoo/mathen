@@ -1,0 +1,138 @@
+{
+  "id": "distroless",
+  "name": "Distroless",
+  "version_context": "GoogleContainerTools/distroless commit f5ca51a71b23afc46b93143d60550278b18ed327, Bazel 8.5.1",
+  "summary": "A family of minimal OCI base images and Bazel build definitions supplying selected runtime dependencies for application images. Standard variants omit package managers and shells; separate debug variants add diagnostic tooling.",
+  "scope": [
+    "minimal runtime image contents",
+    "Bazel image construction",
+    "architecture-specific image indexes",
+    "root and nonroot variants"
+  ],
+  "features": [
+    {
+      "id": "minimal-runtime-content",
+      "name": "Minimal runtime content",
+      "category": "deployment-boundary",
+      "claim_type": "fact",
+      "description": "Standard Distroless base images supply selected runtime dependencies while omitting package managers and shells. Consumers add their application artifacts; debug variants deliberately include additional tools.",
+      "benefits": [
+        "Reduces runtime image contents and potential scanner noise",
+        "Narrows the software provenance surface of a deployed image"
+      ],
+      "costs": [
+        "Interactive debugging and package installation are unavailable by default",
+        "Applications must supply compatible entrypoints and dependencies"
+      ],
+      "evidence_ids": ["distroless-readme", "distroless-base-source"]
+    },
+    {
+      "id": "bazel-oci-image-construction",
+      "name": "Bazel OCI image construction",
+      "category": "build-model",
+      "claim_type": "fact",
+      "description": "The repository builds image variants with Bazel rules that assemble filesystem archives, package inputs, OCI images, and multi-architecture image indexes.",
+      "benefits": [
+        "Makes image construction declarative and inspectable",
+        "Generates related runtime and debug variants from shared definitions"
+      ],
+      "costs": [
+        "Bazel rules and upstream package inputs become build dependencies",
+        "The build graph adds tooling and configuration complexity; a source commit alone does not identify a deployed image digest"
+      ],
+      "evidence_ids": ["distroless-readme", "distroless-base-source", "distroless-static-source"]
+    },
+    {
+      "id": "nonroot-and-debug-variants",
+      "name": "Nonroot and debug variants",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "Distroless build definitions produce root and nonroot image variants and separate debug variants, allowing a smaller production-oriented image and a diagnostic image to share base construction logic.",
+      "benefits": [
+        "Supports least-privilege deployment choices",
+        "Separates diagnostic tooling from the minimal runtime image"
+      ],
+      "costs": [
+        "Variant selection must match deployment and debugging workflows",
+        "Debug images do not represent the exact production artifact"
+      ],
+      "evidence_ids": ["distroless-readme", "distroless-static-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Runtime dependency closure",
+      "question": "What minimal set of application and runtime files is sufficient to execute a workload in a Distroless image?",
+      "assumptions": [
+        "The application dependency closure is known",
+        "The host supplies the container execution boundary",
+        "Absence of a shell is treated as a deliberate image property"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["distroless-readme", "distroless-base-source"]
+    },
+    {
+      "model": "Multi-architecture image build graph",
+      "question": "How do package inputs, architecture-specific layers, variants, and OCI indexes compose into published images?",
+      "assumptions": [
+        "Bazel targets are graph nodes",
+        "OCI indexes select compatible architecture images",
+        "The model abstracts registry publication and signature verification"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["distroless-static-source", "distroless-base-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "minimal-runtime-content",
+      "benefits": ["Fewer shipped components to inventory"],
+      "costs": ["Reduced interactive tooling and compatibility"]
+    },
+    {
+      "feature_id": "bazel-oci-image-construction",
+      "benefits": ["Explicit image assembly graph"],
+      "costs": ["Bazel and package graph complexity; reproducibility requires fixed inputs"]
+    },
+    {
+      "feature_id": "nonroot-and-debug-variants",
+      "benefits": ["Least privilege plus explicit diagnostics"],
+      "costs": ["Variant management and production/debug divergence"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "distroless-repository-commit",
+      "kind": "source-code",
+      "title": "Distroless source at f5ca51a71b23",
+      "uri": "https://github.com/GoogleContainerTools/distroless/commit/f5ca51a71b23afc46b93143d60550278b18ed327",
+      "accessed": "2026-10-24",
+      "notes": "Fixed upstream revision used for this reviewed card."
+    },
+    {
+      "id": "distroless-readme",
+      "kind": "official-doc",
+      "title": "Distroless image overview",
+      "uri": "https://github.com/GoogleContainerTools/distroless/blob/f5ca51a71b23afc46b93143d60550278b18ed327/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Pinned project documentation for minimal contents, Bazel builds, entrypoints, and image variants."
+    },
+    {
+      "id": "distroless-base-source",
+      "kind": "source-code",
+      "title": "Distroless base image rules at pinned commit",
+      "uri": "https://github.com/GoogleContainerTools/distroless/blob/f5ca51a71b23afc46b93143d60550278b18ed327/base/base.bzl",
+      "accessed": "2026-10-24",
+      "notes": "Pinned Bazel source for package assembly, OCI images, indexes, and debug variants."
+    },
+    {
+      "id": "distroless-static-source",
+      "kind": "source-code",
+      "title": "Distroless static image rules at pinned commit",
+      "uri": "https://github.com/GoogleContainerTools/distroless/blob/f5ca51a71b23afc46b93143d60550278b18ed327/static/static.bzl",
+      "accessed": "2026-10-24",
+      "notes": "Pinned Bazel source for static images, root/nonroot variants, and architecture indexes."
+    }
+  ],
+  "related_systems": ["docker", "podman", "containerd"]
+}

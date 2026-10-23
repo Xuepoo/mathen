@@ -1,0 +1,146 @@
+{
+  "id": "podman",
+  "name": "Podman",
+  "version_context": "commit eeeb322d33186b6fdb8522de61ac442c0ae7de81, major version 6",
+  "summary": "A daemonless container and pod manager that uses OCI-compatible image, storage, networking, and runtime components and supports running workloads without root privileges.",
+  "scope": [
+    "container and image lifecycle",
+    "pod management",
+    "rootless execution",
+    "OCI runtime and storage integration"
+  ],
+  "features": [
+    {
+      "id": "daemonless-container-control",
+      "name": "Daemonless container control",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "Podman exposes a Docker-compatible CLI and manages containers, images, volumes, and pods through its libpod library without requiring a persistent manager daemon.",
+      "benefits": [
+        "Reduces idle shared-daemon exposure and resource use",
+        "Provides direct CLI and library lifecycle control"
+      ],
+      "costs": [
+        "Client process lifetime and local state become operational concerns",
+        "Remote API use is a separate service boundary"
+      ],
+      "evidence_ids": ["podman-readme", "podman-runtime-source"]
+    },
+    {
+      "id": "rootless-user-namespace-runtime",
+      "name": "Rootless user-namespace runtime",
+      "category": "isolation-boundary",
+      "claim_type": "fact",
+      "description": "On Linux, rootless Podman uses user namespaces and identity mappings, normally including subordinate IDs, to run container processes within the invoking user's host permissions. The default container-root mapping and alternative user namespace modes remain constrained by those permissions.",
+      "benefits": [
+        "Supports container workflows without a root manager daemon",
+        "Limits container privilege to the launching user under the documented kernel permission model"
+      ],
+      "costs": [
+        "Kernel, subuid/subgid, filesystem, networking, and cgroup constraints remain",
+        "Some operations and image sharing have reduced functionality; multi-ID setup can require privileged mapping helpers"
+      ],
+      "evidence_ids": ["podman-readme", "podman-rootless-doc", "podman-rootless-source"]
+    },
+    {
+      "id": "oci-pod-image-composition",
+      "name": "OCI image and pod composition",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "Podman composes OCI or Docker images, containers, and pods from specialized libraries and OCI runtimes, with pods grouping containers that share selected resources.",
+      "benefits": [
+        "Reuses ecosystem image and runtime contracts",
+        "Groups related containers under one lifecycle model"
+      ],
+      "costs": [
+        "Behavior depends on runtime, storage, networking, and build component compatibility",
+        "Shared pod resources create coordination constraints"
+      ],
+      "evidence_ids": ["podman-readme", "podman-runtime-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "User-namespace isolation refinement",
+      "question": "How does a user-level Podman invocation refine into a container process with mapped identities and host-kernel controls?",
+      "assumptions": [
+        "The host kernel implements user namespaces and requested controls",
+        "Identity mappings are part of the execution state",
+        "The view does not claim complete isolation from kernel vulnerabilities"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["podman-rootless-doc", "podman-rootless-source"]
+    },
+    {
+      "model": "Container-pod composition graph",
+      "question": "Which image, container, pod, storage, network, and OCI-runtime nodes must compose for a workload lifecycle?",
+      "assumptions": [
+        "Nodes represent managed objects or component boundaries",
+        "Edges represent ownership or required coordination",
+        "The graph abstracts implementation details of external OCI projects"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["podman-readme", "podman-runtime-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "daemonless-container-control",
+      "benefits": ["Lower shared-daemon exposure"],
+      "costs": ["Lifecycle coordination is distributed across invocations and services"]
+    },
+    {
+      "feature_id": "rootless-user-namespace-runtime",
+      "benefits": ["Reduced privilege requirement"],
+      "costs": ["Kernel and filesystem limitations reduce feature parity"]
+    },
+    {
+      "feature_id": "oci-pod-image-composition",
+      "benefits": ["Interoperable images and runtimes"],
+      "costs": ["Many component contracts affect behavior"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "podman-repository-commit",
+      "kind": "source-code",
+      "title": "Podman source at eeeb322d3318",
+      "uri": "https://github.com/containers/podman/commit/eeeb322d33186b6fdb8522de61ac442c0ae7de81",
+      "accessed": "2026-10-24",
+      "notes": "Fixed upstream revision used for this reviewed card."
+    },
+    {
+      "id": "podman-readme",
+      "kind": "official-doc",
+      "title": "Podman overview and scope",
+      "uri": "https://github.com/containers/podman/blob/eeeb322d33186b6fdb8522de61ac442c0ae7de81/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Pinned project documentation for daemonless management, pods, OCI components, and rootless support."
+    },
+    {
+      "id": "podman-rootless-doc",
+      "kind": "official-doc",
+      "title": "Rootless Podman guide and limitations",
+      "uri": "https://github.com/containers/podman/blob/eeeb322d33186b6fdb8522de61ac442c0ae7de81/rootless.md",
+      "accessed": "2026-10-24",
+      "notes": "Pinned official documentation for user namespaces, mappings, and rootless constraints."
+    },
+    {
+      "id": "podman-rootless-source",
+      "kind": "source-code",
+      "title": "Podman Linux rootless implementation at pinned commit",
+      "uri": "https://github.com/containers/podman/blob/eeeb322d33186b6fdb8522de61ac442c0ae7de81/pkg/rootless/rootless_linux.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for rootless detection, namespace setup, and re-execution."
+    },
+    {
+      "id": "podman-runtime-source",
+      "kind": "source-code",
+      "title": "Podman libpod runtime at pinned commit",
+      "uri": "https://github.com/containers/podman/blob/eeeb322d33186b6fdb8522de61ac442c0ae7de81/libpod/runtime.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for the core runtime object and component boundaries."
+    }
+  ],
+  "related_systems": ["docker", "containerd", "runc", "kubernetes"]
+}

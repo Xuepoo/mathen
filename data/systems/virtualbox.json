@@ -1,0 +1,154 @@
+{
+  "id": "virtualbox",
+  "name": "Oracle VM VirtualBox",
+  "version_context": "official VirtualBox/virtualbox commit b6bea72111fcff48f31c57c9f66365b1d3301bb9",
+  "summary": "A hosted hypervisor that manages virtual machines through a control API and runs guest CPUs, memory, devices, and I/O through a multi-context virtual machine monitor.",
+  "scope": [
+    "hosted virtualization base platform",
+    "virtual machine lifecycle",
+    "virtual device model",
+    "x86 hardware-assisted execution"
+  ],
+  "features": [
+    {
+      "id": "hosted-vm-control-plane",
+      "name": "Hosted VM control plane",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "VirtualBox exposes machine and console management objects through its Main API while the VM execution process and VMM perform guest execution and lifecycle work.",
+      "benefits": [
+        "Separates management clients from guest execution",
+        "Supports automation and persistent VM configuration"
+      ],
+      "costs": [
+        "API, saved state, and running VM state must remain coordinated",
+        "Management operations can be constrained by VM lifecycle state"
+      ],
+      "evidence_ids": ["virtualbox-manual", "virtualbox-console-source"]
+    },
+    {
+      "id": "multi-context-vmm-execution",
+      "name": "Hardware-assisted VMM execution",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "VirtualBox separates management from guest execution, coordinates virtual CPU threads for lifecycle changes, and implements an x86 hardware-assisted virtualization manager using Intel VT-x and AMD-V.",
+      "benefits": [
+        "Combines host integration with guest CPU execution",
+        "Uses hardware virtualization capabilities on supported x86 hosts"
+      ],
+      "costs": [
+        "Correctness depends on host CPU, kernel, and platform backends",
+        "Cross-context coordination increases implementation complexity"
+      ],
+      "evidence_ids": ["virtualbox-main-doc", "virtualbox-hm-source"]
+    },
+    {
+      "id": "composable-virtual-device-model",
+      "name": "Composable virtual device model",
+      "category": "virtual-machine-model",
+      "claim_type": "fact",
+      "description": "A VirtualBox VM combines virtual CPU and memory state with storage, networking, display, input, and guest integration devices configured through the machine and VMM layers.",
+      "benefits": [
+        "Provides broad guest operating-system compatibility",
+        "Allows machine hardware and I/O topology to be configured per VM"
+      ],
+      "costs": [
+        "Device compatibility and configuration increase the validation surface",
+        "Guest additions and host devices create additional integration contracts"
+      ],
+      "evidence_ids": ["virtualbox-manual", "virtualbox-vmm-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Managed virtual-machine state machine",
+      "question": "How do API requests transition a configured VM through powered-off, running, paused, saved, and restored states?",
+      "assumptions": [
+        "The Main API is the management authority",
+        "Each lifecycle operation has state preconditions",
+        "The model abstracts host process and guest OS failures"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["virtualbox-manual", "virtualbox-console-source"]
+    },
+    {
+      "model": "Layered guest-machine graph",
+      "question": "How do guest CPU and memory state connect to virtual devices, host backends, and the VMM execution context?",
+      "assumptions": [
+        "Machine components and host backends are graph nodes",
+        "Edges represent configuration or execution ownership",
+        "The model does not imply that all configurations are valid or performant"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["virtualbox-manual", "virtualbox-vmm-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "hosted-vm-control-plane",
+      "benefits": ["Automatable VM lifecycle management"],
+      "costs": ["Management and execution state coordination"]
+    },
+    {
+      "feature_id": "multi-context-vmm-execution",
+      "benefits": ["Hardware-assisted hosted virtualization"],
+      "costs": ["Host-specific and cross-context complexity"]
+    },
+    {
+      "feature_id": "composable-virtual-device-model",
+      "benefits": ["Broad guest compatibility"],
+      "costs": ["Large device and integration surface"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "virtualbox-repository-commit",
+      "kind": "source-code",
+      "title": "Official VirtualBox source at b6bea72111fc",
+      "uri": "https://github.com/VirtualBox/virtualbox/commit/b6bea72111fcff48f31c57c9f66365b1d3301bb9",
+      "accessed": "2026-10-24",
+      "notes": "Fixed official upstream revision, locally checked out and inspected; base-platform scope rather than Extension Pack."
+    },
+    {
+      "id": "virtualbox-manual",
+      "kind": "official-doc",
+      "title": "VirtualBox project introduction",
+      "uri": "https://github.com/VirtualBox/virtualbox/blob/b6bea72111fcff48f31c57c9f66365b1d3301bb9/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Pinned official overview identifies full virtualization, supported host families, and the Oracle user guide."
+    },
+    {
+      "id": "virtualbox-main-doc",
+      "kind": "official-doc",
+      "title": "VirtualBox Main API lifecycle walkthrough",
+      "uri": "https://github.com/VirtualBox/virtualbox/blob/b6bea72111fcff48f31c57c9f66365b1d3301bb9/src/VBox/Main/Docs-Intro.cpp",
+      "accessed": "2026-10-24",
+      "notes": "Locally inspected documentation follows pause through COM/XPCOM, VM process, virtual CPU rendezvous, and device suspend callbacks."
+    },
+    {
+      "id": "virtualbox-hm-source",
+      "kind": "source-code",
+      "title": "VirtualBox x86 hardware virtualization manager",
+      "uri": "https://github.com/VirtualBox/virtualbox/blob/b6bea72111fcff48f31c57c9f66365b1d3301bb9/src/VBox/VMM/VMMR3/target-x86/HMR3-x86.cpp",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source documents and implements the VT-x/AMD-V execution manager."
+    },
+    {
+      "id": "virtualbox-console-source",
+      "kind": "source-code",
+      "title": "VirtualBox console lifecycle source at pinned commit",
+      "uri": "https://github.com/VirtualBox/virtualbox/blob/b6bea72111fcff48f31c57c9f66365b1d3301bb9/src/VBox/Main/src-client/ConsoleImpl.cpp",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for console-mediated VM lifecycle operations and state checks."
+    },
+    {
+      "id": "virtualbox-vmm-source",
+      "kind": "source-code",
+      "title": "VirtualBox pluggable device manager",
+      "uri": "https://github.com/VirtualBox/virtualbox/blob/b6bea72111fcff48f31c57c9f66365b1d3301bb9/src/VBox/VMM/VMMR3/PDMR3.cpp",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for device, driver, and USB component lifecycle coordination."
+    }
+  ],
+  "related_systems": ["qemu", "firecracker", "podman"]
+}
