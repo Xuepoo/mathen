@@ -310,7 +310,7 @@
         "ghostty-runtime-source",
         "ghostty-readme"
       ],
-      "notes": "Ghostty's pinned runtime source selects GTK as the default Linux/FreeBSD windowed runtime; this records the runtime integration, not GTK implementation ownership."
+      "notes": "Ghostty's pinned runtime source explicitly selects the GTK runtime for Linux and FreeBSD, with the source comment describing GTK4 as the rich windowed application runtime; this records configured runtime integration, not GTK implementation ownership."
     }
   ]
 }

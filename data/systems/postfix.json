@@ -217,7 +217,7 @@
         "postfix-sasl-doc",
         "postfix-sasl-source"
       ],
-      "notes": "Postfix's SASL documentation and fixed source explicitly cover Dovecot SASL integration as an authentication implementation boundary."
+      "notes": "Postfix's SASL documentation and fixed source explicitly cover Dovecot as an optional SASL authentication provider; the relation is a configured integration boundary, not a universal Postfix dependency."
     }
   ],
   "evidence": [
