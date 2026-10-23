@@ -544,3 +544,14 @@ catalog entry
 The catalog is deliberately broader than the current implementation. It is a
 research backlog and an organizing map; entries become knowledge only after
 evidence-backed modeling and review.
+
+## Model serving and vector systems
+
+| `llama-cpp` | llama.cpp | model runtime and serving | `reviewed` | Compare GGUF model artifacts, backend graphs, constrained decoding, and HTTP serving boundaries using fixed-commit evidence |
+| `vllm` | vLLM | model serving runtime | `reviewed` | Compare paged KV-cache scheduling, continuous batching, distributed execution, and API serving boundaries using fixed-commit evidence |
+| `milvus` | Milvus | vector database | `reviewed` | Compare distributed vector collections, ANN indexes, query/data separation, consistency, and client APIs using fixed-commit evidence |
+| `pinecone` | Pinecone | managed vector database | `reviewed` | Compare documented managed vector indexes, namespaces, dense/sparse/full-text retrieval, metadata filters, and control/data APIs with an explicit docs-only boundary |
+| `llama-cpp` | llama.cpp | `reviewed` | Compare GGUF model artifacts, backend graphs, constrained decoding, and HTTP serving boundaries using fixed-commit evidence |
+| `vllm` | vLLM | `reviewed` | Compare paged KV-cache scheduling, continuous batching, distributed execution, and API serving boundaries using fixed-commit evidence |
+| `milvus` | Milvus | `reviewed` | Compare distributed vector collections, ANN indexes, query/data separation, consistency, and client APIs using fixed-commit evidence |
+| `pinecone` | Pinecone | `reviewed` | Compare documented managed vector indexes, namespaces, dense/sparse/full-text retrieval, metadata filters, and control/data APIs |
