@@ -1,504 +1,660 @@
 import "./style.css";
-import cytoscape, { type Core, type ElementDefinition } from "cytoscape";
-
-type SystemSummary = {
-  id: string;
-  name: string;
-  version_context: string | null;
-  summary: string;
-  scope: string[];
-  related_systems: string[];
-};
-
-type GraphNode = { id: string; name: string; type: "system" };
-
-type GraphEdge = {
-  source: string;
-  target: string;
-  type: string;
-  claim_type?: string;
-  claim_status?: string;
-  evidence_ids?: string[];
-  notes?: string;
-};
-
-type GraphPayload = { nodes: GraphNode[]; edges: GraphEdge[] };
-
-type Feature = {
-  id: string;
-  name: string;
-  category: string;
-  claim_type: string;
-  description: string;
-  benefits: string[];
-  costs: string[];
-  evidence_ids: string[];
-};
-
-type SystemDetail = SystemSummary & {
-  features: Feature[];
-  mathematical_views: Array<{
-    model: string;
-    question: string;
-    assumptions: string[];
-    claim_type: string;
-    evidence_ids: string[];
-  }>;
-  evidence: Array<{ id: string; title: string; uri: string; kind: string }>;
-};
+import ForceGraph3D, { type ForceGraph3DInstance } from "3d-force-graph";
+import SpriteText from "three-spritetext";
+import {
+  domainFor,
+  domains,
+  endpointId,
+  filterGraph,
+  loadAllSystems,
+  neighborhood,
+  searchSystems,
+  simulationData,
+  type GraphPayload,
+  type SimulationLink,
+  type SimulationNode,
+  type SystemSummary,
+} from "./graph-data";
+import { renderDetail, type SystemDetail } from "./system-detail";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root is missing");
-
 app.innerHTML = `
-  <header class="site-header shell">
-    <a class="brand" href="/" aria-label="Mathen home">
-      <span class="brand-mark">M</span>
-      <span><strong>Mathen</strong><small>Architecture intelligence</small></span>
-    </a>
-    <nav class="site-nav" aria-label="Primary navigation">
-      <a href="#explore">Explore</a>
-      <a href="#catalog">Catalog</a>
-      <a href="https://github.com/Xuepoo/mathen" target="_blank" rel="noreferrer">Source ↗</a>
-    </nav>
-  </header>
-  <main>
-    <section class="hero shell">
-      <div class="hero-copy">
-        <p class="eyebrow"><span class="live-dot"></span> Evidence-backed architecture graph</p>
-        <h1>See how software<br /><em>takes shape.</em></h1>
-        <p class="hero-lead">Explore the structures, boundaries, and trade-offs behind the systems we build. Every connection is grounded in a reviewed Architecture Card.</p>
-        <div class="hero-actions"><a class="primary-button" href="#explore">Open the graph <span>↓</span></a><a class="text-link" href="#catalog">Browse systems →</a></div>
+  <main class="explorer" aria-label="Software architecture explorer">
+    <div id="graph" aria-label="Interactive force graph. Use Browse systems for a keyboard accessible list."></div>
+    <header class="topbar glass">
+      <a class="brand" href="/" aria-label="Mathen home"><span class="brand-mark" aria-hidden="true">m<span>·</span></span><span>mathen<small>Architecture atlas</small></span></a>
+      <div class="search-wrap">
+        <label class="sr-only" for="search">Search systems, descriptions, or card scope</label>
+        <span class="search-icon" aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a system…" autocomplete="off" aria-controls="search-results"><kbd>/</kbd>
+        <div id="search-results" class="search-results glass" hidden></div>
       </div>
-      <div class="hero-orbit" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit-core">M</div><span class="orbit-node orbit-node-one">D</span><span class="orbit-node orbit-node-two">G</span><span class="orbit-node orbit-node-three">S</span></div>
+      <button id="catalog-open" class="quiet-button">Browse systems <span aria-hidden="true">↗</span></button>
+    </header>
+
+    <section class="graph-tools glass" aria-label="Graph controls">
+      <div class="dimension-switch" aria-label="Graph dimensions"><button id="mode-2" aria-pressed="true">2D</button><button id="mode-3" aria-pressed="false">3D</button></div>
+      <span class="tool-divider"></span>
+      <button id="fit" title="Fit all visible systems">Fit</button>
+      <button id="focus" disabled title="Focus selected system and its neighbors">Focus</button>
+      <button id="pause" aria-pressed="false">Pause forces</button>
+      <button id="reheat" title="Restart the force simulation">Reheat</button>
+      <button id="reset" title="Clear filters and restore the overview">Reset</button>
     </section>
-    <section class="stats-bar shell" aria-label="Knowledge base statistics">
-      <div><strong id="system-count">—</strong><span>reviewed systems</span></div>
-      <div><strong id="edge-count">—</strong><span>architecture relations</span></div>
-      <div><strong id="feature-count">—</strong><span>reusable features</span></div>
-      <div><strong id="evidence-count">—</strong><span>evidence sources</span></div>
-    </section>
-    <section id="explore" class="explore-section shell">
-      <div class="section-heading"><div><p class="eyebrow">01 / Relational map</p><h2>Architecture graph</h2></div><p class="section-note">Trace patterns across reviewed systems.<br />Select a node to reveal its neighborhood.</p></div>
-      <div class="graph-workspace">
-        <div class="graph-toolbar">
-          <label class="toolbar-search"><span>⌕</span><input id="graph-search" type="search" placeholder="Find a system…" /></label>
-          <div class="toolbar-controls"><label for="relation-filter">Relations</label><select id="relation-filter"><option value="all">All types</option></select><label for="layout-select">Layout</label><select id="layout-select"><option value="cose">Network</option><option value="concentric">Concentric</option><option value="circle">Circle</option><option value="grid">Grid</option></select><button id="graph-focus" class="toolbar-button" type="button" disabled>Focus selected</button><button id="graph-reset" class="toolbar-button icon-button" type="button" aria-label="Reset graph view">↺</button></div>
-        </div>
-        <div class="graph-body"><div id="graph-canvas" class="graph-canvas" role="img" aria-label="Interactive architecture graph"></div><aside id="graph-inspector" class="graph-inspector"><div class="inspector-empty"><span class="inspector-icon">⌁</span><p class="eyebrow">Graph inspector</p><h3>Choose a system or relation</h3><p>Click a node to see its connected architecture patterns. Click an edge to inspect the claim behind it.</p></div></aside></div>
-        <div class="graph-footer"><span><i class="legend-dot"></i> System</span><span><i class="legend-line"></i> Evidence-backed relation</span><span id="graph-hint">Scroll to zoom · drag to pan</span></div>
-      </div>
-    </section>
-    <section id="catalog" class="catalog-section shell">
-      <div class="section-heading"><div><p class="eyebrow">02 / Reviewed catalog</p><h2>Systems worth studying</h2></div><p class="section-note">Search by system, workload, or architectural boundary.</p></div>
-      <div class="catalog-layout"><aside class="catalog-sidebar"><label class="search-label" for="system-search">Search the knowledge base</label><label class="catalog-search"><span>⌕</span><input id="system-search" type="search" placeholder="embedded, isolation, storage…" /></label><div class="catalog-filter-label">Domains</div><div id="scope-filters" class="scope-filters"><button class="scope-chip active" data-scope="all" type="button">All systems</button></div></aside><div id="system-list" class="system-list" aria-live="polite"></div></div>
-    </section>
-    <section id="detail-panel" class="detail-section shell" aria-live="polite"><div class="empty-state"><p class="eyebrow">03 / Architecture card</p><h2>Select a system to inspect it.</h2><p>Features, mathematical views, trade-offs, and primary evidence will appear here.</p></div></section>
+
+    <aside class="filters glass" aria-label="Navigation filters">
+      <label for="domain">Navigation group</label><select id="domain"><option value="all">All domains</option>${domains.map((domain) => `<option value="${domain.id}">${domain.name}</option>`).join("")}</select>
+      <label for="relation">Relation type</label><select id="relation"><option value="all">All relations</option></select>
+      <button id="help-open" class="text-button">How to explore <span aria-hidden="true">?</span></button>
+    </aside>
+
+    <div id="state" class="state-panel glass" role="status"><span class="state-orbit" aria-hidden="true"></span><h1>Connecting the atlas</h1><p>Loading reviewed systems and their relationships…</p></div>
+    <div id="metadata-notice" class="metadata-notice glass" role="status" hidden></div>
+    <aside id="inspector" class="inspector glass" aria-label="Selection" hidden></aside>
+    <footer class="map-footer">
+      <div class="map-caption"><p class="eyebrow">An atlas of software systems</p><h1>Follow the structure.</h1><p id="gesture-hint">Drag a node to reshape its neighborhood. Scroll to explore.</p></div>
+      <div class="map-key glass"><div id="counts" class="map-counts" aria-live="polite">Loading graph…</div><div class="edge-key"><span><i class="typed-line"></i>Typed relation</span><span><i class="legacy-line"></i>Legacy related</span></div><button id="legend-open" class="text-button">Node colors · navigation groups</button><span id="simulation-status" class="simulation-status" aria-live="polite">Preparing layout</span></div>
+    </footer>
   </main>
-  <footer class="site-footer shell"><span>Mathen · a research prototype for software architecture</span><span>D1-backed reviewed knowledge · <a href="https://github.com/Xuepoo/mathen" target="_blank" rel="noreferrer">Open source ↗</a></span></footer>
+  <dialog id="catalog-dialog" class="drawer" aria-labelledby="catalog-title"><div class="dialog-header"><div><p class="eyebrow">Keyboard explorer</p><h2 id="catalog-title">Browse systems</h2></div><button data-close aria-label="Close system catalog">✕</button></div><div class="catalog-search"><label for="catalog-search">Search the complete atlas</label><input id="catalog-search" type="search" placeholder="Name, description, or card scope…"></div><p id="catalog-count" class="muted"></p><div id="catalog-list" class="catalog-list"></div></dialog>
+  <dialog id="detail-dialog" class="drawer detail-drawer" aria-labelledby="detail-title"><div class="dialog-header"><div><p class="eyebrow">Reviewed architecture card</p><h2 id="detail-title">System details</h2></div><button data-close aria-label="Close architecture card">✕</button></div><div id="detail-content"></div></dialog>
+  <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title"><div class="dialog-header"><h2 id="help-title">Explore the atlas</h2><button data-close aria-label="Close exploration guide">✕</button></div><p>Drag any node: spring forces pull connected systems along with it. Scroll or pinch to zoom. Drag the background to pan in 2D or orbit in 3D.</p><p>Select a system to highlight its neighbors, then open its architecture card for features, mathematical views, trade-offs, and source evidence. Select a line to inspect the relation and its claim metadata.</p><p>Pause forces holds the layout while keeping navigation and selection available. Reheat lets the layout settle again. Focus frames the selected neighborhood; Reset restores all systems.</p><h3>Navigation groups</h3><p>Node colors and the domain filter are broad browsing categories. They are independent of evidence-backed card scope and do not imply a relationship.</p><div class="domain-legend">${domains.map((domain) => `<span><i style="--domain-color:${domain.color}"></i>${domain.name}</span>`).join("")}</div><h3>Read the edges</h3><p>Colored arrows are typed relations. Gray lines are legacy “related” links with no implied direction or causal claim. Filters only show relationships supplied by the atlas.</p><p>Use <kbd>/</kbd> to search, <kbd>Enter</kbd> to select the first result, and <kbd>Escape</kbd> to close a dialog. Browse systems offers every visible system and its relations as ordinary keyboard-accessible buttons.</p></dialog>
 `;
 
-const systemList = required<HTMLDivElement>("system-list");
-const systemCount = required<HTMLElement>("system-count");
-const edgeCount = required<HTMLElement>("edge-count");
-const featureCount = required<HTMLElement>("feature-count");
-const evidenceCount = required<HTMLElement>("evidence-count");
-const detailPanel = required<HTMLElement>("detail-panel");
-const graphCanvas = required<HTMLDivElement>("graph-canvas");
-const graphInspector = required<HTMLElement>("graph-inspector");
-const graphSearch = required<HTMLInputElement>("graph-search");
-const systemSearch = required<HTMLInputElement>("system-search");
-const relationFilter = required<HTMLSelectElement>("relation-filter");
-const layoutSelect = required<HTMLSelectElement>("layout-select");
-const graphFocus = required<HTMLButtonElement>("graph-focus");
-const graphReset = required<HTMLButtonElement>("graph-reset");
-const scopeFilters = required<HTMLDivElement>("scope-filters");
+function required<T extends HTMLElement>(id: string): T {
+  const element = document.getElementById(id);
+  if (!element) throw new Error(`Missing UI element: ${id}`);
+  return element as T;
+}
 
+const host = required<HTMLDivElement>("graph");
+const search = required<HTMLInputElement>("search");
+const results = required<HTMLDivElement>("search-results");
+const domainSelect = required<HTMLSelectElement>("domain");
+const relationSelect = required<HTMLSelectElement>("relation");
+const inspector = required<HTMLElement>("inspector");
+const state = required<HTMLDivElement>("state");
+const catalog = required<HTMLDialogElement>("catalog-dialog");
+const detailDialog = required<HTMLDialogElement>("detail-dialog");
+const helpDialog = required<HTMLDialogElement>("help-dialog");
+const catalogSearch = required<HTMLInputElement>("catalog-search");
+const detailContent = required<HTMLDivElement>("detail-content");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let canonical: GraphPayload = { nodes: [], edges: [] };
 let systems: SystemSummary[] = [];
-let graphData: GraphPayload = { nodes: [], edges: [] };
-let graph: Core | undefined;
-let selectedNodeId: string | undefined;
-let activeScope = "all";
+let visible: GraphPayload = canonical;
+let graph: ForceGraph3DInstance<SimulationNode, SimulationLink> | undefined;
+let selectedId: string | undefined;
+let selectedEdge: SimulationLink | undefined;
+let hoveredId: string | undefined;
+let highlighted = new Set<string>();
+let searchMatches: Set<string> | undefined;
+let paused = reducedMotion.matches;
+let dimensions: 2 | 3 = 2;
+let autoFit = true;
 let detailRequest = 0;
-
-await loadSystems();
-await loadFeatureStats();
-await loadGraph();
-systemSearch.addEventListener("input", () => renderSystems(systemSearch.value));
-graphSearch.addEventListener("input", () => searchGraph(graphSearch.value));
-relationFilter.addEventListener("change", () => applyGraphVisibility());
-layoutSelect.addEventListener("change", () => runLayout(layoutSelect.value));
-graphFocus.addEventListener("click", () => focusSelectedNode());
-graphReset.addEventListener("click", () => resetGraph());
-
-async function loadSystems() {
-  try {
-    const response = await fetch("/api/systems");
-    if (!response.ok) throw new Error(`API returned ${response.status}`);
-    const payload = (await response.json()) as { data: SystemSummary[] };
-    systems = payload.data;
-    systemCount.textContent = String(systems.length);
-    buildScopeFilters();
-    renderSystems("");
-  } catch (error) {
-    systemList.innerHTML = `<p class="error-message">Unable to load reviewed systems.</p>`;
-    console.error(error);
+let metadataLoaded = false;
+const labels = new Map<
+  string,
+  SpriteText & {
+    visible: boolean;
+    position: { set: (x: number, y: number, z: number) => void };
+    material: { depthWrite: boolean };
   }
-}
-
-async function loadGraph() {
-  try {
-    const response = await fetch("/api/graph");
-    if (!response.ok) throw new Error(`API returned ${response.status}`);
-    const payload = (await response.json()) as GraphPayload | { data: GraphPayload };
-    graphData = "data" in payload ? payload.data : payload;
-    edgeCount.textContent = String(graphData.edges.length);
-    renderGraph();
-  } catch (error) {
-    graphCanvas.innerHTML = `<p class="graph-error">Unable to load the architecture graph.</p>`;
-    console.error(error);
-  }
-}
-
-async function loadFeatureStats() {
-  try {
-    const response = await fetch("/api/features?limit=200");
-    if (!response.ok) throw new Error(`API returned ${response.status}`);
-    const payload = (await response.json()) as {
-      data: Array<{ evidence_ids?: string[] }>;
-    };
-    const evidenceIds = new Set(payload.data.flatMap((feature) => feature.evidence_ids ?? []));
-    featureCount.textContent = String(payload.data.length);
-    evidenceCount.textContent = String(evidenceIds.size);
-  } catch (error) {
-    featureCount.textContent = "—";
-    evidenceCount.textContent = "—";
-    console.error(error);
-  }
-}
-
-function renderGraph() {
-  const relationTypes = [...new Set(graphData.edges.map((edge) => edge.type))].sort();
-  relationFilter.innerHTML = `<option value="all">All types</option>${relationTypes.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("")}`;
-  const elements: ElementDefinition[] = [
-    ...graphData.nodes.map((node) => ({
-      group: "nodes" as const,
-      data: {
-        id: node.id,
-        label: node.name,
-        scope: systems.find((system) => system.id === node.id)?.scope[0] ?? "system",
-      },
-    })),
-    ...graphData.edges.map((edge, index) => ({
-      group: "edges" as const,
-      data: {
-        id: `edge-${index}-${edge.source}-${edge.target}`,
-        source: edge.source,
-        target: edge.target,
-        type: edge.type,
-        claimType: edge.claim_type,
-        claimStatus: edge.claim_status,
-        evidenceIds: edge.evidence_ids,
-        notes: edge.notes,
-      },
-    })),
-  ];
-  graph?.destroy();
-  graph = cytoscape({
-    container: graphCanvas,
-    elements,
-    minZoom: 0.25,
-    maxZoom: 4,
-    wheelSensitivity: 0.22,
-    style: [
-      {
-        selector: "node",
-        style: {
-          "background-color": "#d5f35f",
-          "border-color": "#f2ffb2",
-          "border-width": 2,
-          color: "#f5f7ed",
-          label: "data(label)",
-          "font-size": 11,
-          "font-weight": 600,
-          "text-wrap": "wrap",
-          "text-max-width": "130px",
-          "text-valign": "bottom",
-          "text-margin-y": 10,
-          "overlay-opacity": 0,
-          width: 28,
-          height: 28,
-        },
-      },
-      {
-        selector: "node:selected",
-        style: {
-          "background-color": "#ffb86b",
-          "border-color": "#fff1d5",
-          "border-width": 4,
-          width: 36,
-          height: 36,
-        },
-      },
-      { selector: "node.dimmed", style: { opacity: 0.18 } },
-      {
-        selector: "edge",
-        style: {
-          width: 2,
-          "line-color": "#5e7081",
-          "target-arrow-color": "#a6bac8",
-          "target-arrow-shape": "triangle",
-          "curve-style": "bezier",
-          label: "data(type)",
-          color: "#b5c4cc",
-          "font-size": 9,
-          "text-background-color": "#121b24",
-          "text-background-opacity": 0.9,
-          "text-background-padding": "4px",
-          "text-rotation": "autorotate",
-          "overlay-opacity": 0,
-        },
-      },
-      {
-        selector: "edge:selected",
-        style: {
-          width: 4,
-          "line-color": "#ffb86b",
-          "target-arrow-color": "#ffb86b",
-          color: "#fff1d5",
-        },
-      },
-      { selector: "edge.dimmed", style: { opacity: 0.08 } },
-    ],
-    layout: layoutOptions("cose"),
-  });
-  graph.on("tap", "node", (event) => selectGraphNode(event.target.id()));
-  graph.on("tap", "edge", (event) => showGraphEdge(event.target.data()));
-  graph.on("tap", (event) => {
-    if (event.target === graph) showGraphGuide();
-  });
-  applyGraphVisibility();
-  updateGraphHint();
-}
-
-function selectGraphNode(id: string) {
-  if (!graph) return;
-  selectedNodeId = id;
-  graphFocus.disabled = false;
-  const node = graphData.nodes.find((item) => item.id === id);
-  graph.elements().removeClass("dimmed");
-  graph
-    .nodes()
-    .not(`#${escapeSelector(id)}`)
-    .addClass("dimmed");
-  graph.edges().forEach((edge) => {
-    if (edge.source().id() !== id && edge.target().id() !== id) edge.addClass("dimmed");
-  });
-  showGraphNode(id, node);
-  void loadDetail(id);
-}
-
-function showGraphNode(id: string, node?: GraphNode) {
-  const system = systems.find((item) => item.id === id);
-  const degree = graph?.getElementById(id).connectedEdges().length ?? 0;
-  graphInspector.innerHTML = `<div class="inspector-label"><span class="inspector-node-dot"></span><p class="eyebrow">Selected system</p></div><h3>${escapeHtml(node?.name ?? id)}</h3><p>${escapeHtml(system?.summary ?? "Open the architecture card below for the complete evidence trail.")}</p><div class="inspector-metrics"><span><strong>${degree}</strong> relations</span><span><strong>${system?.scope.length ?? 0}</strong> domains</span></div><button class="inspector-link" data-system-id="${escapeHtml(id)}" type="button">Open architecture card <span>↓</span></button>`;
-  graphInspector.querySelector("button")?.addEventListener("click", () => void loadDetail(id));
-}
-
-function showGraphEdge(edge: Record<string, unknown>) {
-  graph?.elements().removeClass("dimmed");
-  const metadata = [edge.claimType, edge.claimStatus].filter(
-    (value): value is string => typeof value === "string",
-  );
-  const evidenceIds = Array.isArray(edge.evidenceIds)
-    ? edge.evidenceIds.filter((value): value is string => typeof value === "string")
-    : [];
-  graphInspector.innerHTML = `<div class="inspector-label"><span class="inspector-edge-line"></span><p class="eyebrow">Selected relation</p></div><h3>${escapeHtml(String(edge.type ?? "relation"))}</h3><p class="relation-path">${escapeHtml(`${String(edge.source)} → ${String(edge.target)}`)}</p>${metadata.length ? `<div class="tag-row">${metadata.map((item) => `<span class="tag">${escapeHtml(item)}</span>`).join("")}</div>` : ""}${typeof edge.notes === "string" ? `<p class="graph-note">${escapeHtml(edge.notes)}</p>` : ""}${evidenceIds.length ? `<div class="evidence-pills"><span class="eyebrow">Evidence</span>${evidenceIds.map((id) => `<span class="evidence-pill">${escapeHtml(id)}</span>`).join("")}</div>` : `<p class="muted-message">Legacy relation without typed evidence metadata.</p>`}`;
-}
-
-function showGraphGuide() {
-  selectedNodeId = undefined;
-  graphFocus.disabled = true;
-  graph?.elements().removeClass("dimmed");
-  graphInspector.innerHTML = `<div class="inspector-empty"><span class="inspector-icon">⌁</span><p class="eyebrow">Graph inspector</p><h3>Choose a system or relation</h3><p>Click a node to see its connected architecture patterns. Click an edge to inspect the claim behind it.</p></div>`;
-}
-
-function applyGraphVisibility() {
-  if (!graph) return;
-  const type = relationFilter.value;
-  graph.edges().forEach((edge) => {
-    edge.style("display", type === "all" || edge.data("type") === type ? "element" : "none");
-  });
-  updateGraphHint();
-}
-
-function searchGraph(query: string) {
-  if (!graph) return;
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) {
-    graph.elements().removeClass("dimmed");
-    return;
-  }
-  const matches = graph
-    .nodes()
-    .filter((node) => String(node.data("label")).toLowerCase().includes(normalized));
-  graph.nodes().forEach((node) => {
-    node.toggleClass("dimmed", !matches.contains(node));
-  });
-  graph.edges().forEach((edge) => {
-    edge.toggleClass(
-      "dimmed",
-      !matches.contains(edge.source()) && !matches.contains(edge.target()),
-    );
-  });
-}
-
-function runLayout(name: string) {
-  graph?.layout(layoutOptions(name)).run();
-}
-
-function focusSelectedNode() {
-  if (!graph || !selectedNodeId) return;
-  const node = graph.getElementById(selectedNodeId);
-  graph.animate({
-    fit: { eles: node.closedNeighborhood(), padding: 70 },
-    duration: 450,
-  });
-}
-
-function resetGraph() {
-  graphSearch.value = "";
-  relationFilter.value = "all";
-  selectedNodeId = undefined;
-  graphFocus.disabled = true;
-  graph?.elements().removeClass("dimmed");
-  graph?.edges().forEach((edge) => {
-    edge.style("display", "element");
-  });
-  runLayout(layoutSelect.value);
-  showGraphGuide();
-}
-
-function layoutOptions(name: string) {
-  const base = {
-    name: name as "cose" | "circle" | "grid" | "concentric",
-    animate: false,
-    padding: 54,
-  };
-  return name === "cose"
-    ? {
-        ...base,
-        idealEdgeLength: 160,
-        nodeRepulsion: 8000,
-        edgeElasticity: 100,
-      }
-    : base;
-}
-
-function updateGraphHint() {
-  const visibleEdges = graphData.edges.filter(
-    (edge) => relationFilter.value === "all" || edge.type === relationFilter.value,
-  ).length;
-  const message = graphData.edges.length
-    ? `${visibleEdges} relation${visibleEdges === 1 ? "" : "s"} shown · scroll to zoom`
-    : "No typed relations yet · browse the catalog below";
-  const hint = document.querySelector<HTMLElement>("#graph-hint");
-  if (hint) hint.textContent = message;
-}
-
-function buildScopeFilters() {
-  const scopes = [...new Set(systems.flatMap((system) => system.scope))].sort();
-  scopeFilters.innerHTML = `<button class="scope-chip active" data-scope="all" type="button">All systems</button>${scopes
-    .slice(0, 8)
-    .map(
-      (scope) =>
-        `<button class="scope-chip" data-scope="${escapeHtml(scope)}" type="button">${escapeHtml(scope)}</button>`,
-    )
-    .join("")}`;
-  scopeFilters.querySelectorAll<HTMLButtonElement>("button").forEach((button) =>
-    button.addEventListener("click", () => {
-      activeScope = button.dataset.scope ?? "all";
-      scopeFilters
-        .querySelectorAll("button")
-        .forEach((item) => item.classList.toggle("active", item === button));
-      renderSystems(systemSearch.value);
-    }),
-  );
-}
-
-function renderSystems(query: string) {
-  const normalized = query.trim().toLowerCase();
-  const visible = systems.filter((system) => {
-    const matchesScope = activeScope === "all" || system.scope.includes(activeScope);
-    const searchable = [system.name, system.summary, ...system.scope].join(" ").toLowerCase();
-    return matchesScope && searchable.includes(normalized);
-  });
-  systemList.innerHTML = visible.length
-    ? visible.map(systemCard).join("")
-    : `<p class="muted-message">No reviewed systems match this view.</p>`;
-  systemList
-    .querySelectorAll<HTMLButtonElement>("button[data-system-id]")
-    .forEach((button) =>
-      button.addEventListener("click", () => void loadDetail(button.dataset.systemId ?? "")),
-    );
-}
-
-function systemCard(system: SystemSummary) {
-  const relationCount = graphData.edges.filter(
-    (edge) => edge.source === system.id || edge.target === system.id,
-  ).length;
-  return `<button class="system-card" data-system-id="${escapeHtml(system.id)}"><span class="system-card-top"><span class="card-kicker">${escapeHtml(system.scope[0] ?? "system")}</span><span class="system-degree">${relationCount} relation${relationCount === 1 ? "" : "s"}</span></span><strong>${escapeHtml(system.name)}</strong><span>${escapeHtml(system.summary)}</span><span class="card-arrow">↗</span></button>`;
-}
-
-async function loadDetail(id: string) {
-  const requestId = ++detailRequest;
-  detailPanel.innerHTML = `<div class="loading-state"><span class="spinner"></span> Loading architecture card…</div>`;
-  try {
-    const response = await fetch(`/api/systems/${encodeURIComponent(id)}`);
-    if (!response.ok) throw new Error(`API returned ${response.status}`);
-    const payload = (await response.json()) as { data: SystemDetail };
-    if (requestId === detailRequest) detailPanel.innerHTML = renderDetail(payload.data);
-  } catch (error) {
-    if (requestId === detailRequest)
-      detailPanel.innerHTML = `<div class="error-message">Unable to load this architecture card.</div>`;
-    console.error(error);
-  }
-}
-
-function renderDetail(system: SystemDetail) {
-  const evidenceById = new Map(system.evidence.map((item) => [item.id, item]));
-  return `<article class="architecture-card"><div class="detail-header"><div><p class="eyebrow">03 / Architecture card</p><h2>${escapeHtml(system.name)}</h2><p class="lead">${escapeHtml(system.summary)}</p></div><span class="review-badge"><i></i> Reviewed</span></div><div class="tag-row">${system.scope.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div><div class="detail-metrics"><span><strong>${system.features.length}</strong> features</span><span><strong>${system.mathematical_views.length}</strong> mathematical views</span><span><strong>${system.evidence.length}</strong> evidence sources</span></div><section class="detail-block"><div class="block-heading"><p class="eyebrow">Transferable structure</p><h3>Reusable features</h3></div><div class="feature-grid">${system.features.map((feature) => renderFeature(feature, evidenceById)).join("")}</div></section><section class="detail-block"><div class="block-heading"><p class="eyebrow">Formal lenses</p><h3>Mathematical views</h3></div><div class="view-list">${system.mathematical_views.map((view) => `<div class="view-card"><div class="feature-meta"><span class="card-kicker">${escapeHtml(view.claim_type)}</span><span class="evidence-count">${view.evidence_ids.length} evidence</span></div><h4>${escapeHtml(view.model)}</h4><p>${escapeHtml(view.question)}</p><details><summary>Assumptions (${view.assumptions.length})</summary><ul>${view.assumptions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></details><div class="evidence-pills">${view.evidence_ids.map((id) => evidencePill(id, evidenceById)).join("")}</div></div>`).join("")}</div></section><section class="detail-block evidence-block"><div class="block-heading"><p class="eyebrow">Primary sources</p><h3>Evidence trail</h3></div><ul class="evidence-list">${system.evidence.map((item) => `<li><span class="evidence-kind">${escapeHtml(item.kind)}</span><div><a href="${escapeHtml(item.uri)}" target="_blank" rel="noreferrer">${escapeHtml(item.title)} ↗</a><small>${escapeHtml(item.id)}</small></div></li>`).join("")}</ul></section></article>`;
-}
-
-function renderFeature(
-  feature: Feature,
-  evidenceById: Map<string, SystemDetail["evidence"][number]>,
-) {
-  return `<div class="feature-card"><div class="feature-meta"><span class="card-kicker">${escapeHtml(feature.category)}</span><span class="claim-type">${escapeHtml(feature.claim_type)}</span></div><h4>${escapeHtml(feature.name)}</h4><p>${escapeHtml(feature.description)}</p><details><summary>Benefits and costs</summary><p><strong>Benefits:</strong> ${escapeHtml(feature.benefits.join("; "))}</p><p><strong>Costs:</strong> ${escapeHtml(feature.costs.join("; "))}</p></details><div class="evidence-pills">${feature.evidence_ids.map((id) => evidencePill(id, evidenceById)).join("")}</div></div>`;
-}
-
-function evidencePill(id: string, evidenceById: Map<string, SystemDetail["evidence"][number]>) {
-  const evidence = evidenceById.get(id);
-  return evidence
-    ? `<a class="evidence-pill" href="${escapeHtml(evidence.uri)}" target="_blank" rel="noreferrer">${escapeHtml(id)} ↗</a>`
-    : `<span class="evidence-pill">${escapeHtml(id)}</span>`;
-}
-
-function required<T extends Element>(id: string): T {
-  const element = document.querySelector<T>(`#${id}`);
-  if (!element) throw new Error(`Required UI element is missing: ${id}`);
-  return element;
-}
-
-function escapeSelector(value: string) {
-  return value.replace(/([!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, "\\$1");
-}
+>();
+const details = new Map<string, SystemDetail>();
+const relationColors = ["#69d7c3", "#bca5f4", "#e7bb7d", "#7ab9ee", "#e699ad"];
+const relationColor = (type: string) =>
+  type === "related"
+    ? "#657181"
+    : relationColors[
+        [...type].reduce((sum, character) => sum + character.charCodeAt(0), 0) %
+          relationColors.length
+      ];
+const duration = () => (reducedMotion.matches ? 0 : 500);
 
 function escapeHtml(value: string) {
   return value.replace(
-    /[&<>'"]/g,
+    /[&<>"']/g,
     (character) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character] ??
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ??
       character,
   );
 }
+
+function showDialog(dialog: HTMLDialogElement) {
+  if (!dialog.open) dialog.showModal();
+}
+document.querySelectorAll<HTMLButtonElement>("[data-close]").forEach((button) => {
+  button.addEventListener("click", () => button.closest("dialog")?.close());
+});
+for (const dialog of [catalog, detailDialog, helpDialog]) {
+  let opener: HTMLElement | null = null;
+  dialog.addEventListener("beforetoggle", (event) => {
+    if ((event as ToggleEvent).newState === "open")
+      opener = document.activeElement as HTMLElement | null;
+  });
+  dialog.addEventListener("close", () => {
+    if (dialog === detailDialog) detailRequest++;
+    if (opener?.isConnected) opener.focus();
+  });
+}
+
+function configureCamera() {
+  if (!graph) return;
+  const controls = graph.controls() as {
+    enableRotate: boolean;
+    enablePan: boolean;
+    screenSpacePanning: boolean;
+  };
+  controls.enableRotate = dimensions === 3;
+  controls.enablePan = true;
+  controls.screenSpacePanning = true;
+  required("gesture-hint").textContent =
+    dimensions === 2
+      ? "Drag a node to reshape its neighborhood. Scroll to explore."
+      : "Drag a node to reshape its neighborhood. Drag space to orbit.";
+}
+
+function createGraph() {
+  graph = new ForceGraph3D(host, {
+    controlType: "orbit",
+    rendererConfig: { antialias: true, alpha: true },
+  }) as unknown as ForceGraph3DInstance<SimulationNode, SimulationLink>;
+  graph
+    .width(host.clientWidth)
+    .height(host.clientHeight)
+    .backgroundColor("#10192300")
+    .showNavInfo(false)
+    .numDimensions(2)
+    .nodeRelSize(4)
+    .nodeResolution(16)
+    .nodeVal((node: SimulationNode) => 1.4 + Math.sqrt(node.degree) * 0.65)
+    .nodeColor(nodeColor)
+    .nodeOpacity(0.95)
+    .nodeLabel((node) => {
+      const label = document.createElement("span");
+      label.textContent = node.name;
+      return label;
+    })
+    .nodeThreeObjectExtend(true)
+    .nodeThreeObject((node: SimulationNode) => {
+      const label = new SpriteText(node.name, 4, "#e9f0ef") as SpriteText & {
+        visible: boolean;
+        position: { set: (x: number, y: number, z: number) => void };
+        material: { depthWrite: boolean };
+      };
+      label.backgroundColor = "#111c29dd";
+      label.padding = [2, 1];
+      label.borderRadius = 2;
+      label.position.set(0, 10, 0);
+      label.material.depthWrite = false;
+      label.visible = labelVisible(node);
+      labels.set(node.id, label);
+      return label;
+    })
+    .linkColor(linkColor)
+    .linkOpacity(0.55)
+    .linkWidth((link) =>
+      selectedEdge?.id === link.id ? 2.5 : link.type === "related" ? 0.45 : 1.1,
+    )
+    .linkDirectionalArrowLength((link) => (link.type === "related" ? 0 : 3.5))
+    .linkDirectionalArrowRelPos(0.8)
+    .linkHoverPrecision(3)
+    .linkLabel((link) => {
+      const label = document.createElement("span");
+      label.textContent = `${nodeName(endpointId(link.source))} → ${nodeName(endpointId(link.target))} · ${link.type.replaceAll("_", " ")}`;
+      return label;
+    })
+    .d3AlphaDecay(0.035)
+    .d3VelocityDecay(0.38)
+    .d3AlphaMin(0.005)
+    .warmupTicks(reducedMotion.matches ? 100 : 35)
+    .cooldownTicks(paused ? 0 : 180)
+    .cooldownTime(8000)
+    .onNodeClick((node) => selectNode(node.id))
+    .onNodeHover((node) => {
+      hoveredId = node?.id;
+      host.style.cursor = node ? "pointer" : "";
+      updateStyles();
+    })
+    .onLinkClick((link) => selectEdge(link))
+    .onBackgroundClick(() => clearSelection())
+    .onNodeDrag(() => {
+      autoFit = false;
+      if (!paused) graph?.d3ReheatSimulation();
+    })
+    .onNodeDragEnd((node) => {
+      node.fx = undefined;
+      node.fy = undefined;
+      node.fz = undefined;
+      if (!paused) reheat();
+    })
+    .onEngineStop(() => {
+      required("simulation-status").textContent = paused
+        ? "Forces paused · navigation active"
+        : "Layout settled · drag to reshape";
+      if (autoFit) {
+        fit();
+        autoFit = false;
+      }
+    });
+  graph.d3Force("charge")?.strength(-140).distanceMax(650);
+  graph
+    .d3Force("link")
+    ?.distance((link: SimulationLink) => (link.type === "related" ? 85 : 65))
+    .strength((link: SimulationLink) => (link.type === "related" ? 0.12 : 0.35));
+  graph.d3Force("center")?.strength(0.08);
+  configureCamera();
+  new ResizeObserver(() => {
+    graph?.width(host.clientWidth).height(host.clientHeight);
+  }).observe(host);
+  // Manual navigation should never be interrupted by a later automatic fit.
+  host.addEventListener("pointerdown", () => {
+    autoFit = false;
+  });
+  host.addEventListener(
+    "wheel",
+    () => {
+      autoFit = false;
+    },
+    { passive: true },
+  );
+  updatePauseButton();
+}
+
+function nodeName(id: string) {
+  return canonical.nodes.find((node) => node.id === id)?.name ?? id;
+}
+function nodeColor(node: SimulationNode) {
+  const active =
+    (!highlighted.size || highlighted.has(node.id)) &&
+    (!searchMatches || searchMatches.has(node.id));
+  return active ? domainFor(node.id).color : "#34404c";
+}
+function linkColor(link: SimulationLink) {
+  if (selectedEdge?.id === link.id) return "#ffffff";
+  if (
+    highlighted.size &&
+    (!highlighted.has(endpointId(link.source)) || !highlighted.has(endpointId(link.target)))
+  )
+    return "#29323d";
+  return relationColor(link.type);
+}
+function labelVisible(node: SimulationNode) {
+  return (
+    node.id === hoveredId ||
+    node.id === selectedId ||
+    highlighted.has(node.id) ||
+    Boolean(searchMatches?.has(node.id)) ||
+    (!highlighted.size && !searchMatches && node.degree >= 7)
+  );
+}
+function updateStyles() {
+  if (!graph) return;
+  graph
+    .nodeColor(nodeColor)
+    .linkColor(linkColor)
+    .linkWidth((link) =>
+      selectedEdge?.id === link.id ? 2.5 : link.type === "related" ? 0.45 : 1.1,
+    );
+  for (const node of graph.graphData().nodes) {
+    const label = labels.get(node.id);
+    if (label) {
+      label.visible = labelVisible(node);
+      label.color = node.id === selectedId ? "#9ff5dc" : "#e9f0ef";
+    }
+  }
+}
+
+function updateGraph() {
+  visible = filterGraph(canonical, domainSelect.value, relationSelect.value);
+  if (selectedId && !visible.nodes.some((node) => node.id === selectedId)) clearSelection();
+  selectedEdge = undefined;
+  const next = simulationData(visible);
+  const old = new Map(graph?.graphData().nodes.map((node) => [node.id, node]));
+  for (const node of next.nodes)
+    Object.assign(
+      node,
+      old.get(node.id)
+        ? {
+            x: old.get(node.id)?.x,
+            y: old.get(node.id)?.y,
+            z: dimensions === 2 ? 0 : old.get(node.id)?.z,
+          }
+        : {},
+    );
+  labels.clear();
+  graph?.graphData(next);
+  highlighted = selectedId ? neighborhood(visible, selectedId) : new Set();
+  if (selectedId) renderNodeInspector(selectedId);
+  else inspector.hidden = true;
+  required("counts").textContent =
+    `${visible.nodes.length} systems / ${visible.edges.length} relations`;
+  if (visible.nodes.length) state.hidden = true;
+  else {
+    state.hidden = false;
+    state.innerHTML = `<h2>No systems in this group</h2><p>Choose another navigation group or reset the atlas.</p><button id="empty-reset">Reset atlas</button>`;
+    required("empty-reset").onclick = reset;
+  }
+  updateSearch();
+  renderCatalog();
+  updateStyles();
+  if (!paused) reheat();
+  else graph?.cooldownTicks(0);
+}
+
+function fit() {
+  graph?.zoomToFit(duration(), window.innerWidth < 640 ? 65 : 110);
+}
+function focus() {
+  if (selectedId)
+    graph?.zoomToFit(duration(), window.innerWidth < 640 ? 75 : 140, (node) =>
+      highlighted.has(node.id),
+    );
+}
+function updatePauseButton() {
+  const button = required<HTMLButtonElement>("pause");
+  button.setAttribute("aria-pressed", String(paused));
+  button.textContent = paused ? "Resume forces" : "Pause forces";
+}
+function reheat() {
+  paused = false;
+  updatePauseButton();
+  graph?.cooldownTicks(reducedMotion.matches ? 70 : 180).d3ReheatSimulation();
+  required("simulation-status").textContent = "Forces settling…";
+}
+function clearSelection() {
+  selectedId = undefined;
+  selectedEdge = undefined;
+  highlighted.clear();
+  inspector.hidden = true;
+  required<HTMLButtonElement>("focus").disabled = true;
+  updateStyles();
+}
+function selectNode(id: string) {
+  selectedId = id;
+  selectedEdge = undefined;
+  highlighted = neighborhood(visible, id);
+  required<HTMLButtonElement>("focus").disabled = !visible.nodes.some((node) => node.id === id);
+  results.hidden = true;
+  renderNodeInspector(id);
+  updateStyles();
+}
+function renderNodeInspector(id: string) {
+  const system = details.get(id) ?? systems.find((item) => item.id === id);
+  const edges = visible.edges.filter((edge) => edge.source === id || edge.target === id);
+  inspector.hidden = false;
+  inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow">${escapeHtml(domainFor(id).name)} · navigation group</p><h2>${escapeHtml(nodeName(id))}</h2><p class="selection-summary">${escapeHtml(system?.summary ?? "Open the architecture card for reviewed scope, features, and evidence.")}</p><div class="tag-row">${system ? system.scope.map((scope) => `<span>${escapeHtml(scope)}</span>`).join("") : "<span>Card scope loading on demand</span>"}</div><div class="inspector-bottom"><span>${edges.length} visible relation${edges.length === 1 ? "" : "s"}</span><button id="open-card" class="primary-button">Open card ↗</button></div>`;
+  inspector.querySelector(".inspector-close")?.addEventListener("click", clearSelection);
+  required("open-card").onclick = () => void openDetail(id);
+}
+function selectEdge(edge: SimulationLink) {
+  selectedEdge = edge;
+  selectedId = undefined;
+  highlighted = new Set([endpointId(edge.source), endpointId(edge.target)]);
+  required<HTMLButtonElement>("focus").disabled = true;
+  inspector.hidden = false;
+  inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow">${edge.type === "related" ? "Legacy association" : "Typed relation"}</p><h2>${escapeHtml(edge.type.replaceAll("_", " "))}</h2><p>${escapeHtml(nodeName(endpointId(edge.source)))} ${edge.type === "related" ? "—" : "→"} ${escapeHtml(nodeName(endpointId(edge.target)))}</p><div class="tag-row">${[
+    edge.claim_type,
+    edge.claim_status,
+  ]
+    .filter(Boolean)
+    .map((item) => `<span>${escapeHtml(item!)}</span>`)
+    .join(
+      "",
+    )}</div>${edge.notes ? `<p class="selection-summary">${escapeHtml(edge.notes)}</p>` : ""}<p class="muted">${edge.evidence_ids?.length ? `Evidence: ${edge.evidence_ids.map(escapeHtml).join(", ")}` : "No relation evidence supplied."}</p><button id="source-card" class="primary-button">Open source card & evidence ↗</button>`;
+  inspector.querySelector(".inspector-close")?.addEventListener("click", clearSelection);
+  required("source-card").onclick = () => void openDetail(endpointId(edge.source));
+  updateStyles();
+}
+
+function updateSearch() {
+  const matches = searchSystems(visible.nodes, systems, search.value);
+  searchMatches = search.value.trim() ? new Set(matches.map((node) => node.id)) : undefined;
+  results.hidden = !search.value.trim() || document.activeElement !== search;
+  results.innerHTML = matches.length
+    ? `${matches
+        .slice(0, 8)
+        .map(
+          (node) =>
+            `<button data-result="${escapeHtml(node.id)}"><strong>${escapeHtml(node.name)}</strong><small>${escapeHtml(domainFor(node.id).name)}</small></button>`,
+        )
+        .join("")}<button id="all-results">Browse all ${matches.length} results ↗</button>`
+    : `<p>No matching systems in this navigation group.</p>`;
+  results.querySelectorAll<HTMLButtonElement>("[data-result]").forEach(
+    (button) =>
+      (button.onclick = () => {
+        selectNode(button.dataset.result!);
+        focus();
+      }),
+  );
+  const all = document.getElementById("all-results");
+  if (all)
+    all.onclick = () => {
+      catalogSearch.value = search.value;
+      renderCatalog();
+      showDialog(catalog);
+      results.hidden = true;
+    };
+  updateStyles();
+}
+function renderCatalog() {
+  const nodes = canonical.nodes.length
+    ? visible.nodes
+    : systems.map((system) => ({ id: system.id, name: system.name, type: "system" as const }));
+  const matches = searchSystems(nodes, systems, catalogSearch.value);
+  required("catalog-count").textContent =
+    `${matches.length} systems · ${domainSelect.selectedOptions[0].textContent}`;
+  const metadata = new Map(systems.map((system) => [system.id, system]));
+  required("catalog-list").innerHTML = matches.length
+    ? matches
+        .map(
+          (node) =>
+            `<article class="catalog-item"><span class="eyebrow">${escapeHtml(domainFor(node.id).name)}</span><h3>${escapeHtml(node.name)}</h3><p>${escapeHtml(metadata.get(node.id)?.summary ?? "Reviewed card details available on demand.")}</p><div><button data-card="${escapeHtml(node.id)}">Read card ↗</button><button data-locate="${escapeHtml(node.id)}">Locate on graph</button></div></article>`,
+        )
+        .join("")
+    : `<p class="muted">No systems match this search. Change the query or navigation group.</p>`;
+  required("catalog-list")
+    .querySelectorAll<HTMLButtonElement>("[data-card]")
+    .forEach((button) => (button.onclick = () => void openDetail(button.dataset.card!)));
+  required("catalog-list")
+    .querySelectorAll<HTMLButtonElement>("[data-locate]")
+    .forEach(
+      (button) =>
+        (button.onclick = () => {
+          catalog.close();
+          selectNode(button.dataset.locate!);
+          focus();
+          required("open-card").focus();
+        }),
+    );
+}
+
+async function openDetail(id: string) {
+  const request = ++detailRequest;
+  required("detail-title").textContent = nodeName(id);
+  detailContent.innerHTML = `<p role="status" class="loading-message">Loading architecture card…</p>`;
+  showDialog(detailDialog);
+  try {
+    let system = details.get(id);
+    if (!system) {
+      const response = await fetch(`/api/systems/${encodeURIComponent(id)}`);
+      if (!response.ok) throw new Error(`Card API returned ${response.status}`);
+      system = ((await response.json()) as { data: SystemDetail }).data;
+      details.set(id, system);
+    }
+    if (request !== detailRequest) return;
+    detailContent.innerHTML = renderDetail(system, canonical);
+    detailContent
+      .querySelectorAll<HTMLButtonElement>("[data-related]")
+      .forEach((button) => (button.onclick = () => void openDetail(button.dataset.related!)));
+    if (selectedId === id) renderNodeInspector(id);
+  } catch {
+    if (request !== detailRequest) return;
+    detailContent.innerHTML = `<p role="alert">Unable to load this architecture card.</p><button id="retry-detail" class="primary-button">Retry card</button>`;
+    required("retry-detail").onclick = () => void openDetail(id);
+  }
+}
+
+function reset() {
+  domainSelect.value = "all";
+  relationSelect.value = "all";
+  search.value = "";
+  catalogSearch.value = "";
+  clearSelection();
+  updateGraph();
+  autoFit = true;
+  fit();
+}
+
+function validateMetadata() {
+  if (!metadataLoaded || !canonical.nodes.length) return;
+  const ids = new Set(systems.map((system) => system.id));
+  const missing = canonical.nodes.filter((node) => !ids.has(node.id));
+  if (missing.length)
+    metadataError(
+      `${missing.length} system summaries unavailable. All graph nodes remain searchable by name; cards load on demand.`,
+    );
+}
+function metadataError(message: string) {
+  const notice = required("metadata-notice");
+  notice.hidden = false;
+  notice.innerHTML = `<span>${escapeHtml(message)}</span><button id="retry-metadata">Retry summaries</button>`;
+  required("retry-metadata").onclick = () => void loadMetadata();
+}
+async function loadMetadata() {
+  required("metadata-notice").hidden = true;
+  try {
+    systems = await loadAllSystems();
+    metadataLoaded = true;
+    validateMetadata();
+    updateSearch();
+    renderCatalog();
+    if (selectedId) renderNodeInspector(selectedId);
+  } catch {
+    metadataError(
+      "System summaries unavailable. Search by name or open a card for its actual scope.",
+    );
+  }
+}
+async function loadGraph() {
+  state.hidden = false;
+  state.innerHTML = `<span class="state-orbit" aria-hidden="true"></span><h1>Connecting the atlas</h1><p>Loading systems and relationships…</p>`;
+  try {
+    const response = await fetch("/api/graph");
+    if (!response.ok) throw new Error(`Graph API returned ${response.status}`);
+    const payload = (await response.json()) as GraphPayload | { data: GraphPayload };
+    canonical = "data" in payload ? payload.data : payload;
+    if (!Array.isArray(canonical.nodes) || !Array.isArray(canonical.edges))
+      throw new Error("Invalid graph payload");
+    if (!graph) createGraph();
+    relationSelect.innerHTML = `<option value="all">All relations</option>${[
+      ...new Set(canonical.edges.map((edge) => edge.type)),
+    ]
+      .sort()
+      .map(
+        (type) =>
+          `<option value="${escapeHtml(type)}">${type === "related" ? "Legacy related" : escapeHtml(type.replaceAll("_", " "))}</option>`,
+      )
+      .join("")}`;
+    autoFit = true;
+    updateGraph();
+    validateMetadata();
+  } catch {
+    graph?._destructor();
+    graph = undefined;
+    host.replaceChildren();
+    state.hidden = false;
+    state.innerHTML = `<p class="eyebrow">Atlas unavailable</p><h1>We couldn’t open the graph.</h1><p>Retry the connection or browse architecture cards.</p><div class="state-actions"><button id="retry-graph" class="primary-button">Retry graph</button><button id="fallback-catalog">Browse systems</button></div>`;
+    required("retry-graph").onclick = () => void loadGraph();
+    required("fallback-catalog").onclick = () => {
+      renderCatalog();
+      showDialog(catalog);
+    };
+  }
+}
+
+search.addEventListener("input", updateSearch);
+search.addEventListener("focus", updateSearch);
+search.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    results.hidden = true;
+    search.blur();
+  }
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    results.querySelector<HTMLButtonElement>("button")?.focus();
+  }
+  if (event.key === "Enter") {
+    const first = searchSystems(visible.nodes, systems, search.value)[0];
+    if (first) {
+      selectNode(first.id);
+      focus();
+      search.blur();
+    }
+  }
+});
+document.addEventListener("pointerdown", (event) => {
+  if (!(event.target as Element).closest(".search-wrap")) results.hidden = true;
+});
+document.addEventListener("keydown", (event) => {
+  if (
+    event.key === "/" &&
+    !document.querySelector("dialog[open]") &&
+    !(
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement ||
+      event.target instanceof HTMLSelectElement
+    )
+  ) {
+    event.preventDefault();
+    search.focus();
+  }
+});
+catalogSearch.addEventListener("input", renderCatalog);
+required("catalog-open").onclick = () => {
+  renderCatalog();
+  showDialog(catalog);
+};
+required("help-open").onclick = required("legend-open").onclick = () => showDialog(helpDialog);
+domainSelect.onchange = () => {
+  updateGraph();
+  autoFit = true;
+  fit();
+};
+relationSelect.onchange = () => updateGraph();
+required("fit").onclick = fit;
+required("focus").onclick = focus;
+required("reset").onclick = reset;
+required("reheat").onclick = reheat;
+required("pause").onclick = () => {
+  paused = !paused;
+  updatePauseButton();
+  if (paused) {
+    graph?.cooldownTicks(0);
+    required("simulation-status").textContent = "Forces paused · navigation active";
+  } else reheat();
+};
+for (const mode of [2, 3] as const)
+  required(`mode-${mode}`).onclick = () => {
+    dimensions = mode;
+    required("mode-2").setAttribute("aria-pressed", String(mode === 2));
+    required("mode-3").setAttribute("aria-pressed", String(mode === 3));
+    graph?.numDimensions(mode);
+    configureCamera();
+    if (mode === 2) graph?.cameraPosition({ x: 0, y: 0, z: 700 }, { x: 0, y: 0, z: 0 }, duration());
+    if (!paused) reheat();
+    else graph?.cooldownTicks(0);
+    autoFit = true;
+    fit();
+  };
+reducedMotion.addEventListener("change", () => {
+  if (reducedMotion.matches) {
+    paused = true;
+    graph?.cooldownTicks(0);
+    updatePauseButton();
+  }
+});
+void loadGraph();
+void loadMetadata();
