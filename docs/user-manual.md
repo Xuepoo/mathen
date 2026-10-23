@@ -181,6 +181,41 @@ and evidence. Each constraint, preserved property, and conflict is itself an
 evidence-backed claim. This contract records a composition proposal; it does
 not execute or prove the proposed architecture.
 
+## 3.7 Bounded composition exploration
+
+`mathen.composition_solver` provides a deterministic, library-only exploration
+boundary for candidate compositions. `solve_reviewed_compositions(cards,
+capability_specs, required_capabilities, ...)` accepts validated reviewed-card
+objects and an explicit capability declaration for each feature being made
+available to the solver:
+
+```python
+{
+    "system_id": "app-system",
+    "feature_id": "application-feature",
+    "provides": ["application"],
+    "requires": ["storage"],
+    "conflicts": ["incompatible-capability"],
+}
+```
+
+Capability declarations are intentionally separate from card feature names,
+descriptions, categories, and feature relations. The adapter qualifies feature
+IDs as `system_id:feature_id` and evidence IDs as `system_id:evidence_id`, then
+passes only those explicit records to the solver. A declaration may select a
+subset of the features in the cards; declarations that reference no reviewed
+feature are rejected. Callers should load and validate canonical cards with
+`mathen.cards.load_card` before adapting them.
+
+The solver enumerates non-empty feature subsets up to `max_components`, adds a
+deterministic provider closure up to `max_depth`, and returns at most
+`max_results` candidates. These positive integer bounds are required. Each
+candidate contains selected feature IDs, dependency IDs, provided and required
+capabilities, unresolved requirements, conflicts, evidence IDs, explanations,
+coverage/evidence/deterministic scores, and `proven: false`. Candidates are
+ranked deterministically; unresolved requirements and conflicts remain visible
+and are not treated as proof of compatibility or runtime behavior.
+
 ## 4. Repository Manifest schema
 
 The manifest is a JSON array. Each entry describes one repository to inspect:
