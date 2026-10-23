@@ -157,5 +157,15 @@
       "notes": "Fixed-revision source tree for the JavaScript interface used by native renderer integration."
     }
   ],
-  "related_systems": ["react", "threejs"]
+  "related_systems": ["react", "threejs"],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "react",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["react-native-render-pipeline"],
+      "notes": "React Native's reviewed render pipeline accepts React element trees as its declarative input and transforms them into native host views; this records the framework input boundary, not a claim that React Native implements every React runtime feature."
+    }
+  ]
 }
