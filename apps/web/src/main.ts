@@ -1,7 +1,9 @@
 import "./style.css";
 import ForceGraph3D, { type ForceGraph3DInstance } from "3d-force-graph";
-import SpriteText from "three-spritetext";
 import { createLabelPool } from "./graph-labels";
+import { frameNodes, seedCoordinates, worldUnitsPerPixel } from "./graph-viewport";
+import { applyView, expandOneHop, applyPin, type Pin } from "./graph-view";
+import { movablePanel } from "./movable-panel";
 import {
   domainFor,
   domains,
@@ -30,6 +32,7 @@ if (!app) throw new Error("Application root is missing");
 app.innerHTML = `
   <main class="explorer" aria-label="Software architecture explorer">
     <div id="graph" role="region" aria-label="Interactive force graph. Use Browse systems for a keyboard accessible list."></div>
+    <div id="graph-names" aria-hidden="true"></div>
     <header class="topbar glass">
       <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">m<span>·</span></span><span>mathen<small>Architecture atlas</small></span></a>
       <div class="search-wrap">
@@ -45,10 +48,12 @@ app.innerHTML = `
       <div class="dimension-switch" role="group" aria-label="Graph dimensions"><button id="mode-2" aria-pressed="true">2D</button><button id="mode-3" aria-pressed="false">3D</button></div>
       <span class="tool-divider"></span>
       <button id="fit" title="Fit all visible nodes">Fit</button>
+      <button id="names" aria-pressed="true" title="Toggle all names or highlighted names">Names: all</button>
       <button id="focus" disabled title="Focus selected node and its neighbors">Focus</button>
       <button id="pause" aria-pressed="false">Pause forces</button>
       <button id="reheat" title="Restart the force simulation">Reheat</button>
       <button id="reset" title="Clear filters and restore the overview">Reset</button>
+      <button id="restore-hidden" hidden>Restore hidden</button>
     </section>
 
     <aside class="filters glass" aria-label="Navigation filters">
@@ -60,8 +65,9 @@ app.innerHTML = `
     <div id="state" class="state-panel glass" role="status"><span class="state-orbit" aria-hidden="true"></span><h1>Connecting the atlas</h1><p>Loading reviewed systems and their relationships…</p></div>
     <div id="metadata-notice" class="metadata-notice glass" role="status" hidden></div>
     <aside id="inspector" class="inspector glass" aria-label="Selection" hidden></aside>
+    <div id="node-menu" class="node-menu glass" role="menu" aria-label="Node actions" hidden></div>
     <footer class="map-footer">
-      <div class="map-caption"><p class="eyebrow">An atlas of software systems</p><h1>Follow the structure.</h1><p id="gesture-hint">Drag a node to reshape its neighborhood. Scroll to explore.</p></div>
+      <div class="map-caption"><p id="gesture-hint">Drag nodes · scroll to zoom · drag space to pan</p></div>
       <div class="map-key glass"><div id="counts" class="map-counts" aria-live="polite">Loading graph…</div><div class="edge-key"><span><i class="typed-line"></i>Typed relation</span><span><i class="legacy-line"></i>Legacy related</span></div><button id="legend-open" class="text-button">Node colors · navigation groups</button><span id="simulation-status" class="simulation-status" aria-live="polite">Preparing layout</span></div>
     </footer>
   </main>
@@ -82,10 +88,20 @@ const results = required<HTMLDivElement>("search-results");
 const domainSelect = required<HTMLSelectElement>("domain");
 const relationSelect = required<HTMLSelectElement>("relation");
 const inspector = required<HTMLElement>("inspector");
+const panel = movablePanel(inspector);
+const nodeMenu = required<HTMLDivElement>("node-menu");
+let menuOpener: HTMLElement | null = null;
+const pins = new Map<string, Pin>();
+const hiddenNodes = new Set<string>();
+const expandedNodes = new Set<string>();
 const state = required<HTMLDivElement>("state");
 const catalog = required<HTMLDialogElement>("catalog-dialog");
 const detailDialog = required<HTMLDialogElement>("detail-dialog");
 const helpDialog = required<HTMLDialogElement>("help-dialog");
+helpDialog.insertAdjacentHTML(
+  "beforeend",
+  `<h3>Why these shapes?</h3><p>Stars show a hub with many direct neighbors; in Math models a hub often represents a model family shared by several systems. Chains follow successive supplied links. Disconnected islands have no connecting links in the current data or filter. None of these shapes adds a new relationship.</p><p>2D and 3D are force-layout projections, not semantic distance maps. Position, closeness, direction, and depth do not measure similarity, chronology, or influence. A 3D chain can look shorter or overlap when viewed end-on: orbit to inspect it, or use 2D for a flat overview.</p><p>Names are shown beside every node by default and keep their screen size when zooming. Use Names to show only hovered, selected, or highlighted names in crowded views. Fit frames the current graph; filters and dimension changes frame their new layout until you pan, zoom, or drag.</p>`,
+);
 const catalogSearch = required<HTMLInputElement>("catalog-search");
 const detailContent = required<HTMLDivElement>("detail-content");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -105,43 +121,42 @@ let searchMatches: Set<string> | undefined;
 let paused = reducedMotion.matches;
 let dimensions: 2 | 3 = 2;
 let autoFit = true;
+let initialFitPending = false;
+let allNames = true;
 let detailRequest = 0;
 let metadataLoaded = false;
-type LabelSprite = SpriteText & {
-  position: { set: (x: number, y: number, z: number) => void };
-  removeFromParent: () => void;
-  material: {
-    depthWrite: boolean;
-    map?: { dispose: () => void };
-    dispose: () => void;
-  };
-};
-type LabelAnchor = { add: (label: LabelSprite) => void };
+type LabelAnchor = { scale: { setScalar: (scale: number) => void } };
 const labelAnchors = new Map<string, LabelAnchor>();
+type LinkAnchor = {
+  scale: { x: number; y: number };
+  geometry: { parameters: { radiusTop: number } };
+};
+const linkAnchors = new Map<string, LinkAnchor>();
+const labelElements = new Map<string, HTMLSpanElement>();
+const labelWidths = new Map<string, number>();
+const namesLayer = required<HTMLDivElement>("graph-names");
 let labelUpdateScheduled = false;
-const labels = createLabelPool<SimulationNode, LabelSprite>({
+const labels = createLabelPool<SimulationNode, HTMLSpanElement>({
   schedule: (run) => {
     requestAnimationFrame(run);
   },
   create: (node) => {
-    const label = new SpriteText(node.name, 4, "#e9f0ef") as LabelSprite;
-    label.backgroundColor = "#111c29dd";
-    label.padding = [2, 1];
-    label.borderRadius = 2;
-    label.position.set(0, 10, 0);
-    label.material.depthWrite = false;
-    labelAnchors.get(node.id)?.add(label);
+    const label = document.createElement("span");
+    label.className = "graph-name";
+    label.textContent = node.name;
+    label.dataset.nodeId = node.id;
+    label.hidden = true;
+    namesLayer.append(label);
+    labelElements.set(node.id, label);
     return label;
   },
   update: (label, node) => {
-    const color = node.id === selectedId ? "#9ff5dc" : "#e9f0ef";
-    // SpriteText repaints its canvas even when assigned the same color.
-    if (label.color !== color) label.color = color;
+    label.classList.toggle("active", node.id === selectedId || node.id === hoveredId);
   },
   dispose: (label) => {
-    label.removeFromParent();
-    label.material.map?.dispose();
-    label.material.dispose();
+    labelElements.delete(label.dataset.nodeId!);
+    labelWidths.delete(label.dataset.nodeId!);
+    label.remove();
   },
 });
 const details = new Map<string, SystemDetail>();
@@ -165,6 +180,7 @@ function escapeHtml(value: string) {
 }
 
 function showDialog(dialog: HTMLDialogElement) {
+  closeNodeMenu();
   if (!dialog.open) dialog.showModal();
 }
 document.querySelectorAll<HTMLButtonElement>("[data-close]").forEach((button) => {
@@ -172,13 +188,36 @@ document.querySelectorAll<HTMLButtonElement>("[data-close]").forEach((button) =>
 });
 for (const dialog of [catalog, detailDialog, helpDialog]) {
   let opener: HTMLElement | null = null;
+  let backdropDown = false;
+  const outside = (event: PointerEvent | MouseEvent) => {
+    const rect = dialog.getBoundingClientRect();
+    return (
+      event.target === dialog &&
+      (event.clientX < rect.left ||
+        event.clientX > rect.right ||
+        event.clientY < rect.top ||
+        event.clientY > rect.bottom)
+    );
+  };
+  dialog.addEventListener("pointerdown", (event) => {
+    backdropDown = outside(event);
+  });
+  dialog.addEventListener("click", (event) => {
+    if (backdropDown && outside(event)) dialog.close();
+    backdropDown = false;
+  });
   dialog.addEventListener("beforetoggle", (event) => {
     if ((event as ToggleEvent).newState === "open")
       opener = document.activeElement as HTMLElement | null;
   });
   dialog.addEventListener("close", () => {
     if (dialog === detailDialog) detailRequest++;
-    if (opener?.isConnected) opener.focus();
+    const restore = opener?.isConnected
+      ? opener
+      : opener?.id
+        ? document.getElementById(opener.id)
+        : null;
+    restore?.focus();
   });
 }
 
@@ -223,7 +262,7 @@ function createGraph() {
       return label;
     })
     .nodePositionUpdate((object, _coordinates, node) => {
-      if (!labelAnchors.has(node.id)) {
+      if (labelAnchors.get(node.id) !== object) {
         labelAnchors.set(node.id, object as LabelAnchor);
         if (!labelUpdateScheduled) {
           labelUpdateScheduled = true;
@@ -237,7 +276,11 @@ function createGraph() {
       return false;
     })
     .linkColor(linkColor)
-    .linkOpacity(0.55)
+    .linkOpacity(0.7)
+    .linkPositionUpdate((object, _coordinates, link) => {
+      linkAnchors.set(link.id, object as unknown as LinkAnchor);
+      return false;
+    })
     .linkWidth((link) =>
       selectedEdge?.id === link.id ? 2.5 : link.type === "related" ? 0.45 : 1.1,
     )
@@ -256,6 +299,11 @@ function createGraph() {
     .cooldownTicks(paused ? 0 : 180)
     .cooldownTime(8000)
     .onNodeClick((node) => selectNode(node.id))
+    .onNodeRightClick((node, event) => {
+      event.preventDefault();
+      selectNode(node.id);
+      openNodeMenu(node.id, event.clientX, event.clientY);
+    })
     .onNodeHover((node) => {
       hoveredId = node?.id;
       host.style.cursor = node ? "pointer" : "";
@@ -268,17 +316,30 @@ function createGraph() {
       if (!paused) graph?.d3ReheatSimulation();
     })
     .onNodeDragEnd((node) => {
-      node.fx = undefined;
-      node.fy = undefined;
-      node.fz = undefined;
+      if (pins.has(node.id))
+        pins.set(node.id, {
+          x: node.x!,
+          y: node.y!,
+          z: dimensions === 2 ? pins.get(node.id)!.z : node.z!,
+        });
+      applyPin(node, pins.get(node.id), dimensions);
       if (!paused) reheat();
     })
+    .onEngineTick(() => {
+      flatten2D();
+      if (initialFitPending) {
+        initialFitPending = false;
+        fit(0);
+      }
+    })
     .onEngineStop(() => {
+      flatten2D();
+      initialFitPending = false;
       required("simulation-status").textContent = paused
         ? "Forces paused · navigation active"
         : "Layout settled · drag to reshape";
       if (autoFit) {
-        fit();
+        fit(0);
         autoFit = false;
       }
     });
@@ -291,15 +352,20 @@ function createGraph() {
   configureCamera();
   new ResizeObserver(() => {
     graph?.width(host.clientWidth).height(host.clientHeight);
+    if (autoFit) initialFitPending = true;
   }).observe(host);
   // Manual navigation should never be interrupted by a later automatic fit.
   host.addEventListener("pointerdown", () => {
+    closeNodeMenu(false);
     autoFit = false;
+    initialFitPending = false;
   });
   host.addEventListener(
     "wheel",
     () => {
+      closeNodeMenu(false);
       autoFit = false;
+      initialFitPending = false;
     },
     { passive: true },
   );
@@ -313,6 +379,79 @@ function nodeName(id: string) {
     id
   );
 }
+function graphSource(): ExplorerPayload {
+  return graphMode === "models" ? (modelCanonical ?? { nodes: [], edges: [] }) : canonical;
+}
+function closeNodeMenu(restore = true) {
+  if (nodeMenu.hidden) return;
+  nodeMenu.hidden = true;
+  if (restore && menuOpener?.isConnected) menuOpener.focus();
+}
+function openNodeMenu(id: string, x?: number, y?: number) {
+  const node = graph?.graphData().nodes.find((item) => item.id === id);
+  if (!node || !graph) return;
+  autoFit = false;
+  initialFitPending = false;
+  menuOpener = document.getElementById("node-actions") ?? host;
+  const point = graph.graph2ScreenCoords(node.x!, node.y!, node.z!);
+  nodeMenu.innerHTML = `<strong>${escapeHtml(node.name)}</strong><button role="menuitem" data-action="pin">${pins.has(id) ? "Unpin" : "Pin"}</button><button role="menuitem" data-action="expand">Expand 1 hop</button><button role="menuitem" data-action="hide">Hide from view</button><button role="menuitem" data-action="details">${node.type === "model" ? "View model metadata" : "View details"}</button><p>Expand adds actual neighbors outside the domain; relation filters and hidden nodes still apply.</p>`;
+  nodeMenu.hidden = false;
+  nodeMenu.style.left = `${Math.max(8, Math.min(x ?? point.x + 14, window.innerWidth - nodeMenu.offsetWidth - 8))}px`;
+  nodeMenu.style.top = `${Math.max(8, Math.min(y ?? point.y, window.innerHeight - nodeMenu.offsetHeight - 8))}px`;
+  nodeMenu.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
+    button.onclick = () => {
+      closeNodeMenu();
+      switch (button.dataset.action) {
+        case "pin":
+          if (pins.has(id)) pins.delete(id);
+          else pins.set(id, { x: node.x!, y: node.y!, z: node.z! });
+          applyPin(node, pins.get(id), dimensions);
+          required("simulation-status").textContent =
+            `${node.name} ${pins.has(id) ? "pinned" : "unpinned"}`;
+          break;
+        case "expand":
+          expandOneHop(
+            graphSource(),
+            id,
+            expandedNodes,
+            graphMode === "models" ? "all" : relationSelect.value,
+          );
+          updateGraph();
+          required("simulation-status").textContent =
+            "Expanded actual neighbors · domain exceptions active";
+          break;
+        case "hide":
+          hiddenNodes.add(id);
+          updateGraph();
+          required("restore-hidden").focus();
+          break;
+        case "details":
+          if (node.type === "model") {
+            selectNode(id);
+            required("node-actions").focus();
+          } else void openDetail(id);
+          break;
+      }
+    };
+  });
+  nodeMenu.querySelector<HTMLButtonElement>("button")?.focus();
+}
+nodeMenu.addEventListener("keydown", (event) => {
+  const items = [...nodeMenu.querySelectorAll<HTMLButtonElement>("button")];
+  const index = items.indexOf(document.activeElement as HTMLButtonElement);
+  if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+    event.preventDefault();
+    items[
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? items.length - 1
+          : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
+    ]?.focus();
+  }
+  if (event.key === "Tab") closeNodeMenu(false);
+});
+window.addEventListener("resize", () => closeNodeMenu(false));
 function nodeColor(node: SimulationNode) {
   const active =
     (!highlighted.size || highlighted.has(node.id)) &&
@@ -330,11 +469,11 @@ function linkColor(link: SimulationLink) {
 }
 function labelVisible(node: SimulationNode) {
   return (
+    allNames ||
     node.id === hoveredId ||
     node.id === selectedId ||
     highlighted.has(node.id) ||
-    Boolean(searchMatches?.has(node.id)) ||
-    (!highlighted.size && !searchMatches && node.degree >= (node.type === "model" ? 2 : 7))
+    Boolean(searchMatches?.has(node.id))
   );
 }
 function updateStyles() {
@@ -361,10 +500,20 @@ function updateLabels() {
 }
 
 function updateGraph() {
+  closeNodeMenu(false);
+  autoFit = true;
+  initialFitPending = true;
   visible =
     graphMode === "models"
       ? filterModelGraph(modelCanonical ?? { nodes: [], edges: [] }, domainSelect.value)
       : filterGraph(canonical, domainSelect.value, relationSelect.value);
+  visible = applyView(
+    graphSource(),
+    visible,
+    expandedNodes,
+    hiddenNodes,
+    graphMode === "models" ? "all" : relationSelect.value,
+  );
   if (selectedId && !visible.nodes.some((node) => node.id === selectedId)) clearSelection();
   selectedEdge = undefined;
   const next = modelSimulationData(visible);
@@ -378,10 +527,13 @@ function updateGraph() {
             y: old.get(node.id)?.y,
             z: dimensions === 2 ? 0 : old.get(node.id)?.z,
           }
-        : { z: 0 },
+        : {},
     );
+  seedCoordinates(next.nodes, dimensions);
+  for (const node of next.nodes) applyPin(node, pins.get(node.id), dimensions);
   labels.clear();
   labelAnchors.clear();
+  linkAnchors.clear();
   graph?.graphData(next);
   highlighted = selectedId ? neighborhood(visible, selectedId) : new Set();
   if (selectedId) renderNodeInspector(selectedId);
@@ -390,6 +542,7 @@ function updateGraph() {
     graphMode === "models"
       ? `${visible.nodes.filter((node) => node.type === "system").length} systems / ${visible.nodes.filter((node) => node.type === "model").length} models / ${visible.edges.length} model links`
       : `${visible.nodes.length} systems / ${visible.edges.length} relations`;
+  if (expandedNodes.size) required("counts").textContent += " · expanded beyond group";
   if (visible.nodes.length) state.hidden = true;
   else {
     state.hidden = false;
@@ -397,21 +550,108 @@ function updateGraph() {
     required("empty-reset").onclick = reset;
   }
   updateSearch();
+  required("restore-hidden").hidden = !hiddenNodes.size;
+  required("restore-hidden").textContent = `Restore hidden (${hiddenNodes.size})`;
   renderCatalog();
   updateStyles();
   if (!paused) reheat();
   else graph?.cooldownTicks(0);
 }
 
-function fit() {
-  graph?.zoomToFit(duration(), window.innerWidth < 640 ? 65 : 110);
+function safeViewport() {
+  const width = host.clientWidth;
+  const height = host.clientHeight;
+  const tools = required("fit").closest(".graph-tools")!.getBoundingClientRect();
+  const filters = domainSelect.closest(".filters")!.getBoundingClientRect();
+  const footer = required("counts").closest(".map-key")!.getBoundingClientRect();
+  const mobile = width <= 700;
+  return {
+    width,
+    height,
+    left: mobile ? 25 : filters.right + 24,
+    right: width - (mobile ? 90 : 140),
+    top: Math.max(tools.bottom, mobile ? filters.bottom : 0) + 30,
+    bottom: footer.top - 28,
+  };
+}
+function flatten2D() {
+  // The engine deletes z when changing dimensions, including while forces are paused.
+  if (dimensions === 2) for (const node of graph?.graphData().nodes ?? []) node.z = 0;
+}
+function fit(ms = duration(), only?: Set<string>) {
+  if (!graph) return;
+  const nodes = graph
+    .graphData()
+    .nodes.filter(
+      (node) => (!only || only.has(node.id)) && [node.x, node.y, node.z].every(Number.isFinite),
+    ) as (SimulationNode & { x: number; y: number; z: number })[];
+  if (!nodes.length) return;
+  const camera = graph.camera() as unknown as { fov: number };
+  const frame = frameNodes(nodes, safeViewport(), camera.fov);
+  graph.cameraPosition(frame.position, frame.target, ms);
 }
 function focus() {
-  if (selectedId)
-    graph?.zoomToFit(duration(), window.innerWidth < 640 ? 75 : 140, (node) =>
-      highlighted.has(node.id),
-    );
+  autoFit = false;
+  initialFitPending = false;
+  if (selectedId) fit(duration(), highlighted);
 }
+
+// CSS pixels (not drawing-buffer pixels) keep names and hit geometry readable at any DPR.
+// O(V + E) per frame, O(V + E) anchors and pooled labels. No force restart on camera moves.
+function renderScreenGeometry() {
+  if (graph) {
+    const camera = graph.camera() as unknown as {
+      fov: number;
+      matrixWorldInverse: { elements: number[] };
+    };
+    const m = camera.matrixWorldInverse.elements;
+    const width = host.clientWidth;
+    const height = host.clientHeight;
+    for (const node of graph.graphData().nodes) {
+      const { x = 0, y = 0, z = 0 } = node;
+      const depth = -(m[2] * x + m[6] * y + m[10] * z + m[14]);
+      const radius = node.type === "model" ? 12 : 10;
+      const baseRadius =
+        4 * Math.cbrt((node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65);
+      labelAnchors
+        .get(node.id)
+        ?.scale.setScalar((radius * worldUnitsPerPixel(depth, camera.fov, height)) / baseRadius);
+      const label = labelElements.get(node.id);
+      if (!label) continue;
+      const point = graph.graph2ScreenCoords(x, y, z);
+      label.hidden =
+        depth <= 0 ||
+        point.x < -radius ||
+        point.x > width + radius ||
+        point.y < -radius ||
+        point.y > height + radius;
+      if (!label.hidden) {
+        if (!labelWidths.has(node.id)) labelWidths.set(node.id, label.offsetWidth);
+        const labelWidth = labelWidths.get(node.id)!;
+        // Keep labels adjacent, flipping at the right edge without moving the node.
+        const right = point.x + radius + 5;
+        const left = right + labelWidth < width - 8 ? right : point.x - radius - 5 - labelWidth;
+        label.style.transform = `translate(${Math.max(8, left)}px, ${Math.max(4, Math.min(height - 24, point.y - 10))}px)`;
+      }
+    }
+    for (const link of graph.graphData().links) {
+      const anchor = linkAnchors.get(link.id);
+      if (!anchor?.geometry.parameters.radiusTop) continue;
+      const source = link.source as SimulationNode;
+      const target = link.target as SimulationNode;
+      const x = ((source.x ?? 0) + (target.x ?? 0)) / 2;
+      const y = ((source.y ?? 0) + (target.y ?? 0)) / 2;
+      const z = ((source.z ?? 0) + (target.z ?? 0)) / 2;
+      const depth = -(m[2] * x + m[6] * y + m[10] * z + m[14]);
+      const pixels = selectedEdge?.id === link.id ? 2.5 : link.type === "related" ? 0.8 : 1.2;
+      anchor.scale.x = anchor.scale.y =
+        (pixels * worldUnitsPerPixel(depth, camera.fov, height)) /
+        (2 * anchor.geometry.parameters.radiusTop);
+    }
+  }
+  requestAnimationFrame(renderScreenGeometry);
+}
+requestAnimationFrame(renderScreenGeometry);
 function updatePauseButton() {
   const button = required<HTMLButtonElement>("pause");
   button.setAttribute("aria-pressed", String(paused));
@@ -424,6 +664,7 @@ function reheat() {
   required("simulation-status").textContent = "Forces settling…";
 }
 function clearSelection() {
+  closeNodeMenu(false);
   selectedId = undefined;
   selectedEdge = undefined;
   highlighted.clear();
@@ -432,6 +673,7 @@ function clearSelection() {
   updateStyles();
 }
 function selectNode(id: string) {
+  closeNodeMenu(false);
   selectedId = id;
   selectedEdge = undefined;
   highlighted = neighborhood(visible, id);
@@ -471,6 +713,16 @@ function modelConnections(id: string) {
 }
 
 function bindInspector() {
+  inspector.insertAdjacentHTML(
+    "afterbegin",
+    `<div class="inspector-toolbar"><button data-move-panel class="panel-handle" aria-label="Move selection panel. Arrow keys move; Home resets position." title="Drag to move · arrows to move · Home to reset">⠿ Selection</button>${selectedId ? '<button id="node-actions" aria-haspopup="menu" aria-controls="node-menu">Actions</button>' : ""}</div>`,
+  );
+  const actions = document.getElementById("node-actions");
+  if (actions)
+    actions.onclick = () => {
+      if (selectedId) openNodeMenu(selectedId);
+    };
+  panel.clamp();
   inspector.querySelector(".inspector-close")?.addEventListener("click", clearSelection);
   inspector.querySelectorAll<HTMLButtonElement>("[data-inspect-node]").forEach((button) => {
     button.onclick = () => selectNode(button.dataset.inspectNode!);
@@ -483,6 +735,7 @@ function bindInspector() {
   });
 }
 function selectEdge(edge: SimulationLink) {
+  closeNodeMenu(false);
   selectedEdge = edge;
   selectedId = undefined;
   highlighted = new Set([endpointId(edge.source), endpointId(edge.target)]);
@@ -504,7 +757,7 @@ function selectEdge(edge: SimulationLink) {
     .join(
       "",
     )}</div>${edge.notes ? `<p class="selection-summary">${escapeHtml(edge.notes)}</p>` : ""}<p class="muted">${edge.evidence_ids?.length ? `Evidence: ${edge.evidence_ids.map(escapeHtml).join(", ")}` : "No relation evidence supplied."}</p><button id="source-card" class="primary-button">Open source card & evidence ↗</button>`;
-  inspector.querySelector(".inspector-close")?.addEventListener("click", clearSelection);
+  bindInspector();
   required("source-card").onclick = () => void openDetail(endpointId(edge.source));
   updateStyles();
 }
@@ -602,14 +855,16 @@ async function openDetail(id: string) {
 }
 
 function reset() {
+  pins.clear();
+  hiddenNodes.clear();
+  expandedNodes.clear();
+  panel.reset();
   domainSelect.value = "all";
   relationSelect.value = "all";
   search.value = "";
   catalogSearch.value = "";
   clearSelection();
   updateGraph();
-  autoFit = true;
-  fit();
 }
 
 function validateMetadata() {
@@ -694,6 +949,7 @@ async function loadGraph() {
 function switchGraphMode(mode: "systems" | "models") {
   if (mode === graphMode) return;
   graphMode = mode;
+  expandedNodes.clear();
   clearSelection();
   hoveredId = undefined;
   visible = { nodes: [], edges: [] };
@@ -748,8 +1004,23 @@ search.addEventListener("keydown", (event) => {
 });
 document.addEventListener("pointerdown", (event) => {
   if (!(event.target as Element).closest(".search-wrap")) results.hidden = true;
+  if (!(event.target as Element).closest("#node-menu, #node-actions")) closeNodeMenu(false);
 });
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !nodeMenu.hidden) {
+    event.preventDefault();
+    closeNodeMenu();
+    return;
+  }
+  if (
+    (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) &&
+    selectedId &&
+    !document.querySelector("dialog[open]")
+  ) {
+    event.preventDefault();
+    openNodeMenu(selectedId);
+    return;
+  }
   if (
     event.key === "/" &&
     !document.querySelector("dialog[open]") &&
@@ -770,12 +1041,28 @@ required("catalog-open").onclick = () => {
 };
 required("help-open").onclick = required("legend-open").onclick = () => showDialog(helpDialog);
 domainSelect.onchange = () => {
+  expandedNodes.clear();
   updateGraph();
-  autoFit = true;
+};
+relationSelect.onchange = () => {
+  expandedNodes.clear();
+  updateGraph();
+};
+required("restore-hidden").onclick = () => {
+  hiddenNodes.clear();
+  updateGraph();
+};
+required("fit").onclick = () => {
+  autoFit = false;
+  initialFitPending = false;
   fit();
 };
-relationSelect.onchange = () => updateGraph();
-required("fit").onclick = fit;
+required("names").onclick = () => {
+  allNames = !allNames;
+  required("names").setAttribute("aria-pressed", String(allNames));
+  required("names").textContent = allNames ? "Names: all" : "Names: focus";
+  updateLabels();
+};
 required("focus").onclick = focus;
 required("reset").onclick = reset;
 required("reheat").onclick = reheat;
@@ -791,21 +1078,20 @@ required("pause").onclick = () => {
 };
 for (const mode of [2, 3] as const)
   required(`mode-${mode}`).onclick = () => {
+    if (dimensions === mode) return;
+    closeNodeMenu(false);
     dimensions = mode;
     required("mode-2").setAttribute("aria-pressed", String(mode === 2));
     required("mode-3").setAttribute("aria-pressed", String(mode === 3));
+    seedCoordinates(graph?.graphData().nodes ?? [], mode);
+    for (const node of graph?.graphData().nodes ?? []) applyPin(node, pins.get(node.id), mode);
     graph?.numDimensions(mode);
-    for (const node of graph?.graphData().nodes ?? []) {
-      if (mode === 2 || !Number.isFinite(node.z)) node.z = 0;
-      const velocity = node as SimulationNode & { vz?: number };
-      velocity.vz = 0;
-    }
     configureCamera();
     if (mode === 2) graph?.cameraPosition({ x: 0, y: 0, z: 700 }, { x: 0, y: 0, z: 0 }, 0);
     if (!paused) reheat();
     else graph?.cooldownTicks(0);
     autoFit = true;
-    fit();
+    initialFitPending = true;
   };
 reducedMotion.addEventListener("change", () => {
   if (reducedMotion.matches) {
