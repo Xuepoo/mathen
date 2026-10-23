@@ -1,0 +1,101 @@
+{
+  "id": "haskell",
+  "name": "GHC/Haskell",
+  "version_context": "GHC source commit 14656fd45e4d1cef388587dd73ee4edb037c8c4a",
+  "summary": "A non-strict, statically polymorphic functional language and the Glasgow Haskell Compiler, whose module-oriented compiler lowers Haskell through Core and STG representations into native or alternative backends.",
+  "scope": [
+    "non-strict functional language semantics",
+    "static polymorphic types and type classes",
+    "GHC compilation pipeline",
+    "Concurrent Haskell runtime capabilities"
+  ],
+  "features": [
+    {
+      "id": "non-strict-polymorphic-language",
+      "name": "Non-strict polymorphic language model",
+      "category": "language-semantics",
+      "claim_type": "fact",
+      "description": "The Haskell report describes a purely functional language with non-strict semantics, static polymorphic typing, algebraic datatypes, pattern matching, type classes, and monadic I/O.",
+      "benefits": ["Separates pure expression structure from explicit I/O effects", "Provides reusable abstractions through polymorphism and algebraic data"],
+      "costs": ["Non-strict evaluation makes resource and termination behavior less direct to predict", "Type-class overloading and lazy values add semantic machinery to compilation and runtime"] ,
+      "evidence_ids": ["haskell-report", "ghc-fixed-source"]
+    },
+    {
+      "id": "module-oriented-build",
+      "name": "Module-oriented dependency and interface build",
+      "category": "compiler-toolchain",
+      "claim_type": "fact",
+      "description": "GHC's make mode follows imports from root modules, recompiles modules that are out of date, emits object and interface files, and can compile independent modules in parallel.",
+      "benefits": ["Derives compilation order from source dependencies", "Provides reusable interface artifacts and parallel build opportunities"],
+      "costs": ["Module interfaces and dependency freshness become build-state concerns", "Parallel compilation still depends on dependency closure and available resources"],
+      "evidence_ids": ["ghc-using-doc", "ghc-driver-source"]
+    },
+    {
+      "id": "core-stg-codegen-pipeline",
+      "name": "Core, STG, and backend compilation pipeline",
+      "category": "compiler-pipeline",
+      "claim_type": "fact",
+      "description": "GHC organizes compilation into distinct phases and source modules include front-end, Haskell-to-Core, Core-to-STG, STG-to-Cmm, and backend/code-output boundaries. The user guide documents multiple code-generation backends and phase control.",
+      "benefits": ["Provides intermediate boundaries for optimization and runtime-oriented lowering", "Allows code generation to target different backend strategies"],
+      "costs": ["Each representation and lowering boundary adds invariants and maintenance cost", "Source-level behavior must remain explainable across several transformed representations"],
+      "evidence_ids": ["ghc-phases-doc", "ghc-pipeline-source"]
+    },
+    {
+      "id": "capability-based-concurrency",
+      "name": "Capability-based concurrent runtime",
+      "category": "runtime-model",
+      "claim_type": "fact",
+      "description": "GHC's runtime models physical parallelism with capabilities. The threaded runtime can run Haskell threads across multiple capabilities, and foreign calls can allow other Haskell threads to continue while the call is in progress.",
+      "benefits": ["Makes available parallel execution capacity an explicit runtime setting", "Separates Haskell-thread scheduling from the OS-thread pool used around foreign calls"],
+      "costs": ["Runtime flags and foreign-call annotations affect concurrency behavior", "Parallel evaluation introduces blackholing, scheduling, and shared-runtime state"],
+      "evidence_ids": ["ghc-concurrency-doc", "ghc-rts-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Lazy typed evaluation relation",
+      "question": "How do typed expressions, non-strict evaluation, algebraic values, and bottom relate in a Haskell program?",
+      "assumptions": ["Expressions are typed terms and evaluation may defer subterms", "Bottom represents undefined or nonterminating computation in the abstract semantics", "The view abstracts implementation-specific optimizations and runtime representation"],
+      "claim_type": "inference",
+      "evidence_ids": ["haskell-report"]
+    },
+    {
+      "model": "Module dependency directed graph",
+      "question": "How do imports, interface files, and out-of-date checks determine GHC compilation order and parallelism?",
+      "assumptions": ["Modules are vertices and imports are directed edges", "A module can be compiled when required dependencies and interfaces are available", "The view abstracts package databases, generated code, and build-system integration"],
+      "claim_type": "inference",
+      "evidence_ids": ["ghc-using-doc", "ghc-driver-source"]
+    },
+    {
+      "model": "Representation refinement chain",
+      "question": "How does GHC lower a Haskell module through Core and STG-oriented representations toward code generation?",
+      "assumptions": ["Each intermediate representation is a node in a directed refinement relation", "Lowering preserves the program properties relevant to the next compiler phase", "The view is a candidate abstraction and does not prove compiler correctness"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["ghc-phases-doc", "ghc-pipeline-source"]
+    },
+    {
+      "model": "Capability scheduling transition system",
+      "question": "How do runnable Haskell threads, capabilities, foreign calls, and runtime scheduling transitions determine concurrent execution?",
+      "assumptions": ["Capabilities are execution resources and Haskell threads are schedulable work items", "Foreign-call transitions may release a capability for other work", "The model abstracts OS scheduler behavior and does not claim a particular fairness guarantee"],
+      "claim_type": "inference",
+      "evidence_ids": ["ghc-concurrency-doc", "ghc-rts-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "non-strict-polymorphic-language", "benefits": ["Expressive pure abstractions and deferred computation"], "costs": ["Laziness and overloading complicate resource and runtime reasoning"]},
+    {"feature_id": "module-oriented-build", "benefits": ["Dependency-derived and parallel compilation"], "costs": ["Interfaces and freshness add build-state complexity"]},
+    {"feature_id": "core-stg-codegen-pipeline", "benefits": ["Specialized compiler phases and backend choices"], "costs": ["Multiple intermediate representations add invariants"]},
+    {"feature_id": "capability-based-concurrency", "benefits": ["Explicit runtime capacity for concurrent execution"], "costs": ["Scheduling, foreign calls, and blackholing complicate runtime behavior"]}
+  ],
+  "evidence": [
+    {"id": "ghc-fixed-source", "kind": "source-code", "title": "GHC source tree at fixed commit 14656fd45e4d1", "uri": "https://github.com/ghc/ghc/commit/14656fd45e4d1cef388587dd73ee4edb037c8c4a", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Fixed official repository revision used for GHC compiler and runtime provenance."},
+    {"id": "haskell-report", "kind": "official-doc", "title": "Haskell 2010 Language Report, Introduction", "uri": "https://www.haskell.org/onlinereport/haskell2010/haskellch1.html", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Language specification source for non-strict semantics, polymorphic typing, modules, algebraic data, and monadic I/O."},
+    {"id": "ghc-using-doc", "kind": "official-doc", "title": "GHC User's Guide: Using GHC", "uri": "https://ghc.gitlab.haskell.org/ghc/doc/users_guide/using.html", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Official documentation for module-oriented make mode, interfaces, dependency discovery, and parallel compilation."},
+    {"id": "ghc-phases-doc", "kind": "official-doc", "title": "GHC User's Guide: Compiler phases", "uri": "https://ghc.gitlab.haskell.org/ghc/doc/users_guide/phases.html", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Official documentation for compiler phases, intermediate outputs, and code-generation options."},
+    {"id": "ghc-concurrency-doc", "kind": "official-doc", "title": "GHC User's Guide: Concurrent Haskell and SMP parallelism", "uri": "https://ghc.gitlab.haskell.org/ghc/doc/users_guide/using-concurrent.html", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Official documentation for threaded runtime behavior, capabilities, foreign calls, and parallel execution."},
+    {"id": "ghc-driver-source", "kind": "source-code", "title": "GHC driver source at fixed commit", "uri": "https://github.com/ghc/ghc/tree/14656fd45e4d1cef388587dd73ee4edb037c8c4a/compiler/GHC/Driver", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Fixed-commit source boundary for dependency discovery and compiler pipeline orchestration."},
+    {"id": "ghc-pipeline-source", "kind": "source-code", "title": "GHC Core/STG pipeline sources at fixed commit", "uri": "https://github.com/ghc/ghc/tree/14656fd45e4d1cef388587dd73ee4edb037c8c4a/compiler/GHC", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Fixed-commit source boundary containing Haskell-to-Core, Core-to-STG, STG-to-Cmm, and backend modules."},
+    {"id": "ghc-rts-source", "kind": "source-code", "title": "GHC runtime system source at fixed commit", "uri": "https://github.com/ghc/ghc/tree/14656fd45e4d1cef388587dd73ee4edb037c8c4a/rts", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Fixed-commit source boundary for capabilities, scheduling, foreign calls, and runtime memory behavior."}
+  ],
+  "related_systems": ["rust", "ocaml", "llvm"]
+}

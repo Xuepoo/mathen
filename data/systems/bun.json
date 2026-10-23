@@ -1,0 +1,91 @@
+{
+  "id": "bun",
+  "name": "Bun",
+  "version_context": "commit 5c6d4e24cd185d5bef8d98e7f1f1e3ef10ac163f",
+  "summary": "An all-in-one JavaScript and TypeScript toolkit combining a JavaScriptCore-powered runtime with a package manager, test runner, bundler, transpiler, and script runner.",
+  "scope": [
+    "JavaScript and TypeScript runtime",
+    "event-loop execution",
+    "module and package resolution",
+    "integrated developer tooling"
+  ],
+  "features": [
+    {
+      "id": "integrated-toolkit",
+      "name": "Integrated runtime and developer toolkit",
+      "category": "platform-model",
+      "claim_type": "fact",
+      "description": "Bun ships a single executable that includes a runtime, package manager, test runner, bundler, script runner, and related TypeScript tooling rather than presenting these as unrelated command-line products.",
+      "benefits": ["Provides a consistent executable and workflow across development stages", "Allows package, test, bundle, and execution operations to share platform code"],
+      "costs": ["The executable and release surface spans multiple subsystems", "Tool behavior is coupled to the runtime's compatibility and filesystem models"],
+      "evidence_ids": ["bun-overview", "bun-fixed-source"]
+    },
+    {
+      "id": "javascriptcore-runtime",
+      "name": "JavaScriptCore-powered runtime with source transpilation",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Bun documents its runtime as powered by JavaScriptCore and able to execute TypeScript, JSX, and TSX by transpiling them before JavaScript execution. The fixed source contains separate runtime and JavaScriptCore integration components.",
+      "benefits": ["Executes common source formats without a separate user-invoked transpiler", "Separates JavaScript execution from source-format lowering"],
+      "costs": ["Transpilation adds source-compatibility and diagnostic behavior to runtime execution", "JavaScriptCore-specific behavior remains part of the runtime contract"],
+      "evidence_ids": ["bun-overview", "bun-runtime-source"]
+    },
+    {
+      "id": "event-loop-and-host-apis",
+      "name": "Event-loop and host API integration",
+      "category": "runtime-boundary",
+      "claim_type": "fact",
+      "description": "The fixed Bun source contains an event_loop subsystem and runtime components for timers, networking, sockets, HTTP, and Node-compatible APIs, making asynchronous host operations part of the runtime implementation boundary.",
+      "benefits": ["Integrates asynchronous host operations with JavaScript execution", "Provides web-standard and Node-oriented host APIs within one runtime"],
+      "costs": ["Many host subsystems must coordinate scheduling and lifetime state", "Compatibility behavior is broader than ECMAScript language execution alone"],
+      "evidence_ids": ["bun-overview", "bun-event-loop-source"]
+    },
+    {
+      "id": "module-and-package-compatibility",
+      "name": "ESM, CommonJS, and package-manager compatibility",
+      "category": "module-model",
+      "claim_type": "fact",
+      "description": "Bun recommends ECMAScript modules while supporting CommonJS, Node-style resolution, package scripts, workspaces, and a package manager intended for existing Node.js projects.",
+      "benefits": ["Bridges modern module syntax and the existing npm package ecosystem", "Connects dependency installation, resolution, and execution workflows"],
+      "costs": ["Multiple module and resolution conventions increase edge cases", "Ongoing Node compatibility work creates a moving compatibility boundary"],
+      "evidence_ids": ["bun-overview", "bun-node-compat"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Toolkit composition graph",
+      "question": "How do runtime, package, test, bundling, and transpilation components compose around a shared executable boundary?",
+      "assumptions": ["Toolkit capabilities are vertices and shared source, filesystem, and process boundaries are edges", "The graph describes architectural composition rather than implementation ownership", "The view abstracts release packaging and platform-specific build details"],
+      "claim_type": "inference",
+      "evidence_ids": ["bun-overview", "bun-fixed-source"]
+    },
+    {
+      "model": "Source-to-execution refinement pipeline",
+      "question": "How does Bun transform TypeScript, JSX, or JavaScript source into JavaScriptCore-executed code?",
+      "assumptions": ["Source formats are input states and executable JavaScript is a later state", "Transpilation and runtime dispatch are directed transitions", "The model abstracts JavaScriptCore internals and source-map diagnostics"],
+      "claim_type": "inference",
+      "evidence_ids": ["bun-overview", "bun-runtime-source"]
+    },
+    {
+      "model": "Module-resolution compatibility graph",
+      "question": "How do ESM, CommonJS, Node-style resolution, and package-manager outputs determine executable module boundaries?",
+      "assumptions": ["Packages and modules are graph nodes with typed resolution edges", "Installation and runtime resolution are related but distinct transitions", "The graph does not claim complete Node compatibility or a fixed resolution order for every case"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["bun-overview", "bun-node-compat"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "integrated-toolkit", "benefits": ["One executable spans common JavaScript workflows"], "costs": ["Broad subsystem coupling increases maintenance surface"]},
+    {"feature_id": "javascriptcore-runtime", "benefits": ["Fast direct execution with built-in source-format support"], "costs": ["Transpiler and engine semantics are coupled to runtime behavior"]},
+    {"feature_id": "event-loop-and-host-apis", "benefits": ["Unified asynchronous host integration"], "costs": ["Host API and scheduling state expand the runtime boundary"]},
+    {"feature_id": "module-and-package-compatibility", "benefits": ["Practical interoperability with existing JavaScript packages"], "costs": ["Multiple compatibility modes increase resolution complexity"]}
+  ],
+  "evidence": [
+    {"id": "bun-fixed-source", "kind": "source-code", "title": "Bun source tree at fixed commit 5c6d4e24cd18", "uri": "https://github.com/oven-sh/bun/commit/5c6d4e24cd185d5bef8d98e7f1f1e3ef10ac163f", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Fixed official repository revision used for Bun architecture provenance."},
+    {"id": "bun-overview", "kind": "official-doc", "title": "Bun overview and runtime documentation", "uri": "https://bun.sh/docs", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Official documentation for the all-in-one toolkit, JavaScriptCore runtime, TypeScript/JSX execution, package manager, test runner, and bundler."},
+    {"id": "bun-runtime-source", "kind": "source-code", "title": "Bun runtime source at fixed commit", "uri": "https://github.com/oven-sh/bun/tree/5c6d4e24cd185d5bef8d98e7f1f1e3ef10ac163f/src/runtime", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Fixed-commit source boundary for runtime, JavaScriptCore integration, and host APIs."},
+    {"id": "bun-event-loop-source", "kind": "source-code", "title": "Bun event-loop source at fixed commit", "uri": "https://github.com/oven-sh/bun/tree/5c6d4e24cd185d5bef8d98e7f1f1e3ef10ac163f/src/event_loop", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Fixed-commit source boundary for event-loop task and timer components."},
+    {"id": "bun-node-compat", "kind": "official-doc", "title": "Bun Node.js compatibility", "uri": "https://bun.sh/docs/runtime/nodejs-compat", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Official documentation for Node-compatible globals, modules, and ongoing compatibility scope."}
+  ],
+  "related_systems": ["node", "v8", "deno"]
+}

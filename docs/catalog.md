@@ -91,6 +91,10 @@ These entries are already present in the repository at different review levels:
 | `lua` | Lua | language runtime | `reviewed` | Compare embeddable VM state, coroutines, and extension boundaries |
 | `node` | Node.js | JavaScript runtime | `reviewed` | Compare event-loop scheduling, module loading, and native extension boundaries |
 | `deno` | Deno | JavaScript runtime | `reviewed` | Compare permission-scoped execution and module graph boundaries |
+| `tokio` | Tokio | asynchronous Rust runtime | `reviewed` | Compare runtime drivers, task schedulers, readiness wakeups, and lifecycle boundaries using fixed-commit evidence |
+| `quickjs` | QuickJS | JavaScript engine | `reviewed` | Compare runtime/context isolation, stack bytecode, reference-counted memory, and C embedding using fixed-commit evidence |
+| `bun` | Bun | JavaScript runtime and toolkit | `reviewed` | Compare JavaScriptCore execution, event-loop integration, module compatibility, and integrated tooling using fixed-commit evidence |
+| `haskell` | GHC/Haskell | language and compiler | `reviewed` | Compare non-strict semantics, module builds, Core/STG lowering, and capability scheduling using fixed-commit evidence |
 | `v8` | V8 | JavaScript engine | `reviewed` | Compare isolate/context state, handles, and managed heap boundaries |
 | `chromium` | Chromium | browser engine | `reviewed` | Compare browser/renderer process isolation, Blink parsing and rendering, Mojo IPC, partitioned storage/networking, and sandbox failure boundaries using fixed-commit evidence |
 | `firefox` | Firefox | browser engine | `reviewed` | Compare Gecko process isolation, DOM/style/layout/WebRender stages, IPDL IPC, storage/networking, and sandbox/crash boundaries using fixed-commit evidence |
@@ -203,7 +207,7 @@ identifiers, not claims that the projects share the same architecture.
 | `ruby` | Ruby | language runtime | `reviewed` | Compare dynamic object dispatch, VM frames, GC, and the C extension boundary using fixed-commit evidence |
 | `erlang` | Erlang/OTP | `P0` | Actor processes, supervision trees, and fault tolerance |
 | `elixir` | Elixir | `P1` | BEAM abstractions, message passing, and supervision |
-| `haskell` | GHC/Haskell | `P1` | Laziness, type classes, purity, and compiler pipeline |
+| `haskell` | GHC/Haskell | `reviewed` | Compare non-strict semantics, module builds, Core/STG lowering, and capability scheduling using fixed-commit evidence |
 | `ocaml` | OCaml | `P2` | Algebraic types, modules, and native compilation |
 | `zig` | Zig | language toolchain | `reviewed` | Compare explicit allocation, comptime specialization, typed errors, and cross-target tooling using fixed-revision evidence |
 | `wasm` | WebAssembly | portable instruction format | `reviewed` | Compare validation, store/module instances, structured execution, and bounded linear memory using fixed-revision evidence |
