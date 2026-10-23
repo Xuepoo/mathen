@@ -91,6 +91,8 @@ These entries are already present in the repository at different review levels:
 | `node` | Node.js | JavaScript runtime | `reviewed` | Compare event-loop scheduling, module loading, and native extension boundaries |
 | `deno` | Deno | JavaScript runtime | `reviewed` | Compare permission-scoped execution and module graph boundaries |
 | `v8` | V8 | JavaScript engine | `reviewed` | Compare isolate/context state, handles, and managed heap boundaries |
+| `chromium` | Chromium | browser engine | `reviewed` | Compare browser/renderer process isolation, Blink parsing and rendering, Mojo IPC, partitioned storage/networking, and sandbox failure boundaries using fixed-commit evidence |
+| `firefox` | Firefox | browser engine | `reviewed` | Compare Gecko process isolation, DOM/style/layout/WebRender stages, IPDL IPC, storage/networking, and sandbox/crash boundaries using fixed-commit evidence |
 | `envoy` | Envoy | network proxy | `reviewed` | Compare worker dispatchers, filter chains, and control/data plane propagation using fixed-commit evidence |
 | `haproxy` | HAProxy | network proxy | `reviewed` | Compare polling, task scheduling, layered connection state, and reload topology using fixed-commit evidence |
 | `caddy` | Caddy | web server | `reviewed` | Compare module lifecycle, atomic configuration swaps, and automatic HTTPS using fixed-commit evidence |
@@ -190,6 +192,8 @@ identifiers, not claims that the projects share the same architecture.
 | `rustc` | rustc | compiler infrastructure | `reviewed` | Compare typed IR lowering, MIR ownership analysis, query compilation, and LLVM backend boundaries using fixed-revision evidence |
 | `cpython` | CPython | `P1` | Bytecode VM, reference counting, and extension boundary |
 | `v8` | V8 | `P1` | JIT compilation, hidden classes, and managed heap |
+| `chromium` | Chromium | `P0` | Browser/renderer process isolation, Blink pipeline, Mojo, partitioned services, and sandboxing |
+| `firefox` | Firefox | `P0` | Gecko process hierarchy, DOM/layout/WebRender, IPDL, storage/networking, and sandboxing |
 | `luajit` | LuaJIT | language runtime | `reviewed` | Compare interpreter/tracing-JIT transitions, FFI, and embeddable runtime boundaries using fixed-revision evidence |
 | `tree-sitter` | Tree-sitter | `P1` | Incremental parsing and concrete syntax trees |
 | `lsp` | Language Server Protocol | `reviewed` | Capability negotiation, versioned document synchronization, cancellation, and protocol evolution |

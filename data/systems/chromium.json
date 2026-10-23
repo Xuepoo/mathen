@@ -1,0 +1,152 @@
+{
+  "id": "chromium",
+  "name": "Chromium",
+  "version_context": "commit 91842753a722bf089936e809d899a0af64aa2176",
+  "summary": "A multi-process browser engine that isolates browser services and web content, turns Blink document work into composited output, and connects privileged services through Mojo while applying sandbox and failure boundaries.",
+  "scope": [
+    "browser and renderer processes",
+    "Blink parsing, layout, and compositing",
+    "Mojo IPC and service boundaries",
+    "network and storage partitions",
+    "sandboxing and process failure"
+  ],
+  "features": [
+    {
+      "id": "browser-renderer-process-isolation",
+      "name": "Browser, renderer, and service process isolation",
+      "category": "isolation-model",
+      "claim_type": "fact",
+      "description": "Chromium separates browser coordination from renderer execution and uses additional processes for selected services. The process model makes web content a failure and privilege boundary rather than an in-process browser extension.",
+      "benefits": [
+        "Limits compromised or crashed web content to a process boundary",
+        "Allows browser-owned services and renderers to evolve independently"
+      ],
+      "costs": [
+        "Process startup, memory, and cross-process coordination add overhead",
+        "A feature must define which process owns authority and lifecycle"
+      ],
+      "evidence_ids": ["chromium-process-model-doc", "chromium-browser-source", "chromium-renderer-source"]
+    },
+    {
+      "id": "blink-document-to-compositor-pipeline",
+      "name": "Blink document parsing, layout, and compositor pipeline",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "Blink source contains distinct parser, layout, paint, and compositing stages that transform web input into a renderable layer tree. The renderer process coordinates these stages while compositor code consumes derived rendering state.",
+      "benefits": [
+        "Separates document interpretation from geometry and display scheduling",
+        "Provides derived rendering state that can be composited independently"
+      ],
+      "costs": [
+        "Invalidation and synchronization across stages make rendering state complex",
+        "Layout, paint, and compositor work can consume substantial CPU and memory"
+      ],
+      "evidence_ids": ["chromium-parser-source", "chromium-layout-source", "chromium-compositor-source"]
+    },
+    {
+      "id": "mojo-interface-mediated-ipc",
+      "name": "Mojo interface-mediated IPC",
+      "category": "communication-model",
+      "claim_type": "fact",
+      "description": "Chromium uses Mojo interfaces and message pipes to define typed asynchronous communication between processes and services. Browser and renderer code bind interfaces to task-runner-owned implementations rather than sharing arbitrary process memory.",
+      "benefits": [
+        "Makes authority and communication contracts explicit at service boundaries",
+        "Supports asynchronous calls and independently hosted implementations"
+      ],
+      "costs": [
+        "Interface versioning, serialization, and disconnect handling become protocol obligations",
+        "Cross-process calls add latency and failure states"
+      ],
+      "evidence_ids": ["chromium-mojo-doc", "chromium-browser-source", "chromium-renderer-source"]
+    },
+    {
+      "id": "partitioned-network-storage-services",
+      "name": "Partitioned network and storage services",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "Chromium centralizes network and browser storage behind browser-side service and partition boundaries. Network requests and storage access are associated with browser contexts such as profiles, storage partitions, and site data rather than being unrestricted renderer capabilities.",
+      "benefits": [
+        "Centralizes policy, caching, persistence, and network authority",
+        "Allows site or profile boundaries to constrain state sharing"
+      ],
+      "costs": [
+        "Partition keys and service ownership complicate cache and storage behavior",
+        "Renderer-to-service round trips affect latency and lifecycle handling"
+      ],
+      "evidence_ids": ["chromium-network-source", "chromium-storage-source", "chromium-process-model-doc"]
+    },
+    {
+      "id": "sandboxed-process-failure-boundaries",
+      "name": "Sandboxed process and failure boundaries",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Chromium applies sandbox restrictions to processes handling less-trusted content and treats process launch, IPC disconnection, crash, and restart as explicit lifecycle conditions. The sandbox reduces direct operating-system authority but requires brokered access through trusted processes.",
+      "benefits": [
+        "Reduces the authority available after a renderer or service compromise",
+        "Contains selected crashes and allows the browser to observe process loss"
+      ],
+      "costs": [
+        "Brokered operations and sandbox policy maintenance add implementation complexity",
+        "A process failure can invalidate in-flight requests and derived rendering state"
+      ],
+      "evidence_ids": ["chromium-security-doc", "chromium-process-model-doc", "chromium-browser-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Labeled process and capability graph",
+      "question": "Which browser, renderer, and service processes may communicate, and which authority is available across each boundary?",
+      "assumptions": [
+        "Processes are nodes and Mojo interfaces are labeled communication edges",
+        "Sandbox policy is modeled as an authority restriction on process nodes",
+        "The graph abstracts operating-system scheduler details and implementation-specific broker rules"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["chromium-process-model-doc", "chromium-mojo-doc", "chromium-security-doc"]
+    },
+    {
+      "model": "Rendering pipeline transition system",
+      "question": "How do parser, style, layout, paint, and compositor transitions transform document input into displayable output?",
+      "assumptions": [
+        "Each stage consumes a representation produced by an earlier stage",
+        "Invalidation and scheduling are represented as labeled transitions",
+        "GPU driver behavior and pixel-level equivalence are outside the model"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["chromium-parser-source", "chromium-layout-source", "chromium-compositor-source"]
+    },
+    {
+      "model": "Partition-keyed resource ownership graph",
+      "question": "How do profiles, sites, storage partitions, network contexts, and renderer requests determine state ownership and sharing?",
+      "assumptions": [
+        "Partition keys label resource and service ownership edges",
+        "A renderer request is an input to a browser-owned service rather than direct storage authority",
+        "The view does not claim that partitioning alone proves complete privacy isolation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["chromium-network-source", "chromium-storage-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "browser-renderer-process-isolation", "benefits": ["Fault and privilege separation for web content"], "costs": ["Process and lifecycle coordination overhead"]},
+    {"feature_id": "blink-document-to-compositor-pipeline", "benefits": ["Independent document and display stages"], "costs": ["Invalidation and derived-state complexity"]},
+    {"feature_id": "mojo-interface-mediated-ipc", "benefits": ["Explicit typed service contracts"], "costs": ["Serialization, versioning, and disconnect handling"]},
+    {"feature_id": "partitioned-network-storage-services", "benefits": ["Centralized policy and constrained state sharing"], "costs": ["Partition and round-trip complexity"]},
+    {"feature_id": "sandboxed-process-failure-boundaries", "benefits": ["Reduced post-compromise authority and contained failures"], "costs": ["Broker policy and recovery complexity"]}
+  ],
+  "evidence": [
+    {"id": "chromium-repository-commit", "kind": "source-code", "title": "Chromium source at fixed commit 91842753a722", "uri": "https://github.com/chromium/chromium/commit/91842753a722bf089936e809d899a0af64aa2176", "accessed": "2026-10-23", "notes": "Official Chromium repository revision resolved from the main branch."},
+    {"id": "chromium-process-model-doc", "kind": "official-doc", "title": "Chromium multi-process architecture", "uri": "https://www.chromium.org/developers/design-documents/multi-process-architecture", "accessed": "2026-10-23", "notes": "Official Chromium architecture documentation for browser, renderer, and process isolation boundaries."},
+    {"id": "chromium-mojo-doc", "kind": "official-doc", "title": "Chromium Mojo documentation", "uri": "https://chromium.googlesource.com/chromium/src/+/91842753a722bf089936e809d899a0af64aa2176/docs/mojo_and_services.md", "accessed": "2026-10-23", "notes": "Pinned Chromium documentation for Mojo interfaces and service communication."},
+    {"id": "chromium-threading-doc", "kind": "official-doc", "title": "Threading and tasks in Chrome", "uri": "https://chromium.googlesource.com/chromium/src/+/91842753a722bf089936e809d899a0af64aa2176/docs/threading_and_tasks.md", "accessed": "2026-10-23", "notes": "Pinned Chromium documentation for task queues, sequences, IPC threads, and process concurrency."},
+    {"id": "chromium-security-doc", "kind": "official-doc", "title": "Chromium security overview", "uri": "https://www.chromium.org/Home/chromium-security/", "accessed": "2026-10-23", "notes": "Official Chromium security documentation for sandboxing and defense in depth."},
+    {"id": "chromium-browser-source", "kind": "source-code", "title": "Chromium browser main loop at fixed commit", "uri": "https://github.com/chromium/chromium/blob/91842753a722bf089936e809d899a0af64aa2176/content/browser/browser_main_loop.cc", "accessed": "2026-10-23", "notes": "Pinned source for browser-process initialization and service/thread lifecycle."},
+    {"id": "chromium-renderer-source", "kind": "source-code", "title": "Chromium renderer thread at fixed commit", "uri": "https://github.com/chromium/chromium/blob/91842753a722bf089936e809d899a0af64aa2176/content/renderer/render_thread_impl.cc", "accessed": "2026-10-23", "notes": "Pinned source for renderer initialization, task execution, and renderer-side service setup."},
+    {"id": "chromium-parser-source", "kind": "source-code", "title": "Blink HTML parser at fixed commit", "uri": "https://github.com/chromium/chromium/blob/91842753a722bf089936e809d899a0af64aa2176/third_party/blink/renderer/core/html/parser/html_document_parser.cc", "accessed": "2026-10-23", "notes": "Pinned Blink source for document parsing and parser-driven document updates."},
+    {"id": "chromium-layout-source", "kind": "source-code", "title": "Blink layout object at fixed commit", "uri": "https://github.com/chromium/chromium/blob/91842753a722bf089936e809d899a0af64aa2176/third_party/blink/renderer/core/layout/layout_object.cc", "accessed": "2026-10-23", "notes": "Pinned Blink source for layout object state and geometry lifecycle."},
+    {"id": "chromium-compositor-source", "kind": "source-code", "title": "Chromium compositor tree at fixed commit", "uri": "https://github.com/chromium/chromium/blob/91842753a722bf089936e809d899a0af64aa2176/cc/trees/layer_tree_host_impl.cc", "accessed": "2026-10-23", "notes": "Pinned source for compositor-side layer-tree activation and rendering state."},
+    {"id": "chromium-network-source", "kind": "source-code", "title": "Chromium network service at fixed commit", "uri": "https://github.com/chromium/chromium/blob/91842753a722bf089936e809d899a0af64aa2176/services/network/network_service.cc", "accessed": "2026-10-23", "notes": "Pinned source for browser-owned network service lifecycle and request authority."},
+    {"id": "chromium-storage-source", "kind": "source-code", "title": "Chromium storage partition at fixed commit", "uri": "https://github.com/chromium/chromium/blob/91842753a722bf089936e809d899a0af64aa2176/content/browser/storage_partition_impl.cc", "accessed": "2026-10-23", "notes": "Pinned source for storage-partition ownership and browser-side storage services."}
+  ],
+  "related_systems": ["electron", "playwright", "v8", "webgl"]
+}
