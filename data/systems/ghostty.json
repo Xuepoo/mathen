@@ -1,0 +1,303 @@
+{
+  "id": "ghostty",
+  "name": "Ghostty",
+  "version_context": "commit 08a9518340e19487bd5fdf96963583fb32f0c41f",
+  "summary": "A native, Zig-based terminal emulator and embeddable VT library that composes PTY processes, parser/screen state, GPU renderer backends, input routing, and configurable surface/runtime boundaries.",
+  "scope": [
+    "PTY and child process",
+    "terminal parser, screen, pages, and selection",
+    "renderer and graphics backends",
+    "keyboard, mouse, paste, and events",
+    "configuration, runtime, and surface authority"
+  ],
+  "features": [
+    {
+      "id": "pty-process-boundary",
+      "name": "PTY and child-process boundary",
+      "category": "process-model",
+      "claim_type": "fact",
+      "description": "Each native-app Surface owns a PTY session. The Exec backend starts and stops the subprocess and supplies a PTY read thread to Termio; Surface separately owns terminal I/O and renderer thread managers. The application runtime decides whether a surface appears as a window, tab, or split. These native-app process responsibilities are distinct from the embeddable VT library.",
+      "benefits": [
+        "Provides native shell execution with explicit PTY ownership",
+        "Keeps process lifecycle separate from terminal rendering state"
+      ],
+      "costs": [
+        "PTY and child behavior vary across supported operating systems",
+        "Each surface consumes process, file-descriptor, and buffer resources"
+      ],
+      "evidence_ids": ["ghostty-pty-source", "ghostty-exec-source", "ghostty-surface-source"]
+    },
+    {
+      "id": "terminal-screen-parser-state",
+      "name": "Terminal parser, screen, and selection state",
+      "category": "terminal-model",
+      "claim_type": "fact",
+      "description": "Ghostty separates terminal parsing, screen/page storage, cursor, selection, and protocol-specific state into reusable Zig modules, including a C-facing VT library surface.",
+      "benefits": [
+        "Makes terminal emulation reusable by the native app and embeddable library",
+        "Supports explicit screen, page, selection, and parser state transitions"
+      ],
+      "costs": [
+        "Scrollback, images, and page storage consume memory",
+        "Protocol behavior and ABI-facing state require compatibility discipline"
+      ],
+      "evidence_ids": [
+        "ghostty-terminal-source",
+        "ghostty-screen-source",
+        "ghostty-parser-source",
+        "ghostty-vt-header"
+      ]
+    },
+    {
+      "id": "renderer-backend-composition",
+      "name": "Renderer and graphics backend composition",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "Ghostty selects one graphics backend at compile time, Metal or OpenGL, for a shared generic renderer. Surface owns a renderer thread and shared renderer state; that state requires a mutex for access and includes demand-aware locking to prevent sustained PTY parsing from starving frame snapshots.",
+      "benefits": [
+        "Supports native GPU backends while sharing terminal state",
+        "Separates renderer resources from terminal parser state"
+      ],
+      "costs": [
+        "Backend and driver capabilities differ by platform",
+        "GPU resources and frame scheduling affect latency and memory"
+      ],
+      "evidence_ids": [
+        "ghostty-renderer-source",
+        "ghostty-render-state-source",
+        "ghostty-surface-source"
+      ]
+    },
+    {
+      "id": "input-event-routing",
+      "name": "Keyboard, mouse, paste, and event routing",
+      "category": "input-model",
+      "claim_type": "fact",
+      "description": "Ghostty parses keyboard and mouse events, applies configurable bindings and paste policy, and routes resulting actions or encoded terminal input through surface and runtime event boundaries.",
+      "benefits": [
+        "Makes terminal input and user actions explicit state transitions",
+        "Allows GUI events and terminal protocol input to share one surface model"
+      ],
+      "costs": [
+        "IME, keyboard layouts, and platform event semantics vary",
+        "Paste and input policy cross a user-interface/security boundary"
+      ],
+      "evidence_ids": [
+        "ghostty-input-source",
+        "ghostty-surface-source",
+        "ghostty-config-source",
+        "ghostty-key-event",
+        "ghostty-mouse-event"
+      ]
+    },
+    {
+      "id": "config-and-runtime-authority",
+      "name": "Configuration, runtime, and surface authority",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Ghostty configures terminal-program clipboard reads and writes separately: at this revision reads default to asking the user and writes to allow. Paste protection requests confirmation for potentially unsafe text, with bracketed paste treated as safe by default. Separate byte/line scrollback limits and an OSC 5522 clipboard-write byte limit bound retained data; these policies do not sandbox the child process.",
+      "benefits": [
+        "Makes clipboard access and paste confirmation explicit policy decisions",
+        "Bounds retained scrollback and buffered clipboard transactions with configurable limits"
+      ],
+      "costs": [
+        "Allowing clipboard reads exposes host data to terminal programs",
+        "Relaxing resource limits trades bounded memory use for larger retained data"
+      ],
+      "evidence_ids": ["ghostty-config-source", "ghostty-runtime-source", "ghostty-readme"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "PTY-to-frame transition system",
+      "question": "How does child-process output transition through VT parsing and screen state into renderer frames and surface presentation?",
+      "assumptions": [
+        "PTY output is ordered input to the parser",
+        "Screen/page state is the renderer input state",
+        "Frame scheduling and presentation are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["ghostty-pty-source", "ghostty-terminal-source", "ghostty-renderer-source"]
+    },
+    {
+      "model": "Surface resource containment graph",
+      "question": "How do runtime windows or splits host surfaces that own PTY sessions, input state, and renderer resources?",
+      "assumptions": [
+        "A surface is a lifecycle boundary",
+        "Terminal and renderer state are distinct resource classes",
+        "The model abstracts platform-specific GUI ownership"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["ghostty-surface-source", "ghostty-runtime-source", "ghostty-pty-source"]
+    },
+    {
+      "model": "Configuration-to-authority relation",
+      "question": "Which terminal requests can read or write host clipboard data, and which retained buffers are constrained by configuration?",
+      "assumptions": [
+        "Clipboard requests pass through configured allow, ask, or deny decisions",
+        "Resource limits bound selected retained buffers rather than total process memory",
+        "The relation explains policy and does not prove child-process isolation"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["ghostty-config-source", "ghostty-runtime-source", "ghostty-input-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "pty-process-boundary",
+      "benefits": ["Provides native shell execution with explicit PTY ownership"],
+      "costs": ["PTY and child behavior vary across supported operating systems"]
+    },
+    {
+      "feature_id": "terminal-screen-parser-state",
+      "benefits": ["Makes terminal emulation reusable by the native app and embeddable library"],
+      "costs": ["Scrollback, images, and page storage consume memory"]
+    },
+    {
+      "feature_id": "renderer-backend-composition",
+      "benefits": ["Supports native GPU backends while sharing terminal state"],
+      "costs": ["Backend and driver capabilities differ by platform"]
+    },
+    {
+      "feature_id": "input-event-routing",
+      "benefits": ["Makes terminal input and user actions explicit state transitions"],
+      "costs": ["IME, keyboard layouts, and platform event semantics vary"]
+    },
+    {
+      "feature_id": "config-and-runtime-authority",
+      "benefits": ["Makes clipboard access and paste confirmation explicit policy decisions"],
+      "costs": ["Allowing clipboard reads exposes host data to terminal programs"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Ghostty source at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/commit/08a9518340e19487bd5fdf96963583fb32f0c41f",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "ghostty-pty-source",
+      "kind": "source-code",
+      "title": "Ghostty PTY source at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/pty.zig",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for platform PTY allocation, size/mode operations, and process information. Subprocess startup is in Exec."
+    },
+    {
+      "id": "ghostty-terminal-source",
+      "kind": "source-code",
+      "title": "Ghostty terminal coordinator at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/terminal/Terminal.zig",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for terminal state coordination and parser/screen integration."
+    },
+    {
+      "id": "ghostty-screen-source",
+      "kind": "source-code",
+      "title": "Ghostty screen source at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/terminal/Screen.zig",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for screen, cursor, page, and selection-facing state."
+    },
+    {
+      "id": "ghostty-parser-source",
+      "kind": "source-code",
+      "title": "Ghostty terminal parser at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/terminal/Parser.zig",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for escape/control sequence parsing and terminal actions."
+    },
+    {
+      "id": "ghostty-vt-header",
+      "kind": "source-code",
+      "title": "Ghostty VT public terminal header at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/include/ghostty/vt/terminal.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed public header for the embeddable VT terminal boundary."
+    },
+    {
+      "id": "ghostty-renderer-source",
+      "kind": "source-code",
+      "title": "Ghostty renderer source at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/renderer.zig",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for renderer state and platform graphics integration."
+    },
+    {
+      "id": "ghostty-surface-source",
+      "kind": "source-code",
+      "title": "Ghostty application surface source at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/Surface.zig",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for surface lifecycle, terminal attachment, and GUI integration."
+    },
+    {
+      "id": "ghostty-input-source",
+      "kind": "source-code",
+      "title": "Ghostty input source at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/input.zig",
+      "accessed": "2026-10-23",
+      "notes": "Fixed input module exports keyboard/mouse event encoders, paste validation, and bindings; Surface implements event routing."
+    },
+    {
+      "id": "ghostty-key-event",
+      "kind": "source-code",
+      "title": "Ghostty key event header at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/include/ghostty/vt/key/event.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed public header for keyboard event representation."
+    },
+    {
+      "id": "ghostty-mouse-event",
+      "kind": "source-code",
+      "title": "Ghostty mouse event header at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/include/ghostty/vt/mouse/event.h",
+      "accessed": "2026-10-23",
+      "notes": "Fixed public header for mouse event representation."
+    },
+    {
+      "id": "ghostty-config-source",
+      "kind": "source-code",
+      "title": "Ghostty configuration source at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/config/Config.zig",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for configuration loading, validation, and behavior policy."
+    },
+    {
+      "id": "ghostty-runtime-source",
+      "kind": "source-code",
+      "title": "Ghostty runtime source at fixed commit",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/apprt/runtime.zig",
+      "accessed": "2026-10-23",
+      "notes": "Fixed compile-time selection of the application runtime; Surface holds runtime app/surface references."
+    },
+    {
+      "id": "ghostty-exec-source",
+      "kind": "source-code",
+      "title": "Ghostty subprocess and PTY read-thread backend",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/termio/Exec.zig",
+      "accessed": "2026-10-23",
+      "notes": "Exec module contract and threadEnter implement subprocess startup/teardown and forwarding PTY output to Termio."
+    },
+    {
+      "id": "ghostty-render-state-source",
+      "kind": "source-code",
+      "title": "Ghostty shared renderer state and synchronization",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/src/renderer/State.zig",
+      "accessed": "2026-10-23",
+      "notes": "Shared-state mutex contract, lockDemand/unlockDemand, and yieldToDemand document the parser/frame snapshot contention boundary."
+    },
+    {
+      "id": "ghostty-readme",
+      "kind": "official-doc",
+      "title": "Ghostty official project documentation",
+      "uri": "https://github.com/ghostty-org/ghostty/blob/08a9518340e19487bd5fdf96963583fb32f0c41f/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for native GUI and embeddable library scope."
+    }
+  ],
+  "related_systems": []
+}

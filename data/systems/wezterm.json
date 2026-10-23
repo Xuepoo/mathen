@@ -1,0 +1,302 @@
+{
+  "id": "wezterm",
+  "name": "WezTerm",
+  "version_context": "commit e2a98e1b8af156988ad0ac778658ac27b60a55fb",
+  "summary": "A Rust terminal emulator and multiplexer that connects PTY-backed execution domains to terminal parser/screen state, pane/tab/workspace topology, GPU windows, configurable input, and scriptable control surfaces.",
+  "scope": [
+    "PTY domains and child processes",
+    "terminal parser and screen state",
+    "multiplexer panes, tabs, windows, and workspaces",
+    "GPU window rendering",
+    "keyboard, mouse, clipboard, scripting, and control boundaries"
+  ],
+  "features": [
+    {
+      "id": "pty-domain-lifecycle",
+      "name": "PTY domains and child-process lifecycle",
+      "category": "process-model",
+      "claim_type": "fact",
+      "description": "WezTerm creates local or remote execution domains and attaches panes to PTY-backed child processes. For pane output the mux uses a blocking PTY reader thread, a socket pair feeding a parser thread, and action delivery to the mux thread. Configured parser buffers and terminal scrollback are distinct resource budgets; pane exit behavior determines whether an ended process leaves a visible pane.",
+      "benefits": [
+        "Supports local, SSH, WSL, and other execution domains behind a common pane model",
+        "Makes child process state visible to mux and GUI layers"
+      ],
+      "costs": [
+        "Remote domains add transport, authentication, and failure modes",
+        "PTY, process, and domain resources require coordinated teardown"
+      ],
+      "evidence_ids": ["wezterm-pty-source", "wezterm-mux-source", "wezterm-ssh-source"]
+    },
+    {
+      "id": "terminal-parser-screen-state",
+      "name": "Terminal parser and screen state",
+      "category": "terminal-model",
+      "claim_type": "fact",
+      "description": "The term library parses terminal output and maintains screen, cursor, keyboard, mouse, image, and capability state that panes expose to renderers and input handlers.",
+      "benefits": [
+        "Centralizes terminal semantics for GUI and multiplexed panes",
+        "Supports terminal capability negotiation and rich protocol state"
+      ],
+      "costs": [
+        "Terminal compatibility state is broad and protocol-sensitive",
+        "Scrollback, images, and pane histories consume memory"
+      ],
+      "evidence_ids": ["wezterm-term-source", "wezterm-terminal-doc"]
+    },
+    {
+      "id": "multiplexer-pane-tab-workspace",
+      "name": "Multiplexer pane/tab/workspace composition",
+      "category": "session-model",
+      "claim_type": "fact",
+      "description": "The mux layer composes domains, windows, tabs, panes, workspaces, and clients. The default local domain lives with the GUI; separately configured Unix or SSH mux-server domains permit attachment independently of that GUI. Multiplexed SSH requires a compatible remote WezTerm daemon and differs from an ordinary SSH terminal connection.",
+      "benefits": [
+        "Provides persistent multi-pane organization and remote/client attachment",
+        "Separates session topology from GUI presentation"
+      ],
+      "costs": [
+        "Topology and attachment state increase lifecycle and synchronization complexity",
+        "A mux server creates long-lived processes and resource ownership questions"
+      ],
+      "evidence_ids": ["wezterm-mux-source", "wezterm-mux-pane-source", "wezterm-multiplexing-doc"]
+    },
+    {
+      "id": "gpu-window-rendering-boundary",
+      "name": "GPU window rendering boundary",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "The GUI terminal window obtains renderable pane content and paints cells, glyphs, selections, and decorations through a GPU-backed presentation path.",
+      "benefits": [
+        "Efficiently presents multiple panes and rich terminal content",
+        "Keeps GUI/window and mux state connected through renderable snapshots"
+      ],
+      "costs": [
+        "GPU/window backends and font shaping vary by platform",
+        "Large pane sets and high-rate output pressure rendering budgets"
+      ],
+      "evidence_ids": ["wezterm-gui-source", "wezterm-render-source"]
+    },
+    {
+      "id": "keyboard-mouse-event-actions",
+      "name": "Keyboard, mouse, clipboard, and action events",
+      "category": "input-model",
+      "claim_type": "fact",
+      "description": "WezTerm translates platform key and mouse events, clipboard interactions, and configured key assignments into pane input or mux actions, with pane focus and overlays affecting dispatch.",
+      "benefits": [
+        "Unifies terminal input and mux actions through configurable bindings",
+        "Supports selection, clipboard, pane navigation, and command actions"
+      ],
+      "costs": [
+        "Focus, modal overlays, and key tables alter event routing",
+        "Clipboard and paste behavior cross a host-data boundary"
+      ],
+      "evidence_ids": ["wezterm-input-source", "wezterm-gui-source"]
+    },
+    {
+      "id": "lua-cli-control-boundary",
+      "name": "CLI and domain control authority",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "WezTerm's CLI connects to a running GUI or mux server to list, split, move, spawn, and send input to panes. Unix-domain configuration documents secure socket-ownership checks and a skip_permissions_check override; SSH mux domains use SSH authentication to connect to a remote daemon. Control-endpoint access therefore grants session authority, while terminal configuration independently sets scrollback and protocol behavior.",
+      "benefits": [
+        "Makes terminal automation and policy programmable",
+        "Allows control operations to target structured mux resources"
+      ],
+      "costs": [
+        "Control clients can affect running sessions and input",
+        "SSH domains and external command paths require explicit authority assumptions"
+      ],
+      "evidence_ids": [
+        "wezterm-config-source",
+        "wezterm-cli-source",
+        "wezterm-ssh-source",
+        "wezterm-multiplexing-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "PTY-to-pane-screen transition system",
+      "question": "How does domain PTY output transition through terminal parsing into pane state and rendered GUI content?",
+      "assumptions": [
+        "PTY output is ordered input",
+        "Terminal state is pane-local or pane-associated",
+        "GUI painting observes renderable state after scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "wezterm-pty-source",
+        "wezterm-term-source",
+        "wezterm-mux-pane-source",
+        "wezterm-render-source"
+      ]
+    },
+    {
+      "model": "Multiplexer containment and attachment graph",
+      "question": "How do domains, processes, panes, tabs, windows, workspaces, clients, and GUI windows compose or detach?",
+      "assumptions": [
+        "Mux objects are containment/attachment nodes",
+        "Clients and GUI windows can observe or manipulate mux state",
+        "Persistence is a topology property, not proof of process survival"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["wezterm-mux-source", "wezterm-multiplexing-doc", "wezterm-pty-source"]
+    },
+    {
+      "model": "Control authority relation",
+      "question": "Which CLI and remote-domain connections can reach which pane, process, input, and workspace resources?",
+      "assumptions": [
+        "Control requests are action transitions",
+        "Configuration and domain policy select authority edges",
+        "The model does not prove deployment security"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "wezterm-config-source",
+        "wezterm-cli-source",
+        "wezterm-ssh-source",
+        "wezterm-multiplexing-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "pty-domain-lifecycle",
+      "benefits": [
+        "Supports local, SSH, WSL, and other execution domains behind a common pane model"
+      ],
+      "costs": ["Remote domains add transport, authentication, and failure modes"]
+    },
+    {
+      "feature_id": "terminal-parser-screen-state",
+      "benefits": ["Centralizes terminal semantics for GUI and multiplexed panes"],
+      "costs": ["Terminal compatibility state is broad and protocol-sensitive"]
+    },
+    {
+      "feature_id": "multiplexer-pane-tab-workspace",
+      "benefits": ["Provides persistent multi-pane organization and remote/client attachment"],
+      "costs": ["Topology and attachment state increase lifecycle and synchronization complexity"]
+    },
+    {
+      "feature_id": "gpu-window-rendering-boundary",
+      "benefits": ["Efficiently presents multiple panes and rich terminal content"],
+      "costs": ["GPU/window backends and font shaping vary by platform"]
+    },
+    {
+      "feature_id": "keyboard-mouse-event-actions",
+      "benefits": ["Unifies terminal input and mux actions through configurable bindings"],
+      "costs": ["Focus, modal overlays, and key tables alter event routing"]
+    },
+    {
+      "feature_id": "lua-cli-control-boundary",
+      "benefits": ["Makes terminal automation and policy programmable"],
+      "costs": ["Scripts and control clients can affect running sessions and input"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "WezTerm source at fixed commit",
+      "uri": "https://github.com/wez/wezterm/commit/e2a98e1b8af156988ad0ac778658ac27b60a55fb",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "wezterm-pty-source",
+      "kind": "source-code",
+      "title": "WezTerm PTY library at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/pty/src/lib.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for platform PTY creation, child process, and I/O lifecycle."
+    },
+    {
+      "id": "wezterm-term-source",
+      "kind": "source-code",
+      "title": "WezTerm terminal state library at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/term/src/lib.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for terminal parsing, screen state, input/output, and terminal capabilities."
+    },
+    {
+      "id": "wezterm-mux-source",
+      "kind": "source-code",
+      "title": "WezTerm multiplexer source at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/mux/src/lib.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for domains, windows, tabs, panes, mux clients, and pane state."
+    },
+    {
+      "id": "wezterm-mux-pane-source",
+      "kind": "source-code",
+      "title": "WezTerm mux pane source at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/mux/src/pane.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for pane lifecycle, PTY attachment, rendering data, and input routing."
+    },
+    {
+      "id": "wezterm-gui-source",
+      "kind": "source-code",
+      "title": "WezTerm terminal window source at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/wezterm-gui/src/termwindow/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for GUI terminal-window lifecycle, event dispatch, and rendering coordination."
+    },
+    {
+      "id": "wezterm-input-source",
+      "kind": "source-code",
+      "title": "WezTerm keyboard input source at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/wezterm-gui/src/termwindow/keyevent.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for keyboard event mapping and action dispatch."
+    },
+    {
+      "id": "wezterm-render-source",
+      "kind": "source-code",
+      "title": "WezTerm rendering source at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/wezterm-gui/src/termwindow/render/paint.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for terminal cell painting and GPU presentation."
+    },
+    {
+      "id": "wezterm-config-source",
+      "kind": "source-code",
+      "title": "WezTerm terminal configuration source at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/config/src/terminal.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for terminal configuration and policy options."
+    },
+    {
+      "id": "wezterm-ssh-source",
+      "kind": "source-code",
+      "title": "WezTerm SSH domain source at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/mux/src/ssh.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for remote domain/session integration."
+    },
+    {
+      "id": "wezterm-cli-source",
+      "kind": "source-code",
+      "title": "WezTerm command/control source at fixed commit",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/wezterm/src/cli/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for command entry points and control operations."
+    },
+    {
+      "id": "wezterm-multiplexing-doc",
+      "kind": "official-doc",
+      "title": "WezTerm multiplexing documentation",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/docs/multiplexing.md",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for panes, tabs, windows, workspaces, and mux server behavior."
+    },
+    {
+      "id": "wezterm-terminal-doc",
+      "kind": "official-doc",
+      "title": "WezTerm terminal model documentation",
+      "uri": "https://github.com/wez/wezterm/blob/e2a98e1b8af156988ad0ac778658ac27b60a55fb/docs/what-is-a-terminal.md",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for terminal emulation concepts and boundaries."
+    }
+  ],
+  "related_systems": []
+}

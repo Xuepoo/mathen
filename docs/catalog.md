@@ -109,6 +109,10 @@ These entries are already present in the repository at different review levels:
 | `tauri` | Tauri | desktop application framework | `reviewed` | Compare native shell/webview composition, command IPC, capabilities, and packaging using fixed-commit evidence |
 | `qt` | Qt | desktop application framework | `reviewed` | Compare QObject ownership, event dispatch, signals/slots, widgets, and platform abstraction using fixed-commit evidence |
 | `gtk` | GTK | desktop application framework | `reviewed` | Compare GObject types, event controllers, widget trees, and GDK backend boundaries using fixed-commit evidence |
+| `kitty` | Kitty | terminal emulator | `reviewed` | Compare PTY child supervision, terminal screen state, session/tab/window composition, GPU rendering, input, and remote-control authority using fixed-commit evidence |
+| `wezterm` | WezTerm | terminal emulator | `reviewed` | Compare PTY domains, terminal parsing, mux pane/tab/workspace state, GPU rendering, input, and control APIs using fixed-commit evidence |
+| `alacritty` | Alacritty | terminal emulator | `reviewed` | Compare PTY event loops, terminal grid/parser state, GPU window rendering, input/clipboard, and IPC boundaries using fixed-commit evidence |
+| `ghostty` | Ghostty | terminal emulator | `reviewed` | Compare PTY processes, VT parser/screen state, native renderer backends, input routing, and surface/runtime boundaries using fixed-commit evidence |
 | `rails` | Ruby on Rails | web framework | `reviewed` | Compare engine composition, ordered initialization, autoloading, and Rack middleware using fixed-commit evidence |
 | `laravel` | Laravel | web framework | `reviewed` | Compare service-container resolution, provider bootstrap, deferred services, and middleware pipelines using fixed-commit evidence |
 | `spring-boot` | Spring Boot | web framework | `reviewed` | Compare application-context startup, conditional auto-configuration, environment binding, and embedded web deployment using fixed-commit evidence |
@@ -346,6 +350,15 @@ identifiers, not claims that the projects share the same architecture.
 | `javafx` | JavaFX | `reviewed` | Compare constrained scene graphs, observable property dependencies, and pulse-driven rendering using fixed-commit evidence |
 | `flutter` | Flutter | `reviewed` | Compare immutable widget reconciliation, render-object pipelines, and engine/embedder boundaries using fixed-commit evidence |
 | `wails` | Wails | `reviewed` | Compare Go/webview shells, generated typed bindings, runtime events, and native window bridges using fixed-commit evidence |
+
+### Terminal emulators
+
+| ID | Target | Status | Modeling focus |
+| --- | --- | --- | --- |
+| `kitty` | Kitty | `reviewed` | Compare PTY child supervision, terminal screen state, session/tab/window composition, GPU rendering, input, and remote-control authority using fixed-commit evidence |
+| `wezterm` | WezTerm | `reviewed` | Compare PTY domains, terminal parsing, mux pane/tab/workspace state, GPU rendering, input, and control APIs using fixed-commit evidence |
+| `alacritty` | Alacritty | `reviewed` | Compare PTY event loops, terminal grid/parser state, GPU window rendering, input/clipboard, and IPC boundaries using fixed-commit evidence |
+| `ghostty` | Ghostty | `reviewed` | Compare PTY processes, VT parser/screen state, native renderer backends, input routing, and surface/runtime boundaries using fixed-commit evidence |
 
 ### CLI and developer tools
 

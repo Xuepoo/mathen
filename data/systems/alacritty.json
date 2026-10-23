@@ -1,0 +1,289 @@
+{
+  "id": "alacritty",
+  "name": "Alacritty",
+  "version_context": "commit 542147067dd016fc5f49120ef0ba605a98a4e3a7",
+  "summary": "A Rust terminal emulator whose PTY event loop feeds a reusable terminal parser/grid, while a platform window, GPU renderer, input/clipboard layer, and optional IPC/configuration paths provide host integration.",
+  "scope": [
+    "PTY and event loop",
+    "terminal parser, grid, scrollback, and modes",
+    "window and GPU renderer",
+    "keyboard, mouse, selection, and clipboard input",
+    "IPC, configuration, and resource boundaries"
+  ],
+  "features": [
+    {
+      "id": "pty-event-loop",
+      "name": "PTY and I/O event loop",
+      "category": "process-model",
+      "claim_type": "fact",
+      "description": "Alacritty's PTY reader thread polls the child endpoint, feeds its parser while holding the terminal lock, queues input writes, and emits application wakeups. The read loop caps bytes processed while locked to avoid monopolizing terminal state; child-exit and resize transitions are handled alongside I/O readiness.",
+      "benefits": [
+        "Keeps child I/O and terminal parsing independently testable",
+        "Uses an event-driven path for output and resize/exit notifications"
+      ],
+      "costs": [
+        "PTY and platform process behavior remain OS-specific",
+        "Output bursts can pressure queues and redraw scheduling"
+      ],
+      "evidence_ids": ["alacritty-tty-source", "alacritty-event-loop-source"]
+    },
+    {
+      "id": "terminal-grid-and-parser",
+      "name": "Terminal parser and grid state",
+      "category": "terminal-model",
+      "claim_type": "fact",
+      "description": "The terminal crate parses control sequences into terminal actions and maintains a grid, scrollback, cursor, modes, selection, and vi-style navigation state.",
+      "benefits": [
+        "Provides deterministic terminal-state tests and a reusable terminal crate",
+        "Separates protocol state from the window frontend"
+      ],
+      "costs": [
+        "Grid and scrollback memory scale with configured history",
+        "Terminal protocol state has many compatibility-sensitive modes"
+      ],
+      "evidence_ids": ["alacritty-term-source", "alacritty-grid-source", "alacritty-features-doc"]
+    },
+    {
+      "id": "window-renderer-boundary",
+      "name": "Window and renderer boundary",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "Alacritty maps terminal content and damage into a platform window and GPU renderer, with font rasterization, glyph caching, resize, and presentation handled around the terminal state.",
+      "benefits": [
+        "Efficiently redraws changed terminal content",
+        "Keeps window-system and renderer code outside the terminal crate"
+      ],
+      "costs": [
+        "GPU drivers, window systems, and font stacks vary by platform",
+        "Glyph caches and high-resolution surfaces consume resources"
+      ],
+      "evidence_ids": ["alacritty-window-source", "alacritty-renderer-source"]
+    },
+    {
+      "id": "keyboard-mouse-selection-input",
+      "name": "Keyboard, mouse, selection, and clipboard input",
+      "category": "input-model",
+      "claim_type": "fact",
+      "description": "Alacritty converts platform window events into keyboard and mouse actions, terminal bytes, selection changes, and clipboard operations according to configurable bindings and modes.",
+      "benefits": [
+        "Makes input policy configurable without changing PTY semantics",
+        "Supports selection and clipboard as explicit terminal interactions"
+      ],
+      "costs": [
+        "Binding precedence and terminal application modes can surprise users",
+        "Clipboard access crosses the GUI and host-service boundary"
+      ],
+      "evidence_ids": [
+        "alacritty-event-source",
+        "alacritty-input-source",
+        "alacritty-clipboard-source"
+      ]
+    },
+    {
+      "id": "ipc-and-daemon-resource-boundary",
+      "name": "IPC, configuration, and process resource boundary",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "On Unix, Alacritty's IPC listener decodes JSON CreateWindow, Config, and GetConfig messages and posts them into the GUI event loop. These controls are distinct from terminal-program OSC 52 clipboard requests: the terminal core defaults to OnlyCopy, accepting clipboard writes but rejecting reads. Scrollback configuration separately caps retained history at 100,000 lines at this revision.",
+      "benefits": [
+        "Enables multi-window automation and configuration reload workflows",
+        "Keeps optional control paths outside normal terminal byte processing"
+      ],
+      "costs": [
+        "Control endpoints and inherited environment affect authority",
+        "Configuration changes can alter input, window, and child-process behavior"
+      ],
+      "evidence_ids": [
+        "alacritty-ipc-source",
+        "alacritty-config-source",
+        "alacritty-term-source",
+        "alacritty-scrolling-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "PTY/grid transition system",
+      "question": "How do PTY bytes, parser actions, grid mutations, and redraw notifications evolve?",
+      "assumptions": [
+        "PTY output is an ordered byte stream",
+        "Parser actions mutate terminal state",
+        "Renderer observes state through event scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "alacritty-tty-source",
+        "alacritty-event-loop-source",
+        "alacritty-term-source"
+      ]
+    },
+    {
+      "model": "Terminal resource lifecycle graph",
+      "question": "How do child processes, PTYs, terminal grids, windows, render resources, selections, and clipboards relate?",
+      "assumptions": [
+        "Resources have explicit creation and teardown points",
+        "Window and terminal state are connected but separately implemented",
+        "Host clipboard and GPU resources are external boundaries"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "alacritty-tty-source",
+        "alacritty-window-source",
+        "alacritty-clipboard-source"
+      ]
+    },
+    {
+      "model": "Input authority refinement",
+      "question": "Which platform events become child input, terminal actions, selection changes, or control messages?",
+      "assumptions": [
+        "Bindings and terminal modes select transitions",
+        "The model abstracts OS-specific event delivery",
+        "Capability equivalence across platforms requires validation"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["alacritty-input-source", "alacritty-event-source", "alacritty-ipc-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "pty-event-loop",
+      "benefits": ["Keeps child I/O and terminal parsing independently testable"],
+      "costs": ["PTY and platform process behavior remain OS-specific"]
+    },
+    {
+      "feature_id": "terminal-grid-and-parser",
+      "benefits": ["Provides deterministic terminal-state tests and a reusable terminal crate"],
+      "costs": ["Grid and scrollback memory scale with configured history"]
+    },
+    {
+      "feature_id": "window-renderer-boundary",
+      "benefits": ["Efficiently redraws changed terminal content"],
+      "costs": ["GPU drivers, window systems, and font stacks vary by platform"]
+    },
+    {
+      "feature_id": "keyboard-mouse-selection-input",
+      "benefits": ["Makes input policy configurable without changing PTY semantics"],
+      "costs": ["Binding precedence and terminal application modes can surprise users"]
+    },
+    {
+      "feature_id": "ipc-and-daemon-resource-boundary",
+      "benefits": ["Enables multi-window automation and configuration reload workflows"],
+      "costs": ["Control endpoints and inherited environment affect authority"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "repository-commit",
+      "kind": "source-code",
+      "title": "Alacritty source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/commit/542147067dd016fc5f49120ef0ba605a98a4e3a7",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "alacritty-tty-source",
+      "kind": "source-code",
+      "title": "Alacritty PTY source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty_terminal/src/tty/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "EventedPty and ProcessReadWrite contracts and platform module selection; concrete process setup is in tty/unix.rs and tty/windows."
+    },
+    {
+      "id": "alacritty-scrolling-source",
+      "kind": "source-code",
+      "title": "Alacritty bounded scrollback configuration",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty/src/config/scrolling.rs",
+      "accessed": "2026-10-23",
+      "notes": "MAX_SCROLLBACK_LINES and ScrollingHistory deserialization enforce the 100,000-line configuration ceiling."
+    },
+    {
+      "id": "alacritty-event-loop-source",
+      "kind": "source-code",
+      "title": "Alacritty terminal event loop at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty_terminal/src/event_loop.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for PTY reads/writes, parser feeding, wakeups, and event notifications."
+    },
+    {
+      "id": "alacritty-term-source",
+      "kind": "source-code",
+      "title": "Alacritty terminal state at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty_terminal/src/term/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for parser actions, terminal modes, cursor, selection, and grid-facing state."
+    },
+    {
+      "id": "alacritty-grid-source",
+      "kind": "source-code",
+      "title": "Alacritty grid source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty_terminal/src/grid/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for grid rows, storage, indexing, and resize behavior."
+    },
+    {
+      "id": "alacritty-window-source",
+      "kind": "source-code",
+      "title": "Alacritty window source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty/src/display/window.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for platform window lifecycle, resize, event integration, and presentation."
+    },
+    {
+      "id": "alacritty-renderer-source",
+      "kind": "source-code",
+      "title": "Alacritty renderer source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty/src/renderer/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for GPU renderer and terminal content presentation."
+    },
+    {
+      "id": "alacritty-event-source",
+      "kind": "source-code",
+      "title": "Alacritty application event source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty/src/event.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for application events, child output, input, redraw, and lifecycle dispatch."
+    },
+    {
+      "id": "alacritty-input-source",
+      "kind": "source-code",
+      "title": "Alacritty input source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty/src/input/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for keyboard/mouse bindings, selection, and terminal input actions."
+    },
+    {
+      "id": "alacritty-clipboard-source",
+      "kind": "source-code",
+      "title": "Alacritty clipboard source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty/src/clipboard.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for host clipboard read/write boundary."
+    },
+    {
+      "id": "alacritty-ipc-source",
+      "kind": "source-code",
+      "title": "Alacritty IPC source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty/src/polling/ipc.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for optional IPC polling and control boundary."
+    },
+    {
+      "id": "alacritty-config-source",
+      "kind": "source-code",
+      "title": "Alacritty configuration source at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/alacritty/src/config/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for configuration loading, migration, and runtime settings."
+    },
+    {
+      "id": "alacritty-features-doc",
+      "kind": "official-doc",
+      "title": "Alacritty feature documentation at fixed commit",
+      "uri": "https://github.com/alacritty/alacritty/blob/542147067dd016fc5f49120ef0ba605a98a4e3a7/docs/features.md",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for terminal, input, rendering, and protocol features."
+    }
+  ],
+  "related_systems": []
+}
