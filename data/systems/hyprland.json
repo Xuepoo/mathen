@@ -1,0 +1,149 @@
+{
+  "id": "hyprland",
+  "name": "Hyprland",
+  "version_context": "commit 76edafffc68951a66b094806659ac4823e22c624",
+  "summary": "A Wayland compositor and dynamic tiling window manager that owns protocol clients, monitor and surface resources, animated rendering, input routing, and a command-driven layout state.",
+  "scope": [
+    "Wayland compositor",
+    "dynamic tiling window management",
+    "monitor and surface resources",
+    "input and rendering state"
+  ],
+  "features": [
+    {
+      "id": "wayland-compositor-boundary",
+      "name": "Wayland compositor boundary",
+      "category": "protocol-and-compositor",
+      "claim_type": "fact",
+      "description": "Hyprland implements the compositor side of the Wayland protocol, accepts client surfaces, and coordinates their scene placement, focus, rendering, and lifecycle through a single compositor process.",
+      "benefits": [
+        "Keeps client protocol, policy, and presentation in one authoritative display server",
+        "Allows compositor policy to mediate surface focus, stacking, and output visibility"
+      ],
+      "costs": [
+        "A compositor fault can affect all managed clients",
+        "Protocol and policy changes must remain compatible with diverse Wayland clients"
+      ],
+      "evidence_ids": ["hyprland-wayland-doc", "hyprland-source-commit", "hyprland-compositor-source"]
+    },
+    {
+      "id": "dynamic-layout-tree",
+      "name": "Dynamic tiling layout tree",
+      "category": "layout-model",
+      "claim_type": "fact",
+      "description": "Hyprland represents managed windows and groups in a mutable layout and workspace model; dispatchers and configuration commands change focus, movement, split orientation, grouping, and workspace placement.",
+      "benefits": [
+        "Makes window placement and focus operations addressable as compositor state",
+        "Supports dynamic tiling alongside floating and grouped surfaces"
+      ],
+      "costs": [
+        "Mutable placement rules create ordering and edge cases during window lifecycle changes",
+        "Layout behavior depends on configuration and dispatcher semantics"
+      ],
+      "evidence_ids": ["hyprland-dispatcher-doc", "hyprland-source-commit", "hyprland-layout-source"]
+    },
+    {
+      "id": "input-focus-routing",
+      "name": "Seat input and focus routing",
+      "category": "input-model",
+      "claim_type": "fact",
+      "description": "Hyprland receives keyboard, pointer, and other libinput-backed events, applies device and binding configuration, and routes resulting actions or focus changes to the compositor's active surface and workspace state.",
+      "benefits": [
+        "Centralizes device policy, keybind dispatch, and pointer/keyboard focus",
+        "Allows input actions to operate on the same layout state as protocol events"
+      ],
+      "costs": [
+        "Input behavior depends on device capabilities and configuration precedence",
+        "Incorrect focus or binding state can make windows appear unresponsive while the compositor remains alive"
+      ],
+      "evidence_ids": ["hyprland-input-doc", "hyprland-source-commit", "hyprland-input-source"]
+    },
+    {
+      "id": "output-render-resource-model",
+      "name": "Output and render-resource model",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "Hyprland tracks monitors, workspaces, windows, surfaces, textures, and render damage as resources whose geometry and visibility determine frame composition for each output.",
+      "benefits": [
+        "Separates output geometry and render resources from client application state",
+        "Enables per-monitor workspace placement and incremental scene updates"
+      ],
+      "costs": [
+        "Hotplug, scaling, damage, and animation add resource synchronization paths",
+        "GPU or output failures can invalidate resources independently of client protocol state"
+      ],
+      "evidence_ids": ["hyprland-monitors-doc", "hyprland-source-commit", "hyprland-render-source"]
+    },
+    {
+      "id": "animated-lifecycle-failure-boundary",
+      "name": "Animated lifecycle and failure boundary",
+      "category": "state-and-failure-model",
+      "claim_type": "inference",
+      "description": "Window, workspace, monitor, and animation state progresses through compositor-managed updates; failed client, protocol, output, or render operations are handled at different boundaries, so recovery may preserve compositor state while losing a surface or output.",
+      "benefits": [
+        "Makes transient presentation state explicit rather than coupling it to client process state",
+        "Allows individual surfaces or outputs to be removed without treating every client event as a global restart"
+      ],
+      "costs": [
+        "Asynchronous animation and output transitions increase failure-path complexity",
+        "The fixed source does not establish transparent recovery for every GPU or protocol failure"
+      ],
+      "evidence_ids": ["hyprland-animation-doc", "hyprland-source-commit", "hyprland-compositor-source", "hyprland-render-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Wayland resource graph",
+      "question": "How do clients, protocol objects, surfaces, outputs, and compositor-owned render resources connect across a frame?",
+      "assumptions": [
+        "Protocol objects and outputs are typed resource nodes",
+        "Rendering and GPU internals are abstracted as resource edges",
+        "The graph does not imply client access to another client's resources"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["hyprland-wayland-doc", "hyprland-compositor-source", "hyprland-render-source"]
+    },
+    {
+      "model": "Mutable tiling tree",
+      "question": "Which focus, split, workspace, group, and floating arrangements are reachable after compositor dispatchers and client lifecycle events?",
+      "assumptions": [
+        "Windows and groups are nodes with geometry and focus metadata",
+        "Dispatchers and lifecycle callbacks are state transitions",
+        "The model abstracts animation interpolation and renderer timing"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["hyprland-dispatcher-doc", "hyprland-layout-source", "hyprland-input-source"]
+    },
+    {
+      "model": "Compositor failure-state machine",
+      "question": "What compositor state remains reachable when a client, surface, output, protocol request, or render resource fails?",
+      "assumptions": [
+        "Client and output failures are distinct transitions",
+        "A removed surface may leave workspace and compositor state intact",
+        "The view is a candidate operational model, not a recovery guarantee"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["hyprland-source-commit", "hyprland-compositor-source", "hyprland-render-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "wayland-compositor-boundary", "benefits": ["One policy boundary coordinates clients and presentation"], "costs": ["A process-wide fault threatens the display session"]},
+    {"feature_id": "dynamic-layout-tree", "benefits": ["Tiling and focus are directly manipulable state"], "costs": ["Configuration-driven mutation increases transition complexity"]},
+    {"feature_id": "input-focus-routing", "benefits": ["Input actions and layout commands share one policy model"], "costs": ["Device and binding configuration can create subtle routing failures"]},
+    {"feature_id": "output-render-resource-model", "benefits": ["Per-output composition and damage are explicit"], "costs": ["Hotplug and GPU resource failures complicate consistency"]},
+    {"feature_id": "animated-lifecycle-failure-boundary", "benefits": ["Surface loss can be isolated from unrelated layout state"], "costs": ["Asynchronous transitions make failure diagnosis harder"]}
+  ],
+  "evidence": [
+    {"id": "hyprland-source-commit", "kind": "source-code", "title": "Hyprland source at 76edafffc689", "uri": "https://github.com/hyprwm/Hyprland/commit/76edafffc68951a66b094806659ac4823e22c624", "accessed": "2026-10-23", "notes": "Fixed official Hyprland repository revision used for compositor, layout, input, and rendering claims."},
+    {"id": "hyprland-compositor-source", "kind": "source-code", "title": "Hyprland compositor source at fixed revision", "uri": "https://github.com/hyprwm/Hyprland/tree/76edafffc68951a66b094806659ac4823e22c624/src", "accessed": "2026-10-23", "notes": "Pinned source tree for compositor and lifecycle boundaries."},
+    {"id": "hyprland-layout-source", "kind": "source-code", "title": "Hyprland desktop and layout source at fixed revision", "uri": "https://github.com/hyprwm/Hyprland/tree/76edafffc68951a66b094806659ac4823e22c624/src/layout", "accessed": "2026-10-23", "notes": "Pinned layout source location for workspace, window, and tiling claims."},
+    {"id": "hyprland-input-source", "kind": "source-code", "title": "Hyprland input and keybind source at fixed revision", "uri": "https://github.com/hyprwm/Hyprland/tree/76edafffc68951a66b094806659ac4823e22c624/src/managers", "accessed": "2026-10-23", "notes": "Pinned manager source location for input and dispatcher claims."},
+    {"id": "hyprland-render-source", "kind": "source-code", "title": "Hyprland rendering source at fixed revision", "uri": "https://github.com/hyprwm/Hyprland/tree/76edafffc68951a66b094806659ac4823e22c624/src/render", "accessed": "2026-10-23", "notes": "Pinned rendering source location for output, damage, and resource claims."},
+    {"id": "hyprland-wayland-doc", "kind": "official-doc", "title": "Hyprland Wiki: Configuring", "uri": "https://wiki.hypr.land/Configuring/", "accessed": "2026-10-23", "notes": "Official documentation for compositor configuration and Wayland-facing behavior."},
+    {"id": "hyprland-dispatcher-doc", "kind": "official-doc", "title": "Hyprland Wiki: Dispatchers", "uri": "https://wiki.hypr.land/Configuring/Dispatchers/", "accessed": "2026-10-23", "notes": "Official dispatcher reference for focus, movement, workspace, grouping, and layout actions."},
+    {"id": "hyprland-input-doc", "kind": "official-doc", "title": "Hyprland Wiki: Binds", "uri": "https://wiki.hypr.land/Configuring/Binds/", "accessed": "2026-10-23", "notes": "Official input binding and device policy documentation."},
+    {"id": "hyprland-monitors-doc", "kind": "official-doc", "title": "Hyprland Wiki: Monitors", "uri": "https://wiki.hypr.land/Configuring/Monitors/", "accessed": "2026-10-23", "notes": "Official monitor geometry, scale, workspace, and output configuration documentation."},
+    {"id": "hyprland-animation-doc", "kind": "official-doc", "title": "Hyprland Wiki: Animations", "uri": "https://wiki.hypr.land/Configuring/Animations/", "accessed": "2026-10-23", "notes": "Official animation and transition configuration documentation."}
+  ],
+  "related_systems": ["sway", "niri", "i3", "linux"]
+}

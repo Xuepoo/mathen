@@ -1,0 +1,91 @@
+{
+  "id": "niri",
+  "name": "Niri",
+  "version_context": "commit e19df12cf81ffe805609fee497da1a097066ad2f",
+  "summary": "A scrollable-tiling Wayland compositor that keeps windows in a horizontally arranged layout, maps input and IPC actions into compositor state, and composes output resources through Smithay-based protocol handling.",
+  "scope": [
+    "Wayland compositor",
+    "scrollable tiling layout",
+    "input and IPC control",
+    "outputs and surface lifecycle"
+  ],
+  "features": [
+    {
+      "id": "smithay-wayland-protocol-boundary",
+      "name": "Smithay-backed Wayland protocol boundary",
+      "category": "protocol-and-compositor",
+      "claim_type": "fact",
+      "description": "Niri implements a Wayland compositor using Smithay protocol and backend abstractions, accepting client surfaces and coordinating protocol requests with compositor-owned layout, focus, and rendering state.",
+      "benefits": ["Reuses typed protocol and backend primitives while retaining compositor policy", "Provides a clear client-to-compositor resource boundary"],
+      "costs": ["Protocol behavior is constrained by Wayland and Smithay lifecycle contracts", "A compositor process failure affects the session"] ,
+      "evidence_ids": ["niri-source-commit", "niri-source-tree", "niri-wayland-doc"]
+    },
+    {
+      "id": "scrollable-column-layout",
+      "name": "Scrollable column layout",
+      "category": "layout-model",
+      "claim_type": "fact",
+      "description": "Niri arranges windows in columns along a scrollable workspace strip rather than requiring every window to fit a fixed virtual desktop; column widths, window placement, focus, and scrolling are compositor state.",
+      "benefits": ["Preserves usable window sizes as the workspace grows horizontally", "Makes scrolling and column manipulation first-class layout operations"],
+      "costs": ["Layout navigation differs from fixed-grid tiling expectations", "Scroll position and column geometry add state to focus and output changes"],
+      "evidence_ids": ["niri-layout-doc", "niri-source-commit", "niri-layout-source"]
+    },
+    {
+      "id": "input-ipc-state-control",
+      "name": "Input and IPC state control",
+      "category": "input-and-control",
+      "claim_type": "fact",
+      "description": "Niri maps keyboard and pointer input, configuration keybinds, and its IPC interface into actions over compositor state such as focus, movement, workspace selection, layout changes, and output management.",
+      "benefits": ["Exposes both interactive and programmatic control paths over one state model", "Allows status bars and automation to observe or request compositor actions"],
+      "costs": ["Concurrent input and IPC actions require deterministic ordering", "The IPC surface adds a compatibility and authorization boundary to the session"],
+      "evidence_ids": ["niri-input-doc", "niri-ipc-doc", "niri-source-commit", "niri-input-source"]
+    },
+    {
+      "id": "output-surface-resource-lifecycle",
+      "name": "Output and surface resource lifecycle",
+      "category": "resource-and-state-model",
+      "claim_type": "fact",
+      "description": "Niri tracks outputs, workspaces, columns, windows, and Wayland surfaces as resources whose geometry, visibility, focus, and rendering state are updated as clients and monitors appear or disappear.",
+      "benefits": ["Makes monitor hotplug and surface lifecycle part of the compositor state model", "Supports output-specific scale, transform, and workspace placement"],
+      "costs": ["Hotplug and surface destruction require coordinated geometry and focus updates", "Backend or rendering resource failures can remove an output without removing all logical layout state"],
+      "evidence_ids": ["niri-outputs-doc", "niri-source-commit", "niri-state-source"]
+    },
+    {
+      "id": "transactional-render-failure-boundary",
+      "name": "Transactional render and failure boundary",
+      "category": "failure-model",
+      "claim_type": "inference",
+      "description": "Niri applies layout and rendering updates across compositor state and output frames; protocol, client, backend, or framebuffer failures can reject part of an update or remove a resource while the remaining logical state continues under compositor policy.",
+      "benefits": ["Separates logical layout state from individual client and output resources", "Provides explicit places to reason about rejected requests and unavailable rendering paths"],
+      "costs": ["Failure recovery depends on backend and resource ownership details", "The fixed revision does not prove transparent recovery for every rendering failure"],
+      "evidence_ids": ["niri-source-commit", "niri-state-source", "niri-render-source", "niri-render-doc"]
+    }
+  ],
+  "mathematical_views": [
+    {"model": "Scrollable ordered layout", "question": "How do columns, windows, focus, scroll position, and workspace membership change under input, IPC, and client events?", "assumptions": ["Columns form an ordered sequence with window stacks", "Focus and scroll position are explicit state", "Rendering geometry is derived from layout state"], "claim_type": "inference", "evidence_ids": ["niri-layout-doc", "niri-layout-source", "niri-input-source"]},
+    {"model": "Wayland resource ownership graph", "question": "Which compositor, output, workspace, window, surface, and backend resources own or reference one another?", "assumptions": ["Ownership edges are modeled separately from protocol requests", "Smithay internals are abstracted", "The graph does not claim isolation beyond the documented protocol boundary"], "claim_type": "inference", "evidence_ids": ["niri-source-tree", "niri-state-source", "niri-wayland-doc"]},
+    {"model": "Compositor update failure automaton", "question": "Which logical layout states remain reachable after a rejected action, client disconnect, output loss, or render failure?", "assumptions": ["Actions can be accepted, rejected, or partially reflected in resources", "Client and backend failures have distinct transitions", "This is a candidate model rather than a formal recovery proof"], "claim_type": "hypothesis", "evidence_ids": ["niri-source-commit", "niri-state-source", "niri-render-source"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "smithay-wayland-protocol-boundary", "benefits": ["Typed protocol/backend foundations reduce duplicated compositor plumbing"], "costs": ["Policy and lifecycle behavior remain coupled to protocol and backend contracts"]},
+    {"feature_id": "scrollable-column-layout", "benefits": ["Windows retain width as the workspace expands"], "costs": ["Scrolling introduces additional focus and geometry state"]},
+    {"feature_id": "input-ipc-state-control", "benefits": ["Interactive and automation controls share one action model"], "costs": ["IPC ordering and compatibility become part of session correctness"]},
+    {"feature_id": "output-surface-resource-lifecycle", "benefits": ["Logical workspaces can outlive individual output resources"], "costs": ["Hotplug and destruction paths require coordinated state updates"]},
+    {"feature_id": "transactional-render-failure-boundary", "benefits": ["Resource failures can be reasoned about separately from layout intent"], "costs": ["Partial update and backend failure behavior is difficult to observe"]}
+  ],
+  "evidence": [
+    {"id": "niri-source-commit", "kind": "source-code", "title": "niri source at e19df12cf81f", "uri": "https://github.com/niri-wm/niri/commit/e19df12cf81ffe805609fee497da1a097066ad2f", "accessed": "2026-10-23", "notes": "Fixed official niri repository revision used for compositor, layout, input, state, and rendering claims."},
+    {"id": "niri-source-tree", "kind": "source-code", "title": "niri source tree at fixed revision", "uri": "https://github.com/niri-wm/niri/tree/e19df12cf81ffe805609fee497da1a097066ad2f/src", "accessed": "2026-10-23", "notes": "Pinned source tree for compositor and Smithay integration boundaries."},
+    {"id": "niri-layout-source", "kind": "source-code", "title": "niri layout source at fixed revision", "uri": "https://github.com/niri-wm/niri/tree/e19df12cf81ffe805609fee497da1a097066ad2f/src/layout", "accessed": "2026-10-23", "notes": "Pinned source location for columns, scrolling, focus, and geometry claims."},
+    {"id": "niri-input-source", "kind": "source-code", "title": "niri input and action source at fixed revision", "uri": "https://github.com/niri-wm/niri/tree/e19df12cf81ffe805609fee497da1a097066ad2f/src/input", "accessed": "2026-10-23", "notes": "Pinned source location for input and action dispatch claims."},
+    {"id": "niri-state-source", "kind": "source-code", "title": "niri state and handler source at fixed revision", "uri": "https://github.com/niri-wm/niri/tree/e19df12cf81ffe805609fee497da1a097066ad2f/src", "accessed": "2026-10-23", "notes": "Pinned source tree for lifecycle, output, surface, and state transitions."},
+    {"id": "niri-render-source", "kind": "source-code", "title": "niri rendering source at fixed revision", "uri": "https://github.com/niri-wm/niri/tree/e19df12cf81ffe805609fee497da1a097066ad2f/src", "accessed": "2026-10-23", "notes": "Pinned source tree for output rendering and framebuffer failure claims."},
+    {"id": "niri-wayland-doc", "kind": "official-doc", "title": "niri documentation: Overview", "uri": "https://github.com/niri-wm/niri/wiki", "accessed": "2026-10-23", "notes": "Official niri documentation index for compositor and Wayland behavior."},
+    {"id": "niri-layout-doc", "kind": "official-doc", "title": "niri documentation: Layout", "uri": "https://github.com/niri-wm/niri/wiki/Configuration:-Layout", "accessed": "2026-10-23", "notes": "Official configuration documentation for scrollable columns, gaps, and layout behavior."},
+    {"id": "niri-input-doc", "kind": "official-doc", "title": "niri documentation: Input", "uri": "https://github.com/niri-wm/niri/wiki/Configuration:-Input", "accessed": "2026-10-23", "notes": "Official input and device configuration documentation."},
+    {"id": "niri-ipc-doc", "kind": "official-doc", "title": "niri documentation: IPC", "uri": "https://github.com/niri-wm/niri/wiki/IPC", "accessed": "2026-10-23", "notes": "Official IPC and action interface documentation."},
+    {"id": "niri-outputs-doc", "kind": "official-doc", "title": "niri documentation: Outputs", "uri": "https://github.com/niri-wm/niri/wiki/Configuration:-Outputs", "accessed": "2026-10-23", "notes": "Official output and monitor configuration documentation."},
+    {"id": "niri-render-doc", "kind": "official-doc", "title": "niri documentation: Rendering", "uri": "https://github.com/niri-wm/niri/wiki", "accessed": "2026-10-23", "notes": "Official documentation index supporting rendering and backend scope."}
+  ],
+  "related_systems": ["sway", "hyprland", "i3", "linux"]
+}

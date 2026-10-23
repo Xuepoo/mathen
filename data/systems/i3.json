@@ -1,0 +1,91 @@
+{
+  "id": "i3",
+  "name": "i3",
+  "version_context": "commit be04c853ee7fa01a82a0c81f8217565395e2627c",
+  "summary": "A reparenting X11 tiling window manager that models managed windows as a hierarchical container tree, routes X events and keyboard bindings into commands, and maintains explicit workspace, layout, and rendering state.",
+  "scope": [
+    "X11 window manager",
+    "hierarchical tiling containers",
+    "workspace and layout state",
+    "input, IPC, and X resources"
+  ],
+  "features": [
+    {
+      "id": "x11-reparenting-manager",
+      "name": "X11 reparenting window-manager boundary",
+      "category": "protocol-and-compositor",
+      "claim_type": "fact",
+      "description": "i3 owns the X11 window-management policy boundary, receives X events and requests, reparents managed client windows into frame and container structures, and controls mapped visibility and focus.",
+      "benefits": ["Makes window management policy explicit above the X server", "Can manage existing X11 clients without requiring client-side tiling support"],
+      "costs": ["The manager is coupled to X11 event and reparenting semantics", "A window-manager failure removes policy and session control even though the X server may remain alive"],
+      "evidence_ids": ["i3-source-commit", "i3-window-source", "i3-x11-doc"]
+    },
+    {
+      "id": "container-tree-layout-model",
+      "name": "Container-tree layout model",
+      "category": "layout-model",
+      "claim_type": "fact",
+      "description": "i3 represents outputs, workspaces, containers, and windows as a tree; split, tabbed, stacked, and floating layouts derive geometry and focus from tree structure and commands.",
+      "benefits": ["Supports predictable nested tiling and explicit focus traversal", "Makes layout and workspace changes serializable through commands and IPC"],
+      "costs": ["Tree mutations must preserve parent, focus, and geometry invariants", "Complex nesting can make user intent and recovery from invalid layouts harder to diagnose"],
+      "evidence_ids": ["i3-tree-doc", "i3-source-commit", "i3-tree-source"]
+    },
+    {
+      "id": "keyboard-binding-event-routing",
+      "name": "Keyboard binding and X-event routing",
+      "category": "input-model",
+      "claim_type": "fact",
+      "description": "i3 grabs configured key combinations, processes keyboard and pointer-related X events, and translates them into commands that act on focused containers, workspaces, and windows.",
+      "benefits": ["Provides deterministic keyboard-driven control over the tree", "Allows input actions to share the same command semantics as IPC clients"],
+      "costs": ["Key grabs and modifier state depend on X server and client interactions", "Input configuration errors can prevent commands without invalidating the layout tree"],
+      "evidence_ids": ["i3-bindings-doc", "i3-source-commit", "i3-input-source"]
+    },
+    {
+      "id": "workspace-output-xresource-model",
+      "name": "Workspace, output, and X-resource model",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "i3 tracks workspaces and output assignments alongside X windows, frame windows, pixmaps, borders, and geometry; mapping and rendering decisions are derived from this managed-resource state.",
+      "benefits": ["Separates logical workspace membership from physical X window resources", "Supports multi-output placement, workspace visibility, and configurable borders"],
+      "costs": ["X resource lifetime and output changes require careful cleanup and remapping", "Server resource exhaustion or stale client state can distort the logical tree"],
+      "evidence_ids": ["i3-workspaces-doc", "i3-source-commit", "i3-workspace-source", "i3-x11-source"]
+    },
+    {
+      "id": "ipc-command-event-failure-lifecycle",
+      "name": "IPC command/event and lifecycle boundary",
+      "category": "state-and-failure-model",
+      "claim_type": "inference",
+      "description": "i3 exposes commands, subscriptions, and tree/event replies over IPC while processing X client lifecycle events; a managed window can disappear or reject a request without necessarily invalidating unrelated workspace state, whereas X or manager failures have broader scope.",
+      "benefits": ["Makes automation and state observation available without scraping presentation", "Separates per-window lifecycle failures from many logical workspace transitions"],
+      "costs": ["IPC consumers must interpret event ordering and command failures", "X server and window-manager failures can invalidate broad portions of resource state"],
+      "evidence_ids": ["i3-ipc-doc", "i3-source-commit", "i3-ipc-source", "i3-window-source"]
+    }
+  ],
+  "mathematical_views": [
+    {"model": "X11 managed-window resource graph", "question": "How do X clients, frame windows, containers, workspaces, outputs, and server resources connect under reparenting management?", "assumptions": ["X resources and i3 containers are typed nodes", "Events and commands are directed transitions", "The model abstracts X protocol wire details"], "claim_type": "inference", "evidence_ids": ["i3-window-source", "i3-x11-source", "i3-x11-doc"]},
+    {"model": "Hierarchical layout tree", "question": "Which tiling, tabbed, stacked, floating, focus, and workspace states are reachable under i3 commands and client events?", "assumptions": ["Containers form a rooted tree beneath outputs and workspaces", "Geometry is derived from layout and available output rectangles", "Rendering is abstracted from tree transitions"], "claim_type": "inference", "evidence_ids": ["i3-tree-doc", "i3-tree-source", "i3-workspace-source"]},
+    {"model": "Window-manager failure-state machine", "question": "What logical state survives a client destroy, X resource failure, IPC error, output change, or manager restart?", "assumptions": ["Client lifecycle and manager lifecycle are distinct", "Resource cleanup can remove a window while retaining workspace state", "This is a candidate state model rather than a recovery guarantee"], "claim_type": "hypothesis", "evidence_ids": ["i3-source-commit", "i3-window-source", "i3-ipc-source"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "x11-reparenting-manager", "benefits": ["Centralized policy can manage unmodified X11 clients"], "costs": ["Behavior depends on X11 reparenting and event semantics"]},
+    {"feature_id": "container-tree-layout-model", "benefits": ["Nested layouts and focus are explicit and scriptable"], "costs": ["Tree invariants increase mutation and debugging complexity"]},
+    {"feature_id": "keyboard-binding-event-routing", "benefits": ["Keyboard commands provide direct deterministic tree control"], "costs": ["X grabs and modifier state can conflict with clients and configuration"]},
+    {"feature_id": "workspace-output-xresource-model", "benefits": ["Logical workspaces can be assigned independently of physical windows"], "costs": ["X resource cleanup and server limits add failure modes"]},
+    {"feature_id": "ipc-command-event-failure-lifecycle", "benefits": ["External tools can inspect and manipulate the tree through IPC"], "costs": ["Event ordering and broad X failure scope complicate clients"]}
+  ],
+  "evidence": [
+    {"id": "i3-source-commit", "kind": "source-code", "title": "i3 source at be04c853ee7f", "uri": "https://github.com/i3/i3/commit/be04c853ee7fa01a82a0c81f8217565395e2627c", "accessed": "2026-10-23", "notes": "Fixed official i3 repository revision used for X11, tree, input, workspace, IPC, and lifecycle claims."},
+    {"id": "i3-window-source", "kind": "source-code", "title": "i3 window-management source at fixed revision", "uri": "https://github.com/i3/i3/tree/be04c853ee7fa01a82a0c81f8217565395e2627c/src", "accessed": "2026-10-23", "notes": "Pinned source tree for managed windows, frames, focus, and lifecycle handling."},
+    {"id": "i3-tree-source", "kind": "source-code", "title": "i3 tree and layout source at fixed revision", "uri": "https://github.com/i3/i3/tree/be04c853ee7fa01a82a0c81f8217565395e2627c/src", "accessed": "2026-10-23", "notes": "Pinned source tree for containers, layouts, workspaces, and geometry."},
+    {"id": "i3-input-source", "kind": "source-code", "title": "i3 input and binding source at fixed revision", "uri": "https://github.com/i3/i3/tree/be04c853ee7fa01a82a0c81f8217565395e2627c/src", "accessed": "2026-10-23", "notes": "Pinned source tree for keyboard bindings and X event routing."},
+    {"id": "i3-workspace-source", "kind": "source-code", "title": "i3 workspace and output source at fixed revision", "uri": "https://github.com/i3/i3/tree/be04c853ee7fa01a82a0c81f8217565395e2627c/src", "accessed": "2026-10-23", "notes": "Pinned source tree for workspace, output, and assignment state."},
+    {"id": "i3-x11-source", "kind": "source-code", "title": "i3 X11 resource source at fixed revision", "uri": "https://github.com/i3/i3/tree/be04c853ee7fa01a82a0c81f8217565395e2627c/src", "accessed": "2026-10-23", "notes": "Pinned source tree for X11 resource and rendering boundaries."},
+    {"id": "i3-ipc-source", "kind": "source-code", "title": "i3 IPC source at fixed revision", "uri": "https://github.com/i3/i3/tree/be04c853ee7fa01a82a0c81f8217565395e2627c/src", "accessed": "2026-10-23", "notes": "Pinned source tree for command, subscription, and event replies."},
+    {"id": "i3-x11-doc", "kind": "official-doc", "title": "i3 User's Guide: Windows", "uri": "https://i3wm.org/docs/userguide.html#_windows", "accessed": "2026-10-23", "notes": "Official i3 documentation for managed windows and window-management behavior."},
+    {"id": "i3-tree-doc", "kind": "official-doc", "title": "i3 User's Guide: Tree", "uri": "https://i3wm.org/docs/userguide.html#_tree", "accessed": "2026-10-23", "notes": "Official documentation for the container tree and layouts."},
+    {"id": "i3-bindings-doc", "kind": "official-doc", "title": "i3 User's Guide: Key bindings", "uri": "https://i3wm.org/docs/userguide.html#_key_bindings", "accessed": "2026-10-23", "notes": "Official documentation for keyboard bindings and command dispatch."},
+    {"id": "i3-workspaces-doc", "kind": "official-doc", "title": "i3 User's Guide: Workspaces and outputs", "uri": "https://i3wm.org/docs/userguide.html#_workspaces", "accessed": "2026-10-23", "notes": "Official documentation for workspace state, output assignment, and visibility."},
+    {"id": "i3-ipc-doc", "kind": "official-doc", "title": "i3 IPC protocol", "uri": "https://i3wm.org/docs/ipc.html", "accessed": "2026-10-23", "notes": "Official IPC protocol specification for commands, events, and tree queries."}
+  ],
+  "related_systems": ["sway", "hyprland", "niri", "linux"]
+}

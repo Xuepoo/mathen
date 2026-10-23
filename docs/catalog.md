@@ -66,6 +66,10 @@ These entries are already present in the repository at different review levels:
 | `linux` | Linux Kernel | operating system | `reviewed` | Analyze system calls, scheduling, memory, and modules |
 | `freebsd` | FreeBSD | operating system | `reviewed` | Compare kernel subsystems, jails, networking, and GEOM storage using fixed-commit evidence |
 | `systemd` | systemd | init system | `reviewed` | Compare typed units, dependency transactions, service supervision, and activation using fixed-commit evidence |
+| `hyprland` | Hyprland | Wayland compositor | `reviewed` | Compare Wayland protocol resources, dynamic tiling, input routing, output rendering, and compositor failure boundaries using fixed-commit evidence |
+| `niri` | Niri | Wayland compositor | `reviewed` | Compare scrollable columns, Smithay protocol resources, IPC/input actions, output lifecycle, and rendering failure boundaries using fixed-commit evidence |
+| `sway` | Sway | Wayland compositor | `reviewed` | Compare wlroots protocol/backend boundaries, i3-compatible container trees, seat input, output resources, and IPC lifecycle using fixed-commit evidence |
+| `i3` | i3 | X11 window manager | `reviewed` | Compare X11 reparenting, hierarchical containers, keyboard routing, workspaces, resources, and IPC failure boundaries using fixed-commit evidence |
 | `hadoop` | Apache Hadoop | distributed storage and compute | `reviewed` | Compare HDFS metadata, replicated blocks, YARN arbitration, and batch computation using fixed-commit evidence |
 | `nginx` | NGINX | network server | `reviewed` | Analyze event-driven I/O and worker processes |
 | `llvm` | LLVM | compiler infrastructure | `reviewed` | Add temporal IR and pass-pipeline relations |
