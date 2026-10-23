@@ -4,17 +4,23 @@ import SpriteText from "three-spritetext";
 import {
   domainFor,
   domains,
-  endpointId,
   filterGraph,
   loadAllSystems,
-  neighborhood,
-  searchSystems,
-  simulationData,
   type GraphPayload,
-  type SimulationLink,
-  type SimulationNode,
   type SystemSummary,
 } from "./graph-data";
+import {
+  endpointId,
+  filterModelGraph,
+  loadModelGraph,
+  modelSimulationData,
+  neighborhood,
+  searchNodes,
+  type ExplorerPayload,
+  type ModelGraphPayload,
+  type SimulationLink,
+  type SimulationNode,
+} from "./model-data";
 import { renderDetail, type SystemDetail } from "./system-detail";
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -33,10 +39,11 @@ app.innerHTML = `
     </header>
 
     <section class="graph-tools glass" aria-label="Graph controls">
+      <div class="dimension-switch graph-mode-switch" role="group" aria-label="Graph mode"><button id="graph-systems" aria-pressed="true">Systems</button><button id="graph-models" aria-pressed="false">Math models</button></div>
       <div class="dimension-switch" aria-label="Graph dimensions"><button id="mode-2" aria-pressed="true">2D</button><button id="mode-3" aria-pressed="false">3D</button></div>
       <span class="tool-divider"></span>
-      <button id="fit" title="Fit all visible systems">Fit</button>
-      <button id="focus" disabled title="Focus selected system and its neighbors">Focus</button>
+      <button id="fit" title="Fit all visible nodes">Fit</button>
+      <button id="focus" disabled title="Focus selected node and its neighbors">Focus</button>
       <button id="pause" aria-pressed="false">Pause forces</button>
       <button id="reheat" title="Restart the force simulation">Reheat</button>
       <button id="reset" title="Clear filters and restore the overview">Reset</button>
@@ -81,8 +88,11 @@ const catalogSearch = required<HTMLInputElement>("catalog-search");
 const detailContent = required<HTMLDivElement>("detail-content");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let canonical: GraphPayload = { nodes: [], edges: [] };
+let modelCanonical: ModelGraphPayload | undefined;
+let graphMode: "systems" | "models" = "systems";
+let graphRequest = 0;
 let systems: SystemSummary[] = [];
-let visible: GraphPayload = canonical;
+let visible: ExplorerPayload = canonical;
 let graph: ForceGraph3DInstance<SimulationNode, SimulationLink> | undefined;
 let selectedId: string | undefined;
 let selectedEdge: SimulationLink | undefined;
@@ -166,10 +176,12 @@ function createGraph() {
     .height(host.clientHeight)
     .backgroundColor("#10192300")
     .showNavInfo(false)
-    .numDimensions(2)
+    .numDimensions(dimensions)
     .nodeRelSize(4)
     .nodeResolution(16)
-    .nodeVal((node: SimulationNode) => 1.4 + Math.sqrt(node.degree) * 0.65)
+    .nodeVal(
+      (node: SimulationNode) => (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65,
+    )
     .nodeColor(nodeColor)
     .nodeOpacity(0.95)
     .nodeLabel((node) => {
@@ -264,13 +276,17 @@ function createGraph() {
 }
 
 function nodeName(id: string) {
-  return canonical.nodes.find((node) => node.id === id)?.name ?? id;
+  return (
+    modelCanonical?.nodes.find((node) => node.id === id)?.name ??
+    canonical.nodes.find((node) => node.id === id)?.name ??
+    id
+  );
 }
 function nodeColor(node: SimulationNode) {
   const active =
     (!highlighted.size || highlighted.has(node.id)) &&
     (!searchMatches || searchMatches.has(node.id));
-  return active ? domainFor(node.id).color : "#34404c";
+  return active ? (node.type === "model" ? "#d5afff" : domainFor(node.id).color) : "#34404c";
 }
 function linkColor(link: SimulationLink) {
   if (selectedEdge?.id === link.id) return "#ffffff";
@@ -287,7 +303,7 @@ function labelVisible(node: SimulationNode) {
     node.id === selectedId ||
     highlighted.has(node.id) ||
     Boolean(searchMatches?.has(node.id)) ||
-    (!highlighted.size && !searchMatches && node.degree >= 7)
+    (!highlighted.size && !searchMatches && node.degree >= (node.type === "model" ? 2 : 7))
   );
 }
 function updateStyles() {
@@ -308,10 +324,13 @@ function updateStyles() {
 }
 
 function updateGraph() {
-  visible = filterGraph(canonical, domainSelect.value, relationSelect.value);
+  visible =
+    graphMode === "models"
+      ? filterModelGraph(modelCanonical ?? { nodes: [], edges: [] }, domainSelect.value)
+      : filterGraph(canonical, domainSelect.value, relationSelect.value);
   if (selectedId && !visible.nodes.some((node) => node.id === selectedId)) clearSelection();
   selectedEdge = undefined;
-  const next = simulationData(visible);
+  const next = modelSimulationData(visible);
   const old = new Map(graph?.graphData().nodes.map((node) => [node.id, node]));
   for (const node of next.nodes)
     Object.assign(
@@ -330,11 +349,13 @@ function updateGraph() {
   if (selectedId) renderNodeInspector(selectedId);
   else inspector.hidden = true;
   required("counts").textContent =
-    `${visible.nodes.length} systems / ${visible.edges.length} relations`;
+    graphMode === "models"
+      ? `${visible.nodes.filter((node) => node.type === "system").length} systems / ${visible.nodes.filter((node) => node.type === "model").length} models / ${visible.edges.length} model links`
+      : `${visible.nodes.length} systems / ${visible.edges.length} relations`;
   if (visible.nodes.length) state.hidden = true;
   else {
     state.hidden = false;
-    state.innerHTML = `<h2>No systems in this group</h2><p>Choose another navigation group or reset the atlas.</p><button id="empty-reset">Reset atlas</button>`;
+    state.innerHTML = `<h2>No ${graphMode === "models" ? "model neighborhoods" : "systems"} in this group</h2><p>Choose another navigation group or reset the atlas.</p><button id="empty-reset">Reset atlas</button>`;
     required("empty-reset").onclick = reset;
   }
   updateSearch();
@@ -382,12 +403,48 @@ function selectNode(id: string) {
   updateStyles();
 }
 function renderNodeInspector(id: string) {
+  const node = visible.nodes.find((item) => item.id === id);
+  if (node?.type === "model") {
+    const edges = visible.edges.filter((edge) => edge.target === id);
+    inspector.hidden = false;
+    inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow model-family">Mathematical model family</p><h2>${escapeHtml(node.name)}</h2><p>${edges.length} visible systems share this candidate model family. Shared models do not imply influence or a system-to-system relation.</p>${modelConnections(id)}`;
+    bindInspector();
+    return;
+  }
   const system = details.get(id) ?? systems.find((item) => item.id === id);
   const edges = visible.edges.filter((edge) => edge.source === id || edge.target === id);
   inspector.hidden = false;
   inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow">${escapeHtml(domainFor(id).name)} · navigation group</p><h2>${escapeHtml(nodeName(id))}</h2><p class="selection-summary">${escapeHtml(system?.summary ?? "Open the architecture card for reviewed scope, features, and evidence.")}</p><div class="tag-row">${system ? system.scope.map((scope) => `<span>${escapeHtml(scope)}</span>`).join("") : "<span>Card scope loading on demand</span>"}</div><div class="inspector-bottom"><span>${edges.length} visible relation${edges.length === 1 ? "" : "s"}</span><button id="open-card" class="primary-button">Open card ↗</button></div>`;
-  inspector.querySelector(".inspector-close")?.addEventListener("click", clearSelection);
+  if (graphMode === "models") inspector.insertAdjacentHTML("beforeend", modelConnections(id));
+  bindInspector();
   required("open-card").onclick = () => void openDetail(id);
+}
+
+function modelConnections(id: string) {
+  return `<div class="model-connections">${visible.edges
+    .flatMap((edge, index) => {
+      if (edge.type !== "modeled-by" || (edge.source !== id && edge.target !== id)) return [];
+      const other = edge.source === id ? edge.target : edge.source;
+      return [
+        `<div><button data-inspect-node="${escapeHtml(other)}">${escapeHtml(nodeName(other))}</button><button data-view-edge="${index}">Inspect ${edge.metadata?.length ?? 0} view${edge.metadata?.length === 1 ? "" : "s"} ↗</button></div>`,
+      ];
+    })
+    .join("")}</div>`;
+}
+
+function bindInspector() {
+  inspector.querySelector(".inspector-close")?.addEventListener("click", clearSelection);
+  inspector.querySelectorAll<HTMLButtonElement>("[data-inspect-node]").forEach((button) => {
+    button.onclick = () => selectNode(button.dataset.inspectNode!);
+  });
+  inspector.querySelectorAll<HTMLButtonElement>("[data-view-edge]").forEach((button) => {
+    button.onclick = () => {
+      const edge = graph
+        ?.graphData()
+        .links.find((link) => link.id === `edge-${button.dataset.viewEdge}`);
+      if (edge) selectEdge(edge);
+    };
+  });
 }
 function selectEdge(edge: SimulationLink) {
   selectedEdge = edge;
@@ -395,6 +452,13 @@ function selectEdge(edge: SimulationLink) {
   highlighted = new Set([endpointId(edge.source), endpointId(edge.target)]);
   required<HTMLButtonElement>("focus").disabled = true;
   inspector.hidden = false;
+  if (edge.type === "modeled-by") {
+    inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow model-family">Candidate mathematical views · ${escapeHtml(edge.claim_type ?? "")}</p><h2>${escapeHtml(nodeName(endpointId(edge.target)))}</h2><p>${escapeHtml(nodeName(endpointId(edge.source)))} → modeled by</p><div class="model-views">${(edge.metadata ?? []).map((view) => `<section><h3>${escapeHtml(view.model)}</h3><dl><dt>Question</dt><dd>${escapeHtml(view.question) || "Not supplied"}</dd><dt>Assumptions</dt><dd>${view.assumptions.length ? `<ul>${view.assumptions.map((assumption) => `<li>${escapeHtml(assumption)}</li>`).join("")}</ul>` : "None supplied"}</dd><dt>Claim</dt><dd>${escapeHtml(view.claim_type)}</dd><dt>Evidence IDs · source card</dt><dd>${view.evidence_ids.length ? view.evidence_ids.map(escapeHtml).join(", ") : "None supplied"}</dd></dl></section>`).join("") || "<p>No view metadata supplied.</p>"}</div><button id="source-card" class="primary-button">Open source card & evidence ↗</button>`;
+    bindInspector();
+    required("source-card").onclick = () => void openDetail(endpointId(edge.source));
+    updateStyles();
+    return;
+  }
   inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow">${edge.type === "related" ? "Legacy association" : "Typed relation"}</p><h2>${escapeHtml(edge.type.replaceAll("_", " "))}</h2><p>${escapeHtml(nodeName(endpointId(edge.source)))} ${edge.type === "related" ? "—" : "→"} ${escapeHtml(nodeName(endpointId(edge.target)))}</p><div class="tag-row">${[
     edge.claim_type,
     edge.claim_status,
@@ -410,7 +474,7 @@ function selectEdge(edge: SimulationLink) {
 }
 
 function updateSearch() {
-  const matches = searchSystems(visible.nodes, systems, search.value);
+  const matches = searchNodes(visible.nodes, systems, search.value);
   searchMatches = search.value.trim() ? new Set(matches.map((node) => node.id)) : undefined;
   results.hidden = !search.value.trim() || document.activeElement !== search;
   results.innerHTML = matches.length
@@ -418,10 +482,10 @@ function updateSearch() {
         .slice(0, 8)
         .map(
           (node) =>
-            `<button data-result="${escapeHtml(node.id)}"><strong>${escapeHtml(node.name)}</strong><small>${escapeHtml(domainFor(node.id).name)}</small></button>`,
+            `<button data-result="${escapeHtml(node.id)}"><strong>${escapeHtml(node.name)}</strong><small>${escapeHtml(node.type === "model" ? "Model family" : domainFor(node.id).name)}</small></button>`,
         )
         .join("")}<button id="all-results">Browse all ${matches.length} results ↗</button>`
-    : `<p>No matching systems in this navigation group.</p>`;
+    : `<p>No matching nodes in this navigation group.</p>`;
   results.querySelectorAll<HTMLButtonElement>("[data-result]").forEach(
     (button) =>
       (button.onclick = () => {
@@ -440,21 +504,25 @@ function updateSearch() {
   updateStyles();
 }
 function renderCatalog() {
-  const nodes = canonical.nodes.length
+  const nodes = (graphMode === "models" ? modelCanonical : canonical.nodes.length)
     ? visible.nodes
-    : systems.map((system) => ({ id: system.id, name: system.name, type: "system" as const }));
-  const matches = searchSystems(nodes, systems, catalogSearch.value);
+    : systems.map((system) => ({
+        id: system.id,
+        name: system.name,
+        type: "system" as const,
+      }));
+  const matches = searchNodes(nodes, systems, catalogSearch.value);
   required("catalog-count").textContent =
-    `${matches.length} systems · ${domainSelect.selectedOptions[0].textContent}`;
+    `${matches.length} ${graphMode === "models" ? "systems and models" : "systems"} · ${domainSelect.selectedOptions[0].textContent}`;
   const metadata = new Map(systems.map((system) => [system.id, system]));
   required("catalog-list").innerHTML = matches.length
     ? matches
         .map(
           (node) =>
-            `<article class="catalog-item"><span class="eyebrow">${escapeHtml(domainFor(node.id).name)}</span><h3>${escapeHtml(node.name)}</h3><p>${escapeHtml(metadata.get(node.id)?.summary ?? "Reviewed card details available on demand.")}</p><div><button data-card="${escapeHtml(node.id)}">Read card ↗</button><button data-locate="${escapeHtml(node.id)}">Locate on graph</button></div></article>`,
+            `<article class="catalog-item"><span class="eyebrow">${escapeHtml(node.type === "model" ? "Mathematical model family" : domainFor(node.id).name)}</span><h3>${escapeHtml(node.name)}</h3><p>${escapeHtml(node.type === "model" ? "Select to explore systems and inspect their candidate views." : (metadata.get(node.id)?.summary ?? "Reviewed card details available on demand."))}</p><div>${node.type === "system" ? `<button data-card="${escapeHtml(node.id)}">Read card ↗</button>` : ""}<button data-locate="${escapeHtml(node.id)}">Locate on graph</button></div></article>`,
         )
         .join("")
-    : `<p class="muted">No systems match this search. Change the query or navigation group.</p>`;
+    : `<p class="muted">No nodes match this search. Change the query or navigation group.</p>`;
   required("catalog-list")
     .querySelectorAll<HTMLButtonElement>("[data-card]")
     .forEach((button) => (button.onclick = () => void openDetail(button.dataset.card!)));
@@ -466,7 +534,7 @@ function renderCatalog() {
           catalog.close();
           selectNode(button.dataset.locate!);
           focus();
-          required("open-card").focus();
+          inspector.querySelector<HTMLButtonElement>("button")?.focus();
         }),
     );
 }
@@ -539,18 +607,27 @@ async function loadMetadata() {
   }
 }
 async function loadGraph() {
+  const request = ++graphRequest;
+  const mode = graphMode;
   state.hidden = false;
-  state.innerHTML = `<span class="state-orbit" aria-hidden="true"></span><h1>Connecting the atlas</h1><p>Loading systems and relationships…</p>`;
+  state.innerHTML = `<span class="state-orbit" aria-hidden="true"></span><h1>Connecting the atlas</h1><p>Loading ${mode === "models" ? "mathematical model neighborhoods" : "systems and relationships"}…</p>`;
   try {
-    const response = await fetch("/api/graph");
-    if (!response.ok) throw new Error(`Graph API returned ${response.status}`);
-    const payload = (await response.json()) as GraphPayload | { data: GraphPayload };
-    canonical = "data" in payload ? payload.data : payload;
-    if (!Array.isArray(canonical.nodes) || !Array.isArray(canonical.edges))
-      throw new Error("Invalid graph payload");
+    if (mode === "models") {
+      modelCanonical ??= await loadModelGraph();
+    } else {
+      const response = await fetch("/api/graph");
+      if (!response.ok) throw new Error(`Graph API returned ${response.status}`);
+      const payload = (await response.json()) as GraphPayload | { data: GraphPayload };
+      canonical = "data" in payload ? payload.data : payload;
+      if (!Array.isArray(canonical.nodes) || !Array.isArray(canonical.edges))
+        throw new Error("Invalid graph payload");
+    }
+    if (request !== graphRequest) return;
     if (!graph) createGraph();
     relationSelect.innerHTML = `<option value="all">All relations</option>${[
-      ...new Set(canonical.edges.map((edge) => edge.type)),
+      ...new Set(
+        (mode === "models" ? modelCanonical!.edges : canonical.edges).map((edge) => edge.type),
+      ),
     ]
       .sort()
       .map(
@@ -562,6 +639,7 @@ async function loadGraph() {
     updateGraph();
     validateMetadata();
   } catch {
+    if (request !== graphRequest) return;
     graph?._destructor();
     graph = undefined;
     host.replaceChildren();
@@ -573,6 +651,40 @@ async function loadGraph() {
       showDialog(catalog);
     };
   }
+}
+
+function switchGraphMode(mode: "systems" | "models") {
+  if (mode === graphMode) return;
+  graphMode = mode;
+  clearSelection();
+  hoveredId = undefined;
+  visible = { nodes: [], edges: [] };
+  labels.clear();
+  graph?.graphData({ nodes: [], links: [] });
+  relationSelect.value = "all";
+  relationSelect.disabled = mode === "models";
+  required("graph-systems").setAttribute("aria-pressed", String(mode === "systems"));
+  required("graph-models").setAttribute("aria-pressed", String(mode === "models"));
+  search.placeholder = mode === "models" ? "Find a system or model…" : "Find a system…";
+  search.setAttribute(
+    "aria-label",
+    mode === "models"
+      ? "Search systems and mathematical models"
+      : "Search systems, descriptions, or card scope",
+  );
+  required("catalog-title").textContent =
+    mode === "models" ? "Browse systems & models" : "Browse systems";
+  required("catalog-open").innerHTML =
+    `${mode === "models" ? "Browse nodes" : "Browse systems"} <span aria-hidden="true">↗</span>`;
+  const key = document.querySelector(".edge-key");
+  if (key)
+    key.innerHTML =
+      mode === "models"
+        ? '<span><i class="model-dot"></i>Model family</span><span><i class="typed-line"></i>Modeled by</span>'
+        : '<span><i class="typed-line"></i>Typed relation</span><span><i class="legacy-line"></i>Legacy related</span>';
+  required("counts").textContent = "Loading graph…";
+  updateSearch();
+  void loadGraph();
 }
 
 search.addEventListener("input", updateSearch);
@@ -587,7 +699,7 @@ search.addEventListener("keydown", (event) => {
     results.querySelector<HTMLButtonElement>("button")?.focus();
   }
   if (event.key === "Enter") {
-    const first = searchSystems(visible.nodes, systems, search.value)[0];
+    const first = searchNodes(visible.nodes, systems, search.value)[0];
     if (first) {
       selectNode(first.id);
       focus();
@@ -628,6 +740,8 @@ required("fit").onclick = fit;
 required("focus").onclick = focus;
 required("reset").onclick = reset;
 required("reheat").onclick = reheat;
+required("graph-systems").onclick = () => switchGraphMode("systems");
+required("graph-models").onclick = () => switchGraphMode("models");
 required("pause").onclick = () => {
   paused = !paused;
   updatePauseButton();
