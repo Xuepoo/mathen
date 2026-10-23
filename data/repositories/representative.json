@@ -466,5 +466,14 @@
     "documentation": "https://wiki.libsdl.org/SDL3/",
     "ref": "main",
     "priority": "extended"
+  },
+  {
+    "id": "carryctx",
+    "name": "CarryCtx",
+    "category": "project-lifecycle-tool",
+    "repository": "https://github.com/Xuepoo/carryctx.git",
+    "documentation": "https://github.com/Xuepoo/carryctx-docs",
+    "ref": "4ba349da5e9f20471b87b451900f0d155d84da02",
+    "priority": "seed"
   }
 ]

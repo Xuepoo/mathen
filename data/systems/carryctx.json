@@ -1,0 +1,492 @@
+{
+  "id": "carryctx",
+  "name": "CarryCtx",
+  "version_context": "carryctx-cli commit 4ba349da5e9f20471b87b451900f0d155d84da02; carryctx-docs commit d27e1800f5359dc9d77211fd84de40dba8de3a01",
+  "summary": "A local-first project lifecycle control layer that persists agent and human collaboration state in SQLite, integrates Git-aware workspaces and checkpoints, and exchanges validated state through mergeable local snapshots.",
+  "scope": [
+    "local project lifecycle state",
+    "task dependencies and guarded transitions",
+    "agent, team, session, and handoff coordination",
+    "Git and Jujutsu workspace integration",
+    "context graphs and audit history",
+    "ctxpack export, import, and local snapshot merge"
+  ],
+  "temporal_context": {
+    "version": "carryctx-cli commit 4ba349da5e9f20471b87b451900f0d155d84da02",
+    "status": "current",
+    "claim_status": "accepted",
+    "evidence_ids": ["carryctx-cli-fixed-commit"]
+  },
+  "features": [
+    {
+      "id": "local-sqlite-project-state",
+      "name": "Local SQLite project state",
+      "category": "persistence-model",
+      "claim_type": "fact",
+      "claim_status": "accepted",
+      "description": "CarryCtx stores authoritative project state in a SQLite database at <git-common-dir>/carryctx/state.sqlite, shared by linked worktrees, while .carryctx/ holds project configuration and guidance.",
+      "benefits": [
+        "One durable state boundary for a repository and its linked worktrees",
+        "Queryability without a hosted service",
+        "Schema migrations and integrity checks are part of the CLI contract"
+      ],
+      "costs": [
+        "State depends on local filesystem and SQLite availability",
+        "Shared linked-worktree state requires database coordination",
+        "Migration compatibility is an operational responsibility"
+      ],
+      "evidence_ids": [
+        "carryctx-state-transport-doc",
+        "carryctx-database-source",
+        "carryctx-cli-fixed-commit"
+      ]
+    },
+    {
+      "id": "guarded-task-lifecycle",
+      "name": "Guarded task lifecycle and dependency gating",
+      "category": "workflow-state-model",
+      "claim_type": "fact",
+      "claim_status": "accepted",
+      "description": "Tasks use explicit planned, ready, in-progress, blocked, review, completed, and cancelled states; transition evaluation gates claim, start, unblock, and completion on ownership, dependency, session, progress, and policy facts.",
+      "benefits": [
+        "Explicit readiness and terminal-state behavior",
+        "Strong prerequisites cannot be bypassed at key transitions",
+        "Typed refusal paths for invalid lifecycle changes"
+      ],
+      "costs": [
+        "Many state and guard combinations must be understood",
+        "The lifecycle constrains workflows outside its transition policy",
+        "Dependency and completion policy can reject an executable command"
+      ],
+      "evidence_ids": ["carryctx-task-source", "carryctx-lifecycle-doc"]
+    },
+    {
+      "id": "durable-collaboration-records",
+      "name": "Durable collaboration records",
+      "category": "coordination-model",
+      "claim_type": "fact",
+      "claim_status": "accepted",
+      "description": "Agents, teams, sessions, progress items, checkpoints, handoffs, decisions, and append-only events are persisted as project records so responsibility and recovery context survive changes of harness, window, session, and worktree.",
+      "benefits": [
+        "Separates durable identity from an agent runtime",
+        "Handoffs, review context, and audit history are queryable",
+        "Resume and context projections support recovery"
+      ],
+      "costs": [
+        "Record schemas and references add coordination overhead",
+        "Persistent history requires cleanup and migration policies",
+        "The external harness still owns scheduling and model selection"
+      ],
+      "evidence_ids": [
+        "carryctx-lifecycle-doc",
+        "carryctx-readme-fixed",
+        "carryctx-checkpoint-source"
+      ]
+    },
+    {
+      "id": "vcs-aware-workspaces",
+      "name": "Capability-aware VCS workspaces and checkpoints",
+      "category": "version-control-boundary",
+      "claim_type": "fact",
+      "claim_status": "accepted",
+      "description": "CarryCtx uses a VcsBackend boundary for repository discovery, status, workspace creation and removal, and snapshots Git-aware checkpoint state; Git is the Tier 1 backend and Jujutsu is an optional runtime backend with fail-closed behavior for unsupported operations.",
+      "benefits": [
+        "Version-control operations have an explicit capability boundary",
+        "Checkpoints preserve branch, head, dirty, changed-file, and diff information",
+        "Unsupported Jujutsu operations do not silently become Git operations"
+      ],
+      "costs": [
+        "Checkpoint meaning depends on repository and backend behavior",
+        "Multiple VCS backends require capability-specific policies",
+        "Cleanup must account for sessions, dirty state, and colocated layouts"
+      ],
+      "evidence_ids": [
+        "carryctx-vcs-backend-source",
+        "carryctx-git-backend-source",
+        "carryctx-checkpoint-source",
+        "carryctx-worktrees-doc"
+      ]
+    },
+    {
+      "id": "context-graph-query-model",
+      "name": "Context graph and dependency extraction",
+      "category": "context-model",
+      "claim_type": "fact",
+      "claim_status": "accepted",
+      "description": "CarryCtx models generic graph nodes and edges alongside core entities, and exposes graph scanning, dependency extraction, linking, and edge queries for code and project context.",
+      "benefits": [
+        "Tasks, files, modules, decisions, and bugs can be related explicitly",
+        "Impact and context-gathering queries are supported",
+        "Graph metadata is extensible through JSON fields"
+      ],
+      "costs": [
+        "Generic edges require relation-type discipline",
+        "A graph projection can become stale",
+        "Name resolution needs ambiguity handling"
+      ],
+      "evidence_ids": [
+        "carryctx-graph-domain-source",
+        "carryctx-context-graph-doc",
+        "carryctx-ast-graph-doc"
+      ]
+    },
+    {
+      "id": "validated-mergeable-state-exchange",
+      "name": "Validated ctxpack state exchange and local merge",
+      "category": "state-exchange-model",
+      "claim_type": "fact",
+      "claim_status": "accepted",
+      "description": "CarryCtx exports validated directory-form ctxpack bundles, records export-parent DAGs and tombstones, and can stage a fail-closed three-way merge with conflict resolution and local Git snapshot references without making Git transport part of the binary.",
+      "benefits": [
+        "Parallel local state exchange is explicit and reviewable",
+        "Identity, deletion evidence, and merge-base provenance are preserved",
+        "Unresolved conflicts are staged while live state is protected"
+      ],
+      "costs": [
+        "Merge correctness depends on identity and compatibility rules",
+        "Clock-based election and degraded two-way merges have limits",
+        "External transport is required between machines"
+      ],
+      "evidence_ids": [
+        "carryctx-pack-manifest-source",
+        "carryctx-merge-source",
+        "carryctx-merge-dag-source",
+        "carryctx-state-transport-doc",
+        "carryctx-merge-design-doc"
+      ]
+    },
+    {
+      "id": "zero-network-state-boundary",
+      "name": "Zero-network core boundary",
+      "category": "deployment-boundary",
+      "claim_type": "fact",
+      "claim_status": "accepted",
+      "description": "The core binary is local-first and does not initiate network connections; persistence, Git, files, and local subprocesses stay inside the boundary while Git push/fetch and other byte transport remain external responsibilities.",
+      "benefits": [
+        "Project state stays offline",
+        "Transport and state semantics compose separately",
+        "The core trust and dependency surface stays small"
+      ],
+      "costs": [
+        "Multi-machine workflows require external transport",
+        "Local whole-file sync is last-writer-wins",
+        "Offline operation provides no centralized coordination"
+      ],
+      "evidence_ids": [
+        "carryctx-zero-network-doc",
+        "carryctx-state-transport-doc",
+        "carryctx-readme-fixed"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Guarded project lifecycle transition system",
+      "question": "Which task, ownership, dependency, session, and progress facts permit each lifecycle transition, and which transitions are terminal or refused?",
+      "assumptions": [
+        "Project state is represented by task, dependency, agent, session, and progress records",
+        "Guards observe a consistent SQLite state before applying a command",
+        "External scheduling and human judgment are outside the system",
+        "Typed errors are refused transitions rather than state changes"
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed",
+      "evidence_ids": ["carryctx-task-source", "carryctx-lifecycle-doc"]
+    },
+    {
+      "model": "Append-only event-sourced audit projection",
+      "question": "How do durable entity rows, checkpoints, progress records, and append-only events provide a recoverable projection of project activity?",
+      "assumptions": [
+        "State-changing commands append documented events in the same transaction as state updates",
+        "Events are historical records and are not rewritten by ordinary projections",
+        "SQLite locking and migration internals are abstracted",
+        "A checkpoint is bounded recovery context, not a complete database backup"
+      ],
+      "claim_type": "hypothesis",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "carryctx-lifecycle-doc",
+        "carryctx-checkpoint-source",
+        "carryctx-database-source"
+      ]
+    },
+    {
+      "model": "Export-parent DAG and three-way row merge",
+      "question": "How can independent local state snapshots select a deterministic common ancestor and produce a conflict-aware merged state?",
+      "assumptions": [
+        "Export identifiers are lexicographically stable and parent links form an acyclic history",
+        "Rows have stable identity keys and required deletes have tombstones",
+        "The engine compares base, ours, and theirs before per-table policies",
+        "A degraded two-way merge is distinct from a resolved three-way merge"
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "carryctx-pack-manifest-source",
+        "carryctx-merge-source",
+        "carryctx-merge-dag-source",
+        "carryctx-merge-design-doc"
+      ]
+    },
+    {
+      "model": "Typed context graph with projected code dependencies",
+      "question": "How do task, file, module, decision, and bug nodes plus typed edges support context and impact queries over a changing project?",
+      "assumptions": [
+        "Node identifiers are stable within project state and edge types have defined meanings",
+        "Dependency extraction is a projection that may require rescanning",
+        "Queries report recorded relationships and do not prove code correctness",
+        "SQLite query planning and parser details are abstracted"
+      ],
+      "claim_type": "hypothesis",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "carryctx-graph-domain-source",
+        "carryctx-context-graph-doc",
+        "carryctx-ast-graph-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "local-sqlite-project-state",
+      "benefits": ["Low-deployment local durability and queryability"],
+      "costs": [
+        "Shared local state and migrations require database coordination"
+      ]
+    },
+    {
+      "feature_id": "guarded-task-lifecycle",
+      "benefits": [
+        "Explicit readiness, ownership, and terminal-state invariants"
+      ],
+      "costs": ["Policy guards add workflow states and refusal cases"]
+    },
+    {
+      "feature_id": "durable-collaboration-records",
+      "benefits": ["Handoffs and recovery context survive runtime changes"],
+      "costs": ["Persistent history increases schema responsibility"]
+    },
+    {
+      "feature_id": "vcs-aware-workspaces",
+      "benefits": [
+        "Git evidence and isolation are visible at lifecycle boundaries"
+      ],
+      "costs": ["Backend capabilities constrain cleanup"]
+    },
+    {
+      "feature_id": "context-graph-query-model",
+      "benefits": ["Explicit relationships improve context discovery"],
+      "costs": ["Graph maintenance and relation semantics can become stale"]
+    },
+    {
+      "feature_id": "validated-mergeable-state-exchange",
+      "benefits": ["Parallel state can be exchanged with conflict evidence"],
+      "costs": ["Merge policies and compatibility rules add complexity"]
+    },
+    {
+      "feature_id": "zero-network-state-boundary",
+      "benefits": ["Small offline trust boundary"],
+      "costs": ["Users must operate external transport"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "carryctx-cli-fixed-commit",
+      "kind": "source-code",
+      "title": "CarryCtx CLI source at fixed commit 4ba349da5e9f",
+      "uri": "https://github.com/Xuepoo/carryctx/commit/4ba349da5e9f20471b87b451900f0d155d84da02",
+      "accessed": "2026-10-23",
+      "notes": "Fixed upstream CarryCtx CLI revision used for this card."
+    },
+    {
+      "id": "carryctx-readme-fixed",
+      "kind": "official-doc",
+      "title": "CarryCtx README at fixed CLI commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Official project overview and boundaries for the pinned CLI revision."
+    },
+    {
+      "id": "carryctx-database-source",
+      "kind": "source-code",
+      "title": "CarryCtx SQLite database adapter at fixed commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-sqlite/src/database.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for SQLite opening, PRAGMAs, migrations, and schema versioning."
+    },
+    {
+      "id": "carryctx-cli-sqlite-fixed",
+      "kind": "source-code",
+      "title": "CarryCtx SQLite boundary at fixed CLI commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-sqlite/src/database.rs",
+      "accessed": "2026-10-23",
+      "notes": "Reviewed fixed public source path for the SQLite implementation boundary."
+    },
+    {
+      "id": "carryctx-task-source",
+      "kind": "source-code",
+      "title": "CarryCtx task domain at fixed commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-core/src/domain/task.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for task statuses, transition actions, and guard facts."
+    },
+    {
+      "id": "carryctx-checkpoint-source",
+      "kind": "source-code",
+      "title": "CarryCtx checkpoint domain at fixed commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-core/src/domain/checkpoint.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for Git-aware checkpoint fields and corrections."
+    },
+    {
+      "id": "carryctx-vcs-backend-source",
+      "kind": "source-code",
+      "title": "CarryCtx VCS backend boundary at fixed commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-vcs/src/backend.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for backend kinds, workspace requests, capabilities, and fail-closed defaults."
+    },
+    {
+      "id": "carryctx-git-backend-source",
+      "kind": "source-code",
+      "title": "CarryCtx Git backend at fixed commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-vcs/src/git.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for Git discovery, status snapshots, and workspace behavior."
+    },
+    {
+      "id": "carryctx-cli-git-fixed",
+      "kind": "source-code",
+      "title": "CarryCtx Git boundary at fixed CLI commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-vcs/src/git.rs",
+      "accessed": "2026-10-23",
+      "notes": "Reviewed fixed public source path for the Git implementation boundary."
+    },
+    {
+      "id": "carryctx-graph-domain-source",
+      "kind": "source-code",
+      "title": "CarryCtx graph domain at fixed commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-core/src/domain/graph.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for graph node and edge records."
+    },
+    {
+      "id": "carryctx-pack-manifest-source",
+      "kind": "source-code",
+      "title": "CarryCtx ctxpack manifest at fixed commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-pack/src/manifest.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for ctxpack versions, parents, counts, tombstones, and validation."
+    },
+    {
+      "id": "carryctx-merge-source",
+      "kind": "source-code",
+      "title": "CarryCtx merge engine at fixed commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-pack/src/merge/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for row policies, tombstones, conflicts, and deterministic merge reports."
+    },
+    {
+      "id": "carryctx-merge-dag-source",
+      "kind": "source-code",
+      "title": "CarryCtx export DAG resolution at fixed commit",
+      "uri": "https://github.com/Xuepoo/carryctx/blob/4ba349da5e9f20471b87b451900f0d155d84da02/crates/carryctx-pack/src/merge/dag.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for ancestor closure and deterministic merge-base selection."
+    },
+    {
+      "id": "carryctx-lifecycle-doc",
+      "kind": "official-doc",
+      "title": "CarryCtx project lifecycle documentation",
+      "uri": "https://github.com/Xuepoo/carryctx-docs/blob/d27e1800f5359dc9d77211fd84de40dba8de3a01/manual/2-cli-reference/1-project-lifecycle.md",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for lifecycle phases, durable records, checkpoints, audit, and state exchange."
+    },
+    {
+      "id": "carryctx-worktrees-doc",
+      "kind": "official-doc",
+      "title": "CarryCtx worktree documentation",
+      "uri": "https://github.com/Xuepoo/carryctx-docs/blob/d27e1800f5359dc9d77211fd84de40dba8de3a01/manual/2-cli-reference/5-worktrees.md",
+      "accessed": "2026-10-23",
+      "notes": "Official documentation for isolated workspaces and cleanup behavior."
+    },
+    {
+      "id": "carryctx-context-graph-doc",
+      "kind": "official-doc",
+      "title": "CarryCtx context graph architecture",
+      "uri": "https://github.com/Xuepoo/carryctx-docs/blob/d27e1800f5359dc9d77211fd84de40dba8de3a01/architecture/context-graph.md",
+      "accessed": "2026-10-23",
+      "notes": "Official architecture document for graph nodes, edges, and query patterns."
+    },
+    {
+      "id": "carryctx-ast-graph-doc",
+      "kind": "official-doc",
+      "title": "CarryCtx AST graph CLI documentation",
+      "uri": "https://github.com/Xuepoo/carryctx-docs/blob/d27e1800f5359dc9d77211fd84de40dba8de3a01/manual/2-cli-reference/6-ast-graph.md",
+      "accessed": "2026-10-23",
+      "notes": "Official CLI documentation for graph scanning, dependency extraction, and edge queries."
+    },
+    {
+      "id": "carryctx-state-transport-doc",
+      "kind": "official-doc",
+      "title": "CarryCtx state-transport boundary",
+      "uri": "https://github.com/Xuepoo/carryctx-docs/blob/d27e1800f5359dc9d77211fd84de40dba8de3a01/architecture/state-transport-boundary.md",
+      "accessed": "2026-10-23",
+      "notes": "Accepted official decision separating local state semantics from external transport."
+    },
+    {
+      "id": "carryctx-docs-sqlite-fixed",
+      "kind": "official-doc",
+      "title": "CarryCtx SQLite state boundary at fixed docs commit",
+      "uri": "https://github.com/Xuepoo/carryctx-docs/blob/d27e1800f5359dc9d77211fd84de40dba8de3a01/manual/2-cli-reference/1-project-lifecycle.md",
+      "accessed": "2026-10-23",
+      "notes": "Reviewed fixed public documentation path describing the authoritative SQLite state boundary."
+    },
+    {
+      "id": "carryctx-docs-git-fixed",
+      "kind": "official-doc",
+      "title": "CarryCtx Git state boundary at fixed docs commit",
+      "uri": "https://github.com/Xuepoo/carryctx-docs/blob/d27e1800f5359dc9d77211fd84de40dba8de3a01/architecture/state-transport-boundary.md",
+      "accessed": "2026-10-23",
+      "notes": "Reviewed fixed public documentation path describing local Git state and external transport boundaries."
+    },
+    {
+      "id": "carryctx-zero-network-doc",
+      "kind": "official-doc",
+      "title": "CarryCtx zero-network policy",
+      "uri": "https://github.com/Xuepoo/carryctx-docs/blob/d27e1800f5359dc9d77211fd84de40dba8de3a01/architecture/zero-network-policy.md",
+      "accessed": "2026-10-23",
+      "notes": "Official policy for offline core behavior and external network responsibilities."
+    },
+    {
+      "id": "carryctx-merge-design-doc",
+      "kind": "official-doc",
+      "title": "CarryCtx mergeable Git-managed state design",
+      "uri": "https://github.com/Xuepoo/carryctx-docs/blob/d27e1800f5359dc9d77211fd84de40dba8de3a01/design/2026-09-10-mergeable-git-managed-state.md",
+      "accessed": "2026-10-23",
+      "notes": "Official design for ctxpack DAGs, three-way merge, tombstones, and conflict staging."
+    }
+  ],
+  "related_systems": ["git", "sqlite"],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "git",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["carryctx-cli-git-fixed", "carryctx-docs-git-fixed"],
+      "notes": "CarryCtx invokes local Git operations for repository discovery, workspaces, checkpoints, and optional local snapshot refs; Git remains a separate implementation boundary."
+    },
+    {
+      "type": "uses",
+      "target": "sqlite",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "carryctx-cli-sqlite-fixed",
+        "carryctx-docs-sqlite-fixed"
+      ],
+      "notes": "CarryCtx uses an embedded SQLite database for authoritative project state; this records an implementation dependency, not equivalence with SQLite."
+    }
+  ]
+}
