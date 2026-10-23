@@ -1,0 +1,153 @@
+{
+  "id": "yazi",
+  "name": "Yazi",
+  "version_context": "Official sxyazi/yazi release ref v0.3.3 resolved to commit 7c445cef1fd9ff9d41314d3d2b02cbc74250c6bf; historical source snapshot, not a claim about the latest release.",
+  "summary": "A Rust terminal file manager that separates queued background file work, cancellable previews, and Lua extension execution from interactive navigation.",
+  "scope": [
+    "Task scheduling and progress at the v0.3.3 source boundary",
+    "Per-tab preview lifecycle and directory preview loading",
+    "Lua preview execution and synchronization with application state",
+    "Benefits and costs are architectural inferences, not benchmark results or security guarantees"
+  ],
+  "features": [
+    {
+      "id": "priority-queued-background-work",
+      "name": "Priority-queued background work",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Scheduler::serve creates unbounded priority channels for micro and macro work, a progress channel, and configurable worker counts. Macro workers select between micro futures and file/plugin/prework operations; operations whose task ID is no longer ongoing are skipped. Cancellation can enqueue a cleanup hook or remove the ongoing task entry.",
+      "benefits": [
+        "File operations and preparation work can progress independently of navigation",
+        "Task identifiers connect queued work, cancellation, and progress reporting"
+      ],
+      "costs": [
+        "Configured worker counts do not bound the memory consumed by unbounded queues",
+        "Cancellation and completion must coordinate through shared ongoing state; cancellation is not rollback of filesystem effects"
+      ],
+      "evidence_ids": ["yazi-scheduler"]
+    },
+    {
+      "id": "cancellable-preview-state",
+      "name": "Cancellable preview state",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "Preview::go checks a lock containing URL, skip offset, and file characteristics before reusing content, selects a previewer by URL/MIME, and cancels the previous preview before starting replacement work. Directory previews use a separately abortable loader and emit ticketed partial results in chunks capped at 50,000 entries or 500 milliseconds.",
+      "benefits": [
+        "Avoids regenerating unchanged previews",
+        "Incremental directory delivery lets preview results arrive before the full directory stream completes"
+      ],
+      "costs": [
+        "Metadata-based reuse is not a filesystem snapshot or a content-hash guarantee",
+        "Cancellation tokens, loader handles, and preview locks create multiple lifecycle states to coordinate"
+      ],
+      "evidence_ids": ["yazi-preview"]
+    },
+    {
+      "id": "isolated-lua-and-app-callbacks",
+      "name": "Separate Lua execution with application callbacks",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Asynchronous peek runs on spawn_blocking with a slim Lua instance, cancellation-aware instruction hooks, and a cancellation-select boundary. Synchronous peek is dispatched to the application layer. For isolated Lua execution, ya.sync converts arguments to sendable data, emits an application callback, and awaits a one-shot reply.",
+      "benefits": [
+        "Preview plugin execution can occur outside the shared application Lua context",
+        "Explicit callbacks provide a controlled synchronization point for shared plugin state"
+      ],
+      "costs": [
+        "Values crossing the callback boundary must satisfy the sendable conversion contract",
+        "Synchronous callbacks can delay application work; separate Lua contexts do not establish an operating-system security sandbox"
+      ],
+      "evidence_ids": ["yazi-peek", "yazi-sync"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Priority queues with task-identity lifecycle transitions",
+      "question": "How does a navigation request become queued work, a running operation, progress, or cancellation?",
+      "assumptions": [
+        "Represent state as micro queue, macro queue, ongoing task map, and worker states; enqueue, dequeue, progress, and cancel are transitions",
+        "Worker counts are finite, but queue capacity is unbounded in the inspected implementation",
+        "Removal from the ongoing map suppresses later dispatch checks; already performed I/O is not reversed",
+        "No fairness, latency bound, or memory bound follows without workload and scheduler assumptions"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["yazi-scheduler"]
+    },
+    {
+      "model": "Preview reuse and cancellation transition system",
+      "question": "When can a preview be reused and what changes when navigation selects a replacement?",
+      "assumptions": [
+        "Model preview state using the selected URL, file characteristics, skip offset, optional lock, cancellation token, and directory-loader handle",
+        "Unchanged means the implementation's characteristic comparison succeeds, not that bytes are globally immutable",
+        "Cancellation requests stop obsolete work through the inspected hooks and select boundary; this abstraction does not prove all external processes stop immediately"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["yazi-preview", "yazi-peek"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "priority-queued-background-work",
+      "benefits": ["Concurrent work and identifiable progress"],
+      "costs": ["Queue growth and cancellation bookkeeping under load"]
+    },
+    {
+      "feature_id": "cancellable-preview-state",
+      "benefits": ["Reuse and incremental updates reduce repeated work"],
+      "costs": ["Freshness and lifecycle coordination depend on metadata and cancellation"]
+    },
+    {
+      "feature_id": "isolated-lua-and-app-callbacks",
+      "benefits": ["Extensibility with explicit shared-state synchronization"],
+      "costs": ["Serialization constraints and synchronous application callbacks"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "yazi-readme",
+      "kind": "official-doc",
+      "title": "Yazi v0.3.3 README",
+      "uri": "https://github.com/sxyazi/yazi/blob/7c445cef1fd9ff9d41314d3d2b02cbc74250c6bf/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Official project identity and advertised asynchronous scheduling and Lua plugin architecture. Ref v0.3.3 resolved using the official repository commit API; implementation claims below use pinned source rather than performance marketing."
+    },
+    {
+      "id": "yazi-scheduler",
+      "kind": "source-code",
+      "title": "Scheduler queues, cancellation, workers, and progress",
+      "uri": "https://github.com/sxyazi/yazi/blob/7c445cef1fd9ff9d41314d3d2b02cbc74250c6bf/yazi-scheduler/src/scheduler.rs#L15-L70",
+      "accessed": "2026-10-24",
+      "notes": "Inspected Scheduler fields, serve, cancel, and schedule_micro/schedule_macro (lines 366-416). Both priority queues and the progress channel are unbounded; macro dispatch checks ongoing task identity."
+    },
+    {
+      "id": "yazi-preview",
+      "kind": "source-code",
+      "title": "Tab preview lifecycle",
+      "uri": "https://github.com/sxyazi/yazi/blob/7c445cef1fd9ff9d41314d3d2b02cbc74250c6bf/yazi-core/src/tab/preview.rs#L13-L98",
+      "accessed": "2026-10-24",
+      "notes": "Inspected Preview::go, go_folder, abort, reset, and content_unchanged. Directory stream chunks use an entry cap and timeout and emit prepared tickets."
+    },
+    {
+      "id": "yazi-peek",
+      "kind": "source-code",
+      "title": "Asynchronous and synchronous Lua peek",
+      "uri": "https://github.com/sxyazi/yazi/blob/7c445cef1fd9ff9d41314d3d2b02cbc74250c6bf/yazi-plugin/src/isolate/peek.rs#L11-L71",
+      "accessed": "2026-10-24",
+      "notes": "Inspected spawn_blocking, slim_lua, instruction cancellation hooks, select, and application-layer synchronous callback."
+    },
+    {
+      "id": "yazi-sync",
+      "kind": "source-code",
+      "title": "Lua synchronization bridge",
+      "uri": "https://github.com/sxyazi/yazi/blob/7c445cef1fd9ff9d41314d3d2b02cbc74250c6bf/yazi-plugin/src/utils/sync.rs#L31-L82",
+      "accessed": "2026-10-24",
+      "notes": "Inspected sync_isolate and retrieve: sendable argument/result conversion, application callback, and one-shot response. This is a state coordination boundary, not evidence of hostile-plugin isolation."
+    }
+  ],
+  "temporal_context": {
+    "version": "v0.3.3 / 7c445cef1fd9ff9d41314d3d2b02cbc74250c6bf",
+    "status": "historical",
+    "claim_status": "accepted",
+    "evidence_ids": ["yazi-readme", "yazi-scheduler"]
+  },
+  "related_systems": ["ranger", "lua"]
+}

@@ -441,6 +441,19 @@ identifiers, not claims that the projects share the same architecture.
 | `playwright` | Playwright | `reviewed` | Compare browser/context isolation, page protocol control, fixture scopes, and tracing using fixed-commit evidence |
 | `storybook` | Storybook | `reviewed` | Compare story indexing, manager/preview isolation, addon channels, and component test workflows using fixed-commit evidence |
 
+### File management and document conversion
+
+The generic `file-manager` request is resolved to **ranger** (`ranger/ranger`),
+the open-source Python terminal file manager, using the concrete card ID
+`ranger`. This provides a distinct implementation to compare with Yazi.
+
+| ID | Target | Status | Modeling focus |
+| --- | --- | --- | --- |
+| `yazi` | Yazi | `reviewed` | Compare asynchronous priority queues, cancellable previews, and Lua synchronization at v0.3.3 (`7c445cef1fd9ff9d41314d3d2b02cbc74250c6bf`) |
+| `ranger` | ranger | `reviewed` | Compare directory/tab state, cooperative loading, and external preview/opening at v1.9.4 (`55fc2839f693aed9486d211694d7317d78161341`) |
+| `calibre` | calibre | `reviewed` | Compare SQLite metadata/filesystem coordination, OEB conversion, and format plugins at v7.20.0 (`59fa8a62d3d637d960cc5e1a48b728c7efb4d6ef`) |
+| `pandoc` | Pandoc | `reviewed` | Compare shared AST, format adapters, and ordered filters at 3.5 (`31e4fabbb29d302eb972d25ce4aa10dd26bfbadc`) |
+
 ## Modeling order
 
 The recommended order is:

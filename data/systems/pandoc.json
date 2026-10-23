@@ -1,0 +1,154 @@
+{
+  "id": "pandoc",
+  "name": "Pandoc",
+  "version_context": "Official jgm/pandoc release ref 3.5 resolved to commit 31e4fabbb29d302eb972d25ce4aa10dd26bfbadc; historical source snapshot, not a current compatibility guarantee.",
+  "summary": "A document converter that factors formats into readers and writers around a shared document AST and applies ordered Lua, JSON, and citation filters to that representation.",
+  "scope": [
+    "Reader/AST/writer architecture at Pandoc 3.5",
+    "Format registries and text versus byte-oriented adapter interfaces",
+    "Ordered AST filter composition and information-loss boundary",
+    "Excludes PDF engine internals and format-specific fidelity measurements; benefits and costs are architectural inferences"
+  ],
+  "features": [
+    {
+      "id": "shared-document-intermediate-representation",
+      "name": "Shared document intermediate representation",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "The official architecture description separates readers that parse formats into a native document AST from writers that emit target formats. It explicitly states that the intermediate representation is less expressive than many source formats, targets structural preservation rather than all formatting details, and can produce lossy conversions.",
+      "benefits": [
+        "Readers and writers can be developed independently around one document representation",
+        "Common AST transforms can serve many format pairs"
+      ],
+      "costs": [
+        "Unsupported source distinctions may be lost before the writer runs",
+        "A successful conversion is not a guarantee of identical layout or a reversible round trip"
+      ],
+      "evidence_ids": ["pandoc-readme"]
+    },
+    {
+      "id": "typed-format-adapter-registries",
+      "name": "Typed text and binary format-adapter registries",
+      "category": "interface-model",
+      "claim_type": "fact",
+      "description": "The Reader type distinguishes text-source readers from lazy-byte-string readers, each returning a Pandoc document in a monadic context. Writer distinguishes text and lazy-byte-string outputs. Named registries map formats to these adapters, including native and JSON representations and packaged formats such as DOCX and EPUB.",
+      "benefits": [
+        "The common AST interface accommodates both textual and packaged document formats",
+        "Named dispatch keeps format selection separate from individual parser or serializer implementations"
+      ],
+      "costs": [
+        "Shared AST types do not erase adapter-specific options, extensions, or errors",
+        "The I/O representation boundary still requires format-specific parsing and serialization logic"
+      ],
+      "evidence_ids": ["pandoc-readers", "pandoc-writers"]
+    },
+    {
+      "id": "ordered-ast-filter-boundary",
+      "name": "Ordered AST filter boundary",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "Filter distinguishes LuaFilter, JSONFilter, and CiteprocFilter. applyFilters expands filter paths and uses foldM to apply each filter to the preceding document. The manual defines external JSON filters as stdin/stdout JSON programs and Lua filters as built-in Lua execution, and specifies command-line order for filters and citation processing.",
+      "benefits": [
+        "Document transformations can be added independently of readers and writers",
+        "JSON enables filters in other languages while Lua uses the built-in scripting engine"
+      ],
+      "costs": [
+        "Changing filter order can change the result",
+        "External JSON programs add process/serialization boundaries, and arbitrary filters may fail or have side effects"
+      ],
+      "evidence_ids": ["pandoc-filters", "pandoc-manual"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Hub-and-spoke conversion graph through an information-losing representation",
+      "question": "How does a common AST reduce adapter coupling without guaranteeing lossless conversion?",
+      "assumptions": [
+        "For m input formats and n output formats, model edges R_i from input to AST and W_j from AST to output; m+n adapters replace a conceptual m*n set of pairwise adapters",
+        "This counts architectural adapter boundaries, not implementation time, runtime complexity, or universal format support",
+        "If two source documents map to the same AST after unsupported distinctions are dropped, a writer receiving only that AST cannot reconstruct which source was supplied",
+        "Freeze format options and resources; custom preservation mechanisms and raw fragments require a narrower format-specific model"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["pandoc-readme", "pandoc-readers", "pandoc-writers"]
+    },
+    {
+      "model": "Ordered effectful transformations of document state",
+      "question": "Why does filter order matter and why is the pipeline not generally a commutative algebra?",
+      "assumptions": [
+        "Model each filter as an effectful partial transformation from one Pandoc document to the next, following applyFilters foldM order",
+        "For a simplified pure subset, composition is f_k composed with ... composed with f_1, but swapping adjacent filters is valid only if they commute on the relevant inputs",
+        "General filters can perform I/O, depend on arguments, or fail; determinism and side-effect freedom are not assumed",
+        "For k transforms the orchestration invokes k stages; total time is the sum of stage times and serialization costs, while peak space depends on stage implementations and intermediate document sizes"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["pandoc-filters", "pandoc-manual"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "shared-document-intermediate-representation",
+      "benefits": ["Shared adapters and transforms across format pairs"],
+      "costs": ["Information loss at representation boundaries"]
+    },
+    {
+      "feature_id": "typed-format-adapter-registries",
+      "benefits": ["Uniform dispatch with explicit text/binary interfaces"],
+      "costs": ["Format-specific capabilities and failure paths remain"]
+    },
+    {
+      "feature_id": "ordered-ast-filter-boundary",
+      "benefits": ["Composable transformations independent of formats"],
+      "costs": ["Order sensitivity, effects, and JSON process overhead"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "pandoc-readme",
+      "kind": "official-doc",
+      "title": "Pandoc modular design and fidelity limits",
+      "uri": "https://github.com/jgm/pandoc/blob/31e4fabbb29d302eb972d25ce4aa10dd26bfbadc/README.md#L231-L248",
+      "accessed": "2026-10-24",
+      "notes": "Official ref 3.5 resolved through the repository commit API. Inspected reader/AST/writer explanation and explicit warning about less-expressive intermediate representation and lossy conversion."
+    },
+    {
+      "id": "pandoc-readers",
+      "kind": "source-code",
+      "title": "Reader type and named format registry",
+      "uri": "https://github.com/jgm/pandoc/blob/31e4fabbb29d302eb972d25ce4aa10dd26bfbadc/src/Text/Pandoc/Readers.hs#L120-L149",
+      "accessed": "2026-10-24",
+      "notes": "Reader constructors take ReaderOptions and text sources or lazy ByteString and produce m Pandoc; registry maps names to reader constructors."
+    },
+    {
+      "id": "pandoc-writers",
+      "kind": "source-code",
+      "title": "Writer type and named format registry",
+      "uri": "https://github.com/jgm/pandoc/blob/31e4fabbb29d302eb972d25ce4aa10dd26bfbadc/src/Text/Pandoc/Writers.hs#L134-L180",
+      "accessed": "2026-10-24",
+      "notes": "Writer constructors and registry distinguish TextWriter from ByteStringWriter; DOCX/EPUB use binary writers while JSON/native and many markup formats use text writers."
+    },
+    {
+      "id": "pandoc-filters",
+      "kind": "source-code",
+      "title": "Filter variants and ordered application",
+      "uri": "https://github.com/jgm/pandoc/blob/31e4fabbb29d302eb972d25ce4aa10dd26bfbadc/src/Text/Pandoc/Filter.hs#L40-L118",
+      "accessed": "2026-10-24",
+      "notes": "Inspected Filter constructors, applyFilters with foldM, JSON/Lua/citeproc dispatch, and path expansion. The function operates in PandocMonad with MonadIO rather than asserting purity."
+    },
+    {
+      "id": "pandoc-manual",
+      "kind": "official-doc",
+      "title": "Pinned manual: JSON and Lua filter contracts",
+      "uri": "https://github.com/jgm/pandoc/blob/31e4fabbb29d302eb972d25ce4aa10dd26bfbadc/MANUAL.txt#L591-L642",
+      "accessed": "2026-10-24",
+      "notes": "Inspected JSON stdin/stdout contract, output-format argument, built-in Lua filter mechanism, and explicit command-line ordering of filters and citeproc."
+    }
+  ],
+  "temporal_context": {
+    "version": "3.5 / 31e4fabbb29d302eb972d25ce4aa10dd26bfbadc",
+    "status": "historical",
+    "claim_status": "accepted",
+    "evidence_ids": ["pandoc-readme", "pandoc-filters"]
+  },
+  "related_systems": ["calibre", "lua"]
+}

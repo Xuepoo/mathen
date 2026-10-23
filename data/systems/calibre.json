@@ -1,0 +1,138 @@
+{
+  "id": "calibre",
+  "name": "calibre",
+  "version_context": "Official kovidgoyal/calibre release ref v7.20.0 resolved to commit 59fa8a62d3d637d960cc5e1a48b728c7efb4d6ef; historical implementation snapshot.",
+  "summary": "An ebook manager whose library backend coordinates SQLite metadata with filesystem book formats and whose conversion engine normalizes input into an OEB representation before ordered transforms and output plugins.",
+  "scope": [
+    "Local library metadata and format-file storage boundary",
+    "Input/output conversion plugin contracts and the normal OEB pipeline",
+    "Conversion stage diagnostics; excludes device synchronization, viewer, content server, and DRM behavior",
+    "Benefits and costs are architectural inferences; no benchmark or crash-atomicity claim"
+  ],
+  "features": [
+    {
+      "id": "metadata-database-and-format-files",
+      "name": "Metadata database coordinated with format files",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "The backend opens metadata.db through an APSW SQLite connection, constructs book directories from metadata and book identity, and writes format files under library paths. add_format copies or renames file content; update_path coordinates filesystem renames with filename/path table updates performed in a database connection context.",
+      "benefits": [
+        "Relational metadata can organize multiple external format files",
+        "Format payloads remain ordinary filesystem files"
+      ],
+      "costs": [
+        "Renames and database updates span different persistence mechanisms",
+        "Metadata.db alone is not the complete library, and a database transaction does not by itself make filesystem changes atomic"
+      ],
+      "evidence_ids": ["calibre-backend"]
+    },
+    {
+      "id": "oeb-centered-format-adapters",
+      "name": "OEB-centered input and output adapters",
+      "category": "data-model",
+      "claim_type": "fact",
+      "description": "InputFormatPlugin converts input into UTF-8 HTML/OPF/CSS resources and returns an OPF path or OEBBook. OutputFormatPlugin consumes an OEB document and writes an ebook. Plumber normally obtains or constructs an OEBBook from the input plugin before invoking the output plugin; the inspected implementation also has an AZW4-to-PDF unwrap fast path that bypasses normal conversion.",
+      "benefits": [
+        "Format adapters share a common book representation and transformation stages",
+        "Adding a format can reuse the existing conversion pipeline"
+      ],
+      "costs": [
+        "Format-specific details must fit the OEB representation or be handled specially",
+        "Adapter contracts include temporary-file cleanup and format-dependent options; shared representation does not guarantee reversible conversion"
+      ],
+      "evidence_ids": ["calibre-plugin-contracts", "calibre-plumber"]
+    },
+    {
+      "id": "ordered-conversion-stages-and-dumps",
+      "name": "Ordered conversion stages with diagnostic dumps",
+      "category": "dataflow-model",
+      "claim_type": "fact",
+      "description": "Plumber sets options, runs preprocess plugins, invokes the input adapter, and applies ordered OEB transformations including metadata merge, structure detection, optional jacket/alt-text work, and manifest cleanup before output conversion and postprocess plugins. debug_pipeline retains input, parsed, structure, and processed stage artifacts, while progress reporters map stage-local progress into conversion progress.",
+      "benefits": [
+        "Shared stages centralize common book transformations",
+        "Stage dumps help localize representation changes during conversion"
+      ],
+      "costs": [
+        "Stage ordering and option interactions affect the resulting book",
+        "Diagnostic artifacts consume disk space and can expose intermediate document content; progress fractions are not a wall-clock completion guarantee"
+      ],
+      "evidence_ids": ["calibre-plumber"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Coupled relational and filesystem state",
+      "question": "Which consistency relationship must library mutations maintain between book records and stored formats?",
+      "assumptions": [
+        "Represent state as metadata relations D and filesystem mapping F; a format record's path/name should resolve to the intended payload in F after a successful mutation",
+        "A book identifier is logical identity, while title/author-derived paths may change",
+        "The consistency condition is a modeling goal, not a proven crash invariant; external file edits and failures between filesystem and database operations can violate it",
+        "No distributed transaction across D and F is established by the inspected source"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["calibre-backend"]
+    },
+    {
+      "model": "Partial, ordered conversion composition through an intermediate book",
+      "question": "Which work is reused across format pairs, and why is a round-trip identity not implied?",
+      "assumptions": [
+        "For the normal path, model conversion as W_j composed with T_k through T_1 composed with R_i, where R_i parses to OEB, T stages transform OEB, and W_j writes the target",
+        "Freeze options, profiles, plugins, and external resources; stages may fail and may discard information",
+        "The AZW4-to-PDF unwrap branch is outside this normal-path model",
+        "Order matters and neither reversibility nor commutativity is assumed; adapter reuse is a structural property, not a conversion-fidelity proof"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["calibre-plugin-contracts", "calibre-plumber"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "metadata-database-and-format-files",
+      "benefits": ["Queryable metadata and ordinary payload files"],
+      "costs": ["Cross-store consistency and backup coordination"]
+    },
+    {
+      "feature_id": "oeb-centered-format-adapters",
+      "benefits": ["Shared representation reduces duplicated conversion stages"],
+      "costs": ["Representation limits and format-specific exceptions"]
+    },
+    {
+      "feature_id": "ordered-conversion-stages-and-dumps",
+      "benefits": ["Reusable transforms and stage-local diagnostics"],
+      "costs": ["Order-dependent behavior and intermediate artifact overhead"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "calibre-backend",
+      "kind": "source-code",
+      "title": "Library database and format-file backend",
+      "uri": "https://github.com/kovidgoyal/calibre/blob/59fa8a62d3d637d960cc5e1a48b728c7efb4d6ef/src/calibre/db/backend.py#L345-L375",
+      "accessed": "2026-10-24",
+      "notes": "Official ref v7.20.0 resolved through the repository commit API. Inspected Connection (345-375), DB path (446-465), construct_path_name (1468 onward), add_format (1856-1901), and update_path database helper (1934-1960). SQLite transactions and file operations are distinct; no crash-atomicity inference is made."
+    },
+    {
+      "id": "calibre-plugin-contracts",
+      "kind": "source-code",
+      "title": "InputFormatPlugin and OutputFormatPlugin contracts",
+      "uri": "https://github.com/kovidgoyal/calibre/blob/59fa8a62d3d637d960cc5e1a48b728c7efb4d6ef/src/calibre/customize/conversion.py#L129-L229",
+      "accessed": "2026-10-24",
+      "notes": "Inspected InputFormatPlugin documentation and convert return contract; OutputFormatPlugin at lines 277-340 accepts OEBBook and writes a file or directory. These are developer contracts, not validation of every plugin."
+    },
+    {
+      "id": "calibre-plumber",
+      "kind": "source-code",
+      "title": "Plumber conversion orchestration",
+      "uri": "https://github.com/kovidgoyal/calibre/blob/59fa8a62d3d637d960cc5e1a48b728c7efb4d6ef/src/calibre/ebooks/conversion/plumber.py#L1063-L1314",
+      "accessed": "2026-10-24",
+      "notes": "Inspected run setup/input branch including AZW4 unwrap, OEB creation, ordered metadata/structure transforms, optional stages, manifest trimming, debug dumps, output adapter, and postprocessing. Constructor lines 97-155 document diagnostic and profile options."
+    }
+  ],
+  "temporal_context": {
+    "version": "v7.20.0 / 59fa8a62d3d637d960cc5e1a48b728c7efb4d6ef",
+    "status": "historical",
+    "claim_status": "accepted",
+    "evidence_ids": ["calibre-backend", "calibre-plumber"]
+  },
+  "related_systems": ["pandoc", "sqlite", "cpython"]
+}
