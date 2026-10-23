@@ -1,0 +1,324 @@
+{
+  "id": "postfix",
+  "name": "Postfix",
+  "version_context": "commit 108885f3c56c9246802deca3939644aba37ee697 (postfix-3.12-20261015)",
+  "summary": "A modular mail transfer agent that separates SMTP admission and message cleanup from address resolution, bounded queue scheduling, transport delivery, and retry or bounce handling.",
+  "scope": [
+    "mail transfer agent",
+    "SMTP submission and reception",
+    "message queueing",
+    "address rewriting and routing",
+    "delivery scheduling",
+    "SASL and TLS boundaries"
+  ],
+  "features": [
+    {
+      "id": "multi-stage-message-admission",
+      "name": "Multi-stage message admission and cleanup",
+      "category": "ingress-model",
+      "claim_type": "fact",
+      "description": "Postfix accepts network mail through smtpd and local submissions through pickup or sendmail/postdrop, then sends sender, recipients, and content to cleanup. cleanup canonicalizes the message and writes one queue file to the incoming queue before notifying the queue manager.",
+      "benefits": [
+        "Separates SMTP protocol handling from queue-file creation",
+        "Provides one normalization boundary for network and local submissions",
+        "Lets admission checks and lightweight content inspection occur before scheduling"
+      ],
+      "costs": [
+        "Each handoff adds IPC, configuration, and observable failure boundaries",
+        "Ingress validation does not establish successful downstream delivery",
+        "A burst of accepted mail can compete for disk and queue-manager attention"
+      ],
+      "evidence_ids": [
+        "postfix-overview-doc",
+        "postfix-smtpd-source",
+        "postfix-cleanup-source",
+        "postfix-repository-commit"
+      ]
+    },
+    {
+      "id": "address-rewrite-and-transport-resolution",
+      "name": "Address rewriting and transport resolution boundary",
+      "category": "routing-model",
+      "claim_type": "fact",
+      "description": "The trivial-rewrite service transforms addresses to standard form and resolves recipients to a transport, next hop, recipient, and flags. cleanup performs message-level canonical and alias transformations while trivial-rewrite supplies the routing result used by delivery scheduling.",
+      "benefits": [
+        "Keeps address policy and destination selection reusable across delivery paths",
+        "Reduces lookup-table variation through canonical address form",
+        "Makes transport selection explicit before a delivery agent is invoked"
+      ],
+      "costs": [
+        "Routing behavior is distributed across configuration tables and service boundaries",
+        "A syntactically accepted address can still resolve to an unavailable destination",
+        "Reload timing and lookup failures affect future queue decisions"
+      ],
+      "evidence_ids": [
+        "postfix-address-rewriting-doc",
+        "postfix-trivial-rewrite-source",
+        "postfix-overview-doc"
+      ]
+    },
+    {
+      "id": "bounded-queue-scheduler",
+      "name": "Bounded active queue and deferred retry scheduler",
+      "category": "queue-model",
+      "claim_type": "fact",
+      "description": "The qmgr service maintains incoming, active, and deferred queue state. The active queue is a limited window on larger queues, delivery is delegated to transport-specific agents, and temporary failures are retried with delayed scheduling and backoff. Hold suspends delivery until release; corrupt isolates unreadable queue files for inspection. Per-recipient bounce, defer, and trace records are distinct from queue-file membership.",
+      "benefits": [
+        "Bounds scheduler working state under large backlogs",
+        "Separates newly queued work from delayed failures",
+        "Allows transport-specific concurrency and delivery policies"
+      ],
+      "costs": [
+        "Backlog age and retry delay become part of delivery behavior",
+        "A shared queue manager can compete with front-end processes for disk access",
+        "Flushing deferred work too aggressively can reduce delivery performance"
+      ],
+      "evidence_ids": [
+        "postfix-overview-doc",
+        "postfix-qmgr-doc",
+        "postfix-scheduler-doc",
+        "postfix-qmgr-source"
+      ]
+    },
+    {
+      "id": "transport-delivery-and-status",
+      "name": "Transport delivery agents and per-recipient status",
+      "category": "delivery-model",
+      "claim_type": "fact",
+      "description": "qmgr requests delivery through distinct smtp, lmtp, local, virtual, pipe, discard, or error agents. Delivery agents report completion or a request to retry, allowing queue state and recipient status to advance independently for a message with multiple recipients.",
+      "benefits": [
+        "Supports multiple local, remote, and integration delivery mechanisms",
+        "Keeps transport-specific protocol behavior outside queue scheduling",
+        "Allows success, temporary failure, permanent failure, and bounce paths to be represented"
+      ],
+      "costs": [
+        "The delivery result depends on agent, destination, and configuration semantics",
+        "Partial recipient progress complicates message lifecycle and status reporting",
+        "External commands and remote transports widen the failure surface"
+      ],
+      "evidence_ids": [
+        "postfix-overview-doc",
+        "postfix-qmgr-doc",
+        "postfix-delivery-agent-source",
+        "postfix-qmgr-source"
+      ]
+    },
+    {
+      "id": "privilege-and-authentication-boundaries",
+      "name": "Process privilege and SMTP authentication boundaries",
+      "category": "security-model",
+      "claim_type": "fact",
+      "description": "Postfix runs many services under master process supervision and supports separate SASL implementations for SMTP authentication, including a Dovecot SASL integration. Service-specific process and privilege boundaries, optional chrooting, TLS policy, and access controls constrain exposure at the network and delivery edges.",
+      "benefits": [
+        "Limits the blast radius of protocol-facing or lookup-facing code",
+        "Separates SMTP authentication mechanism selection from message routing",
+        "Provides configurable TLS and access-control enforcement points"
+      ],
+      "costs": [
+        "Privilege, chroot, TLS, and SASL configuration must be mutually compatible",
+        "Authentication success still does not imply message delivery success",
+        "Security policy is spread across service definitions, lookup tables, and protocol settings"
+      ],
+      "evidence_ids": [
+        "postfix-security-doc",
+        "postfix-sasl-doc",
+        "postfix-master-source",
+        "postfix-sasl-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Message admission and delivery state machine",
+      "question": "How does a message move from SMTP or local admission through cleanup, queueing, routing, delivery, retry, bounce, or completion?",
+      "assumptions": [
+        "A message has distinct admission, normalized, queued, active, delivered, deferred, bounced, and terminal states",
+        "A message with multiple recipients may have different recipient outcomes at the same time",
+        "SMTP acceptance is modeled as an ingress transition and not as proof of final delivery",
+        "The view abstracts queue-file record encoding and wire-level SMTP commands"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "postfix-overview-doc",
+        "postfix-qmgr-doc",
+        "postfix-delivery-agent-source"
+      ]
+    },
+    {
+      "model": "Queue scheduling and backpressure system",
+      "question": "How do active-queue bounds, transport concurrency, destination status, delayed retries, and deferred scans constrain delivery throughput?",
+      "assumptions": [
+        "Queue files are work items and active membership is a bounded scheduling window",
+        "Transport and destination limits are resource constraints rather than protocol guarantees",
+        "Temporary delivery failures schedule future transitions with a backoff policy",
+        "Let A be active messages and M the configured active-message bound: |A| <= M limits scheduler membership, not total queued bytes or total process memory",
+        "If sustained accepted arrival exceeds completed delivery, backlog can grow despite a bounded active window; storage capacity and upstream admission still matter",
+        "Hold requires an administrative release transition, and corrupt files do not represent successful delivery",
+        "The model does not claim fairness or latency bounds for arbitrary configuration"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "postfix-qmgr-doc",
+        "postfix-scheduler-doc",
+        "postfix-qmgr-source"
+      ]
+    },
+    {
+      "model": "Process and trust-boundary graph",
+      "question": "Which Postfix services exchange message, routing, authentication, and delivery state, and where are privilege or protocol trust boundaries placed?",
+      "assumptions": [
+        "Master, smtpd, cleanup, trivial-rewrite, qmgr, delivery agents, and SASL services are vertices",
+        "IPC and queue-file edges represent explicit handoffs of bounded state",
+        "Privilege and chroot settings are modeled as deployment-dependent boundary labels",
+        "The graph distinguishes the SMTP protocol implementation from the Postfix services that host it"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "postfix-overview-doc",
+        "postfix-master-source",
+        "postfix-sasl-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "multi-stage-message-admission",
+      "benefits": ["Protocol admission and message normalization have explicit boundaries"],
+      "costs": ["IPC and disk handoffs create additional operational failure points"]
+    },
+    {
+      "feature_id": "address-rewrite-and-transport-resolution",
+      "benefits": ["Routing policy can be composed from reusable lookup and transport rules"],
+      "costs": ["Distributed configuration makes routing behavior harder to reason about"]
+    },
+    {
+      "feature_id": "bounded-queue-scheduler",
+      "benefits": ["Active work is bounded while failed work remains retryable"],
+      "costs": ["Backoff and queue contention trade immediate latency against system stability"]
+    },
+    {
+      "feature_id": "transport-delivery-and-status",
+      "benefits": ["Delivery mechanisms can evolve independently of queue admission"],
+      "costs": ["Per-transport and per-recipient outcomes enlarge failure-state space"]
+    },
+    {
+      "feature_id": "privilege-and-authentication-boundaries",
+      "benefits": ["Network-facing and delivery-facing components can run with constrained trust"],
+      "costs": ["Security configuration and cross-service authentication integration require careful coordination"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "postfix-repository-commit",
+      "kind": "source-code",
+      "title": "Postfix source at fixed commit 108885f3c56c",
+      "uri": "https://github.com/vdukhovni/postfix/commit/108885f3c56c9246802deca3939644aba37ee697",
+      "accessed": "2026-10-23",
+      "notes": "GitHub API-resolved commit and locally downloaded source archive from Viktor Dukhovni's public Postfix mirror, labeled postfix-3.12-20261015. This is a development snapshot, not a stable release or independently signature-verified upstream tarball; architecture claims are also supported by Postfix's own documentation."
+    },
+    {
+      "id": "postfix-overview-doc",
+      "kind": "official-doc",
+      "title": "Postfix architecture overview",
+      "uri": "https://www.postfix.org/OVERVIEW.html",
+      "accessed": "2026-10-23",
+      "notes": "Postfix project documentation for smtpd, pickup, cleanup, incoming, active, qmgr, delivery agents, and deferred queues."
+    },
+    {
+      "id": "postfix-address-rewriting-doc",
+      "kind": "official-doc",
+      "title": "Postfix address rewriting overview",
+      "uri": "https://www.postfix.org/ADDRESS_REWRITING_README.html",
+      "accessed": "2026-10-23",
+      "notes": "Postfix project documentation for cleanup transformations, trivial-rewrite normalization, and transport resolution."
+    },
+    {
+      "id": "postfix-qmgr-doc",
+      "kind": "official-doc",
+      "title": "Postfix qmgr(8) queue manager manual",
+      "uri": "https://www.postfix.org/qmgr.8.html",
+      "accessed": "2026-10-23",
+      "notes": "Official manual for incoming, active, deferred queues, delivery agents, and retry behavior."
+    },
+    {
+      "id": "postfix-scheduler-doc",
+      "kind": "official-doc",
+      "title": "Postfix queue scheduler design",
+      "uri": "https://www.postfix.org/SCHEDULER_README.html",
+      "accessed": "2026-10-23",
+      "notes": "Postfix project documentation for concurrency scheduling, dead-destination detection, preemption, and delivery/retry trade-offs."
+    },
+    {
+      "id": "postfix-sasl-doc",
+      "kind": "official-doc",
+      "title": "Postfix SASL authentication",
+      "uri": "https://www.postfix.org/SASL_README.html",
+      "accessed": "2026-10-23",
+      "notes": "Postfix project documentation for SMTP AUTH integration and SASL implementation choices."
+    },
+    {
+      "id": "postfix-security-doc",
+      "kind": "official-doc",
+      "title": "Postfix security and TLS documentation",
+      "uri": "https://www.postfix.org/TLS_README.html",
+      "accessed": "2026-10-23",
+      "notes": "Postfix project documentation for TLS encryption, authentication, and deployment security controls."
+    },
+    {
+      "id": "postfix-qmgr-source",
+      "kind": "source-code",
+      "title": "Postfix queue manager source",
+      "uri": "https://github.com/vdukhovni/postfix/blob/108885f3c56c9246802deca3939644aba37ee697/postfix/src/qmgr/qmgr.c",
+      "accessed": "2026-10-23",
+      "notes": "Local fixed-revision inspection of qmgr.c lines 8-125: queue classes, per-recipient status reports, bounded active admission, incoming/deferred selection, slow start, round robin, exponential backoff, destination cache, and triggers."
+    },
+    {
+      "id": "postfix-cleanup-source",
+      "kind": "source-code",
+      "title": "Postfix cleanup service source",
+      "uri": "https://github.com/vdukhovni/postfix/blob/108885f3c56c9246802deca3939644aba37ee697/postfix/src/cleanup/cleanup.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of cleanup service processing and queue handoff."
+    },
+    {
+      "id": "postfix-smtpd-source",
+      "kind": "source-code",
+      "title": "Postfix SMTP server source",
+      "uri": "https://github.com/vdukhovni/postfix/blob/108885f3c56c9246802deca3939644aba37ee697/postfix/src/smtpd/smtpd.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of the Postfix SMTP server implementation; this is an implementation of SMTP service behavior, not the SMTP protocol standard itself."
+    },
+    {
+      "id": "postfix-trivial-rewrite-source",
+      "kind": "source-code",
+      "title": "Postfix trivial-rewrite source",
+      "uri": "https://github.com/vdukhovni/postfix/blob/108885f3c56c9246802deca3939644aba37ee697/postfix/src/trivial-rewrite/trivial-rewrite.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of address rewriting and resolution service entry points."
+    },
+    {
+      "id": "postfix-delivery-agent-source",
+      "kind": "source-code",
+      "title": "Postfix SMTP and LMTP delivery client source",
+      "uri": "https://github.com/vdukhovni/postfix/blob/108885f3c56c9246802deca3939644aba37ee697/postfix/src/smtp/smtp.c#L10-L37",
+      "accessed": "2026-10-23",
+      "notes": "Local fixed-revision inspection of lines 10-37: queue-manager requests, queue-file recipient completion, retry signaling, bounce/defer/trace status, and connection caching. The overview documents the other delivery-agent choices."
+    },
+    {
+      "id": "postfix-master-source",
+      "kind": "source-code",
+      "title": "Postfix master process source",
+      "uri": "https://github.com/vdukhovni/postfix/blob/108885f3c56c9246802deca3939644aba37ee697/postfix/src/master/master.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of master supervision and service process management."
+    },
+    {
+      "id": "postfix-sasl-source",
+      "kind": "source-code",
+      "title": "Postfix SASL server abstraction source",
+      "uri": "https://github.com/vdukhovni/postfix/blob/108885f3c56c9246802deca3939644aba37ee697/postfix/src/xsasl/xsasl_server.c",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source inspection of SMTP SASL implementation selection and Dovecot/Cyrus integration boundaries."
+    }
+  ]
+}

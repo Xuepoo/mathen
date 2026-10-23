@@ -72,6 +72,8 @@ These entries are already present in the repository at different review levels:
 | `i3` | i3 | X11 window manager | `reviewed` | Compare X11 reparenting, hierarchical containers, keyboard routing, workspaces, resources, and IPC failure boundaries using fixed-commit evidence |
 | `hadoop` | Apache Hadoop | distributed storage and compute | `reviewed` | Compare HDFS metadata, replicated blocks, YARN arbitration, and batch computation using fixed-commit evidence |
 | `nginx` | NGINX | network server | `reviewed` | Analyze event-driven I/O and worker processes |
+| `postfix` | Postfix | mail transfer agent | `reviewed` | Compare SMTP admission, cleanup, address rewriting, bounded queue scheduling, transport delivery, and retry failure state using fixed-commit evidence |
+| `dovecot` | Dovecot | mail server | `reviewed` | Compare IMAP/POP3 login isolation, asynchronous authentication, mailbox indexes, storage transactions, and least-privilege process boundaries using fixed-commit evidence |
 | `llvm` | LLVM | compiler infrastructure | `reviewed` | Add temporal IR and pass-pipeline relations |
 | `gcc` | GCC | compiler | `reviewed` | Compare front-end, IR, pass, and target-backend boundaries with LLVM |
 | `tree-sitter` | tree-sitter | parser library | `reviewed` | Compare incremental concrete syntax trees with compiler front ends |
@@ -271,6 +273,13 @@ identifiers, not claims that the projects share the same architecture.
 | `tcp` | TCP | `planned` | Reliable ordered byte streams, congestion control, retransmission, and connection state; blocker: no standalone protocol repository selected, use a fixed OS implementation card instead |
 | `tls` | TLS | `planned` | Handshake state, authenticated key exchange, record protection, and version evolution; blocker: protocol-only card lacks a repository boundary, use OpenSSL or another fixed implementation |
 | `libp2p` | libp2p | `P2` | Modular peer-to-peer transports and identity |
+
+### Mail and messaging services
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- | --- |
+| `postfix` | Postfix | `reviewed` | Compare SMTP admission, cleanup, address rewriting, bounded queue scheduling, transport delivery, and retry failure state using fixed-commit evidence |
+| `dovecot` | Dovecot | `reviewed` | Compare IMAP/POP3 login isolation, asynchronous authentication, mailbox indexes, storage transactions, and least-privilege process boundaries using fixed-commit evidence |
 
 ### Graphics, frontend, and media libraries
 
