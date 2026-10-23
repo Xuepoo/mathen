@@ -1,0 +1,94 @@
+{
+  "id": "rsync",
+  "name": "rsync",
+  "version_context": "release 3.4.1, commit fa39b7341ae300dfd5ebdcffc2413057a831aae0",
+  "summary": "A file synchronization and copy tool that builds a file list, uses quick checks and block signatures to select changes, and transfers data over a remote shell or rsync daemon protocol.",
+  "scope": [
+    "file synchronization",
+    "delta transfer",
+    "file-list generation",
+    "remote shell transport",
+    "rsync daemon protocol"
+  ],
+  "features": [
+    {
+      "id": "file-list-and-quick-check-planning",
+      "name": "File-list and quick-check planning",
+      "category": "synchronization-model",
+      "claim_type": "fact",
+      "description": "The generator side scans source paths into a sorted file list and applies a quick-check heuristic using metadata such as size and modification time, with an optional whole-file checksum check before selecting updates.",
+      "benefits": ["Avoids reading and transferring unchanged file contents in common cases", "Makes the synchronization set explicit before transfer"],
+      "costs": ["Metadata heuristics can miss changes when timestamps or sizes are not reliable", "Large trees still incur scanning and file-list memory costs"],
+      "evidence_ids": ["rsync-manual", "rsync-generator-source"]
+    },
+    {
+      "id": "block-signature-delta-transfer",
+      "name": "Block-signature delta transfer",
+      "category": "transport-model",
+      "claim_type": "fact",
+      "description": "For selected regular files, rsync generates block signatures and the receiver tokenizes matching blocks or literal data so the sender transmits a reconstructed delta rather than necessarily sending the whole file.",
+      "benefits": ["Reduces network data for files with localized changes", "Separates basis-file matching from final file reconstruction"],
+      "costs": ["Signature generation and matching consume CPU and memory", "Block boundaries and incompatible peers can reduce delta efficiency"],
+      "evidence_ids": ["rsync-manual", "rsync-generator-source", "rsync-token-source", "rsync-receiver-source"]
+    },
+    {
+      "id": "dual-remote-transport-boundary",
+      "name": "Remote-shell and daemon transport boundary",
+      "category": "deployment-model",
+      "claim_type": "fact",
+      "description": "rsync communicates either by starting a remote rsync process through a remote shell such as ssh or by connecting to an rsync daemon and selecting a configured module. These modes share file-transfer logic but have different admission and authentication boundaries.",
+      "benefits": ["Supports shell-mediated transfers without a persistent daemon", "Supports controlled module exposure through a dedicated daemon"],
+      "costs": ["Transport mode changes authentication, encryption, and path authorization assumptions", "Both peers need compatible rsync behavior for negotiated protocol features"],
+      "evidence_ids": ["rsync-manual", "rsync-clientserver-source", "rsync-main-source"]
+    },
+    {
+      "id": "metadata-and-atomic-update-options",
+      "name": "Metadata and destination update policy",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "The command and receiver paths support policies for permissions, times, ownership, links, backups, partial files, in-place writes, delayed updates, and deletion of destination entries. These policies are explicit options rather than an intrinsic guarantee of every run.",
+      "benefits": ["Lets operators choose preservation and failure-recovery semantics", "Supports mirror, backup, and incremental-update workflows"],
+      "costs": ["Option combinations create substantial filesystem semantics and security surface", "In-place, deletion, and link handling can make partial failure consequential"],
+      "evidence_ids": ["rsync-manual", "rsync-generator-source", "rsync-receiver-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "File-list synchronization relation",
+      "question": "Which source and destination paths are selected for update under metadata, filter, and deletion policies?",
+      "assumptions": ["Source and destination trees are finite snapshots", "Selection depends on quick checks, filters, and requested attributes", "The relation does not claim that selected files are successfully transferred"],
+      "claim_type": "inference",
+      "evidence_ids": ["rsync-manual", "rsync-generator-source"]
+    },
+    {
+      "model": "Basis-file block matching relation",
+      "question": "How are destination blocks and sender literals combined into the next file image?",
+      "assumptions": ["The receiver can expose a basis file to signature generation", "Matching tokens identify reusable blocks while literals carry changed data", "The view abstracts checksum algorithm negotiation and stream framing"],
+      "claim_type": "inference",
+      "evidence_ids": ["rsync-generator-source", "rsync-token-source", "rsync-receiver-source"]
+    },
+    {
+      "model": "Transport-mode state machine",
+      "question": "How does an rsync invocation enter local, remote-shell, or daemon/module transfer setup?",
+      "assumptions": ["Path syntax and options select a transport mode", "The peer protocol and file-transfer state are downstream states", "The model abstracts the remote shell implementation and socket details"],
+      "claim_type": "inference",
+      "evidence_ids": ["rsync-manual", "rsync-clientserver-source", "rsync-main-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "file-list-and-quick-check-planning", "benefits": ["Efficient selection of likely changes"], "costs": ["Metadata assumptions and file-list scans affect correctness and memory"]},
+    {"feature_id": "block-signature-delta-transfer", "benefits": ["Less network transfer for localized changes"], "costs": ["Matching consumes computation and does not always beat whole-file transfer"]},
+    {"feature_id": "dual-remote-transport-boundary", "benefits": ["Flexible shell and daemon deployment modes"], "costs": ["Security and authorization properties differ by mode"]},
+    {"feature_id": "metadata-and-atomic-update-options", "benefits": ["Configurable preservation and update policies"], "costs": ["Option interactions expand filesystem failure modes"]}
+  ],
+  "evidence": [
+    {"id": "rsync-fixed-source", "kind": "source-code", "title": "rsync source at release 3.4.1", "uri": "https://github.com/WayneD/rsync/commit/fa39b7341ae300dfd5ebdcffc2413057a831aae0", "accessed": "2026-10-24", "notes": "Fixed upstream source revision used for this card."},
+    {"id": "rsync-manual", "kind": "official-doc", "title": "rsync 3.4.1 manual", "uri": "https://download.samba.org/pub/rsync/rsync.1", "accessed": "2026-10-24", "notes": "Official manual for quick checks, delta transfer, remote-shell mode, daemon mode, and filesystem options."},
+    {"id": "rsync-generator-source", "kind": "source-code", "title": "rsync generator at fixed commit", "uri": "https://github.com/WayneD/rsync/blob/fa39b7341ae300dfd5ebdcffc2413057a831aae0/generator.c", "accessed": "2026-10-24", "notes": "Fixed source for file-list generation, quick checks, signatures, and update selection."},
+    {"id": "rsync-token-source", "kind": "source-code", "title": "rsync token transfer at fixed commit", "uri": "https://github.com/WayneD/rsync/blob/fa39b7341ae300dfd5ebdcffc2413057a831aae0/token.c", "accessed": "2026-10-24", "notes": "Fixed source for sending and receiving block tokens and literal data."},
+    {"id": "rsync-receiver-source", "kind": "source-code", "title": "rsync receiver at fixed commit", "uri": "https://github.com/WayneD/rsync/blob/fa39b7341ae300dfd5ebdcffc2413057a831aae0/receiver.c", "accessed": "2026-10-24", "notes": "Fixed source for reconstructing destination files from tokens and transferred data."},
+    {"id": "rsync-clientserver-source", "kind": "source-code", "title": "rsync client/server transport at fixed commit", "uri": "https://github.com/WayneD/rsync/blob/fa39b7341ae300dfd5ebdcffc2413057a831aae0/clientserver.c", "accessed": "2026-10-24", "notes": "Fixed source for daemon connection setup, greeting, module access, and server-side transfer setup."},
+    {"id": "rsync-main-source", "kind": "source-code", "title": "rsync command entry point at fixed commit", "uri": "https://github.com/WayneD/rsync/blob/fa39b7341ae300dfd5ebdcffc2413057a831aae0/main.c", "accessed": "2026-10-24", "notes": "Fixed source for local, remote-shell, and daemon invocation dispatch."}
+  ],
+  "related_systems": ["aria2", "ssh", "scp", "curl"]
+}

@@ -134,6 +134,11 @@ deterministic analysis, but they do not yet have reviewed Architecture Cards:
 | `xv6-public` | xv6 | educational operating system | `reviewed` | Compare process scheduling, paging, descriptor I/O, and logged filesystems using fixed-commit evidence |
 | `libuv` | libuv | asynchronous I/O library | `reviewed` | Compare event-loop, handle/request, cross-platform, and thread-pool boundaries using fixed-commit evidence |
 | `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
+| `aria2` | aria2 | download utility | `reviewed` | Compare request-group scheduling, segmented transfers, protocol-specific piece storage, and RPC control using fixed-commit evidence |
+| `rsync` | rsync | file synchronization tool | `reviewed` | Compare file-list planning, block-signature delta transfer, remote-shell/daemon transports, and metadata update policies using fixed-commit evidence |
+| `scp` | OpenSSH scp | file-copy utility | `reviewed` | Compare SSH-backed copy orchestration, SFTP-default and legacy SCP paths, and recursive source/sink state using fixed-commit evidence |
+| `ssh` | OpenSSH ssh | secure remote access tool | `reviewed` | Compare layered transport/authentication, multiplexed flow-controlled channels, and session/forwarding services using fixed-commit evidence |
+| `mosh` | Mosh | remote terminal | `reviewed` | Compare SSH bootstrap, authenticated UDP terminal synchronization, roaming, and predictive local echo using fixed-commit evidence |
 | `openssl` | OpenSSL | cryptography library | `reviewed` |
 | `protobuf` | Protocol Buffers | serialization protocol | `P1` |
 | `grpc` | gRPC | RPC framework | `P1` |
@@ -274,6 +279,11 @@ identifiers, not claims that the projects share the same architecture.
 | `haproxy` | HAProxy | `reviewed` | Compare polling, task scheduling, layered connection state, and reload topology using fixed-commit evidence |
 | `caddy` | Caddy | `reviewed` | Compare module lifecycle, atomic configuration swaps, and automatic HTTPS using fixed-commit evidence |
 | `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
+| `aria2` | aria2 | download utility | `reviewed` | Compare request-group scheduling, segmented transfers, protocol-specific piece storage, and RPC control using fixed-commit evidence |
+| `rsync` | rsync | file synchronization tool | `reviewed` | Compare file-list planning, block-signature delta transfer, remote-shell/daemon transports, and metadata update policies using fixed-commit evidence |
+| `scp` | OpenSSH scp | file-copy utility | `reviewed` | Compare SSH-backed copy orchestration, SFTP-default and legacy SCP paths, and recursive source/sink state using fixed-commit evidence |
+| `ssh` | OpenSSH ssh | secure remote access tool | `reviewed` | Compare layered transport/authentication, multiplexed flow-controlled channels, and session/forwarding services using fixed-commit evidence |
+| `mosh` | Mosh | remote terminal | `reviewed` | Compare SSH bootstrap, authenticated UDP terminal synchronization, roaming, and predictive local echo using fixed-commit evidence |
 | `openssl` | OpenSSL | `P0` | Cryptographic primitives, protocol state, and provider boundary |
 | `wireguard` | WireGuard | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
 | `quiche` | quiche | `reviewed` | Compare QUIC connection state, application-driven packet I/O, HTTP/3 streams, QPACK, and loss recovery using fixed-commit evidence |

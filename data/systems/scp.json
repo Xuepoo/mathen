@@ -1,0 +1,28 @@
+{
+  "id": "scp",
+  "name": "OpenSSH scp",
+  "version_context": "OpenSSH portable V_9_9_P2, commit 6221555579266c08cd024e53600c13ab585af98a",
+  "summary": "The OpenSSH scp file-copy client, which parses local and remote operands, establishes SSH-backed sessions, and in current OpenSSH uses the SFTP protocol by default while retaining a legacy SCP mode.",
+  "scope": ["file-copy client", "SSH session setup", "SFTP transfer path", "legacy SCP protocol compatibility", "recursive copy"],
+  "features": [
+    {"id": "ssh-backed-copy-orchestration", "name": "SSH-backed copy orchestration", "category": "transport-model", "claim_type": "fact", "description": "scp parses source and target operands, starts ssh or sftp-backed connections, and routes local/remote copy direction through distinct source and sink functions. The copy client delegates peer authentication and encrypted transport to OpenSSH session setup.", "benefits": ["Reuses SSH authentication and transport configuration", "Keeps local operand parsing and copy policy in one command boundary"], "costs": ["Copy behavior inherits SSH configuration and remote execution assumptions", "Local/remote direction and multiple operands expand lifecycle paths"], "evidence_ids": ["scp-source", "openssh-manual"]},
+    {"id": "sftp-default-transfer-path", "name": "SFTP default transfer path", "category": "selection-model", "claim_type": "fact", "description": "At the pinned OpenSSH revision, scp opens an SFTP connection for ordinary operation and uses SFTP client operations for source and sink transfer. The -O option selects the legacy SCP protocol path instead.", "benefits": ["Uses a structured file-transfer subsystem for current interoperability", "Preserves an explicit compatibility route for older SCP servers"], "costs": ["Two protocol paths require separate behavior and compatibility testing", "The command name alone does not identify which wire protocol is used"], "evidence_ids": ["scp-source", "scp-manual"]},
+    {"id": "recursive-source-sink-copy", "name": "Recursive source and sink copy", "category": "storage-model", "claim_type": "fact", "description": "scp maintains recursive source traversal and sink handling, including directory targets, metadata options, and local-to-remote, remote-to-local, and remote-to-remote orchestration. The pinned source keeps SFTP and legacy protocol copy functions separate.", "benefits": ["Provides a familiar tree-copy boundary for remote filesystems", "Makes copy direction and recursive behavior explicit in command state"], "costs": ["Remote path and metadata semantics depend on server filesystem permissions", "Recursive and remote-to-remote cases add multiple connection and failure paths"], "evidence_ids": ["scp-source", "scp-manual"]}
+  ],
+  "mathematical_views": [
+    {"model": "Operand and transfer-mode state machine", "question": "How do parsed operands select local, remote-shell, SFTP, legacy SCP, and copy-direction states?", "assumptions": ["Operands are classified as local or remote endpoint descriptions", "Mode flags choose SFTP or legacy SCP behavior", "The view abstracts shell quoting and SSH cryptographic negotiation"], "claim_type": "inference", "evidence_ids": ["scp-source", "scp-manual"]},
+    {"model": "Copy source-sink graph", "question": "How are local files, remote sessions, SFTP handles, and destination sinks connected for a copy operation?", "assumptions": ["Source and sink are distinct endpoints even for remote-to-remote copies", "Edges represent stream or SFTP operations and do not guarantee successful persistence", "Recursive traversal is modeled as expansion of source nodes"], "claim_type": "inference", "evidence_ids": ["scp-source"]}
+  ],
+  "trade_offs": [
+    {"feature_id": "ssh-backed-copy-orchestration", "benefits": ["SSH identity, host-key, and transport configuration reuse"], "costs": ["Copy lifecycle depends on SSH session setup and remote permissions"]},
+    {"feature_id": "sftp-default-transfer-path", "benefits": ["Structured current transfer path with legacy compatibility"], "costs": ["Maintaining two protocol paths complicates semantics and testing"]},
+    {"feature_id": "recursive-source-sink-copy", "benefits": ["Simple recursive file-copy interface"], "costs": ["Tree traversal and remote metadata failures can be partial and difficult to reason about"]}
+  ],
+  "evidence": [
+    {"id": "scp-fixed-source", "kind": "source-code", "title": "OpenSSH portable source at V_9_9_P2", "uri": "https://github.com/openssh/openssh-portable/commit/6221555579266c08cd024e53600c13ab585af98a", "accessed": "2026-10-24", "notes": "Fixed upstream source revision used for this card."},
+    {"id": "scp-source", "kind": "source-code", "title": "OpenSSH scp implementation at fixed commit", "uri": "https://github.com/openssh/openssh-portable/blob/6221555579266c08cd024e53600c13ab585af98a/scp.c", "accessed": "2026-10-24", "notes": "Fixed source for operand parsing, SFTP connection setup, legacy SCP mode, source/sink transfer, and recursive copy dispatch."},
+    {"id": "scp-manual", "kind": "official-doc", "title": "OpenBSD scp manual", "uri": "https://man.openbsd.org/scp", "accessed": "2026-10-24", "notes": "Official OpenSSH-family manual documenting scp operation, SFTP default behavior, and the -O legacy SCP option."},
+    {"id": "openssh-manual", "kind": "official-doc", "title": "OpenSSH manual pages and protocol overview", "uri": "https://www.openssh.com/manual.html", "accessed": "2026-10-24", "notes": "Official OpenSSH documentation for its client programs and layered SSH protocol implementation."}
+  ],
+  "related_systems": ["ssh", "rsync", "aria2"]
+}
