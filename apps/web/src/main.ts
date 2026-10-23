@@ -125,11 +125,15 @@ let initialFitPending = false;
 let allNames = true;
 let detailRequest = 0;
 let metadataLoaded = false;
-type LabelAnchor = { scale: { setScalar: (scale: number) => void } };
+type LabelAnchor = {
+  scale: { setScalar: (scale: number) => void };
+  updateMatrixWorld: (force: boolean) => void;
+};
 const labelAnchors = new Map<string, LabelAnchor>();
 type LinkAnchor = {
   scale: { x: number; y: number };
   geometry: { parameters: { radiusTop: number } };
+  updateMatrixWorld: (force: boolean) => void;
 };
 const linkAnchors = new Map<string, LinkAnchor>();
 const labelElements = new Map<string, HTMLSpanElement>();
@@ -243,6 +247,9 @@ function createGraph() {
     controlType: "orbit",
     rendererConfig: { antialias: true, alpha: true },
   }) as unknown as ForceGraph3DInstance<SimulationNode, SimulationLink>;
+  // The renderer updates camera matrices after controls but before this callback.
+  // A separate RAF races that update and sizes the next frame from stale depth.
+  graph.scene().onBeforeRender = renderScreenGeometry;
   graph
     .width(host.clientWidth)
     .height(host.clientHeight)
@@ -613,9 +620,15 @@ function renderScreenGeometry() {
       const radius = node.type === "model" ? 12 : 10;
       const baseRadius =
         4 * Math.cbrt((node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65);
-      labelAnchors
-        .get(node.id)
-        ?.scale.setScalar((radius * worldUnitsPerPixel(depth, camera.fov, height)) / baseRadius);
+      const anchor = labelAnchors.get(node.id);
+      if (anchor) {
+        anchor.scale.setScalar(
+          (radius * worldUnitsPerPixel(depth, camera.fov, height)) / baseRadius,
+        );
+        // Scene matrices were already updated before onBeforeRender. Refresh the
+        // scaled mesh now so rendering and the subsequent raycast use this size.
+        anchor.updateMatrixWorld(true);
+      }
       const label = labelElements.get(node.id);
       if (!label) continue;
       const point = graph.graph2ScreenCoords(x, y, z);
@@ -647,11 +660,10 @@ function renderScreenGeometry() {
       anchor.scale.x = anchor.scale.y =
         (pixels * worldUnitsPerPixel(depth, camera.fov, height)) /
         (2 * anchor.geometry.parameters.radiusTop);
+      anchor.updateMatrixWorld(true);
     }
   }
-  requestAnimationFrame(renderScreenGeometry);
 }
-requestAnimationFrame(renderScreenGeometry);
 function updatePauseButton() {
   const button = required<HTMLButtonElement>("pause");
   button.setAttribute("aria-pressed", String(paused));
