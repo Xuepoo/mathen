@@ -16,7 +16,7 @@
       "name": "PTY domains and child-process lifecycle",
       "category": "process-model",
       "claim_type": "fact",
-      "description": "WezTerm creates local or remote execution domains and attaches panes to PTY-backed child processes. For pane output the mux uses a blocking PTY reader thread, a socket pair feeding a parser thread, and action delivery to the mux thread. Configured parser buffers and terminal scrollback are distinct resource budgets; pane exit behavior determines whether an ended process leaves a visible pane.",
+      "description": "WezTerm creates local or remote execution domains and attaches panes to PTY-backed child processes. For pane output the mux uses a blocking PTY reader thread and a socket pair feeding a parser thread. The parser thread applies actions directly to the pane, while output notifications are dispatched to the mux/main thread. Configured parser buffers and terminal scrollback are distinct resource budgets; pane exit behavior determines whether an ended process leaves a visible pane.",
       "benefits": [
         "Supports local, SSH, WSL, and other execution domains behind a common pane model",
         "Makes child process state visible to mux and GUI layers"
@@ -25,7 +25,11 @@
         "Remote domains add transport, authentication, and failure modes",
         "PTY, process, and domain resources require coordinated teardown"
       ],
-      "evidence_ids": ["wezterm-pty-source", "wezterm-mux-source", "wezterm-ssh-source"]
+      "evidence_ids": [
+        "wezterm-pty-source",
+        "wezterm-mux-source",
+        "wezterm-ssh-source"
+      ]
     },
     {
       "id": "terminal-parser-screen-state",
@@ -57,7 +61,11 @@
         "Topology and attachment state increase lifecycle and synchronization complexity",
         "A mux server creates long-lived processes and resource ownership questions"
       ],
-      "evidence_ids": ["wezterm-mux-source", "wezterm-mux-pane-source", "wezterm-multiplexing-doc"]
+      "evidence_ids": [
+        "wezterm-mux-source",
+        "wezterm-mux-pane-source",
+        "wezterm-multiplexing-doc"
+      ]
     },
     {
       "id": "gpu-window-rendering-boundary",
@@ -139,7 +147,11 @@
         "Persistence is a topology property, not proof of process survival"
       ],
       "claim_type": "inference",
-      "evidence_ids": ["wezterm-mux-source", "wezterm-multiplexing-doc", "wezterm-pty-source"]
+      "evidence_ids": [
+        "wezterm-mux-source",
+        "wezterm-multiplexing-doc",
+        "wezterm-pty-source"
+      ]
     },
     {
       "model": "Control authority relation",
@@ -164,32 +176,44 @@
       "benefits": [
         "Supports local, SSH, WSL, and other execution domains behind a common pane model"
       ],
-      "costs": ["Remote domains add transport, authentication, and failure modes"]
+      "costs": [
+        "Remote domains add transport, authentication, and failure modes"
+      ]
     },
     {
       "feature_id": "terminal-parser-screen-state",
-      "benefits": ["Centralizes terminal semantics for GUI and multiplexed panes"],
+      "benefits": [
+        "Centralizes terminal semantics for GUI and multiplexed panes"
+      ],
       "costs": ["Terminal compatibility state is broad and protocol-sensitive"]
     },
     {
       "feature_id": "multiplexer-pane-tab-workspace",
-      "benefits": ["Provides persistent multi-pane organization and remote/client attachment"],
-      "costs": ["Topology and attachment state increase lifecycle and synchronization complexity"]
+      "benefits": [
+        "Provides persistent multi-pane organization and remote/client attachment"
+      ],
+      "costs": [
+        "Topology and attachment state increase lifecycle and synchronization complexity"
+      ]
     },
     {
       "feature_id": "gpu-window-rendering-boundary",
-      "benefits": ["Efficiently presents multiple panes and rich terminal content"],
+      "benefits": [
+        "Efficiently presents multiple panes and rich terminal content"
+      ],
       "costs": ["GPU/window backends and font shaping vary by platform"]
     },
     {
       "feature_id": "keyboard-mouse-event-actions",
-      "benefits": ["Unifies terminal input and mux actions through configurable bindings"],
+      "benefits": [
+        "Unifies terminal input and mux actions through configurable bindings"
+      ],
       "costs": ["Focus, modal overlays, and key tables alter event routing"]
     },
     {
       "feature_id": "lua-cli-control-boundary",
       "benefits": ["Makes terminal automation and policy programmable"],
-      "costs": ["Scripts and control clients can affect running sessions and input"]
+      "costs": ["Control clients can affect running sessions and input"]
     }
   ],
   "evidence": [

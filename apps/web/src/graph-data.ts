@@ -25,7 +25,7 @@ export const domains = [
     name: "Web / UI",
     color: "#66dbc5",
     systems:
-      "angular capacitor chromium django electron expo express fastapi firefox flutter gtk ionic javafx laravel nestjs nextjs qt rails react react-native spring-boot stalwart storybook svelte tauri vue wails wxwidgets",
+      "angular capacitor chromium django electron expo express fastapi firefox flutter gtk ionic javafx laravel nestjs nextjs qt rails react react-native spring-boot storybook svelte tauri vue wails wxwidgets",
   },
   {
     id: "languages",
@@ -46,14 +46,14 @@ export const domains = [
     name: "Infrastructure",
     color: "#7fb7f4",
     systems:
-      "apisix argo-cd authentik caddy cilium clickhouse-operator consul containerd crossplane docker envoy firecracker freebsd grpc gvisor haproxy helm istio kata-containers keycloak kong kubernetes linux minix nginx oauth2-proxy openbao openbsd openssl opentelemetry plan9 postfix prometheus qemu quiche runc systemd terraform traefik vault velero wayland wireguard xv6-public",
+      "apisix argo-cd authentik caddy cilium clickhouse-operator consul containerd crossplane docker dovecot envoy firecracker freebsd grpc gvisor haproxy helm istio kata-containers keycloak kong kubernetes linux minix nginx oauth2-proxy openbao openbsd openssl opentelemetry plan9 postfix prometheus qemu quiche runc stalwart systemd terraform traefik vault velero wayland wireguard xv6-public",
   },
   {
     id: "tools",
     name: "Tools",
     color: "#f49eaf",
     systems:
-      "bazel busybox coreutils curl esbuild fd git i3 hyprland jq just lsp niri neovim playwright ripgrep rollup sway vite vscode webpack yq",
+      "alacritty bazel busybox coreutils curl esbuild fd ghostty git i3 hyprland jq just kitty lsp niri neovim playwright ripgrep rollup sway vite vscode webpack wezterm yq",
   },
   {
     id: "graphics",
@@ -67,19 +67,12 @@ export const domains = [
 
 export function domainFor(id: string) {
   return (
-    domains.find((domain) => domain.systems.split(" ").includes(id)) ??
-    domains[domains.length - 1]
+    domains.find((domain) => domain.systems.split(" ").includes(id)) ?? domains[domains.length - 1]
   );
 }
 
-export function filterGraph(
-  graph: GraphPayload,
-  domain = "all",
-  relation = "all",
-): GraphPayload {
-  const nodes = graph.nodes.filter(
-    (node) => domain === "all" || domainFor(node.id).id === domain,
-  );
+export function filterGraph(graph: GraphPayload, domain = "all", relation = "all"): GraphPayload {
+  const nodes = graph.nodes.filter((node) => domain === "all" || domainFor(node.id).id === domain);
   const ids = new Set(nodes.map((node) => node.id));
   return {
     nodes,
@@ -110,11 +103,7 @@ export function endpointId(endpoint: string | SimulationNode): string {
   return typeof endpoint === "string" ? endpoint : endpoint.id;
 }
 
-export function neighborhood(
-  graph: GraphPayload,
-  id: string,
-  relation = "all",
-) {
+export function neighborhood(graph: GraphPayload, id: string, relation = "all") {
   const ids = new Set([id]);
   for (const edge of graph.edges) {
     if (relation !== "all" && edge.type !== relation) continue;
@@ -150,11 +139,7 @@ export function simulationData(graph: GraphPayload, relation = "all") {
   };
 }
 
-export function searchSystems(
-  nodes: GraphNode[],
-  systems: SystemSummary[],
-  query: string,
-) {
+export function searchSystems(nodes: GraphNode[], systems: SystemSummary[], query: string) {
   const metadata = new Map(systems.map((system) => [system.id, system]));
   const normalized = query.trim().toLowerCase();
   return nodes.filter((node) => {
@@ -173,14 +158,12 @@ export async function loadAllSystems(
   const systems = new Map<string, SystemSummary>();
   for (let offset = 0; ; offset += 100) {
     const response = await request(`/api/systems?limit=100&offset=${offset}`);
-    if (!response.ok)
-      throw new Error(`Systems API returned ${response.status}`);
+    if (!response.ok) throw new Error(`Systems API returned ${response.status}`);
     const { data } = (await response.json()) as { data: SystemSummary[] };
     if (!Array.isArray(data)) throw new Error("Invalid systems response");
     const previousSize = systems.size;
     for (const system of data) systems.set(system.id, system);
     if (data.length < 100) return [...systems.values()];
-    if (systems.size === previousSize)
-      throw new Error("Systems API did not advance pagination");
+    if (systems.size === previousSize) throw new Error("Systems API did not advance pagination");
   }
 }

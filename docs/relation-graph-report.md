@@ -2,30 +2,30 @@
 
 ## Scope and interpretation
 
-This report covers the current `167` reviewed Architecture Cards under `data/systems/`. It distinguishes typed evidence-backed relations from legacy navigation metadata and from the separate mathematical-model projection. It does not add edges merely to remove isolated nodes.
+This report covers the current `171` reviewed Architecture Cards under `data/systems/`. It distinguishes typed evidence-backed relations from legacy navigation metadata and from the separate mathematical-model projection. It does not add edges merely to remove isolated nodes.
 
 A typed relation is directional and remains `proposed` until deliberate review accepts it. Its evidence IDs must be local to the source card. A legacy `related` edge is navigation context and carries no typed claim. A model-neighborhood edge groups explicitly named mathematical views; it is not a dependency or equivalence claim.
 
 ## Inventory
 
-- Systems: **167**
-- Features: **633**
-- Mathematical views: **465**
+- Systems: **171**
+- Features: **654**
+- Mathematical views: **477**
 - Typed relations: **33** (`uses`: 18, `composes`: 4, `resembles`: 11)
 - Valid legacy related edges: **260**
 - Combined directed edges: **293**
 
 ## Connectivity
 
-- Combined undirected components: **28**, sizes `[136, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]`.
+- Combined undirected components: **32**: one of size 136, four of size 2, and 27 singletons.
 - Largest component: **136** nodes.
-- Isolated nodes: **23**.
+- Isolated nodes: **27**.
 
-The remaining isolates are an explicit review result. A card can be valuable without a supported cross-system edge; shared words such as “runtime”, “pipeline”, “storage”, “window”, or “protocol” are not relation evidence.
+The remaining isolates have no recorded connection in this projection; some still need relation review. A card can be valuable without a supported cross-system edge; shared words such as “runtime”, “pipeline”, “storage”, “window”, or “protocol” are not relation evidence.
 
 ### Remaining isolates
 
-`bazel`, `blender`, `cassandra`, `celery`, `dovecot`, `flutter`, `foundationdb`, `gtk`, `haproxy`, `imagemagick`, `javafx`, `just`, `leveldb`, `lsp`, `mongodb`, `oauth2-proxy`, `postfix`, `pulsar`, `qt`, `traefik`, `wayland`, `webpack`, `wxwidgets`
+`alacritty`, `bazel`, `blender`, `cassandra`, `celery`, `dovecot`, `flutter`, `foundationdb`, `ghostty`, `gtk`, `haproxy`, `imagemagick`, `javafx`, `just`, `kitty`, `leveldb`, `lsp`, `mongodb`, `oauth2-proxy`, `postfix`, `pulsar`, `qt`, `traefik`, `wayland`, `webpack`, `wezterm`, `wxwidgets`
 
 ### Non-singleton components outside the largest
 
@@ -36,7 +36,7 @@ The remaining isolates are an explicit review result. A card can be valuable wit
 
 ## Mathematical model neighborhood
 
-The `/api/graph/models` projection currently exposes **167 system nodes**, **223 model nodes**, and **445 `modeled-by` links** from reviewed mathematical views. It is a bipartite navigational graph. The model hubs preserve each view’s model name, question, assumptions, claim type, and source-local evidence IDs. Shared placement in a hub means “these views ask related structural questions”; it does not establish common implementation, a shared law, formal proof, historical influence, or composition compatibility.
+The `/api/graph/models` projection currently exposes **171 system nodes**, **230 model nodes**, and **457 `modeled-by` links** from reviewed mathematical views. It is a bipartite navigational graph. The model hubs preserve each view’s model name, question, assumptions, claim type, and source-local evidence IDs. Shared placement in a hub means “these views ask related structural questions”; it does not establish common implementation, a shared law, formal proof, historical influence, or composition compatibility.
 
 The frontend exposes this projection through the `Systems / Math models` toggle. The system graph remains the evidence-backed software relation graph.
 
