@@ -169,5 +169,18 @@
       "accessed": "2026-10-23",
       "notes": "Pinned source for OIDC token processing and claim projection."
     }
+  ],
+  "relations": [
+    {
+      "type": "resembles",
+      "target": "authentik",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "keycloak-admin-doc",
+        "keycloak-auth-source"
+      ],
+      "notes": "Both are self-hosted identity providers with configurable authentication flows and federation/provider boundaries; their internal models and deployment behavior remain distinct."
+    }
   ]
 }

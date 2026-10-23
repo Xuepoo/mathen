@@ -165,5 +165,17 @@
       "accessed": "2026-10-23",
       "notes": "Fixed source for release persistence, history, and storage driver boundaries."
     }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "kubernetes",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "helm-introduction-doc"
+      ],
+      "notes": "Helm is documented as the package manager for Kubernetes and communicates with the Kubernetes API server to install chart releases."
+    }
   ]
 }

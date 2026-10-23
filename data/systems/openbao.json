@@ -70,5 +70,18 @@
     {"id": "openbao-architecture-doc", "kind": "official-doc", "title": "OpenBao architecture", "uri": "https://openbao.org/docs/internals/architecture/", "accessed": "2026-10-23", "notes": "Official architecture documentation for the barrier, seal state, core request flow, policies, engines, leases, and audit."},
     {"id": "openbao-core-source", "kind": "source-code", "title": "OpenBao core implementation", "uri": "https://github.com/openbao/openbao/blob/81004113331f2dea8e05f571faa5e14fe31371ba/internal/vault/core.go", "accessed": "2026-10-23", "notes": "Pinned core implementation used for barrier, seal, storage, router, and backend boundaries."},
     {"id": "openbao-lease-source", "kind": "source-code", "title": "OpenBao lease API source", "uri": "https://github.com/openbao/openbao/blob/81004113331f2dea8e05f571faa5e14fe31371ba/api/sys_leases.go", "accessed": "2026-10-23", "notes": "Pinned lease-management API boundary."}
+  ],
+  "relations": [
+    {
+      "type": "resembles",
+      "target": "vault",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "openbao-architecture-doc",
+        "openbao-core-source"
+      ],
+      "notes": "Both are secret-management services that protect storage behind a security barrier, authorize mounted engines, and manage leases; this does not claim shared implementation or historical influence."
+    }
   ]
 }

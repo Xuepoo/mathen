@@ -193,5 +193,18 @@
       "accessed": "2026-10-23",
       "notes": "Pinned source for package runtime and controller management."
     }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "kubernetes",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "crossplane-composition-doc",
+        "crossplane-managed-source"
+      ],
+      "notes": "Crossplane documents and implements its control plane as Kubernetes APIs and reconcilers for composite and managed resources."
+    }
   ]
 }

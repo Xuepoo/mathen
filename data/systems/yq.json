@@ -183,5 +183,18 @@
       "accessed": "2026-10-23T00:00:00+00:00",
       "notes": "Pinned implementation of all-input evaluation."
     }
+  ],
+  "relations": [
+    {
+      "type": "resembles",
+      "target": "jq",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "yq-readme",
+        "yq-command-doc"
+      ],
+      "notes": "yq explicitly documents jq-like expression syntax while extending evaluation to YAML and other formats; this does not claim that yq embeds or depends on jq."
+    }
   ]
 }

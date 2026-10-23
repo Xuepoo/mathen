@@ -221,5 +221,17 @@
       "accessed": "2026-10-23",
       "notes": "Fixed source for thread-safe shared state with reference-counted values intended for reuse across configuration changes."
     }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "go",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "caddy-architecture-doc"
+      ],
+      "notes": "Caddy documents itself as a self-contained Go binary; this relation identifies the implementation language boundary, not a dependency on a particular Go application."
+    }
   ]
 }

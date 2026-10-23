@@ -173,5 +173,27 @@
       "accessed": "2026-10-23",
       "notes": "Fixed source for configuration and proxy model boundaries."
     }
+  ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "envoy",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "istio-architecture-doc"
+      ],
+      "notes": "Istio documents Envoy as the proxy deployed in its sidecar data plane and the component that interacts with mesh data-plane traffic."
+    },
+    {
+      "type": "uses",
+      "target": "kubernetes",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "istio-architecture-doc"
+      ],
+      "notes": "Istio documents Kubernetes as a supported environment and describes its control-plane deployment and workload integration there."
+    }
   ]
 }
