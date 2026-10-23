@@ -85,6 +85,31 @@ filesystem for offline operation. The API currently serves reviewed systems,
 features, and fixed-commit modeling bundles; draft cards remain filesystem-only
 until an authenticated draft-review API exists.
 
+The intended hosted MCP shape is a remote HTTPS endpoint such as:
+
+```text
+https://mathen.xuepoo.xyz/mcp
+```
+
+That endpoint is a future deployment target, not a current API contract. The
+current implementation is the read-only stdio server in `apps/mcp/`, optionally
+backed by the Hono API through `MATHEN_API_URL`. A future remote adapter must
+preserve the same reviewed-only boundary, authentication decision, tool
+schemas, error contract, and draft isolation rather than exposing the local
+stdio process directly over the network.
+
+## Static asset storage boundary
+
+The current Worker serves the Vite build through Workers Static Assets. R2 is a
+possible future storage layer for versioned static assets, large reports, or
+experiment artifacts, but no R2 bucket is currently bound to the Worker. When
+introduced, manage it in Wrangler configuration with an explicit binding and
+production/preview bucket names, keep upload and cleanup commands in the
+repository, and treat the bucket as a deployment artifact store rather than
+the canonical Architecture Card database. D1 remains the structured source of
+truth; R2 objects must be addressable by release or artifact IDs and remain
+rebuildable from repository inputs where applicable.
+
 The MCP tools call the same canonical API or a shared service layer. Its first
 tools can be:
 

@@ -5,6 +5,19 @@ base from an agent host. It is intentionally read-only: generated drafts must
 pass the Python validation and human review workflow before they become
 canonical system cards.
 
+## Hosted endpoint direction
+
+The planned hosted MCP endpoint is a remote HTTPS service, for example:
+
+```text
+https://mathen.xuepoo.xyz/mcp
+```
+
+This endpoint is not implemented yet. Until the remote transport, authentication,
+session handling, and deployment boundary are specified and tested, use the
+stdio server described below. The future endpoint must expose the same
+reviewed-only read contract and must not expose filesystem-only drafts.
+
 ## Start
 
 From the repository root:
