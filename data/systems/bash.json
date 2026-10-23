@@ -1,0 +1,205 @@
+{
+    "id": "bash",
+    "name": "GNU Bash",
+    "version_context": "tag bash-5.3, commit b8c60bc9ca365f8261fa97900b6fa939f6ebc303",
+    "summary": "A POSIX-oriented command shell whose reader/parser produces command structures for execution, with pipelines, job control, shell variables, functions, and builtins sharing shell process state.",
+    "scope": [
+        "shell reader and parser",
+        "command and pipeline execution",
+        "job control and process groups",
+        "variables, functions, and builtin state"
+    ],
+    "features": [
+        {
+            "id": "reader-parser-executor-pipeline",
+            "name": "Reader, parser, and executor pipeline",
+            "category": "execution-model",
+            "claim_type": "fact",
+            "description": "Bash's fixed source implements a reader loop that reads commands, uses a generated parser to build command structures, and dispatches them through execute_command_internal. The Bash Reference Manual describes shell operation as reading, parsing, expanding, and executing commands.",
+            "benefits": [
+                "Separates syntax recognition from execution and expansion",
+                "Supports interactive and non-interactive input through a common shell loop"
+            ],
+            "costs": [
+                "Shell grammar, expansion rules, and execution contexts are tightly coupled",
+                "Recursive evaluation paths such as command substitution increase control-flow complexity"
+            ],
+            "evidence_ids": [
+                "bash-eval-source",
+                "bash-parser-source",
+                "bash-exec-source",
+                "bash-operation-doc"
+            ]
+        },
+        {
+            "id": "pipeline-job-control",
+            "name": "Pipeline and job-control process model",
+            "category": "process-model",
+            "claim_type": "fact",
+            "description": "The source builds process pipelines, assigns process groups when job control is enabled, tracks jobs, and waits for or reports their state. The Bash manual documents pipelines, asynchronous commands, and job-control behavior.",
+            "benefits": [
+                "Composes commands through Unix pipes and asynchronous process groups",
+                "Tracks process completion and foreground/background status at the shell boundary"
+            ],
+            "costs": [
+                "Signals, terminal ownership, and wait status are platform-sensitive",
+                "Pipeline failures and asynchronous completion require shared job bookkeeping"
+            ],
+            "evidence_ids": ["bash-jobs-source", "bash-exec-source", "bash-job-doc"]
+        },
+        {
+            "id": "shell-state-and-builtins",
+            "name": "Shell variable, function, and builtin state",
+            "category": "state-model",
+            "claim_type": "fact",
+            "description": "Bash stores scalar, indexed-array, and associative-array variables in shell contexts, exports selected state, and executes builtins and functions within the shell process. The manual documents shell parameters, arrays, functions, and builtin commands.",
+            "benefits": [
+                "Builtins and functions can mutate shell state without an external process boundary",
+                "Structured variables and dynamic scopes support reusable scripts"
+            ],
+            "costs": [
+                "State visibility and context restoration vary across subshell and function boundaries",
+                "A large builtin and compatibility surface constrains language evolution"
+            ],
+            "evidence_ids": [
+                "bash-variables-source",
+                "bash-evalfile-source",
+                "bash-parameters-doc"
+            ]
+        }
+    ],
+    "mathematical_views": [
+        {
+            "model": "Shell command transition pipeline",
+            "question": "How does input become parsed command structure, expanded words, execution effects, and an exit status?",
+            "assumptions": [
+                "Input passes through reading, parsing, expansion, and execution stages",
+                "Execution may recurse for substitutions, functions, and sourced files",
+                "The view abstracts generated parser implementation details and OS scheduling"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": [
+                "bash-eval-source",
+                "bash-parser-source",
+                "bash-exec-source",
+                "bash-operation-doc"
+            ]
+        },
+        {
+            "model": "Pipeline and shell-state graph",
+            "question": "How do shell contexts, builtins, functions, process groups, pipes, and jobs connect?",
+            "assumptions": [
+                "Shell variables and process groups are distinct resource classes",
+                "Edges represent data flow, state mutation, fork/exec, or wait relationships",
+                "The graph does not imply that all pipeline stages share shell variable state"
+            ],
+            "claim_type": "hypothesis",
+            "evidence_ids": [
+                "bash-jobs-source",
+                "bash-variables-source",
+                "bash-exec-source",
+                "bash-job-doc"
+            ]
+        }
+    ],
+    "trade_offs": [
+        {
+            "feature_id": "reader-parser-executor-pipeline",
+            "benefits": ["One shell loop supports scripts and interactive commands"],
+            "costs": ["Expansion and recursive evaluation increase semantic coupling"]
+        },
+        {
+            "feature_id": "pipeline-job-control",
+            "benefits": ["Unix process composition and foreground control"],
+            "costs": ["Signals, terminal state, and waits complicate portability"]
+        },
+        {
+            "feature_id": "shell-state-and-builtins",
+            "benefits": ["Scripts can mutate shell state directly"],
+            "costs": ["Scope and compatibility rules make state behavior subtle"]
+        }
+    ],
+    "evidence": [
+        {
+            "id": "bash-fixed-source",
+            "kind": "source-code",
+            "title": "GNU Bash source at fixed tag bash-5.3",
+            "uri": "https://git.savannah.gnu.org/cgit/bash.git/tree/?h=bash-5.3&id=b8c60bc9ca365f8261fa97900b6fa939f6ebc303",
+            "accessed": "2026-10-24",
+            "notes": "Official source inspected at the fixed commit; relevant paths include eval.c, y.tab.c, execute_cmd.c, jobs.c, variables.c, and builtins/evalfile.c."
+        },
+        {
+            "id": "bash-eval-source",
+            "kind": "source-code",
+            "title": "Bash evaluation loop source",
+            "uri": "https://git.savannah.gnu.org/cgit/bash.git/tree/eval.c?h=bash-5.3&id=b8c60bc9ca365f8261fa97900b6fa939f6ebc303",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for reader_loop, read_command, and command evaluation."
+        },
+        {
+            "id": "bash-parser-source",
+            "kind": "source-code",
+            "title": "Bash parser source",
+            "uri": "https://git.savannah.gnu.org/cgit/bash.git/tree/y.tab.c?h=bash-5.3&id=b8c60bc9ca365f8261fa97900b6fa939f6ebc303",
+            "accessed": "2026-10-24",
+            "notes": "Fixed generated parser and shell_getc implementation."
+        },
+        {
+            "id": "bash-exec-source",
+            "kind": "source-code",
+            "title": "Bash command execution source",
+            "uri": "https://git.savannah.gnu.org/cgit/bash.git/tree/execute_cmd.c?h=bash-5.3&id=b8c60bc9ca365f8261fa97900b6fa939f6ebc303",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for execute_command_internal, pipelines, subshells, and command contexts."
+        },
+        {
+            "id": "bash-operation-doc",
+            "kind": "official-doc",
+            "title": "Bash shell operation",
+            "uri": "https://www.gnu.org/software/bash/manual/bash.html#Shell-Operation",
+            "accessed": "2026-10-24",
+            "notes": "Official manual describing reading, parsing, expansion, and execution."
+        },
+        {
+            "id": "bash-jobs-source",
+            "kind": "source-code",
+            "title": "Bash job-control source",
+            "uri": "https://git.savannah.gnu.org/cgit/bash.git/tree/jobs.c?h=bash-5.3&id=b8c60bc9ca365f8261fa97900b6fa939f6ebc303",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for pipeline construction, process groups, job tables, and waits."
+        },
+        {
+            "id": "bash-job-doc",
+            "kind": "official-doc",
+            "title": "Bash job control and pipelines",
+            "uri": "https://www.gnu.org/software/bash/manual/bash.html#Job-Control",
+            "accessed": "2026-10-24",
+            "notes": "Official manual for job control, pipelines, and asynchronous commands."
+        },
+        {
+            "id": "bash-variables-source",
+            "kind": "source-code",
+            "title": "Bash variable state source",
+            "uri": "https://git.savannah.gnu.org/cgit/bash.git/tree/variables.c?h=bash-5.3&id=b8c60bc9ca365f8261fa97900b6fa939f6ebc303",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for variables, arrays, contexts, and environment export."
+        },
+        {
+            "id": "bash-evalfile-source",
+            "kind": "source-code",
+            "title": "Bash source and eval builtin source",
+            "uri": "https://git.savannah.gnu.org/cgit/bash.git/tree/builtins/evalfile.c?h=bash-5.3&id=b8c60bc9ca365f8261fa97900b6fa939f6ebc303",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for sourced files and evaluated shell input."
+        },
+        {
+            "id": "bash-parameters-doc",
+            "kind": "official-doc",
+            "title": "Bash shell parameters and functions",
+            "uri": "https://www.gnu.org/software/bash/manual/bash.html#Shell-Parameters",
+            "accessed": "2026-10-24",
+            "notes": "Official manual for shell variables, arrays, functions, and parameter scope."
+        }
+    ],
+    "related_systems": ["fish", "zsh", "coreutils"]
+}

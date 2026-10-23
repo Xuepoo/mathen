@@ -1,0 +1,195 @@
+{
+    "id": "emacs",
+    "name": "GNU Emacs",
+    "version_context": "tag emacs-30.1, commit 8ac894e2246f25d2a2a97d866b10e6e0b0fede5a",
+    "summary": "An extensible editor whose C runtime drives recursive command loops over Lisp-managed buffers and windows, while a redisplay engine projects editor state onto terminal and graphical frames.",
+    "scope": [
+        "interactive command loop",
+        "Lisp runtime and buffer state",
+        "redisplay and frame boundaries",
+        "process and extension interfaces"
+    ],
+    "features": [
+        {
+            "id": "recursive-command-loop",
+            "name": "Recursive command loop",
+            "category": "execution-model",
+            "claim_type": "fact",
+            "description": "Emacs implements a command loop that reads keyboard events, dispatches commands, handles errors and quits, and supports recursive editing levels. The Elisp manual documents the command loop as the boundary around interactive command execution.",
+            "benefits": [
+                "Supports nested minibuffers and editor modes without replacing the top-level runtime",
+                "Centralizes keyboard input, command dispatch, and recovery"
+            ],
+            "costs": [
+                "Recursive control flow makes dynamic state and unwind behavior difficult to reason about",
+                "Input, command execution, and redisplay responsiveness remain coupled"
+            ],
+            "evidence_ids": ["emacs-keyboard-source", "emacs-command-loop-doc"]
+        },
+        {
+            "id": "lisp-buffer-extension-boundary",
+            "name": "Lisp and buffer extension boundary",
+            "category": "extension-model",
+            "claim_type": "fact",
+            "description": "The fixed source exposes C structures and primitives for Lisp objects and buffers, while the Elisp manual describes buffers as editable text objects with buffer-local state. Lisp commands and packages can therefore operate over host-managed editor resources.",
+            "benefits": [
+                "Makes editor behavior programmable through a large in-process API",
+                "Allows buffer-local modes and data to specialize shared editor machinery"
+            ],
+            "costs": [
+                "Extensions share process memory and can affect global editor behavior",
+                "Dynamic object and buffer state increases compatibility and debugging surface"
+            ],
+            "evidence_ids": [
+                "emacs-buffer-source",
+                "emacs-eval-source",
+                "emacs-buffers-doc"
+            ]
+        },
+        {
+            "id": "redisplay-frame-boundary",
+            "name": "Redisplay and frame boundary",
+            "category": "presentation-model",
+            "claim_type": "fact",
+            "description": "Emacs maintains a redisplay engine that derives glyph and window presentation from buffer state, with terminal and graphical backends implementing frame output. The fixed source separates redisplay from input and buffer mutation paths.",
+            "benefits": [
+                "Supports multiple terminal and graphical frontends over common editor state",
+                "Allows redisplay optimization and damage tracking to remain outside buffer semantics"
+            ],
+            "costs": [
+                "Presentation invalidation is a second state machine coupled to editor mutation",
+                "Backend differences and display timing complicate portability"
+            ],
+            "evidence_ids": [
+                "emacs-redisplay-source",
+                "emacs-terminal-source",
+                "emacs-redisplay-doc"
+            ]
+        }
+    ],
+    "mathematical_views": [
+        {
+            "model": "Recursive command transition system",
+            "question": "How do input events, command execution, recursive edits, errors, and quits advance Emacs state?",
+            "assumptions": [
+                "State includes command-loop depth, current buffer, minibuffer, pending events, and dynamic bindings",
+                "A command is a transition that may enter a nested command loop",
+                "The view abstracts Lisp garbage collection and OS event delivery"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": [
+                "emacs-keyboard-source",
+                "emacs-command-loop-doc",
+                "emacs-buffer-source"
+            ]
+        },
+        {
+            "model": "Buffer-to-frame projection graph",
+            "question": "How do Lisp-managed buffers and windows reach terminal or graphical frame output?",
+            "assumptions": [
+                "Buffers and windows are mutable logical resources",
+                "Redisplay and terminal backends are projection boundaries",
+                "Edges describe observation or mutation paths and do not imply immediate presentation"
+            ],
+            "claim_type": "hypothesis",
+            "evidence_ids": [
+                "emacs-buffer-source",
+                "emacs-redisplay-source",
+                "emacs-terminal-source",
+                "emacs-redisplay-doc"
+            ]
+        }
+    ],
+    "trade_offs": [
+        {
+            "feature_id": "recursive-command-loop",
+            "benefits": ["Nested interactive contexts are first-class"],
+            "costs": ["Dynamic control flow increases recovery complexity"]
+        },
+        {
+            "feature_id": "lisp-buffer-extension-boundary",
+            "benefits": ["Packages can extend editor resources in process"],
+            "costs": ["Extension failures share the editor's address space"]
+        },
+        {
+            "feature_id": "redisplay-frame-boundary",
+            "benefits": ["One editor state supports multiple display backends"],
+            "costs": ["Invalidation and backend behavior add presentation complexity"]
+        }
+    ],
+    "evidence": [
+        {
+            "id": "emacs-fixed-source",
+            "kind": "source-code",
+            "title": "GNU Emacs source at fixed tag emacs-30.1",
+            "uri": "https://github.com/emacs-mirror/emacs/tree/8ac894e2246f25d2a2a97d866b10e6e0b0fede5a",
+            "accessed": "2026-10-24",
+            "notes": "Official source inspected at the fixed commit; relevant paths include src/keyboard.c, src/eval.c, src/buffer.c, src/xdisp.c, src/dispnew.c, and src/terminal.c."
+        },
+        {
+            "id": "emacs-keyboard-source",
+            "kind": "source-code",
+            "title": "Emacs keyboard and command loop source",
+            "uri": "https://github.com/emacs-mirror/emacs/blob/8ac894e2246f25d2a2a97d866b10e6e0b0fede5a/src/keyboard.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for command_loop, recursive_edit, event reading, and command dispatch."
+        },
+        {
+            "id": "emacs-command-loop-doc",
+            "kind": "official-doc",
+            "title": "Emacs Lisp command loop",
+            "uri": "https://www.gnu.org/software/emacs/manual/html_node/elisp/Command-Loop.html",
+            "accessed": "2026-10-24",
+            "notes": "Official manual for the command loop, command execution, and recursive editing context."
+        },
+        {
+            "id": "emacs-buffer-source",
+            "kind": "source-code",
+            "title": "Emacs buffer implementation",
+            "uri": "https://github.com/emacs-mirror/emacs/blob/8ac894e2246f25d2a2a97d866b10e6e0b0fede5a/src/buffer.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for buffer objects, local variables, overlays, and redisplay invalidation."
+        },
+        {
+            "id": "emacs-eval-source",
+            "kind": "source-code",
+            "title": "Emacs Lisp evaluator source",
+            "uri": "https://github.com/emacs-mirror/emacs/blob/8ac894e2246f25d2a2a97d866b10e6e0b0fede5a/src/eval.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for Lisp evaluation and dynamic execution support."
+        },
+        {
+            "id": "emacs-buffers-doc",
+            "kind": "official-doc",
+            "title": "Emacs Lisp buffers",
+            "uri": "https://www.gnu.org/software/emacs/manual/html_node/elisp/Buffers.html",
+            "accessed": "2026-10-24",
+            "notes": "Official manual for buffer identity, text, local variables, and buffer operations."
+        },
+        {
+            "id": "emacs-redisplay-source",
+            "kind": "source-code",
+            "title": "Emacs redisplay source",
+            "uri": "https://github.com/emacs-mirror/emacs/blob/8ac894e2246f25d2a2a97d866b10e6e0b0fede5a/src/xdisp.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for redisplay calculations and glyph/window presentation."
+        },
+        {
+            "id": "emacs-terminal-source",
+            "kind": "source-code",
+            "title": "Emacs terminal and display backend source",
+            "uri": "https://github.com/emacs-mirror/emacs/blob/8ac894e2246f25d2a2a97d866b10e6e0b0fede5a/src/terminal.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for terminal objects and display backend interfaces."
+        },
+        {
+            "id": "emacs-redisplay-doc",
+            "kind": "official-doc",
+            "title": "Emacs Lisp redisplay",
+            "uri": "https://www.gnu.org/software/emacs/manual/html_node/elisp/Low_002dLevel-Display.html",
+            "accessed": "2026-10-24",
+            "notes": "Official manual describing redisplay and display-oriented editor state."
+        }
+    ],
+    "related_systems": ["vim", "neovim", "lua"]
+}

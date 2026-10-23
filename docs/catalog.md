@@ -366,6 +366,11 @@ identifiers, not claims that the projects share the same architecture.
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
 | `neovim` | Neovim | `P1` | Event-driven editor state, MessagePack-RPC channels, embedded Lua, and plugin boundaries |
+| `vim` | Vim | `reviewed` | Compare modal buffer/window state, Ex and Vim9 execution, and job/channel integration using fixed-tag evidence |
+| `emacs` | GNU Emacs | `reviewed` | Compare recursive command loops, Lisp buffer extension, and redisplay/frame boundaries using fixed-tag evidence |
+| `fish` | fish | `reviewed` | Compare structured parsing, interactive reader events, and environment/process execution using fixed-tag evidence |
+| `bash` | GNU Bash | `reviewed` | Compare reader/parser/executor stages, pipeline job control, and shell-state builtins using fixed-tag evidence |
+| `zsh` | Zsh | `reviewed` | Compare wordcode execution, job/signal coordination, and dynamic module/autoload boundaries using fixed-tag evidence |
 | `vscode` | Visual Studio Code | `P1` | Layered workbench services, extension-host IPC, target environments, and contributions |
 | `ripgrep` | ripgrep | `P1` | Ignore-aware parallel traversal, regex/search stages, adaptive I/O, and result streams |
 | `fd` | fd | `P2` | Ignore-aware walking, path/metadata predicates, parallel jobs, and output coordination |

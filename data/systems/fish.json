@@ -1,0 +1,208 @@
+{
+    "id": "fish",
+    "name": "fish",
+    "version_context": "tag 4.0.1, commit 67b6afffd43c0cb7fe4137090a9456556454bec6",
+    "summary": "A user-friendly shell implemented around a structured tokenizer/parser, an interactive reader with event hooks and completion, and explicit environment and process execution layers.",
+    "scope": [
+        "shell tokenizer and parse tree",
+        "interactive reader and completion",
+        "environment and process execution",
+        "event and history integration"
+    ],
+    "features": [
+        {
+            "id": "structured-command-parser",
+            "name": "Structured command parser",
+            "category": "language-model",
+            "claim_type": "fact",
+            "description": "The fixed Rust source tokenizes input into a parse tree and evaluates parsed source through parser and execution modules. Fish documentation describes its command, variable, quoting, and expansion language as a distinct shell syntax.",
+            "benefits": [
+                "Makes syntax and command structure available to parsing, completion, and diagnostics",
+                "Separates lexical structure from later expansion and execution"
+            ],
+            "costs": [
+                "Parser, expansion, and evaluation stages must preserve shell-specific semantics",
+                "Syntax changes affect interactive tooling as well as batch execution"
+            ],
+            "evidence_ids": [
+                "fish-parser-source",
+                "fish-parse-tree-source",
+                "fish-language-doc"
+            ]
+        },
+        {
+            "id": "interactive-reader-event-boundary",
+            "name": "Interactive reader and event boundary",
+            "category": "interaction-model",
+            "claim_type": "fact",
+            "description": "The reader implementation handles character events, prompts, history, completion, repainting, and preexec/postexec/exit hooks. Fish's interactive documentation describes the reader, key bindings, autosuggestions, and completion as interactive shell facilities.",
+            "benefits": [
+                "Integrates editing, completion, history, and hooks around one command reader",
+                "Makes user interaction extensible through named events and functions"
+            ],
+            "costs": [
+                "Event hooks and repainting introduce ordering and reentrancy concerns",
+                "Interactive behavior adds state beyond the command language itself"
+            ],
+            "evidence_ids": [
+                "fish-reader-source",
+                "fish-event-source",
+                "fish-interactive-doc"
+            ]
+        },
+        {
+            "id": "environment-process-execution",
+            "name": "Environment and process execution boundary",
+            "category": "process-model",
+            "claim_type": "fact",
+            "description": "Fish separates environment state, redirections, job groups, process spawning, and execution in dedicated source modules. The language manual documents variables, pipelines, redirections, and command substitution at the shell boundary.",
+            "benefits": [
+                "Keeps shell variables and process resources explicit across execution paths",
+                "Supports pipelines and external commands without conflating them with parsing"
+            ],
+            "costs": [
+                "OS process, file-descriptor, and signal behavior remain external dependencies",
+                "Environment mutation and child-process lifecycle require careful restoration"
+            ],
+            "evidence_ids": [
+                "fish-environment-source",
+                "fish-exec-source",
+                "fish-fork-source",
+                "fish-language-doc"
+            ]
+        }
+    ],
+    "mathematical_views": [
+        {
+            "model": "Parse-expand-execute refinement chain",
+            "question": "How does fish source become a parse tree, expanded command, and process or builtin effect?",
+            "assumptions": [
+                "Source is transformed through tokenization, parse-tree construction, expansion, and evaluation",
+                "Each stage preserves the information required by later shell semantics",
+                "The view abstracts terminal input and OS scheduling"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": [
+                "fish-parser-source",
+                "fish-parse-tree-source",
+                "fish-exec-source",
+                "fish-language-doc"
+            ]
+        },
+        {
+            "model": "Interactive reader event graph",
+            "question": "How do character input, completion, history, hooks, repainting, and command execution interact?",
+            "assumptions": [
+                "Reader state is a central mutable resource",
+                "Events and reader actions are directed edges to parser or display effects",
+                "The graph does not imply that hooks are synchronous in every platform path"
+            ],
+            "claim_type": "hypothesis",
+            "evidence_ids": [
+                "fish-reader-source",
+                "fish-event-source",
+                "fish-interactive-doc"
+            ]
+        }
+    ],
+    "trade_offs": [
+        {
+            "feature_id": "structured-command-parser",
+            "benefits": ["Syntax-aware tooling can share parsed structure"],
+            "costs": ["Language evolution must coordinate multiple stages"]
+        },
+        {
+            "feature_id": "interactive-reader-event-boundary",
+            "benefits": ["Interactive features compose around explicit events"],
+            "costs": ["Hooks and redraw state complicate control flow"]
+        },
+        {
+            "feature_id": "environment-process-execution",
+            "benefits": ["Process and variable boundaries are explicit"],
+            "costs": ["Platform process semantics remain part of correctness"]
+        }
+    ],
+    "evidence": [
+        {
+            "id": "fish-fixed-source",
+            "kind": "source-code",
+            "title": "fish source at fixed tag 4.0.1",
+            "uri": "https://github.com/fish-shell/fish-shell/tree/67b6afffd43c0cb7fe4137090a9456556454bec6",
+            "accessed": "2026-10-24",
+            "notes": "Official source inspected at the fixed commit; relevant paths include src/parser.rs, src/parse_tree.rs, src/reader.rs, src/event.rs, src/env, src/exec.rs, and src/fork_exec."
+        },
+        {
+            "id": "fish-parser-source",
+            "kind": "source-code",
+            "title": "fish tokenizer and parser source",
+            "uri": "https://github.com/fish-shell/fish-shell/blob/67b6afffd43c0cb7fe4137090a9456556454bec6/src/parser.rs",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for parser state and evaluation entry points."
+        },
+        {
+            "id": "fish-parse-tree-source",
+            "kind": "source-code",
+            "title": "fish parse-tree source",
+            "uri": "https://github.com/fish-shell/fish-shell/blob/67b6afffd43c0cb7fe4137090a9456556454bec6/src/parse_tree.rs",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for parsed source and syntax tree representation."
+        },
+        {
+            "id": "fish-language-doc",
+            "kind": "official-doc",
+            "title": "fish language documentation",
+            "uri": "https://fishshell.com/docs/4.0/language.html",
+            "accessed": "2026-10-24",
+            "notes": "Official language reference for commands, variables, expansions, pipelines, and redirections."
+        },
+        {
+            "id": "fish-reader-source",
+            "kind": "source-code",
+            "title": "fish interactive reader source",
+            "uri": "https://github.com/fish-shell/fish-shell/blob/67b6afffd43c0cb7fe4137090a9456556454bec6/src/reader.rs",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for character events, prompts, hooks, completion, history, and command reading."
+        },
+        {
+            "id": "fish-event-source",
+            "kind": "source-code",
+            "title": "fish event source",
+            "uri": "https://github.com/fish-shell/fish-shell/blob/67b6afffd43c0cb7fe4137090a9456556454bec6/src/event.rs",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for event registration and dispatch."
+        },
+        {
+            "id": "fish-interactive-doc",
+            "kind": "official-doc",
+            "title": "fish interactive use documentation",
+            "uri": "https://fishshell.com/docs/4.0/interactive.html",
+            "accessed": "2026-10-24",
+            "notes": "Official documentation for interactive reading, bindings, completion, and autosuggestions."
+        },
+        {
+            "id": "fish-environment-source",
+            "kind": "source-code",
+            "title": "fish environment source",
+            "uri": "https://github.com/fish-shell/fish-shell/tree/67b6afffd43c0cb7fe4137090a9456556454bec6/src/env",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for shell environment and variable state."
+        },
+        {
+            "id": "fish-exec-source",
+            "kind": "source-code",
+            "title": "fish execution source",
+            "uri": "https://github.com/fish-shell/fish-shell/blob/67b6afffd43c0cb7fe4137090a9456556454bec6/src/exec.rs",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for builtin and external command execution."
+        },
+        {
+            "id": "fish-fork-source",
+            "kind": "source-code",
+            "title": "fish process spawning source",
+            "uri": "https://github.com/fish-shell/fish-shell/tree/67b6afffd43c0cb7fe4137090a9456556454bec6/src/fork_exec",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for fork/exec, process setup, and post-fork handling."
+        }
+    ],
+    "related_systems": ["bash", "zsh", "coreutils"]
+}

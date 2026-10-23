@@ -1,0 +1,183 @@
+{
+    "id": "vim",
+    "name": "Vim",
+    "version_context": "tag v9.1.0999, commit 2051af1642843426714efc2572c3e270fe0948be",
+    "summary": "A modal text editor whose main loop coordinates character input and Ex commands over mutable buffers and windows, with Vim script, jobs, and channels extending the editor boundary.",
+    "scope": [
+        "modal terminal editor runtime",
+        "buffers, windows, and undo state",
+        "Ex command and Vim script execution",
+        "jobs, channels, and asynchronous callbacks"
+    ],
+    "features": [
+        {
+            "id": "modal-buffer-window-state",
+            "name": "Modal buffer and window state",
+            "category": "application-state-model",
+            "claim_type": "fact",
+            "description": "The fixed source enters a main editor loop, obtains typed input, and applies commands to buffers, windows, and undo state. Vim's user documentation describes Normal, Insert, and other modes as distinct interpretations of input.",
+            "benefits": [
+                "Separates navigation and editing commands from inserted text",
+                "Keeps buffer, window, and undo state under one editor lifecycle"
+            ],
+            "costs": [
+                "Mode-dependent input increases interaction-state complexity",
+                "Window, buffer, and undo mutations share the responsiveness of the main loop"
+            ],
+            "evidence_ids": ["vim-fixed-source", "vim-intro-doc", "vim-undo-source"]
+        },
+        {
+            "id": "ex-and-vim9-execution-boundary",
+            "name": "Ex command and Vim9 execution boundary",
+            "category": "language-model",
+            "claim_type": "fact",
+            "description": "The source parses and executes Ex command lines through do_cmdline and implements a separate Vim9 compilation and execution surface. The official help documents Ex commands and Vim9 script as programmable editor interfaces.",
+            "benefits": [
+                "Provides both interactive command composition and reusable scripts",
+                "Allows language evolution while retaining the established Ex boundary"
+            ],
+            "costs": [
+                "Multiple command and script execution paths increase compatibility surface",
+                "Script errors and recursive command execution interact with editor state"
+            ],
+            "evidence_ids": ["vim-ex-source", "vim-vim9-source", "vim-eval-doc"]
+        },
+        {
+            "id": "job-channel-integration",
+            "name": "Job and channel integration",
+            "category": "integration-model",
+            "claim_type": "fact",
+            "description": "Vim maintains channels and jobs alongside the editor loop, polls pending work, parses channel messages, and exposes callbacks and terminal buffers. The official job-control help describes asynchronous jobs and channel communication.",
+            "benefits": [
+                "Lets scripts communicate with external processes without replacing editor state",
+                "Provides structured callbacks and message handling for plugins and tools"
+            ],
+            "costs": [
+                "Asynchronous callbacks add ordering and reentrancy obligations",
+                "External process and transport failures cross the editor boundary"
+            ],
+            "evidence_ids": ["vim-ui-source", "vim-channel-source", "vim-job-doc"]
+        }
+    ],
+    "mathematical_views": [
+        {
+            "model": "Modal editor transition system",
+            "question": "How do input characters and Ex commands transform mode, buffer, window, and undo state?",
+            "assumptions": [
+                "Editor state includes the current mode, buffers, windows, cursor, and undo history",
+                "Input dispatch selects transitions based on the active mode and command parser",
+                "The view abstracts terminal timing and exact redraw implementation"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": [
+                "vim-fixed-source",
+                "vim-intro-doc",
+                "vim-ex-source",
+                "vim-undo-source"
+            ]
+        },
+        {
+            "model": "Editor and process integration graph",
+            "question": "Which editor resources and external jobs are connected through channels and callbacks?",
+            "assumptions": [
+                "Buffers and windows are mutable editor resources, while jobs and channels are external-process boundaries",
+                "Edges represent command, message, callback, or terminal-buffer interactions",
+                "The graph describes reachability and does not imply synchronous completion or safety"
+            ],
+            "claim_type": "hypothesis",
+            "evidence_ids": ["vim-channel-source", "vim-job-doc", "vim-ui-source"]
+        }
+    ],
+    "trade_offs": [
+        {
+            "feature_id": "modal-buffer-window-state",
+            "benefits": ["Compact command-oriented editing state"],
+            "costs": ["Mode transitions must remain discoverable and correct"]
+        },
+        {
+            "feature_id": "ex-and-vim9-execution-boundary",
+            "benefits": ["Interactive commands and scripts share editor operations"],
+            "costs": ["Legacy and newer script semantics increase maintenance burden"]
+        },
+        {
+            "feature_id": "job-channel-integration",
+            "benefits": ["External tools can participate in editor workflows"],
+            "costs": ["Process lifecycle and callback ordering become editor concerns"]
+        }
+    ],
+    "evidence": [
+        {
+            "id": "vim-fixed-source",
+            "kind": "source-code",
+            "title": "Vim source at fixed tag v9.1.0999",
+            "uri": "https://github.com/vim/vim/tree/2051af1642843426714efc2572c3e270fe0948be",
+            "accessed": "2026-10-24",
+            "notes": "Official source inspected at the fixed commit; relevant paths include src/main.c, src/getchar.c, src/ex_docmd.c, src/window.c, and src/undo.c."
+        },
+        {
+            "id": "vim-intro-doc",
+            "kind": "official-doc",
+            "title": "Vim introduction and modes help",
+            "uri": "https://vimhelp.org/intro.txt.html",
+            "accessed": "2026-10-24",
+            "notes": "Official help describing Vim's editing modes and command-oriented interaction."
+        },
+        {
+            "id": "vim-ex-source",
+            "kind": "source-code",
+            "title": "Vim Ex command execution source",
+            "uri": "https://github.com/vim/vim/blob/2051af1642843426714efc2572c3e270fe0948be/src/ex_docmd.c",
+            "accessed": "2026-10-24",
+            "notes": "do_cmdline and related code for parsing and executing Ex command lines."
+        },
+        {
+            "id": "vim-vim9-source",
+            "kind": "source-code",
+            "title": "Vim9 compiler and executor source",
+            "uri": "https://github.com/vim/vim/tree/2051af1642843426714efc2572c3e270fe0948be/src",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source paths src/vim9compile.c, src/vim9execute.c, and related Vim9 implementation files."
+        },
+        {
+            "id": "vim-eval-doc",
+            "kind": "official-doc",
+            "title": "Vim expression and Vim9 help",
+            "uri": "https://vimhelp.org/eval.txt.html",
+            "accessed": "2026-10-24",
+            "notes": "Official help for Vim script evaluation and Vim9 script interfaces."
+        },
+        {
+            "id": "vim-undo-source",
+            "kind": "source-code",
+            "title": "Vim undo implementation",
+            "uri": "https://github.com/vim/vim/blob/2051af1642843426714efc2572c3e270fe0948be/src/undo.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for undo and redo state transitions."
+        },
+        {
+            "id": "vim-ui-source",
+            "kind": "source-code",
+            "title": "Vim UI and event polling source",
+            "uri": "https://github.com/vim/vim/blob/2051af1642843426714efc2572c3e270fe0948be/src/ui.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for input waits, pending jobs, channel read-ahead, and event handling."
+        },
+        {
+            "id": "vim-channel-source",
+            "kind": "source-code",
+            "title": "Vim channel implementation",
+            "uri": "https://github.com/vim/vim/blob/2051af1642843426714efc2572c3e270fe0948be/src/channel.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for channel allocation, message queues, callbacks, and lifecycle."
+        },
+        {
+            "id": "vim-job-doc",
+            "kind": "official-doc",
+            "title": "Vim job-control help",
+            "uri": "https://vimhelp.org/channel.txt.html",
+            "accessed": "2026-10-24",
+            "notes": "Official help for jobs, channels, callbacks, and asynchronous process communication."
+        }
+    ],
+    "related_systems": ["neovim", "lua", "zsh"]
+}
