@@ -1,11 +1,67 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  app,
   buildCompositions,
   buildGraph,
   serializeFeature,
   serializeMathematicalView,
 } from "./index.js";
+
+test("GET /api/systems defaults to the first page with deterministic ordering", async () => {
+  const rows = Array.from({ length: 101 }, (_, index) => systemRow(index));
+  const calls: { sql: string; bindings: unknown[] }[] = [];
+  const db = mockSystemsDatabase(rows, calls);
+
+  const response = await app.request(
+    "/api/systems",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as { data: Array<{ id: string }> };
+  assert.equal(body.data.length, 50);
+  assert.equal(body.data[0]?.id, "system-000");
+  assert.equal(body.data.at(-1)?.id, "system-049");
+  assert.deepEqual(calls[0]?.bindings, ["", "%%", 50, 0]);
+  assert.match(calls[0]?.sql ?? "", /ORDER BY name, id/);
+  assert.match(calls[0]?.sql ?? "", /LIMIT \?3 OFFSET \?4/);
+});
+
+test("GET /api/systems clamps limit and supports offsets beyond the maximum page size", async () => {
+  const rows = Array.from({ length: 101 }, (_, index) => systemRow(index));
+  const calls: { sql: string; bindings: unknown[] }[] = [];
+  const db = mockSystemsDatabase(rows, calls);
+
+  const response = await app.request(
+    "/api/systems?limit=999&offset=100",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as { data: Array<{ id: string }> };
+  assert.deepEqual(
+    body.data.map((system) => system.id),
+    ["system-100"],
+  );
+  assert.deepEqual(calls[0]?.bindings, ["", "%%", 100, 100]);
+});
+
+test("GET /api/systems clamps negative pagination values", async () => {
+  const calls: { sql: string; bindings: unknown[] }[] = [];
+  const db = mockSystemsDatabase([systemRow(0)], calls);
+
+  const response = await app.request(
+    "/api/systems?limit=-10&offset=-20",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(calls[0]?.bindings, ["", "%%", 1, 0]);
+});
 
 test("serializes feature and mathematical-view evidence references", () => {
   assert.deepEqual(
@@ -204,3 +260,45 @@ test("buildGraph ignores malformed and unknown graph targets", () => {
     { source: "alpha", target: "beta", type: "related" },
   ]);
 });
+
+function systemRow(index: number) {
+  const id = `system-${String(index).padStart(3, "0")}`;
+  return {
+    id,
+    name: `System ${String(index).padStart(3, "0")}`,
+    version_context: null,
+    temporal_context_json: null,
+    relations_json: "[]",
+    composition_json: null,
+    summary: `Summary for ${id}`,
+    scope_json: "[]",
+    related_systems_json: "[]",
+    source_path: `data/systems/${id}.json`,
+  };
+}
+
+function mockSystemsDatabase(
+  rows: ReturnType<typeof systemRow>[],
+  calls: { sql: string; bindings: unknown[] }[],
+) {
+  return {
+    prepare(sql: string) {
+      return {
+        bind(...bindings: unknown[]) {
+          calls.push({ sql, bindings });
+          return {
+            all<T>() {
+              const limit = Number(bindings[2]);
+              const offset = Number(bindings[3]);
+              return Promise.resolve({
+                results: rows.slice(offset, offset + limit) as T[],
+                success: true,
+                meta: {},
+              });
+            },
+          };
+        },
+      };
+    },
+  } as unknown as D1Database;
+}

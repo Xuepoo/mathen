@@ -39,15 +39,9 @@ type EvidenceRow = {
   notes: string | null;
 };
 
-type GraphSystem = Pick<
-  SystemRow,
-  "id" | "name" | "related_systems_json" | "relations_json"
->;
+type GraphSystem = Pick<SystemRow, "id" | "name" | "related_systems_json" | "relations_json">;
 
-type CompositionSystem = Pick<
-  SystemRow,
-  "id" | "name" | "version_context" | "composition_json"
-> & {
+type CompositionSystem = Pick<SystemRow, "id" | "name" | "version_context" | "composition_json"> & {
   evidence_json?: string | null;
 };
 
@@ -66,7 +60,7 @@ export type Graph = {
   edges: GraphEdge[];
 };
 
-const app = new Hono<{ Bindings: Bindings }>().basePath("/api");
+export const app = new Hono<{ Bindings: Bindings }>().basePath("/api");
 
 app.get("/health", (c) =>
   c.json({ status: "ok", service: "mathen-api", environment: c.env.APP_ENV }),
@@ -75,16 +69,17 @@ app.get("/health", (c) =>
 app.get("/systems", async (c) => {
   const query = c.req.query("query")?.trim() ?? "";
   const limit = boundedInteger(c.req.query("limit"), 50, 1, 100);
+  const offset = boundedInteger(c.req.query("offset"), 0, 0, Number.MAX_SAFE_INTEGER);
   const pattern = `%${query}%`;
   const result = await c.env.DB.prepare(
     `SELECT id, name, version_context, summary, scope_json, related_systems_json,
             temporal_context_json, relations_json, composition_json, source_path
      FROM systems
      WHERE (?1 = '' OR id LIKE ?2 OR name LIKE ?2 OR summary LIKE ?2)
-     ORDER BY name
-     LIMIT ?3`,
+     ORDER BY name, id
+     LIMIT ?3 OFFSET ?4`,
   )
-    .bind(query, pattern, limit)
+    .bind(query, pattern, limit, offset)
     .all<SystemRow>();
 
   return c.json({ data: result.results.map(serializeSystem) });
@@ -254,12 +249,8 @@ app.get("/modeling/:id", async (c) => {
     }>();
 
   if (!row) return c.json({ error: "Modeling bundle not found" }, 404);
-  const bundle = parseJson<Record<string, unknown> | null>(
-    row.bundle_json,
-    null,
-  );
-  if (!bundle)
-    return c.json({ error: "Stored modeling bundle is invalid" }, 500);
+  const bundle = parseJson<Record<string, unknown> | null>(row.bundle_json, null);
+  if (!bundle) return c.json({ error: "Stored modeling bundle is invalid" }, 500);
   return c.json({ data: bundle });
 });
 
@@ -302,15 +293,9 @@ export function buildCompositions(
 ): CompositionResult[] {
   return systems
     .flatMap((system) => {
-      const composition = parseJson<Record<string, unknown> | null>(
-        system.composition_json,
-        null,
-      );
+      const composition = parseJson<Record<string, unknown> | null>(system.composition_json, null);
       if (!isCompositionRecord(composition)) return [];
-      if (
-        inputSystem &&
-        !composition.inputs.some((input) => input.system_id === inputSystem)
-      ) {
+      if (inputSystem && !composition.inputs.some((input) => input.system_id === inputSystem)) {
         return [];
       }
       if (claimStatus && composition.claim_status !== claimStatus) return [];
@@ -344,13 +329,8 @@ function compositionEvidence(
   });
 }
 
-function typedRelationEdges(
-  system: GraphSystem,
-  knownSystemIds: Set<string>,
-): GraphEdge[] {
-  const relations = parseJsonArray<Record<string, unknown>>(
-    system.relations_json,
-  ).filter(isRecord);
+function typedRelationEdges(system: GraphSystem, knownSystemIds: Set<string>): GraphEdge[] {
+  const relations = parseJsonArray<Record<string, unknown>>(system.relations_json).filter(isRecord);
   return relations.flatMap((relation) => {
     const target = stringValue(relation.target);
     const type = stringValue(relation.type);
@@ -369,18 +349,13 @@ function typedRelationEdges(
   });
 }
 
-function legacyRelationEdges(
-  system: GraphSystem,
-  knownSystemIds: Set<string>,
-): GraphEdge[] {
-  return parseJsonArray<string>(system.related_systems_json).flatMap(
-    (target) => {
-      const normalizedTarget = stringValue(target);
-      return normalizedTarget && knownSystemIds.has(normalizedTarget)
-        ? [{ source: system.id, target: normalizedTarget, type: "related" }]
-        : [];
-    },
-  );
+function legacyRelationEdges(system: GraphSystem, knownSystemIds: Set<string>): GraphEdge[] {
+  return parseJsonArray<string>(system.related_systems_json).flatMap((target) => {
+    const normalizedTarget = stringValue(target);
+    return normalizedTarget && knownSystemIds.has(normalizedTarget)
+      ? [{ source: system.id, target: normalizedTarget, type: "related" }]
+      : [];
+  });
 }
 
 function serializeSystem(system: SystemRow) {
@@ -391,18 +366,9 @@ function serializeSystem(system: SystemRow) {
     summary: system.summary,
     scope: parseJson<string[]>(system.scope_json, []),
     related_systems: parseJson<string[]>(system.related_systems_json, []),
-    temporal_context: parseJson<Record<string, unknown> | null>(
-      system.temporal_context_json,
-      null,
-    ),
-    relations: parseJson<Array<Record<string, unknown>>>(
-      system.relations_json,
-      [],
-    ),
-    composition: parseJson<Record<string, unknown> | null>(
-      system.composition_json,
-      null,
-    ),
+    temporal_context: parseJson<Record<string, unknown> | null>(system.temporal_context_json, null),
+    relations: parseJson<Array<Record<string, unknown>>>(system.relations_json, []),
+    composition: parseJson<Record<string, unknown> | null>(system.composition_json, null),
     source_path: system.source_path,
   };
 }
@@ -456,9 +422,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isCompositionRecord(
-  value: Record<string, unknown> | null,
-): value is Record<string, unknown> & {
+function isCompositionRecord(value: Record<string, unknown> | null): value is Record<
+  string,
+  unknown
+> & {
   inputs: Array<Record<string, unknown> & { system_id: string }>;
   claim_status: string;
   constraints: unknown[];
@@ -474,15 +441,11 @@ function isCompositionRecord(
   if (
     !Array.isArray(value.evidence_ids) ||
     value.evidence_ids.length === 0 ||
-    !value.evidence_ids.every(
-      (item) => typeof item === "string" && item.length > 0,
-    )
+    !value.evidence_ids.every((item) => typeof item === "string" && item.length > 0)
   ) {
     return false;
   }
-  return value.inputs.every(
-    (input) => isRecord(input) && Boolean(stringValue(input.system_id)),
-  );
+  return value.inputs.every((input) => isRecord(input) && Boolean(stringValue(input.system_id)));
 }
 
 function stringValue(value: unknown): string | undefined {
@@ -497,12 +460,7 @@ function stringArrayValue(value: unknown): string[] | undefined {
   return values.length ? values : undefined;
 }
 
-function boundedInteger(
-  value: string | undefined,
-  fallback: number,
-  min: number,
-  max: number,
-) {
+function boundedInteger(value: string | undefined, fallback: number, min: number, max: number) {
   const parsed = Number.parseInt(value ?? "", 10);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(Math.max(parsed, min), max);
