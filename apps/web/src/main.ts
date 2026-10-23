@@ -27,9 +27,9 @@ const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root is missing");
 app.innerHTML = `
   <main class="explorer" aria-label="Software architecture explorer">
-    <div id="graph" aria-label="Interactive force graph. Use Browse systems for a keyboard accessible list."></div>
+    <div id="graph" role="region" aria-label="Interactive force graph. Use Browse systems for a keyboard accessible list."></div>
     <header class="topbar glass">
-      <a class="brand" href="/" aria-label="Mathen home"><span class="brand-mark" aria-hidden="true">m<span>·</span></span><span>mathen<small>Architecture atlas</small></span></a>
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">m<span>·</span></span><span>mathen<small>Architecture atlas</small></span></a>
       <div class="search-wrap">
         <label class="sr-only" for="search">Search systems, descriptions, or card scope</label>
         <span class="search-icon" aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a system…" autocomplete="off" aria-controls="search-results"><kbd>/</kbd>
@@ -40,7 +40,7 @@ app.innerHTML = `
 
     <section class="graph-tools glass" aria-label="Graph controls">
       <div class="dimension-switch graph-mode-switch" role="group" aria-label="Graph mode"><button id="graph-systems" aria-pressed="true">Systems</button><button id="graph-models" aria-pressed="false">Math models</button></div>
-      <div class="dimension-switch" aria-label="Graph dimensions"><button id="mode-2" aria-pressed="true">2D</button><button id="mode-3" aria-pressed="false">3D</button></div>
+      <div class="dimension-switch" role="group" aria-label="Graph dimensions"><button id="mode-2" aria-pressed="true">2D</button><button id="mode-3" aria-pressed="false">3D</button></div>
       <span class="tool-divider"></span>
       <button id="fit" title="Fit all visible nodes">Fit</button>
       <button id="focus" disabled title="Focus selected node and its neighbors">Focus</button>

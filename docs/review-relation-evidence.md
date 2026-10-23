@@ -107,9 +107,9 @@ The following are not safe edits from the current source-card evidence:
 - Do not turn Rust's mention of LLVM IR into `rust` → `uses` → `llvm` without
   evidence that the reviewed Rust implementation uses the LLVM project. The
   conservative candidate is `resembles`.
-- Do not add `qemu` → `uses` → `kvm`, `kubernetes` → `uses` → `etcd`, or
-  `elasticsearch` → `uses` → `lucene` while those target cards/evidence
-  boundaries are absent from the reviewed relation contract. A related product
+- `kvm` and `lucene` have no reviewed target cards in this snapshot. The `etcd`
+  card does exist; adding `kubernetes` → `uses` → `etcd` still requires a
+  source-local citation supporting the specific integration. A related product
   or host fact outside the source card is not source-local relation evidence.
 - Do not add Linux/Kubernetes, Linux/NGINX, Firecracker/Kubernetes, or
   QEMU/NGINX edges from generic scheduler, process, event, host, or isolation

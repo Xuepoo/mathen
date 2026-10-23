@@ -1,7 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
-
 :root {
-  font-family: "DM Sans", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
   color: #e8eeed;
   background: #101923;
   font-synthesis: none;
@@ -82,7 +84,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: "Manrope", sans-serif;
+  font-family: system-ui, sans-serif;
 }
 [hidden] {
   display: none !important;
@@ -147,7 +149,7 @@ h4 {
   gap: 12px;
   align-items: center;
   text-decoration: none;
-  font-family: "Manrope", sans-serif;
+  font-family: system-ui, sans-serif;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -1px;
@@ -173,7 +175,7 @@ h4 {
   display: block;
   margin-top: 1px;
   font:
-    9px "DM Sans",
+    9px system-ui,
     sans-serif;
   color: var(--muted);
   letter-spacing: 1.8px;
@@ -857,7 +859,7 @@ summary {
   background: #0e1925ee !important;
   color: #e8eeed !important;
   font:
-    12px "DM Sans",
+    12px system-ui,
     sans-serif !important;
   border-radius: 7px !important;
   padding: 8px 12px !important;
