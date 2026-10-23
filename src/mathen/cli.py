@@ -12,6 +12,10 @@ from .modeling import (
     build_modeling_bundles,
     write_modeling_prompts,
 )
+from .relation_candidates import (
+    RelationCandidateError,
+    write_relation_candidate_report,
+)
 from .repositories import RepositoryAnalysisError, analyze_manifest
 
 DEFAULT_CARDS = Path(__file__).parents[2] / "data" / "systems"
@@ -82,6 +86,18 @@ def build_parser() -> argparse.ArgumentParser:
     model.add_argument(
         "--force", action="store_true", help="overwrite existing draft cards"
     )
+    relation_candidates = subparsers.add_parser(
+        "relation-candidates",
+        help="generate a review-only deterministic relation-candidate report",
+    )
+    relation_candidates.add_argument(
+        "path", nargs="?", type=Path, default=DEFAULT_CARDS
+    )
+    relation_candidates.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_ANALYSES / "g6-relation-candidates.json",
+    )
     analyze.add_argument(
         "--refresh",
         action="store_true",
@@ -141,11 +157,14 @@ def main() -> int:
                 args.timeout,
                 args.force,
             )
+        if args.command == "relation-candidates":
+            return relation_candidates_command(args.path, args.output)
     except (
         CardValidationError,
         LLMModelError,
         ModelingBundleError,
         RepositoryAnalysisError,
+        RelationCandidateError,
     ) as error:
         print(f"ERROR: {error}")
         return 1
@@ -261,6 +280,14 @@ def model_command(
         bundle_dir, output_dir, client, system_ids or None, overwrite=force
     ):
         print(f"draft  {path}")
+    return 0
+
+
+def relation_candidates_command(cards_path: Path, output_path: Path) -> int:
+    """Write the G6 report and print its path."""
+
+    path = write_relation_candidate_report(cards_path, output_path)
+    print(f"report  {path}")
     return 0
 
 
