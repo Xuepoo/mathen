@@ -413,6 +413,8 @@ def _check_evidence_ids(
 ) -> None:
     if not isinstance(references, list) or not references:
         raise CardValidationError(f"{label}: {item_id} needs evidence_ids")
+    if len(references) != len(set(references)):
+        raise CardValidationError(f"{label}: {item_id} has duplicate evidence ids")
     unknown = set(references) - evidence_ids
     if unknown:
         raise CardValidationError(f"{label}: unknown evidence ids: {sorted(unknown)}")

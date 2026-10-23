@@ -100,6 +100,15 @@ class CardValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(CardValidationError, "unknown evidence ids"):
             validate_card(card)
 
+    def test_duplicate_evidence_reference_is_rejected(self) -> None:
+        card = json.loads((ROOT / "data" / "systems" / "git.json").read_text())
+        card["features"][0]["evidence_ids"] = [
+            card["features"][0]["evidence_ids"][0],
+            card["features"][0]["evidence_ids"][0],
+        ]
+        with self.assertRaisesRegex(CardValidationError, "duplicate evidence ids"):
+            validate_card(card)
+
         card = self._evolution_fixture()
         card["composition"]["claim_status"] = "certain"
         with self.assertRaisesRegex(

@@ -24,10 +24,7 @@
         "Parser, evaluator, and command registry must evolve together",
         "Dynamic overlays and scopes increase resolution complexity"
       ],
-      "evidence_ids": [
-        "nushell-parser-source",
-        "nushell-command-source"
-      ]
+      "evidence_ids": ["nushell-parser-source", "nushell-command-source"]
     },
     {
       "id": "nushell-typed-pipeline",
@@ -43,10 +40,7 @@
         "Commands must handle a broad value and stream contract",
         "Structured values require explicit conversion at external boundaries"
       ],
-      "evidence_ids": [
-        "nushell-value-source",
-        "nushell-value-source"
-      ]
+      "evidence_ids": ["nushell-value-source"]
     },
     {
       "id": "nushell-command-dispatch",
@@ -62,10 +56,7 @@
         "Overlay precedence and scope lifetime can surprise users",
         "Command metadata and signatures are part of runtime compatibility"
       ],
-      "evidence_ids": [
-        "nushell-command-source",
-        "nushell-command-source"
-      ]
+      "evidence_ids": ["nushell-command-source"]
     },
     {
       "id": "nushell-external-boundary",
@@ -81,10 +72,7 @@
         "Encoding, exit status, and decoding failures cross the boundary",
         "External tools retain their own argument and output contracts"
       ],
-      "evidence_ids": [
-        "nushell-external-source",
-        "nushell-value-source"
-      ]
+      "evidence_ids": ["nushell-external-source", "nushell-value-source"]
     }
   ],
   "mathematical_views": [
@@ -97,11 +85,7 @@
         "Terminal rendering is an output projection"
       ],
       "claim_type": "inference",
-      "evidence_ids": [
-        "nushell-parser-source",
-        "nushell-value-source",
-        "nushell-value-source"
-      ]
+      "evidence_ids": ["nushell-parser-source", "nushell-value-source"]
     },
     {
       "model": "Scoped command-resolution graph",
@@ -112,10 +96,7 @@
         "The graph abstracts implementation-specific lookup details"
       ],
       "claim_type": "inference",
-      "evidence_ids": [
-        "nushell-command-source",
-        "nushell-command-source"
-      ]
+      "evidence_ids": ["nushell-command-source"]
     },
     {
       "model": "Structured-to-byte interop relation",
@@ -126,48 +107,31 @@
         "Interop behavior does not imply external process isolation"
       ],
       "claim_type": "hypothesis",
-      "evidence_ids": [
-        "nushell-external-source",
-        "nushell-value-source"
-      ]
+      "evidence_ids": ["nushell-external-source", "nushell-value-source"]
     }
   ],
   "trade_offs": [
     {
       "feature_id": "nushell-parser-engine",
-      "benefits": [
-        "Separates syntax analysis from evaluation state"
-      ],
-      "costs": [
-        "Parser, evaluator, and command registry must evolve together"
-      ]
+      "benefits": ["Separates syntax analysis from evaluation state"],
+      "costs": ["Parser, evaluator, and command registry must evolve together"]
     },
     {
       "feature_id": "nushell-typed-pipeline",
-      "benefits": [
-        "Supports structured filtering and transformation"
-      ],
-      "costs": [
-        "Commands must handle a broad value and stream contract"
-      ]
+      "benefits": ["Supports structured filtering and transformation"],
+      "costs": ["Commands must handle a broad value and stream contract"]
     },
     {
       "feature_id": "nushell-command-dispatch",
-      "benefits": [
-        "Supports modular command environments"
-      ],
+      "benefits": ["Supports modular command environments"],
       "costs": [
         "Overlay precedence and scope lifetime add resolution complexity"
       ]
     },
     {
       "feature_id": "nushell-external-boundary",
-      "benefits": [
-        "Integrates existing tools with structured workflows"
-      ],
-      "costs": [
-        "Encoding and decoding failures cross the process boundary"
-      ]
+      "benefits": ["Integrates existing tools with structured workflows"],
+      "costs": ["Encoding and decoding failures cross the process boundary"]
     }
   ],
   "evidence": [
@@ -212,7 +176,5 @@
       "notes": "External process invocation, redirection, and output boundary."
     }
   ],
-  "related_systems": [
-    "powershell"
-  ]
+  "related_systems": ["powershell"]
 }

@@ -24,9 +24,7 @@
         "Language grammar and parsing rules are compatibility-sensitive",
         "A richer syntax model increases runtime and tooling surface"
       ],
-      "evidence_ids": [
-        "powershell-parser-source"
-      ]
+      "evidence_ids": ["powershell-parser-source"]
     },
     {
       "id": "powershell-command-pipeline",
@@ -42,10 +40,7 @@
         "Command binding and adapter behavior can be difficult to predict",
         "Object serialization is still required at native or remoting boundaries"
       ],
-      "evidence_ids": [
-        "powershell-command-source",
-        "powershell-command-source"
-      ]
+      "evidence_ids": ["powershell-command-source"]
     },
     {
       "id": "powershell-session-providers",
@@ -61,9 +56,7 @@
         "Provider behavior adds indirection over underlying resources",
         "Session state lifetime and scope rules add language complexity"
       ],
-      "evidence_ids": [
-        "powershell-session-source"
-      ]
+      "evidence_ids": ["powershell-session-source"]
     },
     {
       "id": "powershell-remoting-runspaces",
@@ -95,11 +88,7 @@
         "Host presentation is outside the pipeline state"
       ],
       "claim_type": "inference",
-      "evidence_ids": [
-        "powershell-parser-source",
-        "powershell-command-source",
-        "powershell-command-source"
-      ]
+      "evidence_ids": ["powershell-parser-source", "powershell-command-source"]
     },
     {
       "model": "Provider-backed session graph",
@@ -110,10 +99,7 @@
         "The graph abstracts host-specific provider implementations"
       ],
       "claim_type": "inference",
-      "evidence_ids": [
-        "powershell-session-source",
-        "powershell-session-source"
-      ]
+      "evidence_ids": ["powershell-session-source"]
     },
     {
       "model": "Local-to-remote authority relation",
@@ -133,30 +119,22 @@
   "trade_offs": [
     {
       "feature_id": "powershell-language-parser",
-      "benefits": [
-        "Separates language recognition from command execution"
-      ],
+      "benefits": ["Separates language recognition from command execution"],
       "costs": [
         "Language grammar and parsing rules are compatibility-sensitive"
       ]
     },
     {
       "feature_id": "powershell-command-pipeline",
-      "benefits": [
-        "Composes commands with structured object values"
-      ],
+      "benefits": ["Composes commands with structured object values"],
       "costs": [
         "Command binding and adapter behavior can be difficult to predict"
       ]
     },
     {
       "feature_id": "powershell-session-providers",
-      "benefits": [
-        "Unifies heterogeneous resources behind shell navigation"
-      ],
-      "costs": [
-        "Provider behavior adds indirection over underlying resources"
-      ]
+      "benefits": ["Unifies heterogeneous resources behind shell navigation"],
+      "costs": ["Provider behavior adds indirection over underlying resources"]
     },
     {
       "feature_id": "powershell-remoting-runspaces",
@@ -210,7 +188,5 @@
       "notes": "Remote runspace pool connection and lifecycle boundary."
     }
   ],
-  "related_systems": [
-    "nushell"
-  ]
+  "related_systems": ["nushell"]
 }
