@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
+import { configureNavigation } from "./navigation-controls";
 
 const require = createRequire(import.meta.url);
 const graphPath = require.resolve("3d-force-graph");
@@ -32,6 +33,52 @@ class Pointer extends Event {
     super(type);
     Object.assign(this, init);
   }
+}
+
+for (const pointerType of ["mouse", "touch"]) {
+  test(`primary ${pointerType} pans in 2D after returning from 3D`, () => {
+    const ownerDocument = new EventTarget();
+    const element = Object.assign(new EventTarget(), {
+      ownerDocument,
+      style: {},
+      clientWidth: 1000,
+      clientHeight: 800,
+      getRootNode: () => ownerDocument,
+      getBoundingClientRect: () => ({
+        left: 0,
+        top: 0,
+        width: 1000,
+        height: 800,
+      }),
+      setPointerCapture: () => {},
+      releasePointerCapture: () => {},
+    });
+    const camera = new PerspectiveCamera();
+    camera.position.set(0, 0, 700);
+    const controls = new OrbitControls(camera, element);
+    for (const dimensions of [2, 3, 2] as const) {
+      configureNavigation(controls, dimensions);
+      const target = controls.target.clone();
+      const position = camera.position.clone();
+      const event = (type: string, x: number) =>
+        new Pointer(type, {
+          pointerId: 7,
+          pointerType,
+          button: 0,
+          clientX: x,
+          clientY: 200,
+          pageX: x,
+          pageY: 200,
+        });
+      element.dispatchEvent(event("pointerdown", 200));
+      ownerDocument.dispatchEvent(event("pointermove", 280));
+      ownerDocument.dispatchEvent(event("pointerup", 280));
+      expect(camera.position.distanceTo(position)).toBeGreaterThan(0);
+      if (dimensions === 2) expect(controls.target.distanceTo(target)).toBeGreaterThan(0);
+      else expect(controls.target.distanceTo(target)).toBe(0);
+    }
+    controls.dispose();
+  });
 }
 
 for (const pointerTypes of [["mouse"], ["touch"], ["touch", "touch"]]) {

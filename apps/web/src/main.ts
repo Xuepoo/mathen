@@ -4,6 +4,7 @@ import { createLabelPool } from "./graph-labels";
 import { frameNodes, seedCoordinates, worldUnitsPerPixel } from "./graph-viewport";
 import { applyView, expandOneHop, applyPin, type Pin } from "./graph-view";
 import { movablePanel } from "./movable-panel";
+import { configureNavigation } from "./navigation-controls";
 import {
   domainFor,
   domains,
@@ -229,17 +230,10 @@ for (const dialog of [catalog, detailDialog, helpDialog]) {
 
 function configureCamera() {
   if (!graph) return;
-  const controls = graph.controls() as {
-    enableRotate: boolean;
-    enablePan: boolean;
-    screenSpacePanning: boolean;
-  };
-  controls.enableRotate = dimensions === 3;
-  controls.enablePan = true;
-  controls.screenSpacePanning = true;
+  configureNavigation(graph.controls() as Parameters<typeof configureNavigation>[0], dimensions);
   required("gesture-hint").textContent =
     dimensions === 2
-      ? "Drag a node to reshape its neighborhood. Scroll to explore."
+      ? "Drag space to pan. Drag a node to reshape its neighborhood. Scroll to zoom."
       : "Drag a node to reshape its neighborhood. Drag space to orbit.";
 }
 
