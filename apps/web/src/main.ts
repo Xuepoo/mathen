@@ -378,7 +378,7 @@ function updateGraph() {
             y: old.get(node.id)?.y,
             z: dimensions === 2 ? 0 : old.get(node.id)?.z,
           }
-        : {},
+        : { z: 0 },
     );
   labels.clear();
   labelAnchors.clear();
@@ -795,8 +795,13 @@ for (const mode of [2, 3] as const)
     required("mode-2").setAttribute("aria-pressed", String(mode === 2));
     required("mode-3").setAttribute("aria-pressed", String(mode === 3));
     graph?.numDimensions(mode);
+    for (const node of graph?.graphData().nodes ?? []) {
+      if (mode === 2 || !Number.isFinite(node.z)) node.z = 0;
+      const velocity = node as SimulationNode & { vz?: number };
+      velocity.vz = 0;
+    }
     configureCamera();
-    if (mode === 2) graph?.cameraPosition({ x: 0, y: 0, z: 700 }, { x: 0, y: 0, z: 0 }, duration());
+    if (mode === 2) graph?.cameraPosition({ x: 0, y: 0, z: 700 }, { x: 0, y: 0, z: 0 }, 0);
     if (!paused) reheat();
     else graph?.cooldownTicks(0);
     autoFit = true;
