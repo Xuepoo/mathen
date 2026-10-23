@@ -81,7 +81,7 @@ const MODEL_FAMILIES: ModelFamily[] = [
     name: "Navigation family: fixed-point/convergence wording",
     description:
       "Navigation by fixed-point or convergence wording; membership does not establish formal equivalence.",
-    matches: [/\bfixed[- ]point\b/i, /\bconvergence\b/i, /\bmonotone\b/i, /\bcrdt\b/i],
+    matches: [/\bfixed[- ]point\b/i, /\bconverg(?:ence|ent)\b/i, /\bmonotone\b/i, /\bcrdt\b/i],
   },
   {
     slug: "algebra-relational-algebra",

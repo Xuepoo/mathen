@@ -177,6 +177,18 @@
       ]
     }
   ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "node",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "webpack-package-source"
+      ],
+      "notes": "The pinned package.json declares webpack's package entry point and engines.node >=10.13.0, providing direct package-runtime evidence for the Node.js relation."
+    }
+  ],
   "evidence": [
     {
       "id": "repository-commit",
@@ -185,6 +197,14 @@
       "uri": "https://github.com/webpack/webpack/commit/c47cf0a42a639715da71738749fb426a60e8e9d4",
       "accessed": "2026-10-23",
       "notes": "Fixed repository provenance for the reviewed revision."
+    },
+    {
+      "id": "webpack-package-source",
+      "kind": "source-code",
+      "title": "webpack package metadata at fixed commit",
+      "uri": "https://github.com/webpack/webpack/blob/c47cf0a42a639715da71738749fb426a60e8e9d4/package.json",
+      "accessed": "2026-10-23",
+      "notes": "Inspected the pinned package.json: version 5.112.0, main lib/index.js, bin webpack, and engines.node >=10.13.0."
     },
     {
       "id": "webpack-compiler-source",

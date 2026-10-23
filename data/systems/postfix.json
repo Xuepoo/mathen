@@ -207,6 +207,19 @@
       "costs": ["Security configuration and cross-service authentication integration require careful coordination"]
     }
   ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "dovecot",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "postfix-sasl-doc",
+        "postfix-sasl-source"
+      ],
+      "notes": "Postfix's SASL documentation and fixed source explicitly cover Dovecot as an optional SASL authentication provider; the relation is a configured integration boundary, not a universal Postfix dependency."
+    }
+  ],
   "evidence": [
     {
       "id": "postfix-repository-commit",

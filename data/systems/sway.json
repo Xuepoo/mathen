@@ -73,6 +73,20 @@
     {"feature_id": "output-render-resource-management", "benefits": ["Output geometry and frame resources are coordinated with layout"], "costs": ["Output and render failures complicate state consistency"]},
     {"feature_id": "ipc-command-lifecycle-failure", "benefits": ["Automation observes and controls compositor state through a protocol"], "costs": ["Event ordering and command errors become client responsibilities"]}
   ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "wayland",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "sway-source-commit",
+        "sway-wlroots-source",
+        "sway-wayland-doc"
+      ],
+      "notes": "Sway's pinned main source initializes a wl_display-backed server and sets WAYLAND_DISPLAY; the card's wlroots integration evidence bounds this to implementation use of Wayland server APIs."
+    }
+  ],
   "evidence": [
     {"id": "sway-source-commit", "kind": "source-code", "title": "Sway source at 1652c54b73f6", "uri": "https://github.com/swaywm/sway/commit/1652c54b73f67df17b7b4ab0b0f7048204aa8104", "accessed": "2026-10-23", "notes": "Fixed official Sway repository revision used for compositor, tree, input, output, IPC, and lifecycle claims."},
     {"id": "sway-wlroots-source", "kind": "source-code", "title": "Sway wlroots integration at fixed revision", "uri": "https://github.com/swaywm/sway/tree/1652c54b73f67df17b7b4ab0b0f7048204aa8104/sway", "accessed": "2026-10-23", "notes": "Pinned source location for compositor and backend integration."},

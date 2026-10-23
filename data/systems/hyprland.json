@@ -133,6 +133,20 @@
     {"feature_id": "output-render-resource-model", "benefits": ["Per-output composition and damage are explicit"], "costs": ["Hotplug and GPU resource failures complicate consistency"]},
     {"feature_id": "animated-lifecycle-failure-boundary", "benefits": ["Surface loss can be isolated from unrelated layout state"], "costs": ["Asynchronous transitions make failure diagnosis harder"]}
   ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "wayland",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "hyprland-source-commit",
+        "hyprland-compositor-source",
+        "hyprland-wayland-doc"
+      ],
+      "notes": "The pinned compositor source creates a wl_display, adds a Wayland socket, and exports WAYLAND_DISPLAY; this is an implementation dependency on the Wayland server API."
+    }
+  ],
   "evidence": [
     {"id": "hyprland-source-commit", "kind": "source-code", "title": "Hyprland source at 76edafffc689", "uri": "https://github.com/hyprwm/Hyprland/commit/76edafffc68951a66b094806659ac4823e22c624", "accessed": "2026-10-23", "notes": "Fixed official Hyprland repository revision used for compositor, layout, input, and rendering claims."},
     {"id": "hyprland-compositor-source", "kind": "source-code", "title": "Hyprland compositor source at fixed revision", "uri": "https://github.com/hyprwm/Hyprland/tree/76edafffc68951a66b094806659ac4823e22c624/src", "accessed": "2026-10-23", "notes": "Pinned source tree for compositor and lifecycle boundaries."},

@@ -75,8 +75,33 @@
     {"feature_id": "result-backend-state", "benefits": ["Queryable asynchronous task outcomes"], "costs": ["Backend storage, cleanup, and semantic variation add operational work"]},
     {"feature_id": "routing-retry-canvas-composition", "benefits": ["Flexible task specialization and multi-step coordination"], "costs": ["More messages and distributed failure paths complicate reasoning"]}
   ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "rabbitmq",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "celery-introduction",
+        "celery-config-source"
+      ],
+      "notes": "RabbitMQ is a supported/configured Celery broker transport, not a dependency of every installation. The official introduction lists RabbitMQ, while the pinned source exposes broker_url configuration and runtime transport selection."
+    },
+    {
+      "type": "uses",
+      "target": "redis",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "celery-introduction",
+        "celery-config-source"
+      ],
+      "notes": "Redis is a supported/configured Celery broker transport and result-backend option, not a dependency of every installation. The official introduction lists Redis, while the pinned source exposes broker_url and result_backend configuration."
+    }
+  ],
   "evidence": [
     {"id": "celery-source-commit", "kind": "source-code", "title": "Celery source at 682754c16ac9", "uri": "https://github.com/celery/celery/commit/682754c16ac9cd0768275eab5325b78b5342b0b0", "accessed": "2026-10-23", "notes": "Fixed official repository revision used as the provenance boundary for this card."},
+    {"id": "celery-config-source", "kind": "source-code", "title": "Celery broker and result configuration source at fixed commit", "uri": "https://github.com/celery/celery/blob/682754c16ac9cd0768275eab5325b78b5342b0b0/celery/app/utils.py", "accessed": "2026-10-23", "notes": "Inspected Settings.broker_url and Settings.result_backend: Celery reads configured broker and result-backend values and resolves the runtime transport/backend rather than hard-coding RabbitMQ or Redis."},
     {"id": "celery-introduction", "kind": "official-doc", "title": "Celery Introduction", "uri": "https://docs.celeryq.dev/en/stable/getting-started/introduction.html", "accessed": "2026-10-23", "notes": "Official documentation for task queues, brokers, workers, scaling, result stores, and task protocol."},
     {"id": "celery-tasks", "kind": "official-doc", "title": "Celery Tasks", "uri": "https://docs.celeryq.dev/en/stable/userguide/tasks.html", "accessed": "2026-10-23", "notes": "Official documentation for task names, acknowledgement, redelivery, task state, result backends, and retry behavior."},
     {"id": "celery-routing", "kind": "official-doc", "title": "Celery Routing", "uri": "https://docs.celeryq.dev/en/stable/userguide/routing.html", "accessed": "2026-10-23", "notes": "Official documentation for routing tasks to queues and worker specialization."},

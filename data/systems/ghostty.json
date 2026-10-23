@@ -299,5 +299,18 @@
       "notes": "Official documentation for native GUI and embeddable library scope."
     }
   ],
-  "related_systems": []
+  "related_systems": [],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "gtk",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "ghostty-runtime-source",
+        "ghostty-readme"
+      ],
+      "notes": "Ghostty's pinned runtime source explicitly selects the GTK runtime for Linux and FreeBSD, with the source comment describing GTK4 as the rich windowed application runtime; this records configured runtime integration, not GTK implementation ownership."
+    }
+  ]
 }
