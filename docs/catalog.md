@@ -99,6 +99,7 @@ These entries are already present in the repository at different review levels:
 | `threejs` | Three.js | 3D graphics library | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
 | `blender` | Blender | 3D graphics application | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
 | `sdl` | SDL | multimedia library | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
+| `wayland` | Wayland | display protocol | `reviewed` | Compare client/compositor protocol globals, surface commit state, typed message ordering, input capabilities, and per-client security boundaries using fixed-commit evidence |
 | `godot` | Godot | game engine | `planned` | Add a fixed-commit source bundle and draft before review; no evidence-backed card is present yet |
 | `electron` | Electron | desktop application framework | `reviewed` | Compare main/renderer process isolation, IPC, preload capabilities, and utility processes using fixed-commit evidence |
 | `tauri` | Tauri | desktop application framework | `reviewed` | Compare native shell/webview composition, command IPC, capabilities, and packaging using fixed-commit evidence |
@@ -280,6 +281,7 @@ identifiers, not claims that the projects share the same architecture.
 | `webgl` | WebGL | `reviewed` | Compare browser context state, typed GPU resources, shader submission, and security boundaries using fixed-commit evidence |
 | `vulkan` | Vulkan | `reviewed` | Compare explicit resources, command recording/submission, queue ownership, and synchronization using fixed-commit evidence |
 | `opengl` | OpenGL | `reviewed` | Compare context state, object bindings, programmable pipeline, and platform integration using fixed-commit evidence |
+| `wayland` | Wayland | `reviewed` | Compare client/compositor protocol globals, surface commit state, typed message ordering, input capabilities, and per-client security boundaries using fixed-commit evidence |
 | `sdl` | SDL | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
 | `godot` | Godot | `P1` | Scene tree, nodes, resources, and game runtime |
 | `react` | React | `reviewed` | Compare component trees, hooks, reconciliation, and host commit boundaries using fixed-commit evidence |
