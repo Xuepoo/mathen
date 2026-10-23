@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { buildModelGraph, type ModelViewRow } from "./model-graph.js";
+import { buildModelGraph, modelViewKey, type ModelViewRow } from "./model-graph.js";
 
 type Bindings = {
   DB: D1Database;
@@ -156,6 +156,7 @@ app.get("/systems/:id", async (c) => {
       features: features.results.map(serializeFeature),
       mathematical_views: views.results.map((view) => ({
         id: view.id,
+        key: modelViewKey(system.id, view.model, view.question),
         model: view.model,
         question: view.question,
         assumptions: parseJson<string[]>(view.assumptions_json, []),

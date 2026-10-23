@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { type ModelGraph, modelViewKey } from "./model-graph.js";
 import {
   app,
   buildCompositions,
@@ -262,8 +263,10 @@ test("buildGraph ignores malformed and unknown graph targets", () => {
 });
 
 test("GET /api/graph/models projects reviewed mathematical views", async () => {
+  const queries: string[] = [];
   const db = {
-    prepare() {
+    prepare(sql: string) {
+      queries.push(sql);
       return {
         all<T>() {
           return Promise.resolve({
@@ -288,6 +291,16 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
                 claim_type: "hypothesis",
                 evidence_ids_json: '["other-source"]',
               },
+              {
+                system_id: "temporal",
+                system_name: "Temporal",
+                view_id: 9,
+                model: "Replay state machine",
+                question: "Does replay preserve state?",
+                assumptions_json: "[]",
+                claim_type: "analogy",
+                evidence_ids_json: '["temporal-replay"]',
+              },
             ] as T[],
             success: true,
             meta: {},
@@ -304,28 +317,86 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
   );
 
   assert.equal(response.status, 200);
-  const body = (await response.json()) as {
-    data: {
-      nodes: Array<{ id: string }>;
-      edges: Array<{ metadata: unknown[] }>;
-    };
-  };
+  const body = (await response.json()) as { data: ModelGraph };
+  assert.deepEqual(Object.keys(body), ["data"]);
+  assert.match(
+    queries[0]!,
+    /substr\(mve\.evidence_id, length\(mathematical_views\.system_id\) \+ 2\)/,
+  );
+  assert.match(queries[0]!, /WHERE mve\.view_id = mathematical_views\.id/);
   assert.equal(
-    body.data.nodes.some((node) => node.id === "model:queueing-cost-resource"),
+    body.data.nodes.some((node) => node.id === "model:state-transition-systems"),
     true,
   );
   assert.equal(body.data.edges.length, 2);
-  const temporalEdge = body.data.edges.find((edge) =>
-    edge.metadata.some((view) => (view as { id?: number }).id === 7),
+  const temporalEdge = body.data.edges.find((edge) => edge.metadata.some((view) => view.id === 7));
+  assert.equal(temporalEdge?.claim_type, "mixed");
+  assert.equal(body.data.edges.find((edge) => edge.source === "other")?.claim_type, "hypothesis");
+  assert.deepEqual(
+    temporalEdge?.metadata.find((view) => view.id === 7),
+    {
+      id: 7,
+      key: modelViewKey("temporal", "Queue-mediated workflow state machine", "How does work move?"),
+      model: "Queue-mediated workflow state machine",
+      question: "How does work move?",
+      assumptions: ["workers poll"],
+      claim_type: "inference",
+      evidence_ids: ["temporal-task-queues"],
+    },
   );
-  assert.deepEqual(temporalEdge?.metadata[0], {
-    id: 7,
-    model: "Queue-mediated workflow state machine",
-    question: "How does work move?",
-    assumptions: ["workers poll"],
-    claim_type: "inference",
-    evidence_ids: ["temporal-task-queues"],
-  });
+});
+
+test("system detail view keys match graph identity across database ids", async () => {
+  const view = {
+    id: 42,
+    model: "Snapshot visibility relation",
+    question: "Which snapshots are visible?",
+    assumptions_json: '["committed writes"]',
+    claim_type: "hypothesis",
+    evidence_ids_json: '["architecture"]',
+  };
+  const system = systemRow(0);
+  const db = {
+    prepare(sql: string) {
+      return {
+        bind() {
+          return {
+            first() {
+              return Promise.resolve(system);
+            },
+            all() {
+              return Promise.resolve({
+                results: sql.includes("FROM mathematical_views WHERE") ? [view] : [],
+              });
+            },
+          };
+        },
+      };
+    },
+  } as unknown as D1Database;
+  const response = await app.request(
+    `/api/systems/${system.id}`,
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as {
+    data: {
+      mathematical_views: Array<{
+        id: number;
+        key: string;
+        claim_type: string;
+        evidence_ids: string[];
+      }>;
+    };
+  };
+  assert.equal(body.data.mathematical_views[0]?.id, 42);
+  assert.equal(
+    body.data.mathematical_views[0]?.key,
+    modelViewKey(system.id, view.model, view.question),
+  );
+  assert.equal(body.data.mathematical_views[0]?.claim_type, "hypothesis");
+  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, ["architecture"]);
 });
 
 function systemRow(index: number) {

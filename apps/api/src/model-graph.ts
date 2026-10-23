@@ -11,6 +11,8 @@ export type ModelViewRow = {
 
 export type ModelViewMetadata = {
   id: string | number;
+  /** Stable card-local navigation identity; id remains the database row id for compatibility. */
+  key: string;
   model: string;
   question: string;
   assumptions: string[];
@@ -22,13 +24,14 @@ export type ModelGraphNode = {
   id: string;
   name: string;
   type: "system" | "model";
+  description?: string;
 };
 
 export type ModelGraphEdge = {
   source: string;
   target: string;
   type: "modeled-by";
-  claim_type: "inference";
+  claim_type: string;
   metadata: ModelViewMetadata[];
 };
 
@@ -40,13 +43,16 @@ export type ModelGraph = {
 type ModelFamily = {
   slug: string;
   name: string;
+  description: string;
   matches: RegExp[];
 };
 
 const MODEL_FAMILIES: ModelFamily[] = [
   {
     slug: "simulation-refinement",
-    name: "Simulation and refinement",
+    name: "Navigation family: simulation/refinement wording",
+    description:
+      "Navigation by simulation or refinement wording; membership does not establish formal equivalence.",
     matches: [
       /\bbisimulation\b/i,
       /\bsimulation\b/i,
@@ -56,38 +62,53 @@ const MODEL_FAMILIES: ModelFamily[] = [
     ],
   },
   {
-    slug: "lattices-convergence",
-    name: "Lattices and convergence",
+    slug: "lattices-orders",
+    name: "Navigation family: lattice/order wording",
+    description:
+      "Navigation by lattice or order wording; membership does not establish formal equivalence.",
     matches: [
       /\bcomplete lattice\b/i,
       /\bsemilattice\b/i,
       /\blattice\b/i,
       /\bjoin[- ]semilattice\b/i,
       /\bmeet[- ]semilattice\b/i,
-      /\bfixed[- ]point\b/i,
-      /\bconvergence\b/i,
-      /\bmonotone\b/i,
-      /\bcrdt\b/i,
+      /\bpartial order\b/i,
+      /\bposet\b/i,
     ],
   },
   {
+    slug: "fixed-points-convergence",
+    name: "Navigation family: fixed-point/convergence wording",
+    description:
+      "Navigation by fixed-point or convergence wording; membership does not establish formal equivalence.",
+    matches: [/\bfixed[- ]point\b/i, /\bconvergence\b/i, /\bmonotone\b/i, /\bcrdt\b/i],
+  },
+  {
     slug: "algebra-relational-algebra",
-    name: "Algebra and relational algebra",
+    name: "Navigation family: algebra wording",
+    description: "Navigation by algebra wording; membership does not establish formal equivalence.",
     matches: [
       /\brelational algebra\b/i,
       /\bquery algebra\b/i,
       /\bcommutative algebra\b/i,
       /\boperator algebra\b/i,
-      /\b(?:group|ring|monoid|semigroup)\b/i,
-      /\balgebra(?:ic)?\b/i,
+      /\b(?:group|ring|monoid|semigroup) algebra\b/i,
+      /\balgebra(?:ic)? (?:model|structure|semantics)\b/i,
     ],
   },
   {
-    slug: "queueing-cost-resource",
-    name: "Queueing, cost, and resource models",
+    slug: "queueing-theory",
+    name: "Navigation family: queueing-theory wording",
+    description:
+      "Navigation by explicit queueing-theory wording; membership does not establish formal equivalence.",
+    matches: [/\bqueueing (?:theory|model|network)\b/i, /\bm\/m\/\d+\b/i],
+  },
+  {
+    slug: "cost-resource",
+    name: "Navigation family: cost/resource wording",
+    description:
+      "Navigation by cost or resource wording; membership does not establish formal equivalence.",
     matches: [
-      /\bqueue(?:ing|ing theory)?\b/i,
-      /\bqueueing network\b/i,
       /\bcost model\b/i,
       /\bresource model\b/i,
       /\bresource allocation\b/i,
@@ -99,7 +120,9 @@ const MODEL_FAMILIES: ModelFamily[] = [
   },
   {
     slug: "state-transition-systems",
-    name: "State and transition systems",
+    name: "Navigation family: state/transition wording",
+    description:
+      "Navigation by state or transition wording; membership does not establish formal equivalence.",
     matches: [
       /\bstate machine\b/i,
       /\bstate transition\b/i,
@@ -114,13 +137,12 @@ const MODEL_FAMILIES: ModelFamily[] = [
   },
   {
     slug: "graphs-partial-orders",
-    name: "Graphs and partial orders",
+    name: "Navigation family: graph wording",
+    description: "Navigation by graph wording; membership does not establish formal equivalence.",
     matches: [
       /\b(?:dependency|labeled|labelled|process|dataflow|event|state|control[- ]flow) graph\b/i,
       /\bgraph(?: traversal| partition| coloring| colouring| cut| homomorphism)\b/i,
       /\b(?:directed acyclic graph|dag)\b/i,
-      /\bpartial order\b/i,
-      /\bposet\b/i,
       /\brooted tree\b/i,
       /\bsyntax tree\b/i,
       /\btopological sort\b/i,
@@ -128,7 +150,9 @@ const MODEL_FAMILIES: ModelFamily[] = [
   },
   {
     slug: "types-grammars",
-    name: "Types and grammars",
+    name: "Navigation family: types/grammar wording",
+    description:
+      "Navigation by type or grammar wording; membership does not establish formal equivalence.",
     matches: [
       /\btype system\b/i,
       /\btype checker\b/i,
@@ -141,7 +165,9 @@ const MODEL_FAMILIES: ModelFamily[] = [
   },
   {
     slug: "dataflow-pipelines",
-    name: "Dataflow and pipelines",
+    name: "Navigation family: dataflow/pipeline wording",
+    description:
+      "Navigation by dataflow or pipeline wording; membership does not establish formal equivalence.",
     matches: [
       /\bdataflow\b/i,
       /\bdata flow\b/i,
@@ -153,7 +179,9 @@ const MODEL_FAMILIES: ModelFamily[] = [
   },
   {
     slug: "probabilistic-stochastic",
-    name: "Probabilistic and stochastic models",
+    name: "Navigation family: probabilistic/stochastic wording",
+    description:
+      "Navigation by probabilistic or stochastic wording; membership does not establish formal equivalence.",
     matches: [
       /\bprobabilistic\b/i,
       /\bprobability model\b/i,
@@ -164,7 +192,9 @@ const MODEL_FAMILIES: ModelFamily[] = [
   },
   {
     slug: "optimization-scheduling",
-    name: "Optimization and scheduling",
+    name: "Navigation family: optimization/scheduling wording",
+    description:
+      "Navigation by optimization or scheduling wording; membership does not establish formal equivalence.",
     matches: [
       /\boptimization\b/i,
       /\boptimisation\b/i,
@@ -183,6 +213,7 @@ type ModelGroup = {
 
 type RawModelGroup = {
   name: string;
+  description: string;
   views: Array<{ system_id: string; metadata: ModelViewMetadata }>;
 };
 
@@ -201,6 +232,7 @@ export function buildModelGraph(rows: ModelViewRow[]): ModelGraph {
   const rawGroups = new Map<string, RawModelGroup>();
 
   for (const row of validRows) {
+    const viewKey = modelViewKey(row.system_id, row.model, row.question);
     if (!systemById.has(row.system_id)) {
       systemById.set(row.system_id, {
         id: row.system_id,
@@ -214,14 +246,27 @@ export function buildModelGraph(rows: ModelViewRow[]): ModelGraph {
       }
     }
 
-    const family = classifyModel(row.model);
-    const key = family ? `family:${family.slug}` : `model:${row.model}`;
-    const group = rawGroups.get(key) ?? {
-      name: family?.name ?? row.model,
-      views: [],
-    };
-    group.views.push({ system_id: row.system_id, metadata: toMetadata(row) });
-    rawGroups.set(key, group);
+    const families = classifyModel(row.model);
+    for (const family of families) {
+      addRawGroup(
+        rawGroups,
+        `family:${family.slug}`,
+        family.name,
+        family.description,
+        row,
+        viewKey,
+      );
+    }
+    if (families.length === 0) {
+      addRawGroup(
+        rawGroups,
+        `model:${row.model}`,
+        `Same title: ${row.model}`,
+        "Same title is a navigation grouping and does not establish formal equivalence.",
+        row,
+        viewKey,
+      );
+    }
   }
 
   const modelGroups = makeModelGroups(rawGroups);
@@ -239,7 +284,7 @@ export function buildModelGraph(rows: ModelViewRow[]): ModelGraph {
         source: system.id,
         target: group.node.id,
         type: "modeled-by",
-        claim_type: "inference",
+        claim_type: aggregateClaimType(views.map((view) => view.metadata)),
         metadata: views.map((view) => view.metadata),
       });
     }
@@ -269,9 +314,45 @@ function normalizeRow(row: ModelViewRow): ModelViewRow | null {
   };
 }
 
-function toMetadata(row: ModelViewRow): ModelViewMetadata {
+/**
+ * Lossless tuple encoding avoids hash, slug, and delimiter collisions.
+ * Repeated rows with the same normalized identity intentionally share a key;
+ * their database ids and individual claims remain available in metadata.
+ */
+export function modelViewKey(systemId: string, model: string, question: string): string {
+  return `view:${encodeURIComponent(
+    JSON.stringify([
+      systemId.trim(),
+      normalizeIdentityPart(model),
+      normalizeIdentityPart(question),
+    ]),
+  )}`;
+}
+
+function normalizeIdentityPart(value: string): string {
+  return value.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function addRawGroup(
+  groups: Map<string, RawModelGroup>,
+  key: string,
+  name: string,
+  description: string,
+  row: ModelViewRow,
+  viewKey: string,
+): void {
+  const group = groups.get(key) ?? { name, description, views: [] };
+  group.views.push({
+    system_id: row.system_id,
+    metadata: toMetadata(row, viewKey),
+  });
+  groups.set(key, group);
+}
+
+function toMetadata(row: ModelViewRow, key: string): ModelViewMetadata {
   return {
     id: row.view_id,
+    key,
     model: row.model,
     question: row.question,
     assumptions: stringArray(row.assumptions_json),
@@ -280,10 +361,8 @@ function toMetadata(row: ModelViewRow): ModelViewMetadata {
   };
 }
 
-function classifyModel(model: string): ModelFamily | null {
-  return (
-    MODEL_FAMILIES.find((family) => family.matches.some((pattern) => pattern.test(model))) ?? null
-  );
+function classifyModel(model: string): ModelFamily[] {
+  return MODEL_FAMILIES.filter((family) => family.matches.some((pattern) => pattern.test(model)));
 }
 
 function makeModelGroups(rawGroups: Map<string, RawModelGroup>): Map<string, ModelGroup> {
@@ -300,17 +379,27 @@ function makeModelGroups(rawGroups: Map<string, RawModelGroup>): Map<string, Mod
       const id = `model:${family.slug}`;
       usedIds.add(id);
       result.set(key, {
-        node: { id, name: group.name, type: "model" },
+        node: {
+          id,
+          name: group.name,
+          description: group.description,
+          type: "model",
+        },
         views: sortViews(group.views),
       });
     }
   }
 
   for (const [key, group] of unknowns) {
-    const id = uniqueModelId(group.name, usedIds);
+    const id = uniqueModelId(key.slice("model:".length), usedIds);
     usedIds.add(id);
     result.set(key, {
-      node: { id, name: group.name, type: "model" },
+      node: {
+        id,
+        name: group.name,
+        description: group.description,
+        type: "model",
+      },
       views: sortViews(group.views),
     });
   }
@@ -329,17 +418,15 @@ function sortViews(
 
 function compareViewMetadata(left: ModelViewMetadata, right: ModelViewMetadata): number {
   return (
-    compareViewIds(left.id, right.id) ||
+    left.key.localeCompare(right.key) ||
     left.model.localeCompare(right.model) ||
     left.question.localeCompare(right.question)
   );
 }
 
-function compareViewIds(left: string | number, right: string | number): number {
-  if (typeof left === "number" && typeof right === "number") return left - right;
-  if (typeof left === "number") return -1;
-  if (typeof right === "number") return 1;
-  return left.localeCompare(right);
+function aggregateClaimType(views: ModelViewMetadata[]): string {
+  const claims = new Set(views.map((view) => view.claim_type));
+  return claims.size === 1 ? (views[0]?.claim_type ?? "") : "mixed";
 }
 
 function uniqueModelId(name: string, usedIds: Set<string>): string {
