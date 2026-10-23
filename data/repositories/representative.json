@@ -284,7 +284,7 @@
     "category": "init-system",
     "repository": "https://github.com/systemd/systemd.git",
     "documentation": "https://www.freedesktop.org/wiki/Software/systemd/",
-    "ref": "main",
+    "ref": "558da3129cce0f4ab52cc03d7444d12355300daa",
     "priority": "core"
   },
   {
