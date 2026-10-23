@@ -122,6 +122,10 @@ These entries are already present in the repository at different review levels:
 | `wezterm` | WezTerm | terminal emulator | `reviewed` | Compare PTY domains, terminal parsing, mux pane/tab/workspace state, GPU rendering, input, and control APIs using fixed-commit evidence |
 | `alacritty` | Alacritty | terminal emulator | `reviewed` | Compare PTY event loops, terminal grid/parser state, GPU window rendering, input/clipboard, and IPC boundaries using fixed-commit evidence |
 | `ghostty` | Ghostty | terminal emulator | `reviewed` | Compare PTY processes, VT parser/screen state, native renderer backends, input routing, and surface/runtime boundaries using fixed-commit evidence |
+| `powershell` | PowerShell | shell language and runtime | `reviewed` | Compare parser/runtime state, object pipelines, provider-backed sessions, and remoting runspaces using fixed-commit evidence |
+| `nushell` | Nushell | shell language and runtime | `reviewed` | Compare typed pipeline values, parser/engine state, command overlays, and external-process boundaries using fixed-commit evidence |
+| `tmux` | tmux | terminal multiplexer | `reviewed` | Compare server/client lifecycle, session/window/pane topology, PTY I/O, and command control using fixed-commit evidence |
+| `zellij` | Zellij | terminal multiplexer | `reviewed` | Compare client/server sessions, PTY-backed panes, tab/layout topology, and mode-aware input routing using fixed-commit evidence |
 | `rails` | Ruby on Rails | web framework | `reviewed` | Compare engine composition, ordered initialization, autoloading, and Rack middleware using fixed-commit evidence |
 | `laravel` | Laravel | web framework | `reviewed` | Compare service-container resolution, provider bootstrap, deferred services, and middleware pipelines using fixed-commit evidence |
 | `spring-boot` | Spring Boot | web framework | `reviewed` | Compare application-context startup, conditional auto-configuration, environment binding, and embedded web deployment using fixed-commit evidence |

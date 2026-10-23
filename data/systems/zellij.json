@@ -1,0 +1,241 @@
+{
+  "id": "zellij",
+  "name": "Zellij",
+  "version_context": "commit d121d8e0162b844a7c7f95e9bff7e9f8d2cef5e9",
+  "summary": "A Rust terminal workspace and multiplexer that separates client and server responsibilities, manages PTY-backed panes inside tabs and layouts, and routes input actions and pane updates through an explicit session runtime.",
+  "scope": [
+    "client/server session lifecycle",
+    "PTY-backed panes",
+    "tabs, layouts, and pane topology",
+    "input and action routing"
+  ],
+  "features": [
+    {
+      "id": "zellij-client-server-session",
+      "name": "Client/server session boundary",
+      "category": "process-model",
+      "claim_type": "fact",
+      "description": "Zellij separates terminal-client interaction from a server-side session runtime that owns workspace state and can be attached to by clients, making session lifetime distinct from one terminal frontend.",
+      "benefits": [
+        "Supports reattachment to a structured workspace",
+        "Separates UI connection concerns from session ownership"
+      ],
+      "costs": [
+        "Client/server communication adds lifecycle and transport failure modes",
+        "Shared session state requires coordinated updates"
+      ],
+      "evidence_ids": [
+        "zellij-client-source",
+        "zellij-server-source"
+      ]
+    },
+    {
+      "id": "zellij-pty-pane-lifecycle",
+      "name": "PTY-backed pane lifecycle",
+      "category": "terminal-model",
+      "claim_type": "fact",
+      "description": "The server creates and supervises PTY-backed pane processes, reads their output, and routes pane input and exit events into the session state.",
+      "benefits": [
+        "Preserves interactive shell semantics inside managed panes",
+        "Makes process exit and pane state observable to the workspace"
+      ],
+      "costs": [
+        "PTY and process behavior remain operating-system dependent",
+        "Many panes multiply file descriptors, buffers, and scheduling work"
+      ],
+      "evidence_ids": [
+        "zellij-pty-source",
+        "zellij-server-source"
+      ]
+    },
+    {
+      "id": "zellij-tab-layout-topology",
+      "name": "Tab, layout, and pane topology",
+      "category": "session-model",
+      "claim_type": "fact",
+      "description": "Zellij composes panes into tabs and layouts, with the server maintaining focus, geometry, tiled or floating placement, and workspace-level topology independently of a single client view.",
+      "benefits": [
+        "Provides structured multi-pane workspaces",
+        "Makes layout and focus state explicit and scriptable"
+      ],
+      "costs": [
+        "Geometry, focus, and pane lifecycle must remain consistent during mutations",
+        "Topology features increase state and rendering complexity"
+      ],
+      "evidence_ids": [
+        "zellij-tab-source",
+        "zellij-panes-source",
+        "zellij-server-source"
+      ]
+    },
+    {
+      "id": "zellij-input-action-routing",
+      "name": "Input and action routing",
+      "category": "control-model",
+      "claim_type": "fact",
+      "description": "Input events are decoded into actions and routed through session modes, pane focus, and client/server messages; actions can target panes, tabs, layouts, or workspace control rather than only sending bytes to a child process.",
+      "benefits": [
+        "Unifies keyboard control and workspace operations",
+        "Allows mode-aware routing without changing pane process semantics"
+      ],
+      "costs": [
+        "Modes and focus alter the meaning of the same input",
+        "Control actions require clear client/session authority boundaries"
+      ],
+      "evidence_ids": [
+        "zellij-input-source",
+        "zellij-client-source",
+        "zellij-server-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Workspace containment and attachment graph",
+      "question": "How do clients attach to servers, and how do servers contain tabs, layouts, panes, and child processes?",
+      "assumptions": [
+        "The server owns session topology",
+        "Clients observe or request workspace transitions",
+        "Attachment does not prove process survival after server teardown"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "zellij-client-source",
+        "zellij-server-source",
+        "zellij-tab-source",
+        "zellij-panes-source"
+      ]
+    },
+    {
+      "model": "PTY-to-pane transition system",
+      "question": "How do pane PTY events transition into pane state, layout updates, and client-visible output?",
+      "assumptions": [
+        "PTY output is ordered input",
+        "Pane and tab state are server-managed",
+        "Rendering and terminal protocol details are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "zellij-pty-source",
+        "zellij-server-source",
+        "zellij-panes-source"
+      ]
+    },
+    {
+      "model": "Mode-aware input authority relation",
+      "question": "Which client inputs become child-process bytes, pane actions, tab actions, or session commands?",
+      "assumptions": [
+        "Input decoding selects action transitions",
+        "Focus and mode determine reachable targets",
+        "The model does not prove deployment security"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "zellij-input-source",
+        "zellij-client-source",
+        "zellij-server-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "zellij-client-server-session",
+      "benefits": [
+        "Supports reattachment to a structured workspace"
+      ],
+      "costs": [
+        "Client/server communication adds lifecycle failure modes"
+      ]
+    },
+    {
+      "feature_id": "zellij-pty-pane-lifecycle",
+      "benefits": [
+        "Preserves interactive shell semantics inside managed panes"
+      ],
+      "costs": [
+        "Many panes multiply process and buffer resources"
+      ]
+    },
+    {
+      "feature_id": "zellij-tab-layout-topology",
+      "benefits": [
+        "Provides structured multi-pane workspaces"
+      ],
+      "costs": [
+        "Geometry, focus, and lifecycle must stay consistent during mutations"
+      ]
+    },
+    {
+      "feature_id": "zellij-input-action-routing",
+      "benefits": [
+        "Unifies keyboard control and workspace operations"
+      ],
+      "costs": [
+        "Modes and focus alter input meaning"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "zellij-repository-commit",
+      "kind": "source-code",
+      "title": "Zellij source at fixed commit",
+      "uri": "https://github.com/zellij-org/zellij/commit/d121d8e0162b844a7c7f95e9bff7e9f8d2cef5e9",
+      "accessed": "2026-10-24",
+      "notes": "Official repository revision used for this card."
+    },
+    {
+      "id": "zellij-client-source",
+      "kind": "source-code",
+      "title": "Zellij client source at fixed commit",
+      "uri": "https://github.com/zellij-org/zellij/blob/d121d8e0162b844a7c7f95e9bff7e9f8d2cef5e9/zellij-client/src/lib.rs",
+      "accessed": "2026-10-24",
+      "notes": "Client connection and event-routing boundary."
+    },
+    {
+      "id": "zellij-server-source",
+      "kind": "source-code",
+      "title": "Zellij server source at fixed commit",
+      "uri": "https://github.com/zellij-org/zellij/blob/d121d8e0162b844a7c7f95e9bff7e9f8d2cef5e9/zellij-server/src/lib.rs",
+      "accessed": "2026-10-24",
+      "notes": "Server session ownership and runtime coordination."
+    },
+    {
+      "id": "zellij-pty-source",
+      "kind": "source-code",
+      "title": "Zellij PTY source at fixed commit",
+      "uri": "https://github.com/zellij-org/zellij/blob/d121d8e0162b844a7c7f95e9bff7e9f8d2cef5e9/zellij-server/src/pty.rs",
+      "accessed": "2026-10-24",
+      "notes": "PTY process creation, I/O, and pane process lifecycle."
+    },
+    {
+      "id": "zellij-tab-source",
+      "kind": "source-code",
+      "title": "Zellij tab source at fixed commit",
+      "uri": "https://github.com/zellij-org/zellij/blob/d121d8e0162b844a7c7f95e9bff7e9f8d2cef5e9/zellij-server/src/tab/mod.rs",
+      "accessed": "2026-10-24",
+      "notes": "Tab, layout, focus, and pane composition boundary."
+    },
+    {
+      "id": "zellij-panes-source",
+      "kind": "source-code",
+      "title": "Zellij pane source at fixed commit",
+      "uri": "https://github.com/zellij-org/zellij/blob/d121d8e0162b844a7c7f95e9bff7e9f8d2cef5e9/zellij-server/src/panes/mod.rs",
+      "accessed": "2026-10-24",
+      "notes": "Pane topology and geometry implementation."
+    },
+    {
+      "id": "zellij-input-source",
+      "kind": "source-code",
+      "title": "Zellij input source at fixed commit",
+      "uri": "https://github.com/zellij-org/zellij/blob/d121d8e0162b844a7c7f95e9bff7e9f8d2cef5e9/zellij-utils/src/input/mod.rs",
+      "accessed": "2026-10-24",
+      "notes": "Input decoding, modes, and action representation."
+    }
+  ],
+  "related_systems": [
+    "tmux",
+    "wezterm",
+    "kitty"
+  ]
+}

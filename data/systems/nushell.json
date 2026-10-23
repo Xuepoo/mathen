@@ -1,0 +1,218 @@
+{
+  "id": "nushell",
+  "name": "Nushell",
+  "version_context": "commit c77c34bc935a8990242b9350fb46fdfb4e9e91c4",
+  "summary": "A Rust shell language and runtime that carries typed pipeline data through parsed command blocks, resolves commands against explicit engine state, and adapts external process streams at a boundary between structured shell values and byte-oriented tools.",
+  "scope": [
+    "parser and shell language",
+    "typed pipeline values",
+    "engine and command state",
+    "external process boundary"
+  ],
+  "features": [
+    {
+      "id": "nushell-parser-engine",
+      "name": "Parser and engine-state execution",
+      "category": "language-model",
+      "claim_type": "fact",
+      "description": "Nushell parses blocks and expressions into executable representations and evaluates them against engine state containing declarations, scopes, variables, commands, and runtime configuration.",
+      "benefits": [
+        "Separates syntax analysis from evaluation state",
+        "Makes command and scope resolution explicit"
+      ],
+      "costs": [
+        "Parser, evaluator, and command registry must evolve together",
+        "Dynamic overlays and scopes increase resolution complexity"
+      ],
+      "evidence_ids": [
+        "nushell-parser-source",
+        "nushell-command-source"
+      ]
+    },
+    {
+      "id": "nushell-typed-pipeline",
+      "name": "Typed pipeline data model",
+      "category": "dataflow-model",
+      "claim_type": "fact",
+      "description": "Pipeline data and values represent structured records, lists, strings, errors, and streams as shell values, allowing internal commands to transform data without formatting it as text between every stage.",
+      "benefits": [
+        "Supports structured filtering and transformation",
+        "Keeps stream, value, and error semantics visible to commands"
+      ],
+      "costs": [
+        "Commands must handle a broad value and stream contract",
+        "Structured values require explicit conversion at external boundaries"
+      ],
+      "evidence_ids": [
+        "nushell-value-source",
+        "nushell-value-source"
+      ]
+    },
+    {
+      "id": "nushell-command-dispatch",
+      "name": "Command and overlay dispatch",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Command declarations and engine state provide a dispatch boundary for built-ins, custom definitions, modules, and overlays; the active environment determines which declarations and scopes are visible.",
+      "benefits": [
+        "Supports modular command environments",
+        "Allows shell definitions to participate in the same pipeline model"
+      ],
+      "costs": [
+        "Overlay precedence and scope lifetime can surprise users",
+        "Command metadata and signatures are part of runtime compatibility"
+      ],
+      "evidence_ids": [
+        "nushell-command-source",
+        "nushell-command-source"
+      ]
+    },
+    {
+      "id": "nushell-external-boundary",
+      "name": "External process and structured decoding boundary",
+      "category": "interoperability-model",
+      "claim_type": "fact",
+      "description": "External commands exchange byte streams with Nushell, while the shell can route output through decoding and redirection paths so external text becomes structured pipeline data only at an explicit interoperability boundary.",
+      "benefits": [
+        "Integrates existing Unix tools with structured shell workflows",
+        "Preserves raw output when a pipeline remains external-facing"
+      ],
+      "costs": [
+        "Encoding, exit status, and decoding failures cross the boundary",
+        "External tools retain their own argument and output contracts"
+      ],
+      "evidence_ids": [
+        "nushell-external-source",
+        "nushell-value-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed pipeline transition system",
+      "question": "How do parsed commands transform streams and values while preserving errors and external redirections?",
+      "assumptions": [
+        "Internal commands consume typed pipeline data",
+        "Streams may be lazy or incremental",
+        "Terminal rendering is an output projection"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "nushell-parser-source",
+        "nushell-value-source",
+        "nushell-value-source"
+      ]
+    },
+    {
+      "model": "Scoped command-resolution graph",
+      "question": "Which declarations, overlays, variables, and modules are visible when a command is evaluated?",
+      "assumptions": [
+        "Engine state records lexical and runtime scopes",
+        "Resolution depends on active overlays",
+        "The graph abstracts implementation-specific lookup details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "nushell-command-source",
+        "nushell-command-source"
+      ]
+    },
+    {
+      "model": "Structured-to-byte interop relation",
+      "question": "Where does typed shell data become bytes for an external process and where can bytes be decoded back?",
+      "assumptions": [
+        "External processes are byte-oriented",
+        "Decoding is selected by command or pipeline context",
+        "Interop behavior does not imply external process isolation"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "nushell-external-source",
+        "nushell-value-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "nushell-parser-engine",
+      "benefits": [
+        "Separates syntax analysis from evaluation state"
+      ],
+      "costs": [
+        "Parser, evaluator, and command registry must evolve together"
+      ]
+    },
+    {
+      "feature_id": "nushell-typed-pipeline",
+      "benefits": [
+        "Supports structured filtering and transformation"
+      ],
+      "costs": [
+        "Commands must handle a broad value and stream contract"
+      ]
+    },
+    {
+      "feature_id": "nushell-command-dispatch",
+      "benefits": [
+        "Supports modular command environments"
+      ],
+      "costs": [
+        "Overlay precedence and scope lifetime add resolution complexity"
+      ]
+    },
+    {
+      "feature_id": "nushell-external-boundary",
+      "benefits": [
+        "Integrates existing tools with structured workflows"
+      ],
+      "costs": [
+        "Encoding and decoding failures cross the process boundary"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "nushell-repository-commit",
+      "kind": "source-code",
+      "title": "Nushell source at fixed commit",
+      "uri": "https://github.com/nushell/nushell/commit/c77c34bc935a8990242b9350fb46fdfb4e9e91c4",
+      "accessed": "2026-10-24",
+      "notes": "Official repository revision used for this card."
+    },
+    {
+      "id": "nushell-parser-source",
+      "kind": "source-code",
+      "title": "Nushell parser source at fixed commit",
+      "uri": "https://github.com/nushell/nushell/blob/c77c34bc935a8990242b9350fb46fdfb4e9e91c4/crates/nu-parser/src/parser.rs",
+      "accessed": "2026-10-24",
+      "notes": "Parser and block/expression construction implementation."
+    },
+    {
+      "id": "nushell-value-source",
+      "kind": "source-code",
+      "title": "Nushell value source at fixed commit",
+      "uri": "https://github.com/nushell/nushell/blob/c77c34bc935a8990242b9350fb46fdfb4e9e91c4/crates/nu-protocol/src/value/mod.rs",
+      "accessed": "2026-10-24",
+      "notes": "Structured shell value representation."
+    },
+    {
+      "id": "nushell-command-source",
+      "kind": "source-code",
+      "title": "Nushell command registry source at fixed commit",
+      "uri": "https://github.com/nushell/nushell/blob/c77c34bc935a8990242b9350fb46fdfb4e9e91c4/crates/nu-protocol/src/engine/command.rs",
+      "accessed": "2026-10-24",
+      "notes": "Command declaration and signature boundary."
+    },
+    {
+      "id": "nushell-external-source",
+      "kind": "source-code",
+      "title": "Nushell external command source at fixed commit",
+      "uri": "https://github.com/nushell/nushell/blob/c77c34bc935a8990242b9350fb46fdfb4e9e91c4/crates/nu-command/src/system/run_external.rs",
+      "accessed": "2026-10-24",
+      "notes": "External process invocation, redirection, and output boundary."
+    }
+  ],
+  "related_systems": [
+    "powershell"
+  ]
+}

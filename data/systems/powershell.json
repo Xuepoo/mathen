@@ -1,0 +1,216 @@
+{
+  "id": "powershell",
+  "name": "PowerShell",
+  "version_context": "commit c28aa00857ac509948ae97ebd300c4edbed7e210",
+  "summary": "A cross-platform shell language and runtime that parses commands into executable representations, composes typed pipeline objects through command processors, exposes provider-backed session state, and can project execution into remoting runspaces.",
+  "scope": [
+    "language parser and AST",
+    "command pipeline and runtime",
+    "provider-backed session state",
+    "remoting runspaces and host boundary"
+  ],
+  "features": [
+    {
+      "id": "powershell-language-parser",
+      "name": "Language parser and syntax tree",
+      "category": "language-model",
+      "claim_type": "fact",
+      "description": "PowerShell parses input into tokens and syntax-tree representations before command execution, allowing language constructs, expressions, redirections, and command arguments to be represented separately from runtime invocation.",
+      "benefits": [
+        "Separates language recognition from command execution",
+        "Provides structured syntax for diagnostics and tooling"
+      ],
+      "costs": [
+        "Language grammar and parsing rules are compatibility-sensitive",
+        "A richer syntax model increases runtime and tooling surface"
+      ],
+      "evidence_ids": [
+        "powershell-parser-source"
+      ]
+    },
+    {
+      "id": "powershell-command-pipeline",
+      "name": "Command processor and object pipeline",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The runtime turns parsed commands into command processors and connects them through pipeline execution, passing .NET objects between commands rather than requiring text serialization at every stage.",
+      "benefits": [
+        "Composes commands with structured object values",
+        "Makes parameter binding and command lifecycle explicit"
+      ],
+      "costs": [
+        "Command binding and adapter behavior can be difficult to predict",
+        "Object serialization is still required at native or remoting boundaries"
+      ],
+      "evidence_ids": [
+        "powershell-command-source",
+        "powershell-command-source"
+      ]
+    },
+    {
+      "id": "powershell-session-providers",
+      "name": "Provider-backed session state",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "Execution context and session-state objects hold variables, functions, aliases, drives, providers, and other invocation state; providers project resources such as the filesystem into command-facing locations.",
+      "benefits": [
+        "Unifies heterogeneous resources behind shell navigation and commands",
+        "Scopes state to explicit execution contexts and runspaces"
+      ],
+      "costs": [
+        "Provider behavior adds indirection over underlying resources",
+        "Session state lifetime and scope rules add language complexity"
+      ],
+      "evidence_ids": [
+        "powershell-session-source"
+      ]
+    },
+    {
+      "id": "powershell-remoting-runspaces",
+      "name": "Remoting and runspace boundary",
+      "category": "distributed-execution",
+      "claim_type": "fact",
+      "description": "Runspace pools and remoting clients provide a separate execution boundary for remote pipelines, with connection, invocation, output, and teardown state coordinated outside the local command processor.",
+      "benefits": [
+        "Reuses the shell execution model across local and remote targets",
+        "Makes remote concurrency and session lifetime explicit"
+      ],
+      "costs": [
+        "Transport, authentication, serialization, and remote failure become part of execution",
+        "Remote object behavior differs from in-process object behavior"
+      ],
+      "evidence_ids": [
+        "powershell-remoting-source",
+        "powershell-session-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Parse-to-pipeline transition system",
+      "question": "How does source text transition through tokens, syntax nodes, command processors, and pipeline output?",
+      "assumptions": [
+        "Input is parsed before invocation",
+        "Command processors consume and emit pipeline objects",
+        "Host presentation is outside the pipeline state"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "powershell-parser-source",
+        "powershell-command-source",
+        "powershell-command-source"
+      ]
+    },
+    {
+      "model": "Provider-backed session graph",
+      "question": "How do runspaces contain scopes, commands, variables, drives, and provider projections?",
+      "assumptions": [
+        "A runspace is an execution-state boundary",
+        "Scopes and providers expose typed resource relationships",
+        "The graph abstracts host-specific provider implementations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "powershell-session-source",
+        "powershell-session-source"
+      ]
+    },
+    {
+      "model": "Local-to-remote authority relation",
+      "question": "Which pipeline operations cross from a local runspace into a remote execution session?",
+      "assumptions": [
+        "Remoting requests are separately authorized transitions",
+        "Serialization can change value representation",
+        "The model does not prove deployment security"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "powershell-remoting-source",
+        "powershell-session-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "powershell-language-parser",
+      "benefits": [
+        "Separates language recognition from command execution"
+      ],
+      "costs": [
+        "Language grammar and parsing rules are compatibility-sensitive"
+      ]
+    },
+    {
+      "feature_id": "powershell-command-pipeline",
+      "benefits": [
+        "Composes commands with structured object values"
+      ],
+      "costs": [
+        "Command binding and adapter behavior can be difficult to predict"
+      ]
+    },
+    {
+      "feature_id": "powershell-session-providers",
+      "benefits": [
+        "Unifies heterogeneous resources behind shell navigation"
+      ],
+      "costs": [
+        "Provider behavior adds indirection over underlying resources"
+      ]
+    },
+    {
+      "feature_id": "powershell-remoting-runspaces",
+      "benefits": [
+        "Reuses execution semantics across local and remote targets"
+      ],
+      "costs": [
+        "Transport and serialization add failure and compatibility modes"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "powershell-repository-commit",
+      "kind": "source-code",
+      "title": "PowerShell source at fixed commit",
+      "uri": "https://github.com/PowerShell/PowerShell/commit/c28aa00857ac509948ae97ebd300c4edbed7e210",
+      "accessed": "2026-10-24",
+      "notes": "Official repository revision used for this card."
+    },
+    {
+      "id": "powershell-parser-source",
+      "kind": "source-code",
+      "title": "PowerShell parser source at fixed commit",
+      "uri": "https://github.com/PowerShell/PowerShell/blob/c28aa00857ac509948ae97ebd300c4edbed7e210/src/System.Management.Automation/engine/parser/Parser.cs",
+      "accessed": "2026-10-24",
+      "notes": "Parser and syntax representation implementation."
+    },
+    {
+      "id": "powershell-command-source",
+      "kind": "source-code",
+      "title": "PowerShell command processor source at fixed commit",
+      "uri": "https://github.com/PowerShell/PowerShell/blob/c28aa00857ac509948ae97ebd300c4edbed7e210/src/System.Management.Automation/engine/CommandProcessor.cs",
+      "accessed": "2026-10-24",
+      "notes": "Command processor construction and invocation boundary."
+    },
+    {
+      "id": "powershell-session-source",
+      "kind": "source-code",
+      "title": "PowerShell execution context source at fixed commit",
+      "uri": "https://github.com/PowerShell/PowerShell/blob/c28aa00857ac509948ae97ebd300c4edbed7e210/src/System.Management.Automation/engine/ExecutionContext.cs",
+      "accessed": "2026-10-24",
+      "notes": "Execution context and session-state boundary."
+    },
+    {
+      "id": "powershell-remoting-source",
+      "kind": "source-code",
+      "title": "PowerShell remoting source at fixed commit",
+      "uri": "https://github.com/PowerShell/PowerShell/blob/c28aa00857ac509948ae97ebd300c4edbed7e210/src/System.Management.Automation/engine/remoting/client/RemoteRunspacePoolInternal.cs",
+      "accessed": "2026-10-24",
+      "notes": "Remote runspace pool connection and lifecycle boundary."
+    }
+  ],
+  "related_systems": [
+    "nushell"
+  ]
+}

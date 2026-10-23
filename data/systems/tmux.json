@@ -1,0 +1,258 @@
+{
+  "id": "tmux",
+  "name": "tmux",
+  "version_context": "commit 729fa175095cfdf03273dd367d9b5392413d8223",
+  "summary": "A terminal multiplexer that keeps a server-owned session graph of clients, sessions, windows, and panes, connects panes to PTYs, and routes parsed commands and terminal events across persistent server and client processes.",
+  "scope": [
+    "server and client lifecycle",
+    "sessions, windows, and panes",
+    "PTY and terminal I/O",
+    "command parser and control protocol"
+  ],
+  "features": [
+    {
+      "id": "tmux-server-client-boundary",
+      "name": "Server and client process boundary",
+      "category": "process-model",
+      "claim_type": "fact",
+      "description": "tmux separates a long-lived server from client processes; clients connect to the server to attach, display, and issue commands while the server owns session state and pane processes.",
+      "benefits": [
+        "Sessions can outlive an attaching terminal client",
+        "Control and presentation are separate process roles"
+      ],
+      "costs": [
+        "Socket connection and server lifecycle add failure modes",
+        "State ownership across processes requires synchronization"
+      ],
+      "evidence_ids": [
+        "tmux-server-source",
+        "tmux-client-source"
+      ]
+    },
+    {
+      "id": "tmux-session-topology",
+      "name": "Session, window, and pane topology",
+      "category": "session-model",
+      "claim_type": "fact",
+      "description": "The server composes sessions from windows and panes, supports current and grouped client views, and applies commands that create, select, split, move, resize, or destroy topology nodes.",
+      "benefits": [
+        "Provides persistent named workspaces with multiple terminal panes",
+        "Makes layout and attachment state explicit"
+      ],
+      "costs": [
+        "Topology changes must coordinate focus, size, and process lifetime",
+        "Multiple clients can observe or mutate shared state"
+      ],
+      "evidence_ids": [
+        "tmux-session-source",
+        "tmux-window-source",
+        "tmux-pane-source"
+      ]
+    },
+    {
+      "id": "tmux-pty-terminal-io",
+      "name": "PTY and terminal I/O loop",
+      "category": "terminal-model",
+      "claim_type": "fact",
+      "description": "Panes own PTY-backed processes and terminal state; the server reads and writes pane streams, updates screen state, and sends terminal output to attached clients through tty handling.",
+      "benefits": [
+        "Preserves interactive shell behavior behind a persistent session",
+        "Centralizes pane output for multiple clients"
+      ],
+      "costs": [
+        "PTY and terminal semantics remain host-specific",
+        "High output rates compete with client redraw and input handling"
+      ],
+      "evidence_ids": [
+        "tmux-pane-source",
+        "tmux-tty-source",
+        "tmux-window-source"
+      ]
+    },
+    {
+      "id": "tmux-command-control",
+      "name": "Command parser and control dispatch",
+      "category": "control-model",
+      "claim_type": "fact",
+      "description": "tmux parses command lines and key-driven command sequences into command objects, queues them for execution, and exposes operations for sessions, windows, panes, options, buffers, and clients.",
+      "benefits": [
+        "Offers one control vocabulary for interactive and scripted operations",
+        "Supports ordered command queues and conditional control"
+      ],
+      "costs": [
+        "Command parsing and quoting are a compatibility surface",
+        "Control authority reaches shared session resources"
+      ],
+      "evidence_ids": [
+        "tmux-command-parser-source",
+        "tmux-command-source",
+        "tmux-server-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Persistent multiplexer containment graph",
+      "question": "How do a server, clients, sessions, windows, panes, and child processes attach and detach?",
+      "assumptions": [
+        "The server is the authoritative topology owner",
+        "Clients observe or request mutations",
+        "Attachment does not prove child-process persistence after server teardown"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "tmux-server-source",
+        "tmux-client-source",
+        "tmux-session-source",
+        "tmux-pane-source"
+      ]
+    },
+    {
+      "model": "PTY-to-client event transition system",
+      "question": "How does pane process output become terminal state and client-visible redraw data?",
+      "assumptions": [
+        "PTY output is ordered input",
+        "The server maintains pane terminal state",
+        "TTY presentation and client scheduling are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "tmux-pane-source",
+        "tmux-tty-source",
+        "tmux-window-source"
+      ]
+    },
+    {
+      "model": "Shared-session control relation",
+      "question": "Which client or command can mutate a session, window, pane, option, or buffer?",
+      "assumptions": [
+        "Commands are authority-bearing transitions",
+        "Server access policy selects reachable resources",
+        "The model does not prove socket deployment security"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "tmux-command-source",
+        "tmux-server-source",
+        "tmux-client-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "tmux-server-client-boundary",
+      "benefits": [
+        "Sessions can outlive an attaching terminal client"
+      ],
+      "costs": [
+        "Socket connection and server lifecycle add failure modes"
+      ]
+    },
+    {
+      "feature_id": "tmux-session-topology",
+      "benefits": [
+        "Provides persistent named workspaces with multiple panes"
+      ],
+      "costs": [
+        "Topology changes coordinate focus, size, and process lifetime"
+      ]
+    },
+    {
+      "feature_id": "tmux-pty-terminal-io",
+      "benefits": [
+        "Preserves interactive shell behavior behind a persistent session"
+      ],
+      "costs": [
+        "High output rates compete with redraw and input handling"
+      ]
+    },
+    {
+      "feature_id": "tmux-command-control",
+      "benefits": [
+        "Offers one control vocabulary for interactive and scripted operations"
+      ],
+      "costs": [
+        "Control authority reaches shared session resources"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "tmux-repository-commit",
+      "kind": "source-code",
+      "title": "tmux source at fixed commit",
+      "uri": "https://github.com/tmux/tmux/commit/729fa175095cfdf03273dd367d9b5392413d8223",
+      "accessed": "2026-10-24",
+      "notes": "Official repository revision used for this card."
+    },
+    {
+      "id": "tmux-server-source",
+      "kind": "source-code",
+      "title": "tmux server source at fixed commit",
+      "uri": "https://github.com/tmux/tmux/blob/729fa175095cfdf03273dd367d9b5392413d8223/server.c",
+      "accessed": "2026-10-24",
+      "notes": "Server lifecycle and authoritative state loop."
+    },
+    {
+      "id": "tmux-client-source",
+      "kind": "source-code",
+      "title": "tmux client source at fixed commit",
+      "uri": "https://github.com/tmux/tmux/blob/729fa175095cfdf03273dd367d9b5392413d8223/client.c",
+      "accessed": "2026-10-24",
+      "notes": "Client connection and command/display boundary."
+    },
+    {
+      "id": "tmux-session-source",
+      "kind": "source-code",
+      "title": "tmux session source at fixed commit",
+      "uri": "https://github.com/tmux/tmux/blob/729fa175095cfdf03273dd367d9b5392413d8223/session.c",
+      "accessed": "2026-10-24",
+      "notes": "Session lifecycle and client attachment relationships."
+    },
+    {
+      "id": "tmux-window-source",
+      "kind": "source-code",
+      "title": "tmux window source at fixed commit",
+      "uri": "https://github.com/tmux/tmux/blob/729fa175095cfdf03273dd367d9b5392413d8223/window.c",
+      "accessed": "2026-10-24",
+      "notes": "Window topology and terminal screen coordination."
+    },
+    {
+      "id": "tmux-pane-source",
+      "kind": "source-code",
+      "title": "tmux pane source at fixed commit",
+      "uri": "https://github.com/tmux/tmux/blob/729fa175095cfdf03273dd367d9b5392413d8223/window.c",
+      "accessed": "2026-10-24",
+      "notes": "Pane PTY and child-process lifecycle."
+    },
+    {
+      "id": "tmux-tty-source",
+      "kind": "source-code",
+      "title": "tmux tty source at fixed commit",
+      "uri": "https://github.com/tmux/tmux/blob/729fa175095cfdf03273dd367d9b5392413d8223/tty.c",
+      "accessed": "2026-10-24",
+      "notes": "Terminal output and client tty presentation."
+    },
+    {
+      "id": "tmux-command-parser-source",
+      "kind": "source-code",
+      "title": "tmux command parser source at fixed commit",
+      "uri": "https://github.com/tmux/tmux/blob/729fa175095cfdf03273dd367d9b5392413d8223/cmd-parse.y",
+      "accessed": "2026-10-24",
+      "notes": "Command-line grammar and parsing."
+    },
+    {
+      "id": "tmux-command-source",
+      "kind": "source-code",
+      "title": "tmux command dispatch source at fixed commit",
+      "uri": "https://github.com/tmux/tmux/blob/729fa175095cfdf03273dd367d9b5392413d8223/cmd.c",
+      "accessed": "2026-10-24",
+      "notes": "Command queue and dispatch implementation."
+    }
+  ],
+  "related_systems": [
+    "zellij",
+    "kitty",
+    "wezterm"
+  ]
+}
