@@ -1,0 +1,99 @@
+{
+  "id": "pi-agent",
+  "name": "Pi Coding Agent",
+  "version_context": "earendil-works/pi commit ede2c9b468d8e061c557d16957513715e6d49cd6 (official repository; current Pi package namespace at this revision)",
+  "summary": "A minimal, extensible TypeScript agent harness composed of a provider-neutral model API, stateful tool-calling agent runtime, and coding-agent session layer with interactive, print, JSON, RPC, and SDK surfaces.",
+  "scope": [
+    "pi-ai provider and model boundary",
+    "pi-agent-core loop, messages, tools, and events",
+    "coding-agent sessions, compaction, and extensions",
+    "CLI, RPC, SDK, and package customization surfaces"
+  ],
+  "temporal_context": {
+    "version": "earendil-works/pi commit ede2c9b468d8e061c557d16957513715e6d49cd6",
+    "status": "current",
+    "claim_status": "accepted",
+    "evidence_ids": ["pi-agent-fixed-commit"]
+  },
+  "features": [
+    {
+      "id": "provider-neutral-model-boundary",
+      "name": "Provider-neutral model boundary",
+      "category": "provider-model",
+      "claim_type": "fact",
+      "description": "The pi-ai package presents a unified multi-provider LLM API and model/auth registries beneath the agent runtime, while the repository README lists providers and the pi-agent-core package consumes the abstraction rather than a single vendor API.",
+      "benefits": ["Keeps agent-loop code reusable across provider transports", "Allows model and credential selection to remain a replaceable boundary"],
+      "costs": ["Provider-specific capabilities need compatibility and normalization", "Model catalogs and authentication add another evolving contract"],
+      "evidence_ids": ["pi-agent-readme", "pi-agent-ai-source"]
+    },
+    {
+      "id": "evented-tool-calling-loop",
+      "name": "Evented tool-calling agent loop",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "pi-agent-core exposes agentLoop and a stateful Agent wrapper over an asynchronous loop that streams assistant responses, emits lifecycle events, queues steering and follow-up messages, validates tool arguments, and executes tool calls before continuation.",
+      "benefits": ["Separates orchestration events from presentation layers", "Supports interruption, steering, follow-up, and programmatic consumers"],
+      "costs": ["Queue modes and event ordering add state-machine complexity", "Tool execution remains an authority boundary requiring caller policy"],
+      "evidence_ids": ["pi-agent-loop-source", "pi-agent-agent-source"]
+    },
+    {
+      "id": "session-and-context-management",
+      "name": "Persistent sessions with compaction and branching",
+      "category": "session-model",
+      "claim_type": "fact",
+      "description": "The coding-agent session layer owns transcript state, model/thinking settings, tool loadouts, session switching and branching, compaction, retries, and export across interactive, print, RPC, and SDK modes.",
+      "benefits": ["Reuses one session abstraction across multiple I/O modes", "Makes long-running conversations recoverable within the coding-agent layer"],
+      "costs": ["Compaction and branch projections can change the context presented to a model", "Session persistence and mode-specific UI behavior increase lifecycle surface"],
+      "evidence_ids": ["pi-agent-readme", "pi-agent-session-source"]
+    },
+    {
+      "id": "extension-and-package-customization",
+      "name": "Extension, skill, prompt, theme, and package customization",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "The official README and extension types define a customization boundary for lifecycle subscriptions, LLM-callable tools, commands, keyboard/UI interactions, skills, prompt templates, themes, and distributable Pi packages.",
+      "benefits": ["Lets workflows add behavior without forking the core loop", "Shares customization through documented package and extension surfaces"],
+      "costs": ["Extensions can couple to event, tool, and UI contracts", "Customization moves some correctness and permission policy to package authors"],
+      "evidence_ids": ["pi-agent-readme", "pi-agent-extension-types"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Provider-normalized agent transition system",
+      "question": "How do prompts, assistant tool calls, tool results, steering messages, and follow-ups advance an agent context?",
+      "assumptions": ["An agent context is an ordered message sequence plus model, tool, and queue state", "A provider stream returns an assistant message or an error/abort outcome", "Tool execution and external side effects are abstracted as event-labeled transitions", "The view describes inspected loop behavior and does not prove provider semantic equivalence"],
+      "claim_type": "inference",
+      "evidence_ids": ["pi-agent-loop-source", "pi-agent-agent-source"]
+    },
+    {
+      "model": "Session projection and compaction state machine",
+      "question": "Which transcript, branch, compaction, retry, and mode states are visible to a coding-agent session?",
+      "assumptions": ["Session entries form an ordered history with branch and compaction projections", "Compaction replaces or summarizes context according to the session policy", "Interactive, print, JSON, RPC, and SDK modes share session state but differ in presentation", "This is a candidate operational model, not a durability or correctness proof"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["pi-agent-session-source", "pi-agent-readme"]
+    },
+    {
+      "model": "Composable extension graph",
+      "question": "How do core lifecycle events, registered tools, commands, UI capabilities, skills, and packages compose around a session?",
+      "assumptions": ["Extensions are nodes connected to event, tool, command, and UI registration interfaces", "Registration order and host mode constrain which edges are active", "Package distribution is treated as an external deployment edge", "Graph adjacency does not establish that an extension is safe or behavior-preserving"],
+      "claim_type": "inference",
+      "evidence_ids": ["pi-agent-extension-types", "pi-agent-readme"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "provider-neutral-model-boundary", "benefits": ["Portable model/provider integration"], "costs": ["Capability normalization and catalog drift"]},
+    {"feature_id": "evented-tool-calling-loop", "benefits": ["Reusable event stream for UI and automation"], "costs": ["Explicit queue and lifecycle ordering is required"]},
+    {"feature_id": "session-and-context-management", "benefits": ["Long-running sessions and multiple frontends share one abstraction"], "costs": ["Compaction and branching complicate context reasoning"]},
+    {"feature_id": "extension-and-package-customization", "benefits": ["Workflow-specific behavior without core forks"], "costs": ["Extension compatibility and policy become part of the integration surface"]}
+  ],
+  "evidence": [
+    {"id": "pi-agent-fixed-commit", "kind": "source-code", "title": "Pi official repository at fixed commit ede2c9b468d8", "uri": "https://github.com/earendil-works/pi/commit/ede2c9b468d8e061c557d16957513715e6d49cd6", "accessed": "2026-10-24", "notes": "The official Pi repository resolves this fixed revision. Earlier search results may show the historical badlogic/pi-mono location; this card uses the current repository identity and records the exact commit rather than merging histories."},
+    {"id": "pi-agent-readme", "kind": "official-doc", "title": "Pi README at fixed commit", "uri": "https://github.com/earendil-works/pi/blob/ede2c9b468d8e061c557d16957513715e6d49cd6/README.md", "accessed": "2026-10-24", "notes": "Official overview, supported modes, package composition, customization surfaces, installation, and development commands."},
+    {"id": "pi-agent-loop-source", "kind": "source-code", "title": "Pi agent loop source", "uri": "https://github.com/earendil-works/pi/blob/ede2c9b468d8e061c557d16957513715e6d49cd6/packages/agent/src/agent-loop.ts", "accessed": "2026-10-24", "notes": "Fixed source inspected locally for agentLoop, continuation, queue handling, turn transitions, event emission, streaming, and tool-call orchestration."},
+    {"id": "pi-agent-agent-source", "kind": "source-code", "title": "Pi stateful Agent source", "uri": "https://github.com/earendil-works/pi/blob/ede2c9b468d8e061c557d16957513715e6d49cd6/packages/agent/src/agent.ts", "accessed": "2026-10-24", "notes": "Fixed source inspected locally for Agent state, message conversion, queueing, callbacks, and tool lifecycle configuration."},
+    {"id": "pi-agent-ai-source", "kind": "source-code", "title": "Pi AI package source", "uri": "https://github.com/earendil-works/pi/tree/ede2c9b468d8e061c557d16957513715e6d49cd6/packages/ai/src", "accessed": "2026-10-24", "notes": "Fixed source tree for unified provider APIs, model catalogs, authentication, and stream boundaries."},
+    {"id": "pi-agent-session-source", "kind": "source-code", "title": "Pi coding-agent session source", "uri": "https://github.com/earendil-works/pi/blob/ede2c9b468d8e061c557d16957513715e6d49cd6/packages/coding-agent/src/core/agent-session.ts", "accessed": "2026-10-24", "notes": "Fixed source inspected locally for the shared session abstraction, compaction, branching, persistence, tool loadouts, and mode integration."},
+    {"id": "pi-agent-extension-types", "kind": "source-code", "title": "Pi extension API types", "uri": "https://github.com/earendil-works/pi/blob/ede2c9b468d8e061c557d16957513715e6d49cd6/packages/coding-agent/src/core/extensions/types.ts", "accessed": "2026-10-24", "notes": "Fixed source inspected locally for lifecycle subscriptions, tools, commands, UI context, and extension contracts."}
+  ],
+  "related_systems": ["opencode", "node", "typescript"]
+}
