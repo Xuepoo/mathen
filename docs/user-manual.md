@@ -204,11 +204,17 @@ Important fields are `analysis_version`, `system_id`, `system_name`, `category`,
 `priority`, `repository`, `documentation`, `requested_ref`, `commit`,
 `commit_url`, `provenance`, `analyzed_at`, `file_count`, `top_level_entries`,
 `language_counts`, `extension_counts`, `build_markers`, `readme_paths`, and
-`path_signals`.
+`path_signals`. Analysis version 3 also includes an `observations` array. Each
+observation records a conservative deterministic signal with `kind`, a tracked
+source `location` (`path` and, for content signals, `line`), `basis`, `detail`,
+the inspector `tool`, and checkout `provenance`. Recognized dependency manifests,
+bounded source locations, and test, benchmark, recovery, and configuration
+path/content signals are included when present.
 
 Path signals and file counts are navigation evidence only. They help select
 source files for deeper review; they are not proof of a concurrency model,
-storage engine, or runtime architecture.
+storage engine, or runtime architecture. Content signals are bounded and use
+simple text matching; they do not parse source or assert runtime behavior.
 
 ## 6. Structural Draft Card
 

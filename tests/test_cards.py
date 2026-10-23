@@ -296,6 +296,83 @@ class CardValidationTests(unittest.TestCase):
             self.assertEqual(report["provenance"], "github-archive")
             self.assertEqual(report["commit"], "b" * 40)
 
+    def test_repository_observations_record_manifest_signals_and_locations(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            checkout = Path(directory)
+            (checkout / "src").mkdir()
+            (checkout / "tests").mkdir()
+            (checkout / "benchmarks").mkdir()
+            (checkout / "pyproject.toml").write_text("[project]\nname = 'fixture'\n")
+            (checkout / "tests" / "test_recovery.py").write_text(
+                "# benchmark config\n# recovery test\n# test again\n"
+            )
+            (checkout / ".mathen-repository.json").write_text(
+                json.dumps(
+                    {
+                        "commit": "c" * 40,
+                        "repository": "https://github.com/example/project.git",
+                        "requested_ref": "main",
+                        "source": "github-archive",
+                    }
+                )
+            )
+            spec = RepositorySpec(
+                id="fixture",
+                name="Fixture",
+                category="test",
+                repository="https://github.com/example/project.git",
+                documentation="https://example.com/docs",
+                ref="main",
+                priority="test",
+            )
+
+            report = inspect_repository(spec, checkout)
+
+        self.assertEqual(report["analysis_version"], 3)
+        observations = report["observations"]
+        self.assertTrue(
+            any(
+                observation["kind"] == "dependency-manifest"
+                and observation["location"] == {"path": "pyproject.toml"}
+                for observation in observations
+            )
+        )
+        self.assertTrue(
+            any(
+                observation["kind"] == "test"
+                and observation["location"]["path"] == "tests/test_recovery.py"
+                for observation in observations
+            )
+        )
+        self.assertTrue(
+            any(
+                observation["kind"] == "source-location"
+                and observation["location"]["path"] == "tests/test_recovery.py"
+                for observation in observations
+            )
+        )
+        content_observation = next(
+            observation
+            for observation in observations
+            if observation["basis"] == "content"
+        )
+        self.assertEqual(content_observation["location"]["line"], 1)
+        self.assertEqual(content_observation["provenance"], "github-archive")
+        self.assertEqual(content_observation["tool"], "mathen-deterministic-inspector")
+        self.assertTrue(
+            {"benchmark", "recovery", "configuration"}.issubset(
+                {observation["kind"] for observation in observations}
+            )
+        )
+        content_kinds = [
+            observation["kind"]
+            for observation in observations
+            if observation["basis"] == "content"
+        ]
+        self.assertEqual(len(content_kinds), len(set(content_kinds)))
+
     def test_interrupted_archive_response_is_recoverable(self) -> None:
         class BrokenResponse:
             def __enter__(self):
