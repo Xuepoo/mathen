@@ -342,22 +342,39 @@ The Hono Worker uses the `/api` base path. Successful responses use a
 | Endpoint | Purpose |
 | --- | --- |
 | `GET /api/health` | Worker health and environment |
-| `GET /api/systems?query=&limit=` | Search reviewed system summaries |
+| `GET /api/systems?query=&limit=&offset=` | Search reviewed system summaries in stable name/id order |
 | `GET /api/systems/:id` | Retrieve one reviewed card projection |
 | `GET /api/features?query=&category=&claim_type=&limit=` | Search reviewed features |
 | `GET /api/compositions?input_system=&claim_status=&limit=` | Search reviewed composition proposals, including cited evidence records |
 | `GET /api/modeling/:id` | Retrieve one fixed-commit modeling bundle |
 | `GET /api/graph` | Return current system nodes and valid typed or legacy edges |
+| `GET /api/graph/models` | Return a navigational system-to-mathematical-model projection |
 
 The current API is read-only. It does not expose draft cards or provide review,
 promotion, or synthesis writes.
 
-The browser client presents this graph as an exploration workspace. Search and
-relation filters narrow the visible graph, layout controls switch between
-network, concentric, circle, and grid views, and selecting a node highlights
-its neighborhood. Typed edges expose their claim status and evidence IDs in
-the inspector. A legacy `related` edge is retained when an older card has a
-valid `related_systems` target but no typed relation metadata.
+System searches default to 50 results, with a maximum page size of 100. Use
+`offset` (default 0) to read subsequent pages with the same query. Browser
+metadata loading must cover every page; an unloaded system does not have zero
+domains merely because it is absent from the first page.
+
+The browser opens directly into a force-directed graph. Compact controls expose
+search, relation filters, and planar or spatial exploration. Dragging a node
+reheats the simulation so that connected nodes can respond. System descriptions,
+features, mathematical views, and evidence are available on demand rather than
+occupying the main canvas.
+
+Typed edges retain their claim status and evidence IDs. A legacy `related`
+edge provides navigation context when an older card has a valid
+`related_systems` target without typed relation metadata. Domain browsing groups
+are navigation aids; membership does not establish dependency, historical
+influence, or architectural equivalence.
+
+The mathematical-model projection is a separate graph. Its model nodes group
+explicitly named mathematical views such as state-transition, queueing, or
+refinement models. It retains each view's question, assumptions, claim type, and
+source-local evidence IDs. A `modeled-by` edge is a navigational inference, not
+a dependency, equivalence, proof, or composition claim.
 
 ## 11. MCP interface
 

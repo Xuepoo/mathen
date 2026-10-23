@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { buildModelGraph, type ModelViewRow } from "./model-graph.js";
 
 type Bindings = {
   DB: D1Database;
@@ -260,6 +261,28 @@ app.get("/graph", async (c) => {
   ).all<GraphSystem>();
 
   return c.json(buildGraph(systems.results));
+});
+
+app.get("/graph/models", async (c) => {
+  const views = await c.env.DB.prepare(
+    `SELECT systems.id AS system_id, systems.name AS system_name,
+            mathematical_views.id AS view_id, mathematical_views.model,
+            mathematical_views.question, mathematical_views.assumptions_json,
+            mathematical_views.claim_type,
+            COALESCE((
+              SELECT json_group_array(
+                substr(mve.evidence_id, length(mathematical_views.system_id) + 2)
+              )
+              FROM mathematical_view_evidence mve
+              WHERE mve.view_id = mathematical_views.id
+              ORDER BY mve.evidence_id
+            ), '[]') AS evidence_ids_json
+     FROM mathematical_views
+     JOIN systems ON systems.id = mathematical_views.system_id
+     ORDER BY systems.name, systems.id, mathematical_views.id`,
+  ).all<ModelViewRow>();
+
+  return c.json({ data: buildModelGraph(views.results) });
 });
 
 export function buildGraph(systems: GraphSystem[]): Graph {

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "wrangler dev --local --var APP_ENV:local",
     "check": "tsc --noEmit",
+    "test": "bun test src/*.test.ts",
     "db:migrate:local": "wrangler d1 migrations apply mathen-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply mathen-db --remote",
     "db:seed:local": "bun run scripts/seed.ts --local",

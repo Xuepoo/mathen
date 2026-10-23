@@ -261,6 +261,73 @@ test("buildGraph ignores malformed and unknown graph targets", () => {
   ]);
 });
 
+test("GET /api/graph/models projects reviewed mathematical views", async () => {
+  const db = {
+    prepare() {
+      return {
+        all<T>() {
+          return Promise.resolve({
+            results: [
+              {
+                system_id: "temporal",
+                system_name: "Temporal",
+                view_id: 7,
+                model: "Queue-mediated workflow state machine",
+                question: "How does work move?",
+                assumptions_json: '["workers poll"]',
+                claim_type: "inference",
+                evidence_ids_json: '["temporal-task-queues"]',
+              },
+              {
+                system_id: "other",
+                system_name: "Other",
+                view_id: 8,
+                model: "Queue-mediated workflow state machine",
+                question: "How does work move elsewhere?",
+                assumptions_json: "[]",
+                claim_type: "hypothesis",
+                evidence_ids_json: '["other-source"]',
+              },
+            ] as T[],
+            success: true,
+            meta: {},
+          });
+        },
+      };
+    },
+  } as unknown as D1Database;
+
+  const response = await app.request(
+    "/api/graph/models",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as {
+    data: {
+      nodes: Array<{ id: string }>;
+      edges: Array<{ metadata: unknown[] }>;
+    };
+  };
+  assert.equal(
+    body.data.nodes.some((node) => node.id === "model:queueing-cost-resource"),
+    true,
+  );
+  assert.equal(body.data.edges.length, 2);
+  const temporalEdge = body.data.edges.find((edge) =>
+    edge.metadata.some((view) => (view as { id?: number }).id === 7),
+  );
+  assert.deepEqual(temporalEdge?.metadata[0], {
+    id: 7,
+    model: "Queue-mediated workflow state machine",
+    question: "How does work move?",
+    assumptions: ["workers poll"],
+    claim_type: "inference",
+    evidence_ids: ["temporal-task-queues"],
+  });
+});
+
 function systemRow(index: number) {
   const id = `system-${String(index).padStart(3, "0")}`;
   return {
