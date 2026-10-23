@@ -1,6 +1,7 @@
 import "./style.css";
 import ForceGraph3D, { type ForceGraph3DInstance } from "3d-force-graph";
 import SpriteText from "three-spritetext";
+import { createLabelPool } from "./graph-labels";
 import {
   domainFor,
   domains,
@@ -97,6 +98,7 @@ let visible: ExplorerPayload = canonical;
 let graph: ForceGraph3DInstance<SimulationNode, SimulationLink> | undefined;
 let selectedId: string | undefined;
 let selectedEdge: SimulationLink | undefined;
+let styledEdgeId: string | undefined;
 let hoveredId: string | undefined;
 let highlighted = new Set<string>();
 let searchMatches: Set<string> | undefined;
@@ -105,14 +107,43 @@ let dimensions: 2 | 3 = 2;
 let autoFit = true;
 let detailRequest = 0;
 let metadataLoaded = false;
-const labels = new Map<
-  string,
-  SpriteText & {
-    visible: boolean;
-    position: { set: (x: number, y: number, z: number) => void };
-    material: { depthWrite: boolean };
-  }
->();
+type LabelSprite = SpriteText & {
+  position: { set: (x: number, y: number, z: number) => void };
+  removeFromParent: () => void;
+  material: {
+    depthWrite: boolean;
+    map?: { dispose: () => void };
+    dispose: () => void;
+  };
+};
+type LabelAnchor = { add: (label: LabelSprite) => void };
+const labelAnchors = new Map<string, LabelAnchor>();
+let labelUpdateScheduled = false;
+const labels = createLabelPool<SimulationNode, LabelSprite>({
+  schedule: (run) => {
+    requestAnimationFrame(run);
+  },
+  create: (node) => {
+    const label = new SpriteText(node.name, 4, "#e9f0ef") as LabelSprite;
+    label.backgroundColor = "#111c29dd";
+    label.padding = [2, 1];
+    label.borderRadius = 2;
+    label.position.set(0, 10, 0);
+    label.material.depthWrite = false;
+    labelAnchors.get(node.id)?.add(label);
+    return label;
+  },
+  update: (label, node) => {
+    const color = node.id === selectedId ? "#9ff5dc" : "#e9f0ef";
+    // SpriteText repaints its canvas even when assigned the same color.
+    if (label.color !== color) label.color = color;
+  },
+  dispose: (label) => {
+    label.removeFromParent();
+    label.material.map?.dispose();
+    label.material.dispose();
+  },
+});
 const details = new Map<string, SystemDetail>();
 const relationColors = ["#69d7c3", "#bca5f4", "#e7bb7d", "#7ab9ee", "#e699ad"];
 const relationColor = (type: string) =>
@@ -168,6 +199,7 @@ function configureCamera() {
 }
 
 function createGraph() {
+  styledEdgeId = undefined;
   graph = new ForceGraph3D(host, {
     controlType: "orbit",
     rendererConfig: { antialias: true, alpha: true },
@@ -190,21 +222,19 @@ function createGraph() {
       label.textContent = node.name;
       return label;
     })
-    .nodeThreeObjectExtend(true)
-    .nodeThreeObject((node: SimulationNode) => {
-      const label = new SpriteText(node.name, 4, "#e9f0ef") as SpriteText & {
-        visible: boolean;
-        position: { set: (x: number, y: number, z: number) => void };
-        material: { depthWrite: boolean };
-      };
-      label.backgroundColor = "#111c29dd";
-      label.padding = [2, 1];
-      label.borderRadius = 2;
-      label.position.set(0, 10, 0);
-      label.material.depthWrite = false;
-      label.visible = labelVisible(node);
-      labels.set(node.id, label);
-      return label;
+    .nodePositionUpdate((object, _coordinates, node) => {
+      if (!labelAnchors.has(node.id)) {
+        labelAnchors.set(node.id, object as LabelAnchor);
+        if (!labelUpdateScheduled) {
+          labelUpdateScheduled = true;
+          queueMicrotask(() => {
+            labelUpdateScheduled = false;
+            updateLabels();
+          });
+        }
+      }
+      // Returning false preserves the engine's normal positioning and dragging.
+      return false;
     })
     .linkColor(linkColor)
     .linkOpacity(0.55)
@@ -309,19 +339,25 @@ function labelVisible(node: SimulationNode) {
 }
 function updateStyles() {
   if (!graph) return;
-  graph
-    .nodeColor(nodeColor)
-    .linkColor(linkColor)
-    .linkWidth((link) =>
+  graph.nodeColor(nodeColor).linkColor(linkColor);
+  // The engine rebuilds every link mesh when linkWidth is set, even on hover.
+  if (styledEdgeId !== selectedEdge?.id) {
+    styledEdgeId = selectedEdge?.id;
+    graph.linkWidth((link) =>
       selectedEdge?.id === link.id ? 2.5 : link.type === "related" ? 0.45 : 1.1,
     );
-  for (const node of graph.graphData().nodes) {
-    const label = labels.get(node.id);
-    if (label) {
-      label.visible = labelVisible(node);
-      label.color = node.id === selectedId ? "#9ff5dc" : "#e9f0ef";
-    }
   }
+  updateLabels();
+}
+function updateLabels() {
+  const nodes = (graph?.graphData().nodes ?? []).filter(
+    (node) => labelAnchors.has(node.id) && labelVisible(node),
+  );
+  // Hovered/selected nodes should not wait behind a large highlighted neighborhood.
+  labels.sync([
+    ...nodes.filter((node) => node.id === selectedId || node.id === hoveredId),
+    ...nodes.filter((node) => node.id !== selectedId && node.id !== hoveredId),
+  ]);
 }
 
 function updateGraph() {
@@ -345,6 +381,7 @@ function updateGraph() {
         : {},
     );
   labels.clear();
+  labelAnchors.clear();
   graph?.graphData(next);
   highlighted = selectedId ? neighborhood(visible, selectedId) : new Set();
   if (selectedId) renderNodeInspector(selectedId);
@@ -639,6 +676,8 @@ async function loadGraph() {
     validateMetadata();
   } catch {
     if (request !== graphRequest) return;
+    labels.clear();
+    labelAnchors.clear();
     graph?._destructor();
     graph = undefined;
     host.replaceChildren();
@@ -659,6 +698,7 @@ function switchGraphMode(mode: "systems" | "models") {
   hoveredId = undefined;
   visible = { nodes: [], edges: [] };
   labels.clear();
+  labelAnchors.clear();
   graph?.graphData({ nodes: [], links: [] });
   relationSelect.value = "all";
   relationSelect.disabled = mode === "models";
