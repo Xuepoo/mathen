@@ -16,6 +16,7 @@ import {
   modelSimulationData,
   neighborhood,
   searchNodes,
+  simulationEdgeId,
   type ExplorerPayload,
   type ModelGraphPayload,
   type SimulationLink,
@@ -422,11 +423,11 @@ function renderNodeInspector(id: string) {
 
 function modelConnections(id: string) {
   return `<div class="model-connections">${visible.edges
-    .flatMap((edge, index) => {
+    .flatMap((edge) => {
       if (edge.type !== "modeled-by" || (edge.source !== id && edge.target !== id)) return [];
       const other = edge.source === id ? edge.target : edge.source;
       return [
-        `<div><button data-inspect-node="${escapeHtml(other)}">${escapeHtml(nodeName(other))}</button><button data-view-edge="${index}">Inspect ${edge.metadata?.length ?? 0} view${edge.metadata?.length === 1 ? "" : "s"} ↗</button></div>`,
+        `<div><button data-inspect-node="${escapeHtml(other)}">${escapeHtml(nodeName(other))}</button><button data-view-edge="${escapeHtml(simulationEdgeId(edge.source, edge.target))}">Inspect ${edge.metadata?.length ?? 0} view${edge.metadata?.length === 1 ? "" : "s"} ↗</button></div>`,
       ];
     })
     .join("")}</div>`;
@@ -439,9 +440,7 @@ function bindInspector() {
   });
   inspector.querySelectorAll<HTMLButtonElement>("[data-view-edge]").forEach((button) => {
     button.onclick = () => {
-      const edge = graph
-        ?.graphData()
-        .links.find((link) => link.id === `edge-${button.dataset.viewEdge}`);
+      const edge = graph?.graphData().links.find((link) => link.id === button.dataset.viewEdge);
       if (edge) selectEdge(edge);
     };
   });
@@ -474,7 +473,7 @@ function selectEdge(edge: SimulationLink) {
 }
 
 function updateSearch() {
-  const matches = searchNodes(visible.nodes, systems, search.value);
+  const matches = searchNodes(visible.nodes, systems, search.value, visible.edges);
   searchMatches = search.value.trim() ? new Set(matches.map((node) => node.id)) : undefined;
   results.hidden = !search.value.trim() || document.activeElement !== search;
   results.innerHTML = matches.length
@@ -699,7 +698,7 @@ search.addEventListener("keydown", (event) => {
     results.querySelector<HTMLButtonElement>("button")?.focus();
   }
   if (event.key === "Enter") {
-    const first = searchNodes(visible.nodes, systems, search.value)[0];
+    const first = searchNodes(visible.nodes, systems, search.value, visible.edges)[0];
     if (first) {
       selectNode(first.id);
       focus();

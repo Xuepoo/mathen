@@ -135,6 +135,20 @@ describe("mathematical model graph", () => {
     );
   });
 
+  test("parallel relation types retain distinct identities", () => {
+    const force = modelSimulationData({
+      nodes: [
+        { id: "a", name: "A", type: "system" },
+        { id: "b", name: "B", type: "system" },
+      ],
+      edges: [
+        { source: "a", target: "b", type: "related" },
+        { source: "a", target: "b", type: "uses" },
+      ],
+    });
+    expect(new Set(force.links.map((link) => link.id)).size).toBe(2);
+  });
+
   test("force mutation cannot alter canonical nodes, endpoints, or nested view metadata", () => {
     const before = JSON.stringify(graph);
     const canonical = normalizeModelGraph({ data: graph });

@@ -136,7 +136,7 @@ export function modelSimulationData(graph: ExplorerPayload) {
     if (!known.has(edge.source) || !known.has(edge.target)) return [];
     degree.set(edge.source, (degree.get(edge.source) ?? 0) + 1);
     degree.set(edge.target, (degree.get(edge.target) ?? 0) + 1);
-    return [{ ...edge, id: simulationEdgeId(edge.source, edge.target) }];
+    return [{ ...edge, id: simulationEdgeId(edge.source, edge.target, edge.type) }];
   });
   const nodes: SimulationNode[] = copy.nodes.map((node) => ({
     ...node,
@@ -146,8 +146,8 @@ export function modelSimulationData(graph: ExplorerPayload) {
 }
 
 /** Identify a directed simulation edge by its stable graph endpoints. */
-export function simulationEdgeId(source: string, target: string) {
-  return `edge-${JSON.stringify([source, target])}`;
+export function simulationEdgeId(source: string, target: string, type = "modeled-by") {
+  return `edge-${JSON.stringify([source, target, type])}`;
 }
 
 export function endpointId(endpoint: string | SimulationNode) {
