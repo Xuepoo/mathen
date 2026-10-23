@@ -475,5 +475,41 @@
     "documentation": "https://github.com/Xuepoo/carryctx-docs",
     "ref": "4ba349da5e9f20471b87b451900f0d155d84da02",
     "priority": "seed"
+  },
+  {
+    "id": "tailscale",
+    "name": "Tailscale",
+    "category": "secure-mesh-vpn",
+    "repository": "https://github.com/tailscale/tailscale.git",
+    "documentation": "https://tailscale.com/kb/1151/what-is-tailscale",
+    "ref": "e26db7a5797683ec99ad1516c40b628c7f2dfd71",
+    "priority": "extended"
+  },
+  {
+    "id": "v2ray",
+    "name": "V2Ray Core",
+    "category": "proxy-core",
+    "repository": "https://github.com/v2fly/v2ray-core.git",
+    "documentation": "https://www.v2fly.org/",
+    "ref": "de610153d59ee0bc9222a17680061d732fa14e7b",
+    "priority": "extended"
+  },
+  {
+    "id": "mihomo",
+    "name": "Mihomo",
+    "category": "proxy-client",
+    "repository": "https://github.com/MetaCubeX/mihomo.git",
+    "documentation": "https://wiki.metacubex.one/",
+    "ref": "3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8",
+    "priority": "extended"
+  },
+  {
+    "id": "xray",
+    "name": "Xray-core",
+    "category": "proxy-core",
+    "repository": "https://github.com/XTLS/Xray-core.git",
+    "documentation": "https://xtls.github.io/",
+    "ref": "1b1647cd9ddf0abc34b981d4611fc03bcac1ca74",
+    "priority": "extended"
   }
 ]

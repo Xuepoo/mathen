@@ -1,0 +1,196 @@
+{
+  "id": "v2ray",
+  "name": "V2Ray Core",
+  "version_context": "commit de610153d59ee0bc9222a17680061d732fa14e7b",
+  "summary": "A configurable, embeddable proxy core that composes inbound protocol handlers, rule-based routing, DNS/policy features, and tagged outbound handlers; its local core graph is distinct from any external management or subscription service.",
+  "scope": [
+    "proxy core",
+    "inbound and outbound protocol handlers",
+    "rule-based routing",
+    "DNS-aware dispatch",
+    "transport and multiplexing"
+  ],
+  "features": [
+    {
+      "id": "v2ray-feature-core-instance",
+      "name": "Feature-oriented core instance",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "The core instance hosts registered features and lets inbound, outbound, DNS, policy, statistics, and routing components depend on typed interfaces. The core is an embeddable runtime boundary, not a remote control plane.",
+      "benefits": [
+        "Allows protocol components to depend on narrow feature interfaces",
+        "Supports assembling different inbound, outbound, routing, and transport components from configuration"
+      ],
+      "costs": [
+        "Feature registration and lifecycle ordering increase startup and shutdown coupling",
+        "A valid component graph still depends on compatible protocol and transport settings"
+      ],
+      "evidence_ids": [
+        "v2ray-core-source",
+        "v2ray-overview-doc"
+      ]
+    },
+    {
+      "id": "v2ray-inbound-outbound-protocol-boundary",
+      "name": "Inbound/outbound protocol handler boundary",
+      "category": "protocol-boundary",
+      "claim_type": "fact",
+      "description": "Inbound workers accept TCP or UDP connections, build session context, and invoke a configured proxy.Inbound. Outbound handlers wrap a configured proxy.Outbound and optionally apply target DNS strategy, proxy chaining, or multiplexing before dispatching traffic.",
+      "benefits": [
+        "Keeps wire-facing protocol handlers separate from transport and routing orchestration",
+        "Supports many protocol implementations behind common inbound and outbound interfaces"
+      ],
+      "costs": [
+        "Session context and stream settings must preserve metadata across protocol boundaries",
+        "Multiplexing, proxy chaining, and DNS resolution add alternate dispatch paths"
+      ],
+      "evidence_ids": [
+        "v2ray-inbound-source",
+        "v2ray-outbound-source"
+      ]
+    },
+    {
+      "id": "v2ray-rule-router",
+      "name": "Rule-based routing to tagged outbounds",
+      "category": "routing-model",
+      "claim_type": "fact",
+      "description": "The router evaluates ordered conditions against routing context, optionally resolves domains according to a configured strategy, and returns an outbound tag or balancing result. It selects among configured handlers; it is not itself a transport protocol or centralized control plane.",
+      "benefits": [
+        "Makes policy decisions independent of individual protocol implementations",
+        "Supports DNS-aware rules and balancing without moving routing logic into every inbound"
+      ],
+      "costs": [
+        "Rule order and DNS strategy affect observable traffic behavior",
+        "Routing failures leave the session without a selected outbound and require caller handling"
+      ],
+      "evidence_ids": [
+        "v2ray-router-source",
+        "v2ray-outbound-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Feature dependency graph",
+      "question": "How are inbound, routing, DNS, policy, statistics, and outbound components connected inside one V2Ray core instance?",
+      "assumptions": [
+        "Typed feature interfaces are vertices and component requirements are edges",
+        "The graph describes local construction and dispatch, not a distributed control plane",
+        "Configuration parsing and generated protobuf details are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "v2ray-core-source",
+        "v2ray-inbound-source",
+        "v2ray-outbound-source"
+      ]
+    },
+    {
+      "model": "Inbound-session-outbound pipeline",
+      "question": "How does an accepted connection become a routed outbound flow?",
+      "assumptions": [
+        "An inbound worker creates session metadata and invokes an inbound protocol handler",
+        "The router selects a tagged outbound and the outbound handler dispatches through its protocol/transport implementation",
+        "The model abstracts byte framing and cryptographic protocol internals"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "v2ray-inbound-source",
+        "v2ray-router-source",
+        "v2ray-outbound-source"
+      ]
+    },
+    {
+      "model": "Ordered routing decision system",
+      "question": "Which routing context fields and DNS observations lead to a selected outbound tag?",
+      "assumptions": [
+        "Rules are evaluated in configured order and a rule can require DNS-assisted IP matching",
+        "A selected tag names a locally configured outbound or balancer",
+        "The view does not imply policy correctness or reachability of the selected handler"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "v2ray-router-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "v2ray-feature-core-instance",
+      "benefits": [
+        "Allows protocol components to depend on narrow feature interfaces"
+      ],
+      "costs": [
+        "Feature registration and lifecycle ordering increase startup and shutdown coupling"
+      ]
+    },
+    {
+      "feature_id": "v2ray-inbound-outbound-protocol-boundary",
+      "benefits": [
+        "Keeps wire-facing protocol handlers separate from transport and routing orchestration"
+      ],
+      "costs": [
+        "Session context and stream settings must preserve metadata across protocol boundaries"
+      ]
+    },
+    {
+      "feature_id": "v2ray-rule-router",
+      "benefits": [
+        "Makes policy decisions independent of individual protocol implementations"
+      ],
+      "costs": [
+        "Rule order and DNS strategy affect observable traffic behavior"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "v2ray-repository-commit",
+      "kind": "source-code",
+      "title": "V2Ray Core source at de610153d59e",
+      "uri": "https://github.com/v2fly/v2ray-core/blob/de610153d59ee0bc9222a17680061d732fa14e7b/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Pinned official source revision corresponding to release tag v5.55.0."
+    },
+    {
+      "id": "v2ray-overview-doc",
+      "kind": "official-doc",
+      "title": "V2Fly documentation",
+      "uri": "https://www.v2fly.org/",
+      "accessed": "2026-10-24",
+      "notes": "Official project documentation and configuration entry point for V2Fly/V2Ray."
+    },
+    {
+      "id": "v2ray-core-source",
+      "kind": "source-code",
+      "title": "Core instance and feature registry at de610153d59e",
+      "uri": "https://github.com/v2fly/v2ray-core/blob/de610153d59ee0bc9222a17680061d732fa14e7b/core.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for the embeddable core instance and feature-based component boundary."
+    },
+    {
+      "id": "v2ray-inbound-source",
+      "kind": "source-code",
+      "title": "Inbound worker at de610153d59e",
+      "uri": "https://github.com/v2fly/v2ray-core/blob/de610153d59ee0bc9222a17680061d732fa14e7b/app/proxyman/inbound/worker.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for listening, session context construction, sniffing, and inbound proxy dispatch."
+    },
+    {
+      "id": "v2ray-outbound-source",
+      "kind": "source-code",
+      "title": "Outbound handler at de610153d59e",
+      "uri": "https://github.com/v2fly/v2ray-core/blob/de610153d59ee0bc9222a17680061d732fa14e7b/app/proxyman/outbound/handler.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for outbound proxy dispatch, DNS strategy, and optional multiplexed workers."
+    },
+    {
+      "id": "v2ray-router-source",
+      "kind": "source-code",
+      "title": "Routing engine at de610153d59e",
+      "uri": "https://github.com/v2fly/v2ray-core/blob/de610153d59ee0bc9222a17680061d732fa14e7b/app/router/router.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for rule matching, DNS-assisted domain strategies, and outbound tag selection."
+    }
+  ]
+}

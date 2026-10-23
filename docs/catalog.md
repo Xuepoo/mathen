@@ -98,6 +98,10 @@ These entries are already present in the repository at different review levels:
 | `haproxy` | HAProxy | network proxy | `reviewed` | Compare polling, task scheduling, layered connection state, and reload topology using fixed-commit evidence |
 | `caddy` | Caddy | web server | `reviewed` | Compare module lifecycle, atomic configuration swaps, and automatic HTTPS using fixed-commit evidence |
 | `wireguard` | WireGuard | secure tunnel | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
+| `tailscale` | Tailscale | secure mesh VPN | `reviewed` | Compare control-plane coordination, WireGuard peer data paths, and DERP relay selection using fixed-commit evidence |
+| `v2ray` | V2Ray Core | proxy core | `reviewed` | Compare feature-oriented composition, inbound/outbound protocol boundaries, and rule-based routing using fixed-commit evidence |
+| `mihomo` | Mihomo | proxy client | `reviewed` | Compare TCP/UDP tunnel dispatch, outbound adapters, provider-backed groups, and local configuration boundaries using fixed-commit evidence |
+| `xray` | Xray-core | proxy core | `reviewed` | Compare inbound/outbound protocol boundaries, reloadable routing, balancers, and transport composition using fixed-commit evidence |
 | `busybox` | BusyBox | Unix system tools | `reviewed` | Compare multi-call dispatch, configurable applet sets, and shared userland support using fixed-commit evidence |
 | `musl` | musl libc | C runtime | `reviewed` | Compare portable interfaces, static/dynamic linking, and thread-local runtime boundaries using fixed-commit evidence |
 | `glibc` | GNU C Library | C runtime | `reviewed` | Compare ABI versioning, dynamic loading, and process/thread runtime boundaries using fixed-commit evidence |
@@ -286,6 +290,10 @@ identifiers, not claims that the projects share the same architecture.
 | `mosh` | Mosh | remote terminal | `reviewed` | Compare SSH bootstrap, authenticated UDP terminal synchronization, roaming, and predictive local echo using fixed-commit evidence |
 | `openssl` | OpenSSL | `P0` | Cryptographic primitives, protocol state, and provider boundary |
 | `wireguard` | WireGuard | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
+| `tailscale` | Tailscale | `reviewed` | Control-plane coordination, WireGuard peer data plane, and direct/DERP path selection |
+| `v2ray` | V2Ray Core | `reviewed` | Feature-oriented proxy core, inbound/outbound handlers, and DNS-aware rule routing |
+| `mihomo` | Mihomo | `reviewed` | TCP/UDP tunnel dispatch, protocol adapters, provider-backed groups, and local configuration |
+| `xray` | Xray-core | `reviewed` | Inbound/outbound handlers, reloadable rules and balancers, and transport/multiplexing composition |
 | `quiche` | quiche | `reviewed` | Compare QUIC connection state, application-driven packet I/O, HTTP/3 streams, QPACK, and loss recovery using fixed-commit evidence |
 | `http` | HTTP | `planned` | Protocol semantics, message ordering, intermediaries, and version evolution; blocker: no single authoritative HTTP implementation or fixed repository revision selected |
 | `dns` | DNS | `planned` | Name resolution, delegation, caching, and transport/security evolution; blocker: no authoritative DNS implementation or fixed repository revision selected |
