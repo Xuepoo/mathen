@@ -487,6 +487,18 @@
         "carryctx-docs-sqlite-fixed"
       ],
       "notes": "CarryCtx uses an embedded SQLite database for authoritative project state; this records an implementation dependency, not equivalence with SQLite."
+    },
+    {
+      "type": "resembles",
+      "target": "temporal",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "carryctx-task-source",
+        "carryctx-lifecycle-doc",
+        "carryctx-checkpoint-source"
+      ],
+      "notes": "Both systems make durable, inspectable execution state and lifecycle transitions explicit: CarryCtx records project tasks, dependencies, sessions, progress, and checkpoints, while Temporal records workflow execution history and replay-relevant transitions. This is a bounded structural analogy, not implementation reuse, equivalence, or historical influence."
     }
   ]
 }
