@@ -71,6 +71,8 @@ These entries are already present in the repository at different review levels:
 | `llvm` | LLVM | compiler infrastructure | `reviewed` | Add temporal IR and pass-pipeline relations |
 | `gcc` | GCC | compiler | `reviewed` | Compare front-end, IR, pass, and target-backend boundaries with LLVM |
 | `tree-sitter` | tree-sitter | parser library | `reviewed` | Compare incremental concrete syntax trees with compiler front ends |
+| `lsp` | Language Server Protocol | language tooling protocol | `reviewed` | Compare negotiated capabilities, document mirrors, request lifecycle, and partial-result boundaries using the pinned 3.17 specification |
+| `ast-grep` | ast-grep | structural code tooling | `reviewed` | Compare Tree-sitter document state, capture-aware rules, diff interfaces, and parallel scan resources using fixed-commit evidence |
 | `coreutils` | GNU Coreutils | Unix system tools | `reviewed` | Compare command composition and multi-call packaging with BusyBox |
 | `boost` | Boost | C++ library | `reviewed` | Compare modular headers, binary components, and build configuration with Rust and LLVM |
 | `ffmpeg` | FFmpeg | media processing | `reviewed` | Compare format contexts, codec state machines, and filter graphs using fixed-commit evidence |
@@ -182,6 +184,8 @@ identifiers, not claims that the projects share the same architecture.
 | `v8` | V8 | `P1` | JIT compilation, hidden classes, and managed heap |
 | `luajit` | LuaJIT | language runtime | `reviewed` | Compare interpreter/tracing-JIT transitions, FFI, and embeddable runtime boundaries using fixed-revision evidence |
 | `tree-sitter` | Tree-sitter | `P1` | Incremental parsing and concrete syntax trees |
+| `lsp` | Language Server Protocol | `reviewed` | Capability negotiation, versioned document synchronization, cancellation, and protocol evolution |
+| `ast-grep` | ast-grep | `reviewed` | Tree-sitter composition, structural matchers, declarative rules, and parallel rewrite preparation |
 | `antlr` | ANTLR | `P2` | Grammar-driven parser and code-generation pipeline |
 | `protobuf` | Protocol Buffers | `P0` | Schema evolution, serialization, and compatibility |
 | `grpc` | gRPC | `P1` | RPC contracts, streaming, and generated clients |

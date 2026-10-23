@@ -1,0 +1,261 @@
+{
+  "id": "ast-grep",
+  "name": "ast-grep",
+  "version_context": "ast-grep repository commit aaa80f08698dee907402f844da06850c435c431e; workspace package version 0.51.0 and tree-sitter dependency requirement 0.27.0 at this snapshot, without asserting that the commit is a release tag.",
+  "summary": "A structural code-search, linting, and rewriting toolkit that composes Tree-sitter parsing, capture-aware syntax matchers, declarative rules, and parallel file workers behind CLI and library boundaries.",
+  "scope": [
+    "Rust core, rule configuration, and CLI scan pipeline at the pinned revision",
+    "Tree-sitter document state, capture environments, and source-range rewrite preparation",
+    "Pattern/configuration failures, worker resource topology, and grammar-sensitive evolution",
+    "Syntactic matching rather than compiler-level semantic equivalence; language-server and binding implementations are outside scope"
+  ],
+  "features": [
+    {
+      "id": "layered-syntax-analysis-pipeline",
+      "name": "Parser, matcher, rule, and CLI component separation",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "The workspace separates core matching, language support, rule configuration, and CLI crates. The core Tree-sitter adapter supplies parsed documents and nodes; configuration compiles declarative rules into matchers and fixers. CLI scan selects rules for each language and path, runs CombinedScan, and delegates diagnostics or diffs to printer processors. Tree-sitter use is directly evidenced by imports, parser calls, and the workspace dependency, not inferred from architectural resemblance.",
+      "benefits": ["Reuses syntax matching beneath different rule and presentation interfaces"],
+      "costs": [
+        "Language adapters, rule compilation, and output processing must agree on node and capture representations"
+      ],
+      "evidence_ids": [
+        "ast-grep-workspace",
+        "ast-grep-parser",
+        "ast-grep-rule-config",
+        "ast-grep-scan"
+      ]
+    },
+    {
+      "id": "source-tree-document-state",
+      "name": "Coupled source, language, and syntax-tree state",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "StrDoc owns source text, a language value, and a Tree-sitter tree. Its edit path updates source content and tree coordinates, then reparses using the edited old tree. Tree nodes expose ranges and borrowed source text. try_new returns parsing errors while the convenience new constructor expects success; do_edit mutates content and coordinates before reparsing and can return an error, so successful reparse is a necessary condition for a coherent post-edit tree.",
+      "benefits": [
+        "Keeps syntax ranges tied to owned text and allows incremental reparsing after an edit"
+      ],
+      "costs": [
+        "Callers must respect node lifetimes and handle edit failures; the sequence is not evidence of transactional rollback"
+      ],
+      "evidence_ids": ["ast-grep-parser"]
+    },
+    {
+      "id": "capture-aware-composable-matchers",
+      "name": "Capture-aware syntax patterns and rule composition",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Patterns are parsed into syntax-based PatternNodes with metavariables; a contextual pattern selects a node kind from a surrounding snippet. Matchers carry a capture environment and may prefilter node kinds. Pattern matching commits environment changes only on success; All commits after every operand succeeds, Any retries alternatives from the original environment and commits the first success, and Not probes with a throwaway environment. Declarative rules include atomic, relational, and composite forms.",
+      "benefits": [
+        "Expresses structural constraints and reusable captures without writing a full parser traversal"
+      ],
+      "costs": [
+        "Capture effects and alternative order matter; these operators cannot generally be treated as pure commutative Boolean predicates"
+      ],
+      "evidence_ids": ["ast-grep-pattern", "ast-grep-operators", "ast-grep-rule-language"]
+    },
+    {
+      "id": "declarative-rule-and-diff-interface",
+      "name": "Validated rule configuration and diff-oriented output",
+      "category": "interface-model",
+      "claim_type": "fact",
+      "description": "Serializable rule configuration combines a language, matching rule, optional fix and rewriters, severity, message, labels, and file filters. RuleConfig construction compiles the matcher, requires potential node kinds, parses fixes, and checks capture use. CLI scan accepts project rules, a rule file, or inline YAML, and routes matches with fixes through Diff generation and printer interfaces rather than identifying a syntax match with an already-applied file mutation.",
+      "benefits": [
+        "Packages reusable lint and rewrite intent separately from file traversal and presentation"
+      ],
+      "costs": [
+        "A structurally valid rewrite is not a proof that program behavior is preserved; rule fixtures and downstream checks remain necessary"
+      ],
+      "evidence_ids": ["ast-grep-rule-config", "ast-grep-scan", "ast-grep-readme"]
+    },
+    {
+      "id": "explicit-pattern-errors-and-file-isolation",
+      "name": "Configuration rejection and per-file failure isolation",
+      "category": "failure-model",
+      "claim_type": "fact",
+      "description": "Pattern construction rejects empty or multi-root patterns, standalone multi-capture roots, invalid kinds, and unmatched contextual selectors. Rule compilation reports YAML, fixer, rewriter, label, and missing-kind errors. In the parallel worker, a produce_item error increments the skipped-file trace and traversal continues; setup and printer errors propagate through Result. Scan counts error-severity findings and returns a diagnostic error when that count is nonzero.",
+      "benefits": [
+        "Rejects invalid analysis definitions early while allowing independent files to continue through a scan"
+      ],
+      "costs": [
+        "A completed traversal does not itself establish that every file was successfully analyzed; skipped-file accounting matters"
+      ],
+      "evidence_ids": [
+        "ast-grep-pattern",
+        "ast-grep-rule-config",
+        "ast-grep-worker",
+        "ast-grep-scan"
+      ]
+    },
+    {
+      "id": "parallel-workers-with-thread-local-parsers",
+      "name": "Parallel file workers with thread-local parser reuse",
+      "category": "resource-model",
+      "claim_type": "fact",
+      "description": "The CLI worker runs a parallel directory walker, produces processed items, and sends them through std::sync::mpsc::channel to the consuming printer. A closed receiver stops sending workers. The Tree-sitter adapter caches one parser per language per thread, resets parser state for each complete-document parse, and reuses language-specific parser setup. Scan can reserve result slots through an atomic counter, but the result channel itself is unbounded.",
+      "benefits": [
+        "Exploits file-level parallelism and amortizes parser creation without sharing parsers across workers"
+      ],
+      "costs": [
+        "Parser caches multiply with active threads and languages; producer/consumer imbalance can accumulate queued output"
+      ],
+      "evidence_ids": ["ast-grep-worker", "ast-grep-parser", "ast-grep-scan"]
+    },
+    {
+      "id": "grammar-and-rule-version-coupling",
+      "name": "Grammar and rule compatibility boundary",
+      "category": "evolution-model",
+      "claim_type": "inference",
+      "description": "Patterns and contextual selectors are compiled against language-specific syntax kinds, while parser construction rejects incompatible Tree-sitter languages and configuration rejects unknown top-level keys. Consequently grammar, matcher, and rule-schema changes can affect existing rule behavior even when the source snippet still looks similar. The workspace version and dependency requirements pin this observation to one snapshot; they do not establish compatibility across releases.",
+      "benefits": [
+        "Explicit grammar and configuration boundaries make compatibility failures inspectable"
+      ],
+      "costs": [
+        "Upgrades require representative rule fixtures; node-kind or schema changes may require rule migration"
+      ],
+      "evidence_ids": [
+        "ast-grep-workspace",
+        "ast-grep-parser",
+        "ast-grep-pattern",
+        "ast-grep-rule-config"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Effectful matcher relation over syntax nodes and capture environments",
+      "question": "How do successful and failed rule branches affect reusable metavariable captures?",
+      "assumptions": [
+        "A matcher maps (node, environment) to failure or (matched node, updated environment).",
+        "Pattern and All commit only successful environments; Any selects the first successful branch from the original environment; Not exports no bindings.",
+        "Pure Boolean laws apply only after erasing capture effects and restricting predicates appropriately; operand reordering can otherwise change bindings.",
+        "This models inspected operator behavior, not a completeness proof for all language grammars or semantic program properties."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["ast-grep-pattern", "ast-grep-operators", "ast-grep-rule-language"]
+    },
+    {
+      "model": "Source/tree edit transition with a successful-reparse invariant",
+      "question": "When do syntax ranges describe the current source after mutation?",
+      "assumptions": [
+        "State is (source text, language, syntax tree); edits first update text and tree coordinates, then construct a replacement tree from the new text and edited old tree.",
+        "The invariant that the tree describes the current source is asserted only after successful parsing with a compatible language.",
+        "Borrowed nodes belong to their document state; failed parsing after mutation does not imply restoration of the previous source/tree pair.",
+        "The model does not equate syntactic replacement with semantic equivalence or assume all edits commute."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["ast-grep-parser", "ast-grep-scan"]
+    },
+    {
+      "model": "Parallel producer/single-consumer resource model",
+      "question": "Which work and memory costs can grow as file scanning is parallelized?",
+      "assumptions": [
+        "For file i, n_i syntax nodes and r_i applicable rules give a simple unoptimized work model sum(parse_i + n_i*r_i*c_i), where c_i bounds a candidate match; kind filtering may reduce candidate work and relational matching can increase c_i.",
+        "Matching cost is not universally linear: metavariable structure and relational traversal are included in c_i, not assumed constant without restriction.",
+        "With W workers, L encountered languages, parser-cache footprint P, active document memory D, and queued output Q, an illustrative space model is O(W*L*P + D + Q), excluding shared rule storage.",
+        "The unbounded channel offers no fixed bound on Q; throughput and parallel speedup depend on parser, matcher, storage, and printer costs. No benchmark result is asserted."
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["ast-grep-worker", "ast-grep-parser", "ast-grep-pattern", "ast-grep-scan"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "capture-aware-composable-matchers",
+      "benefits": ["Code-shaped patterns and composition reduce manual tree traversal"],
+      "costs": ["Grammar-specific structure and capture side effects require careful rule design"]
+    },
+    {
+      "feature_id": "declarative-rule-and-diff-interface",
+      "benefits": ["Shares lint and rewrite definitions across scans"],
+      "costs": ["Syntactic matching alone cannot guarantee behavior-preserving transformations"]
+    },
+    {
+      "feature_id": "explicit-pattern-errors-and-file-isolation",
+      "benefits": ["One file-production failure need not stop other files"],
+      "costs": [
+        "Coverage must account for skipped files rather than treating termination as exhaustive success"
+      ]
+    },
+    {
+      "feature_id": "parallel-workers-with-thread-local-parsers",
+      "benefits": ["Parallel traversal and cached parsers reduce repeated setup work"],
+      "costs": ["Replicated parser state and unbounded pending output trade memory for throughput"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ast-grep-workspace",
+      "kind": "source-code",
+      "title": "Workspace composition, package version, and Tree-sitter dependency",
+      "uri": "https://github.com/ast-grep/ast-grep/blob/aaa80f08698dee907402f844da06850c435c431e/Cargo.toml",
+      "accessed": "2026-10-23",
+      "notes": "Workspace version 0.51.0; core/config/language/CLI workspace organization and tree-sitter requirement 0.27.0. Requirements are not asserted to be exact resolved dependency versions."
+    },
+    {
+      "id": "ast-grep-readme",
+      "kind": "official-doc",
+      "title": "ast-grep overview and structural rewrite examples at fixed commit",
+      "uri": "https://github.com/ast-grep/ast-grep/blob/aaa80f08698dee907402f844da06850c435c431e/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Feature Highlight explicitly attributes parsing to Tree-sitter and describes code patterns, YAML rules, traversal APIs, and multi-core execution."
+    },
+    {
+      "id": "ast-grep-parser",
+      "kind": "source-code",
+      "title": "Tree-sitter adapter, parser cache, and StrDoc edit lifecycle",
+      "uri": "https://github.com/ast-grep/ast-grep/blob/aaa80f08698dee907402f844da06850c435c431e/crates/core/src/tree_sitter/mod.rs",
+      "accessed": "2026-10-23",
+      "notes": "Inspected imports, TSParseError, PARSER_CACHE, parse_lang, StrDoc constructors/do_edit, perform_edit, and LanguageExt. Source-local evidence for related_systems tree-sitter."
+    },
+    {
+      "id": "ast-grep-pattern",
+      "kind": "source-code",
+      "title": "Pattern construction, validation, capture commit, and kind filtering",
+      "uri": "https://github.com/ast-grep/ast-grep/blob/aaa80f08698dee907402f844da06850c435c431e/crates/core/src/matcher/pattern.rs",
+      "accessed": "2026-10-23",
+      "notes": "PatternBuilder::build/single/contextual, PatternError, Pattern::match_node_with_env, and potential_kinds."
+    },
+    {
+      "id": "ast-grep-operators",
+      "kind": "source-code",
+      "title": "All, Any, and Not capture-environment semantics",
+      "uri": "https://github.com/ast-grep/ast-grep/blob/aaa80f08698dee907402f844da06850c435c431e/crates/core/src/ops.rs",
+      "accessed": "2026-10-23",
+      "notes": "Inspected All and Any match_node_with_env implementations and Not's throwaway probe; source comments explain avoiding capture leakage on failed branches."
+    },
+    {
+      "id": "ast-grep-rule-language",
+      "kind": "source-code",
+      "title": "Serializable atomic, relational, and composite rule variants",
+      "uri": "https://github.com/ast-grep/ast-grep/blob/aaa80f08698dee907402f844da06850c435c431e/crates/config/src/rule/mod.rs",
+      "accessed": "2026-10-23"
+    },
+    {
+      "id": "ast-grep-rule-config",
+      "kind": "source-code",
+      "title": "Rule schema, configuration errors, and matcher/fixer compilation",
+      "uri": "https://github.com/ast-grep/ast-grep/blob/aaa80f08698dee907402f844da06850c435c431e/crates/config/src/rule_config.rs",
+      "accessed": "2026-10-23",
+      "notes": "RuleConfigError, SerializableRuleConfig, DenyUnknownKeys, and RuleConfig::try_from/deserializing; potential-kind requirement and check_fix precede successful construction."
+    },
+    {
+      "id": "ast-grep-scan",
+      "kind": "source-code",
+      "title": "CLI rule loading, scan execution, diagnostic status, and diff output",
+      "uri": "https://github.com/ast-grep/ast-grep/blob/aaa80f08698dee907402f844da06850c435c431e/crates/cli/src/scan.rs",
+      "accessed": "2026-10-23",
+      "notes": "ScanWithConfig::try_new, produce_item, consume_items, match_rule_on_file, and match_rule_diff_on_file; no claim about atomic file replacement follows from this output-preparation path."
+    },
+    {
+      "id": "ast-grep-worker",
+      "kind": "source-code",
+      "title": "Parallel file worker and result channel",
+      "uri": "https://github.com/ast-grep/ast-grep/blob/aaa80f08698dee907402f844da06850c435c431e/crates/cli/src/utils/worker.rs",
+      "accessed": "2026-10-23",
+      "notes": "run_worker creates mpsc::channel, spawns traversal, clones worker handles, counts skipped production failures, quits on send failure, and consumes results through the printer. MaxItemCounter supports scan result reservation."
+    }
+  ],
+  "related_systems": ["tree-sitter"]
+}
