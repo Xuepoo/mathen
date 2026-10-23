@@ -5,6 +5,7 @@ import { frameNodes, seedCoordinates, worldUnitsPerPixel } from "./graph-viewpor
 import { applyView, expandOneHop, applyPin, type Pin } from "./graph-view";
 import { movablePanel } from "./movable-panel";
 import { configureNavigation } from "./navigation-controls";
+import { centeredCamera } from "./graph-camera";
 import {
   domainFor,
   domains,
@@ -689,6 +690,20 @@ function selectNode(id: string) {
   results.hidden = true;
   renderNodeInspector(id);
   updateStyles();
+  const node = graph?.graphData().nodes.find((candidate) => candidate.id === id);
+  if (graph && node && [node.x, node.y, node.z].every(Number.isFinite)) {
+    autoFit = false;
+    initialFitPending = false;
+    const controls = graph.controls() as {
+      target: { x: number; y: number; z: number };
+    };
+    const frame = centeredCamera(graph.camera().position, controls.target, {
+      x: node.x!,
+      y: node.y!,
+      z: node.z!,
+    });
+    graph.cameraPosition(frame.position, frame.target, duration());
+  }
 }
 function renderNodeInspector(id: string) {
   const node = visible.nodes.find((item) => item.id === id);
@@ -787,7 +802,6 @@ function updateSearch() {
     (button) =>
       (button.onclick = () => {
         selectNode(button.dataset.result!);
-        focus();
       }),
   );
   const all = document.getElementById("all-results");
@@ -830,7 +844,6 @@ function renderCatalog() {
         (button.onclick = () => {
           catalog.close();
           selectNode(button.dataset.locate!);
-          focus();
           inspector.querySelector<HTMLButtonElement>("button")?.focus();
         }),
     );
@@ -1005,7 +1018,6 @@ search.addEventListener("keydown", (event) => {
     const first = searchNodes(visible.nodes, systems, search.value, visible.edges)[0];
     if (first) {
       selectNode(first.id);
-      focus();
       search.blur();
     }
   }
