@@ -6,12 +6,15 @@ import {
   type SystemSummary,
 } from "./graph-data";
 
+export type ModelClaimType = "fact" | "inference" | "hypothesis" | "analogy" | "mixed";
+
 export type ModelViewMetadata = {
   id: string | number;
+  key?: string;
   model: string;
   question: string;
   assumptions: string[];
-  claim_type: string;
+  claim_type: ModelClaimType;
   evidence_ids: string[];
 };
 export type ModelGraphNode = {
@@ -23,7 +26,7 @@ export type ModelGraphEdge = {
   source: string;
   target: string;
   type: "modeled-by";
-  claim_type: "inference";
+  claim_type: ModelClaimType;
   metadata: ModelViewMetadata[];
 };
 export type ModelGraphPayload = {
@@ -47,13 +50,23 @@ function record(value: unknown): value is Record<string, unknown> {
 function strings(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
+function claimType(value: unknown): value is ModelClaimType {
+  return (
+    value === "fact" ||
+    value === "inference" ||
+    value === "hypothesis" ||
+    value === "analogy" ||
+    value === "mixed"
+  );
+}
 function view(value: unknown): value is ModelViewMetadata {
   return (
     record(value) &&
     (typeof value.id === "string" || typeof value.id === "number") &&
+    (value.key === undefined || typeof value.key === "string") &&
     typeof value.model === "string" &&
     typeof value.question === "string" &&
-    typeof value.claim_type === "string" &&
+    claimType(value.claim_type) &&
     strings(value.assumptions) &&
     strings(value.evidence_ids)
   );
@@ -86,7 +99,7 @@ export function normalizeModelGraph(payload: unknown): ModelGraphPayload {
       types.get(edge.source) !== "system" ||
       types.get(edge.target) !== "model" ||
       edge.type !== "modeled-by" ||
-      edge.claim_type !== "inference" ||
+      !claimType(edge.claim_type) ||
       !Array.isArray(edge.metadata) ||
       !edge.metadata.every(view)
     )
@@ -119,17 +132,22 @@ export function modelSimulationData(graph: ExplorerPayload) {
   const copy = structuredClone(graph);
   const known = new Set(copy.nodes.map((node) => node.id));
   const degree = new Map<string, number>();
-  const links: SimulationLink[] = copy.edges.flatMap((edge, index) => {
+  const links: SimulationLink[] = copy.edges.flatMap((edge) => {
     if (!known.has(edge.source) || !known.has(edge.target)) return [];
     degree.set(edge.source, (degree.get(edge.source) ?? 0) + 1);
     degree.set(edge.target, (degree.get(edge.target) ?? 0) + 1);
-    return [{ ...edge, id: `edge-${index}` }];
+    return [{ ...edge, id: simulationEdgeId(edge.source, edge.target) }];
   });
   const nodes: SimulationNode[] = copy.nodes.map((node) => ({
     ...node,
     degree: degree.get(node.id) ?? 0,
   }));
   return { nodes, links };
+}
+
+/** Identify a directed simulation edge by its stable graph endpoints. */
+export function simulationEdgeId(source: string, target: string) {
+  return `edge-${JSON.stringify([source, target])}`;
 }
 
 export function endpointId(endpoint: string | SimulationNode) {
@@ -143,7 +161,12 @@ export function neighborhood(graph: ExplorerPayload, id: string) {
   }
   return ids;
 }
-export function searchNodes(nodes: ModelGraphNode[], systems: SystemSummary[], query: string) {
+export function searchNodes(
+  nodes: ModelGraphNode[],
+  systems: SystemSummary[],
+  query: string,
+  edges: Pick<ExplorerPayload["edges"][number], "source" | "target" | "metadata">[] = [],
+) {
   const matches = new Set(
     searchSystems(
       nodes.filter((node): node is ModelGraphNode & { type: "system" } => node.type === "system"),
@@ -152,9 +175,20 @@ export function searchNodes(nodes: ModelGraphNode[], systems: SystemSummary[], q
     ).map((node) => node.id),
   );
   const normalized = query.trim().toLowerCase();
+  const modelMatches = new Set(
+    edges.flatMap((edge) => {
+      const searchable = (edge.metadata ?? []).flatMap((view) => [
+        view.model,
+        view.question,
+        ...view.assumptions,
+        ...view.evidence_ids,
+      ]);
+      return searchable.join(" ").toLowerCase().includes(normalized) ? [edge.target] : [];
+    }),
+  );
   return nodes.filter((node) =>
     node.type === "model"
-      ? `${node.id} ${node.name}`.toLowerCase().includes(normalized)
+      ? modelMatches.has(node.id) || `${node.id} ${node.name}`.toLowerCase().includes(normalized)
       : matches.has(node.id),
   );
 }

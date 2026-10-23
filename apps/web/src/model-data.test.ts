@@ -6,6 +6,7 @@ import {
   normalizeModelGraph,
   neighborhood,
   searchNodes,
+  simulationEdgeId,
   type ModelGraphPayload,
 } from "./model-data";
 
@@ -67,6 +68,28 @@ describe("mathematical model graph", () => {
     ).toThrow();
   });
 
+  test("preserves aggregate claim types and optional stable view keys", () => {
+    const edge = {
+      ...graph.edges[0],
+      claim_type: "mixed" as const,
+      metadata: [
+        {
+          ...graph.edges[0].metadata[0],
+          key: "react#mv-1",
+          claim_type: "analogy" as const,
+        },
+      ],
+    };
+    expect(normalizeModelGraph({ data: { ...graph, edges: [edge] } }).edges[0]).toEqual(edge);
+    for (const claim_type of ["fact", "inference", "hypothesis", "analogy"] as const) {
+      expect(
+        normalizeModelGraph({
+          data: { ...graph, edges: [{ ...graph.edges[0], claim_type }] },
+        }).edges[0]?.claim_type,
+      ).toBe(claim_type);
+    }
+  });
+
   test("filters systems by domain and retains only their actual model hubs", () => {
     const filtered = filterModelGraph(graph, "web");
     expect(filtered.nodes.map((node) => node.id)).toEqual(["react", "model:state"]);
@@ -81,9 +104,35 @@ describe("mathematical model graph", () => {
 
   test("search and selection find model families without linking systems to each other", () => {
     expect(searchNodes(graph.nodes, [], "STATE").map((node) => node.id)).toEqual(["model:state"]);
+    expect(
+      searchNodes(graph.nodes, [], "Transition system", graph.edges).map((node) => node.id),
+    ).toEqual(["model:state"]);
+    expect(
+      searchNodes(graph.nodes, [], "Which transitions are valid?", graph.edges).map(
+        (node) => node.id,
+      ),
+    ).toEqual(["model:state"]);
+    expect(searchNodes(graph.nodes, [], "e1", graph.edges).map((node) => node.id)).toEqual([
+      "model:state",
+    ]);
     expect(searchNodes(graph.nodes, [], "react").map((node) => node.id)).toEqual(["react"]);
     expect([...neighborhood(graph, "model:state")]).toEqual(["model:state", "react", "temporal"]);
     expect([...neighborhood(graph, "react")]).toEqual(["react", "model:state"]);
+  });
+
+  test("uses stable source-target identities for simulation links", () => {
+    const reversed = modelSimulationData({
+      ...graph,
+      edges: graph.edges.slice().reverse(),
+    });
+    const filtered = modelSimulationData({ ...graph, edges: [graph.edges[0]] });
+    expect(reversed.links.map((link) => link.id).sort()).toEqual(
+      graph.edges.map((edge) => simulationEdgeId(edge.source, edge.target)).sort(),
+    );
+    expect(filtered.links[0]?.id).toBe(simulationEdgeId("react", "model:state"));
+    expect(filtered.links[0]?.id).toBe(
+      reversed.links.find((link) => link.source === "react")?.id as string,
+    );
   });
 
   test("force mutation cannot alter canonical nodes, endpoints, or nested view metadata", () => {
