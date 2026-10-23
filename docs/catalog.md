@@ -264,7 +264,11 @@ identifiers, not claims that the projects share the same architecture.
 | `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
 | `openssl` | OpenSSL | `P0` | Cryptographic primitives, protocol state, and provider boundary |
 | `wireguard` | WireGuard | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
-| `quiche` | quiche | `P2` | QUIC and HTTP/3 protocol implementation |
+| `quiche` | quiche | `reviewed` | Compare QUIC connection state, application-driven packet I/O, HTTP/3 streams, QPACK, and loss recovery using fixed-commit evidence |
+| `http` | HTTP | `planned` | Protocol semantics, message ordering, intermediaries, and version evolution; blocker: no single authoritative HTTP implementation or fixed repository revision selected |
+| `dns` | DNS | `planned` | Name resolution, delegation, caching, and transport/security evolution; blocker: no authoritative DNS implementation or fixed repository revision selected |
+| `tcp` | TCP | `planned` | Reliable ordered byte streams, congestion control, retransmission, and connection state; blocker: no standalone protocol repository selected, use a fixed OS implementation card instead |
+| `tls` | TLS | `planned` | Handshake state, authenticated key exchange, record protection, and version evolution; blocker: protocol-only card lacks a repository boundary, use OpenSSL or another fixed implementation |
 | `libp2p` | libp2p | `P2` | Modular peer-to-peer transports and identity |
 
 ### Graphics, frontend, and media libraries
