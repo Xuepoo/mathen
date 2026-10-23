@@ -166,12 +166,14 @@ const labels = createLabelPool<SimulationNode, HTMLSpanElement>({
 const details = new Map<string, SystemDetail>();
 const relationColors = ["#69d7c3", "#bca5f4", "#e7bb7d", "#7ab9ee", "#e699ad"];
 const relationColor = (type: string) =>
-  type === "related"
-    ? "#657181"
-    : relationColors[
-        [...type].reduce((sum, character) => sum + character.charCodeAt(0), 0) %
-          relationColors.length
-      ];
+  type === "modeled-by"
+    ? "#69d7c3"
+    : type === "related"
+      ? "#8c9cab"
+      : relationColors[
+          [...type].reduce((sum, character) => sum + character.charCodeAt(0), 0) %
+            relationColors.length
+        ];
 const duration = () => (reducedMotion.matches ? 0 : 500);
 
 function escapeHtml(value: string) {
@@ -283,7 +285,7 @@ function createGraph() {
       return false;
     })
     .linkColor(linkColor)
-    .linkOpacity(0.7)
+    .linkOpacity(0.85)
     .linkPositionUpdate((object, _coordinates, link) => {
       linkAnchors.set(link.id, object as unknown as LinkAnchor);
       return false;
@@ -353,7 +355,7 @@ function createGraph() {
   graph.d3Force("charge")?.strength(-140).distanceMax(650);
   graph
     .d3Force("link")
-    ?.distance((link: SimulationLink) => (link.type === "related" ? 85 : 65))
+    ?.distance((link: SimulationLink) => (link.type === "modeled-by" ? 220 : 150))
     .strength((link: SimulationLink) => (link.type === "related" ? 0.12 : 0.35));
   graph.d3Force("center")?.strength(0.08);
   configureCamera();
@@ -656,7 +658,7 @@ function renderScreenGeometry() {
       const y = ((source.y ?? 0) + (target.y ?? 0)) / 2;
       const z = ((source.z ?? 0) + (target.z ?? 0)) / 2;
       const depth = -(m[2] * x + m[6] * y + m[10] * z + m[14]);
-      const pixels = selectedEdge?.id === link.id ? 2.5 : link.type === "related" ? 0.8 : 1.2;
+      const pixels = selectedEdge?.id === link.id ? 3 : link.type === "related" ? 1.2 : 2;
       anchor.scale.x = anchor.scale.y =
         (pixels * worldUnitsPerPixel(depth, camera.fov, height)) /
         (2 * anchor.geometry.parameters.radiusTop);
