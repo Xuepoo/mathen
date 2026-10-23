@@ -1,0 +1,20 @@
+{
+  "id": "g5-minimal-experiment",
+  "kind": "experiment",
+  "title": "Minimal reproducibility fixture",
+  "uri": "https://example.com/experiments/g5-minimal",
+  "protocol": "Run the command once against the pinned fixture.",
+  "system_commit": "fixture-commit",
+  "environment": {
+    "os": "Linux",
+    "runtime": "Python 3.12"
+  },
+  "command": "true",
+  "dataset": {
+    "name": "empty-fixture",
+    "description": "No measured dataset is included."
+  },
+  "repetitions": 1,
+  "metrics": {},
+  "artifacts": []
+}

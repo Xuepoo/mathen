@@ -131,6 +131,14 @@ Each evidence item contains:
 
 Every feature and mathematical view must reference existing evidence IDs.
 
+For `kind: "experiment"`, the evidence item additionally requires `protocol`,
+`system_commit`, `environment`, `command`, `dataset`, `repetitions`, `metrics`,
+and `artifacts`. `repetitions` is a positive integer, `metrics` is an object
+whose values are finite numbers, and `artifacts` is an array of strings or
+metadata objects. Environment and dataset can be strings or metadata objects.
+These fields describe reproducibility context; they do not by themselves claim
+that an experiment produced a particular result.
+
 ### 3.5 Claim types
 
 | Claim type   | Use it for                                                     |

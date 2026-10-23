@@ -71,6 +71,18 @@ claims. A source archive is sufficient for tree inspection but does not preserve
 history-sensitive evidence; use a Git checkout when commit history or blame is
 part of the question.
 
+### Experiment evidence
+
+Evidence with `kind: "experiment"` carries a reproducibility record in addition
+to the common evidence fields. It requires non-empty `protocol`,
+`system_commit`, `environment`, `command`, and `dataset` fields, a positive
+integer `repetitions`, a `metrics` object, and an `artifacts` array. Environment
+and dataset may be descriptive strings or metadata objects; metric values must
+be finite numbers. Empty metrics and artifacts are valid when the protocol is
+recorded without a checked-in measurement or artifact. These fields describe
+how to reproduce an observation and do not by themselves assert an experiment
+result.
+
 ## Architecture Card contract
 
 The machine-readable contract lives in

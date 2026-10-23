@@ -56,6 +56,36 @@ class CardValidationTests(unittest.TestCase):
         self.assertNotIn("relations", card)
         validate_card(card)
 
+    def test_experiment_evidence_fixture_is_valid(self) -> None:
+        experiment = json.loads(
+            (ROOT / "data" / "experiments" / "g5-minimal.json").read_text()
+        )
+        card = self._evolution_fixture()
+        card["evidence"].append(experiment)
+        validate_card(card)
+
+    def test_experiment_evidence_requires_reproducibility_fields(self) -> None:
+        card = self._evolution_fixture()
+        card["evidence"].append(self._experiment_evidence())
+        del card["evidence"][1]["protocol"]
+        with self.assertRaisesRegex(CardValidationError, "missing experiment fields"):
+            validate_card(card)
+
+    def test_experiment_metrics_must_be_finite_numbers(self) -> None:
+        card = self._evolution_fixture()
+        experiment = self._experiment_evidence()
+        experiment["metrics"]["latency_ms"] = float("inf")
+        card["evidence"].append(experiment)
+        with self.assertRaisesRegex(CardValidationError, "must be finite"):
+            validate_card(card)
+
+        card = self._evolution_fixture()
+        experiment = self._experiment_evidence()
+        experiment["repetitions"] = 0
+        card["evidence"].append(experiment)
+        with self.assertRaisesRegex(CardValidationError, "positive integer"):
+            validate_card(card)
+
     def test_temporal_relations_and_composition_contract_is_valid(self) -> None:
         card = self._evolution_fixture()
         validate_card(card)
@@ -193,6 +223,23 @@ class CardValidationTests(unittest.TestCase):
                 "claim_status": "under-review",
                 "evidence_ids": ["spec"],
             },
+        }
+
+    @staticmethod
+    def _experiment_evidence() -> dict:
+        return {
+            "id": "experiment",
+            "kind": "experiment",
+            "title": "Fixture experiment",
+            "uri": "https://example.com/experiment",
+            "protocol": "Run the fixture command.",
+            "system_commit": "a" * 40,
+            "environment": "Linux",
+            "command": "true",
+            "dataset": "fixture dataset",
+            "repetitions": 3,
+            "metrics": {"latency_ms": 1.5},
+            "artifacts": ["https://example.com/artifact"],
         }
 
     def test_generated_draft_card_has_valid_references(self) -> None:

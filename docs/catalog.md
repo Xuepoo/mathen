@@ -34,6 +34,7 @@ These entries are already present in the repository at different review levels:
 | ID | Name | Domain | Status | Next action |
 | --- | --- | --- | --- | --- |
 | `git` | Git | version control | `reviewed` | Add temporal commits, refs, and composition relations |
+| `carryctx` | CarryCtx | project lifecycle tooling | `reviewed` | Validate Git/SQLite integration and compare lifecycle state with other coordination systems |
 | `duckdb` | DuckDB | analytical database | `reviewed` | Compare with SQLite and columnar engines |
 | `firecracker` | Firecracker | microvirtualization | `reviewed` | Compare with QEMU and container isolation |
 | `supabase` | Supabase | backend platform | `reviewed` | Model platform composition and lineage |

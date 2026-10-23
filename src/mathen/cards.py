@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,16 @@ REQUIRED_TOP_LEVEL = {
 CLAIM_TYPES = {"fact", "inference", "hypothesis", "analogy"}
 CLAIM_STATUSES = {"proposed", "under-review", "accepted", "rejected", "deprecated"}
 RELATION_TYPES = {"uses", "extends", "composes", "resembles", "influenced-by"}
+EXPERIMENT_REQUIRED_FIELDS = (
+    "protocol",
+    "system_commit",
+    "environment",
+    "command",
+    "dataset",
+    "repetitions",
+    "metrics",
+    "artifacts",
+)
 
 
 class CardValidationError(ValueError):
@@ -51,6 +62,8 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
     evidence = card["evidence"]
     if not isinstance(evidence, list) or not evidence:
         raise CardValidationError(f"{label}: evidence must be a non-empty list")
+    for index, item in enumerate(evidence):
+        _validate_evidence(label, index, item)
     evidence_ids = {item.get("id") for item in evidence if isinstance(item, dict)}
 
     feature_ids: set[str] = set()
@@ -178,6 +191,68 @@ def _require_object(label: str, field: str, value: Any) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise CardValidationError(f"{label}: {field} must be an object")
     return value
+
+
+def _validate_evidence(label: str, index: int, evidence: Any) -> None:
+    if not isinstance(evidence, dict):
+        raise CardValidationError(f"{label}: evidence[{index}] must be an object")
+    if evidence.get("kind") != "experiment":
+        return
+
+    evidence_label = f"evidence[{index}]"
+    missing = [field for field in EXPERIMENT_REQUIRED_FIELDS if field not in evidence]
+    if missing:
+        raise CardValidationError(
+            f"{label}: {evidence_label} missing experiment fields: {missing}"
+        )
+    for field in ("protocol", "system_commit", "command"):
+        if not isinstance(evidence[field], str) or not evidence[field].strip():
+            raise CardValidationError(
+                f"{label}: {evidence_label}.{field} must be a non-empty string"
+            )
+    for field in ("environment", "dataset"):
+        value = evidence[field]
+        if not (isinstance(value, str) and value.strip() or isinstance(value, dict)):
+            raise CardValidationError(
+                f"{label}: {evidence_label}.{field} must be a string or object"
+            )
+
+    repetitions = evidence["repetitions"]
+    if isinstance(repetitions, bool) or not isinstance(repetitions, int):
+        raise CardValidationError(
+            f"{label}: {evidence_label}.repetitions must be a positive integer"
+        )
+    if repetitions < 1:
+        raise CardValidationError(
+            f"{label}: {evidence_label}.repetitions must be a positive integer"
+        )
+
+    metrics = evidence["metrics"]
+    if not isinstance(metrics, dict):
+        raise CardValidationError(
+            f"{label}: {evidence_label}.metrics must be an object"
+        )
+    for name, value in metrics.items():
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise CardValidationError(
+                f"{label}: {evidence_label}.metrics.{name} must be a number"
+            )
+        if isinstance(value, float) and not math.isfinite(value):
+            raise CardValidationError(
+                f"{label}: {evidence_label}.metrics.{name} must be finite"
+            )
+
+    artifacts = evidence["artifacts"]
+    if not isinstance(artifacts, list):
+        raise CardValidationError(f"{label}: {evidence_label}.artifacts must be a list")
+    for artifact in artifacts:
+        if not (
+            isinstance(artifact, dict) or isinstance(artifact, str) and artifact.strip()
+        ):
+            raise CardValidationError(
+                f"{label}: {evidence_label}.artifacts entries must be strings "
+                "or objects"
+            )
 
 
 def _check_claim_status(label: str, item_id: str, status: Any) -> None:
