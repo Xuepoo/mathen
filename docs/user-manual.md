@@ -15,12 +15,12 @@ boundaries needed for those extensions.
 
 ## 1. Concepts and status boundaries
 
-| Concept | Meaning |
-| --- | --- |
-| System | A product or project such as Git, SQLite, or DuckDB |
-| Architecture Card | A structured model of one system and its evidence |
-| Draft | An automatically generated or not-yet-reviewed card |
-| Reviewed card | A card accepted into the canonical knowledge base |
+| Concept           | Meaning                                             |
+| ----------------- | --------------------------------------------------- |
+| System            | A product or project such as Git, SQLite, or DuckDB |
+| Architecture Card | A structured model of one system and its evidence   |
+| Draft             | An automatically generated or not-yet-reviewed card |
+| Reviewed card     | A card accepted into the canonical knowledge base   |
 
 The repository currently uses these directories:
 
@@ -39,17 +39,17 @@ directory and cannot overwrite reviewed cards.
 
 ## 2. Schema inventory
 
-| Contract | File or source | Role |
-| --- | --- | --- |
-| Architecture Card | `schemas/architecture-card.schema.json` | Canonical system model |
-| Repository Manifest | `data/repositories/representative.json` | Analysis input catalog |
-| Analysis Report | `data/analyses/<id>.json` | Deterministic repository observations |
-| Structural Draft | `data/drafts/<id>.json` | Conservative card from observations |
-| Modeling Bundle | `data/modeling/<id>.json` | Fixed evidence input for semantic modeling |
-| LLM Draft Card | `data/drafts/llm/<id>.json` | Validated model output awaiting review |
-| D1 projection | `apps/api/migrations/` | Relational storage for cards and bundles |
-| API envelope | `apps/api/src/index.ts` | Read-only HTTP projection |
-| MCP contract | `apps/mcp/src/index.ts` | Read-only agent-facing tools |
+| Contract            | File or source                          | Role                                       |
+| ------------------- | --------------------------------------- | ------------------------------------------ |
+| Architecture Card   | `schemas/architecture-card.schema.json` | Canonical system model                     |
+| Repository Manifest | `data/repositories/representative.json` | Analysis input catalog                     |
+| Analysis Report     | `data/analyses/<id>.json`               | Deterministic repository observations      |
+| Structural Draft    | `data/drafts/<id>.json`                 | Conservative card from observations        |
+| Modeling Bundle     | `data/modeling/<id>.json`               | Fixed evidence input for semantic modeling |
+| LLM Draft Card      | `data/drafts/llm/<id>.json`             | Validated model output awaiting review     |
+| D1 projection       | `apps/api/migrations/`                  | Relational storage for cards and bundles   |
+| API envelope        | `apps/api/src/index.ts`                 | Read-only HTTP projection                  |
+| MCP contract        | `apps/mcp/src/index.ts`                 | Read-only agent-facing tools               |
 
 The JSON Schema defines the card shape. The Python validator in
 `src/mathen/cards.py` adds cross-reference and semantic checks that a JSON
@@ -60,36 +60,36 @@ Schema alone cannot express.
 An Architecture Card describes one system at one stated version or revision.
 The top-level object has these fields:
 
-| Field | Required | Type | Meaning |
-| --- | --- | --- | --- |
-| `id` | yes | lowercase string | Stable machine identifier, for example `duckdb` |
-| `name` | yes | string | Human-readable system name |
-| `version_context` | no | string | Version, release, commit, or analysis context |
-| `summary` | yes | string | One-paragraph architectural summary |
-| `scope` | yes | non-empty string array | Topics and boundaries covered |
-| `features` | yes | non-empty object array | Reusable architecture features |
-| `mathematical_views` | yes | object array | Mathematical or formal views |
-| `trade_offs` | yes | object array | Benefits and costs of features |
-| `evidence` | yes | non-empty object array | Sources supporting the card |
-| `related_systems` | no | string array | IDs of related cards |
-| `temporal_context` | no | object | Version lifecycle and temporal claims |
-| `relations` | no | object array | Typed, directed architecture relations |
-| `composition` | no | object | Proposed or reviewed system composition |
+| Field                | Required | Type                   | Meaning                                         |
+| -------------------- | -------- | ---------------------- | ----------------------------------------------- |
+| `id`                 | yes      | lowercase string       | Stable machine identifier, for example `duckdb` |
+| `name`               | yes      | string                 | Human-readable system name                      |
+| `version_context`    | no       | string                 | Version, release, commit, or analysis context   |
+| `summary`            | yes      | string                 | One-paragraph architectural summary             |
+| `scope`              | yes      | non-empty string array | Topics and boundaries covered                   |
+| `features`           | yes      | non-empty object array | Reusable architecture features                  |
+| `mathematical_views` | yes      | object array           | Mathematical or formal views                    |
+| `trade_offs`         | yes      | object array           | Benefits and costs of features                  |
+| `evidence`           | yes      | non-empty object array | Sources supporting the card                     |
+| `related_systems`    | no       | string array           | IDs of related cards                            |
+| `temporal_context`   | no       | object                 | Version lifecycle and temporal claims           |
+| `relations`          | no       | object array           | Typed, directed architecture relations          |
+| `composition`        | no       | object                 | Proposed or reviewed system composition         |
 
 ### 3.1 Feature fields
 
 Every feature contains:
 
-| Field | Meaning |
-| --- | --- |
-| `id` | Stable lowercase feature identifier |
-| `name` | Human-readable reusable feature name |
-| `category` | Feature family, such as `storage-model` or `execution-model` |
-| `claim_type` | `fact`, `inference`, `hypothesis`, or `analogy` |
-| `description` | Precise claim about the system or transferable structure |
-| `benefits` | Optional list of positive consequences |
-| `costs` | Optional list of limitations |
-| `evidence_ids` | Non-empty references to evidence in the same card |
+| Field          | Meaning                                                      |
+| -------------- | ------------------------------------------------------------ |
+| `id`           | Stable lowercase feature identifier                          |
+| `name`         | Human-readable reusable feature name                         |
+| `category`     | Feature family, such as `storage-model` or `execution-model` |
+| `claim_type`   | `fact`, `inference`, `hypothesis`, or `analogy`              |
+| `description`  | Precise claim about the system or transferable structure     |
+| `benefits`     | Optional list of positive consequences                       |
+| `costs`        | Optional list of limitations                                 |
+| `evidence_ids` | Non-empty references to evidence in the same card            |
 
 Describe transferable structure rather than only product details. For example,
 `embedded-process-execution` is more reusable than `has a Python package`.
@@ -98,13 +98,13 @@ Describe transferable structure rather than only product details. For example,
 
 Every mathematical view contains:
 
-| Field | Meaning |
-| --- | --- |
-| `model` | Candidate mathematical or formal model |
-| `question` | Concrete question answered by the model |
-| `assumptions` | Conditions and simplifications required |
-| `claim_type` | Status of the correspondence |
-| `evidence_ids` | Supporting evidence references |
+| Field          | Meaning                                 |
+| -------------- | --------------------------------------- |
+| `model`        | Candidate mathematical or formal model  |
+| `question`     | Concrete question answered by the model |
+| `assumptions`  | Conditions and simplifications required |
+| `claim_type`   | Status of the correspondence            |
+| `evidence_ids` | Supporting evidence references          |
 
 Candidate views include graphs and partial orders for dependency or causality,
 state machines for lifecycle behavior, semilattices for convergence, and
@@ -120,25 +120,25 @@ non-empty `costs` array. The feature ID must exist in the same card.
 
 Each evidence item contains:
 
-| Field | Required | Meaning |
-| --- | --- | --- |
-| `id` | yes | Stable lowercase evidence identifier |
-| `kind` | yes | `official-doc`, `paper`, `source-code`, `experiment`, or `secondary` |
-| `title` | yes | Source title |
-| `uri` | yes | Source URL |
-| `accessed` | no | Retrieval date or timestamp |
-| `notes` | no | Scope, excerpt, or provenance notes |
+| Field      | Required | Meaning                                                              |
+| ---------- | -------- | -------------------------------------------------------------------- |
+| `id`       | yes      | Stable lowercase evidence identifier                                 |
+| `kind`     | yes      | `official-doc`, `paper`, `source-code`, `experiment`, or `secondary` |
+| `title`    | yes      | Source title                                                         |
+| `uri`      | yes      | Source URL                                                           |
+| `accessed` | no       | Retrieval date or timestamp                                          |
+| `notes`    | no       | Scope, excerpt, or provenance notes                                  |
 
 Every feature and mathematical view must reference existing evidence IDs.
 
 ### 3.5 Claim types
 
-| Claim type | Use it for |
-| --- | --- |
-| `fact` | Directly supported implementation or documentation observation |
-| `inference` | Reasonable abstraction derived from supported facts |
-| `hypothesis` | Proposed model requiring validation |
-| `analogy` | Explanatory comparison that is not formal equivalence |
+| Claim type   | Use it for                                                     |
+| ------------ | -------------------------------------------------------------- |
+| `fact`       | Directly supported implementation or documentation observation |
+| `inference`  | Reasonable abstraction derived from supported facts            |
+| `hypothesis` | Proposed model requiring validation                            |
+| `analogy`    | Explanatory comparison that is not formal equivalence          |
 
 Do not use `fact` for an elegant mathematical interpretation unless the source
 actually establishes it.
@@ -339,16 +339,16 @@ consumers.
 The Hono Worker uses the `/api` base path. Successful responses use a
 `{"data": ...}` envelope.
 
-| Endpoint | Purpose |
-| --- | --- |
-| `GET /api/health` | Worker health and environment |
-| `GET /api/systems?query=&limit=&offset=` | Search reviewed system summaries in stable name/id order |
-| `GET /api/systems/:id` | Retrieve one reviewed card projection |
-| `GET /api/features?query=&category=&claim_type=&limit=` | Search reviewed features |
+| Endpoint                                                   | Purpose                                                                 |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `GET /api/health`                                          | Worker health and environment                                           |
+| `GET /api/systems?query=&limit=&offset=`                   | Search reviewed system summaries in stable name/id order                |
+| `GET /api/systems/:id`                                     | Retrieve one reviewed card projection                                   |
+| `GET /api/features?query=&category=&claim_type=&limit=`    | Search reviewed features                                                |
 | `GET /api/compositions?input_system=&claim_status=&limit=` | Search reviewed composition proposals, including cited evidence records |
-| `GET /api/modeling/:id` | Retrieve one fixed-commit modeling bundle |
-| `GET /api/graph` | Return current system nodes and valid typed or legacy edges |
-| `GET /api/graph/models` | Return a navigational system-to-mathematical-model projection |
+| `GET /api/modeling/:id`                                    | Retrieve one fixed-commit modeling bundle                               |
+| `GET /api/graph`                                           | Return current system nodes and valid typed or legacy edges             |
+| `GET /api/graph/models`                                    | Return a navigational system-to-mathematical-model projection           |
 
 The current API is read-only. It does not expose draft cards or provide review,
 promotion, or synthesis writes.
@@ -373,20 +373,24 @@ influence, or architectural equivalence.
 The mathematical-model projection is a separate graph. Its model nodes group
 explicitly named mathematical views such as state-transition, queueing, or
 refinement models. It retains each view's question, assumptions, claim type, and
-source-local evidence IDs. A `modeled-by` edge is a navigational inference, not
-a dependency, equivalence, proof, or composition claim.
+source-local evidence IDs. A `modeled-by` edge is a navigation link, not
+a dependency, equivalence, proof, or composition claim. Its claim label reflects
+the attached views, or `mixed` when their claim types differ. Views can appear
+in multiple wording-based families. Model search includes view titles,
+questions, assumptions, and evidence IDs. A stable view key uses the system,
+normalized model title, and question; changing those fields changes the key.
 
 ## 11. MCP interface
 
 The stdio MCP server provides the same read boundary to agents:
 
-| Tool | Inputs | Result |
-| --- | --- | --- |
-| `list_systems` | optional `include_drafts` | System summaries |
-| `get_system` | `system_id`, optional `include_drafts` | One Architecture Card |
-| `search_features` | `query`, optional `category`, `claim_type`, `include_drafts`, `limit` | Matching reusable features |
-| `list_compositions` | optional `input_system`, `claim_status`, `include_drafts`, `limit` | Matching reviewed composition proposals with cited evidence records |
-| `get_modeling_bundle` | `system_id` | Fixed-commit modeling bundle |
+| Tool                  | Inputs                                                                | Result                                                              |
+| --------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `list_systems`        | optional `include_drafts`                                             | System summaries                                                    |
+| `get_system`          | `system_id`, optional `include_drafts`                                | One Architecture Card                                               |
+| `search_features`     | `query`, optional `category`, `claim_type`, `include_drafts`, `limit` | Matching reusable features                                          |
+| `list_compositions`   | optional `input_system`, `claim_status`, `include_drafts`, `limit`    | Matching reviewed composition proposals with cited evidence records |
+| `get_modeling_bundle` | `system_id`                                                           | Fixed-commit modeling bundle                                        |
 
 Without `MATHEN_API_URL`, the server uses the local filesystem. With
 `MATHEN_API_URL`, reviewed system, feature, and bundle reads use the Hono/D1

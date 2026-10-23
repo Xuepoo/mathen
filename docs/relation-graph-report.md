@@ -36,7 +36,9 @@ The remaining isolates have no recorded connection in this projection; some stil
 
 ## Mathematical model neighborhood
 
-The `/api/graph/models` projection currently exposes **171 system nodes**, **230 model nodes**, and **457 `modeled-by` links** from reviewed mathematical views. It is a bipartite navigational graph. The model hubs preserve each view’s model name, question, assumptions, claim type, and source-local evidence IDs. Shared placement in a hub means “these views ask related structural questions”; it does not establish common implementation, a shared law, formal proof, historical influence, or composition compatibility.
+The `/api/graph/models` projection currently exposes **171 system nodes**, **241 model nodes**, and **463 `modeled-by` links** from reviewed mathematical views. It is a bipartite navigational graph. The model hubs preserve each view’s model name, question, assumptions, claim type, and source-local evidence IDs. Shared placement in a hub indicates matching model-title wording; it does not establish common implementation, a shared law, formal proof, historical influence, or composition compatibility.
+
+A view may belong to multiple navigation families. All **477** distinct view keys are retained. Keys derive from the source system, normalized model title, and question, so reseeding database row IDs does not change them; changing those identity fields does. Aggregate edges retain a shared claim type or report `mixed` when their views differ. Each view's own claim type remains available.
 
 The frontend exposes this projection through the `Systems / Math models` toggle. The system graph remains the evidence-backed software relation graph.
 
