@@ -1,0 +1,450 @@
+{
+  "id": "stalwart",
+  "name": "Stalwart Mail Server",
+  "version_context": "commit aa47d8ef7bfba7200d3293198ac2592747b20e73 (2026-10-18; repository default branch)",
+  "summary": "A Rust mail and collaboration server that presents one message store through SMTP transport and submission, IMAP4rev2 mailbox sessions, and JMAP JSON synchronization, with shared authentication, filtering, queueing, and pluggable storage boundaries.",
+  "scope": [
+    "SMTP relay and message submission",
+    "IMAP4rev2 mailbox access",
+    "JMAP mail synchronization",
+    "shared message store",
+    "authentication and authorization",
+    "delivery queue and filtering"
+  ],
+  "features": [
+    {
+      "id": "multi-protocol-mail-store",
+      "name": "Multi-protocol mail-store boundary",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "The fixed repository contains separate SMTP, IMAP, and JMAP crates alongside a shared store crate. The protocol surfaces therefore form distinct adapters over common server, directory, and storage facilities rather than three independent mail databases.",
+      "benefits": [
+        "Allows legacy mailbox clients, SMTP peers, and synchronization clients to access one service boundary",
+        "Makes protocol-specific state machines independently evolvable",
+        "Provides a natural place to compare envelope, mailbox, and JSON object semantics"
+      ],
+      "costs": [
+        "Cross-protocol consistency must be maintained for message, mailbox, flag, and identity changes",
+        "Each protocol has different identifiers, transaction boundaries, and error semantics",
+        "The shared store becomes a coupling and migration boundary for all adapters"
+      ],
+      "evidence_ids": [
+        "stalwart-repository",
+        "stalwart-smtp-module",
+        "stalwart-imap-module",
+        "stalwart-jmap-module",
+        "stalwart-store-module",
+        "smtp-rfc5321",
+        "imap-rfc9051",
+        "jmap-rfc8620",
+        "jmap-mail-rfc8621"
+      ]
+    },
+    {
+      "id": "smtp-envelope-queue-pipeline",
+      "name": "SMTP envelope and delivery-queue pipeline",
+      "category": "transport-model",
+      "claim_type": "fact",
+      "description": "The SMTP implementation is split into inbound session, authentication, EHLO, MAIL, RCPT, and DATA handling plus outbound client, delivery, lookup, and queue modules. This matches SMTP's envelope transaction and relay model while adding a persistent delivery pipeline and policy hooks around acceptance and forwarding.",
+      "benefits": [
+        "Separates command transaction handling from outbound retry and next-hop delivery",
+        "Supports authenticated submission and policy checks before queueing",
+        "Makes transient delivery failure a recoverable queue state rather than a lost connection"
+      ],
+      "costs": [
+        "Acceptance, queue persistence, retry, and final delivery are distinct states that require careful observability",
+        "Policy and filtering can change whether a message is accepted, deferred, rejected, or rewritten",
+        "SMTP interoperability depends on extensions, DNS, remote server behavior, and timeout policy"
+      ],
+      "evidence_ids": [
+        "smtp-rfc5321",
+        "smtp-submission-rfc6409",
+        "stalwart-smtp-inbound",
+        "stalwart-smtp-outbound",
+        "stalwart-smtp-queue",
+        "stalwart-repository"
+      ]
+    },
+    {
+      "id": "imap-session-mailbox-state",
+      "name": "IMAP session and mailbox state",
+      "category": "session-model",
+      "claim_type": "fact",
+      "description": "The IMAP implementation has explicit client, session, mailbox, and message core modules. It exposes the IMAP4rev2 authenticated and selected mailbox lifecycle over a tagged command/response protocol, with mailbox and message state mediated by the shared store.",
+      "benefits": [
+        "Preserves compatibility with stateful desktop and offline-capable mailbox clients",
+        "Makes authentication, mailbox selection, flags, message numbers, and unsolicited updates explicit",
+        "Keeps protocol parsing and session lifecycle separate from storage operations"
+      ],
+      "costs": [
+        "Long-lived selected sessions must reconcile concurrent delivery and flag changes",
+        "Sequence numbers are session-relative while UIDs require durable validity semantics",
+        "Tagged, untagged, and continuation responses create substantial parser and flow-control complexity"
+      ],
+      "evidence_ids": [
+        "imap-rfc9051",
+        "stalwart-imap-core",
+        "stalwart-imap-session",
+        "stalwart-imap-mailbox",
+        "stalwart-imap-message",
+        "stalwart-store-module"
+      ]
+    },
+    {
+      "id": "jmap-stateful-json-sync",
+      "name": "JMAP capability and stateful JSON synchronization",
+      "category": "synchronization-model",
+      "claim_type": "fact",
+      "description": "The JMAP implementation separates session discovery, authenticated API requests, query operations, mail objects, submission, and change/push handling. This realizes JMAP's capability-advertised account model, ordered method calls, immutable object identifiers, and state-based resynchronization over the shared mail store.",
+      "benefits": [
+        "Batches structured operations and reduces round trips for web and mobile clients",
+        "Provides explicit state tokens and change queries for incremental resynchronization",
+        "Separates protocol discovery, JSON method processing, binary blobs, and mail data types"
+      ],
+      "costs": [
+        "The server must retain and validate account state, object IDs, change state, and method dependencies",
+        "Push notifications indicate that synchronization is needed; clients still need a follow-up changes/get workflow",
+        "JMAP semantics must be mapped carefully onto IMAP mailbox and flag compatibility constraints"
+      ],
+      "evidence_ids": [
+        "jmap-rfc8620",
+        "jmap-mail-rfc8621",
+        "stalwart-jmap-api",
+        "stalwart-jmap-changes",
+        "stalwart-jmap-mail",
+        "stalwart-jmap-submission",
+        "stalwart-jmap-push"
+      ]
+    },
+    {
+      "id": "shared-policy-and-storage-adapters",
+      "name": "Shared policy, identity, and storage adapters",
+      "category": "platform-model",
+      "claim_type": "fact",
+      "description": "The repository exposes common authentication, configuration, IPC, storage, and directory modules used by protocol crates. The project README also describes pluggable storage backends, authentication backends, filtering, queue management, and multi-tenant controls as system capabilities.",
+      "benefits": [
+        "Centralizes identity, authorization, quotas, filtering, and persistence policy",
+        "Allows deployments to choose storage and directory implementations behind stable server boundaries",
+        "Reduces duplicated policy logic across SMTP, IMAP, and JMAP"
+      ],
+      "costs": [
+        "A policy or storage change can affect all protocol surfaces simultaneously",
+        "Backend-specific behavior can make deployment semantics differ even when wire protocols match",
+        "Cross-cutting hooks increase configuration and debugging surface"
+      ],
+      "evidence_ids": [
+        "stalwart-readme",
+        "stalwart-common-module",
+        "stalwart-store-module",
+        "stalwart-smtp-inbound",
+        "stalwart-jmap-api"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Protocol adapter composition over a shared mail state",
+      "question": "How can SMTP envelope state, IMAP mailbox/session state, and JMAP account/object state expose one mail store without treating the wire protocols as equivalent?",
+      "assumptions": [
+        "The shared store is modeled as the underlying state space containing messages, mailboxes, identities, permissions, and delivery metadata",
+        "SMTP, IMAP, and JMAP are distinct transition systems whose operations map into that state space through adapters",
+        "A protocol-specific success response is not by itself proof that another protocol has observed the change",
+        "The view abstracts backend transaction isolation and does not claim global atomicity across protocol requests"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "smtp-rfc5321",
+        "imap-rfc9051",
+        "jmap-rfc8620",
+        "jmap-mail-rfc8621",
+        "stalwart-smtp-module",
+        "stalwart-imap-module",
+        "stalwart-jmap-module",
+        "stalwart-store-module"
+      ]
+    },
+    {
+      "model": "SMTP delivery queue transition system",
+      "question": "How does a message move from SMTP session negotiation through envelope acceptance, queueing, retry, and final delivery or failure?",
+      "assumptions": [
+        "An SMTP transaction has session, envelope, content, acceptance, queued, deferred, delivered, rejected, and failed observations",
+        "Outbound delivery can be retried independently of the inbound connection after acceptance",
+        "Temporary and permanent remote responses are distinct transition inputs",
+        "The model does not infer exact retry timing or end-to-end delivery guarantees from module names alone"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "smtp-rfc5321",
+        "smtp-submission-rfc6409",
+        "stalwart-smtp-inbound",
+        "stalwart-smtp-outbound",
+        "stalwart-smtp-queue"
+      ]
+    },
+    {
+      "model": "Mailbox session state machine with durable message identity",
+      "question": "How do IMAP authentication, mailbox selection, sequence numbers, UIDs, flags, and expunge transitions support offline-capable mailbox access?",
+      "assumptions": [
+        "The connection state follows not-authenticated, authenticated, selected, and logout states from IMAP4rev2",
+        "Message sequence numbers are session-relative while UID and UIDVALIDITY provide durable resynchronization identity",
+        "Mailbox and message mutations may be observed asynchronously by a selected session",
+        "The view abstracts the implementation's exact locking and notification scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "imap-rfc9051",
+        "stalwart-imap-core",
+        "stalwart-imap-session",
+        "stalwart-imap-mailbox",
+        "stalwart-imap-message"
+      ]
+    },
+    {
+      "model": "JMAP state-token and change-set transition system",
+      "question": "How do JMAP method batches, immutable object IDs, state tokens, changes queries, and push events support incremental mail synchronization?",
+      "assumptions": [
+        "Each account and data type has an observable state token that changes when relevant records change",
+        "A changes response is a delta description that may require a subsequent get/query operation",
+        "Ordered method calls and result references are modeled as dependencies within one request",
+        "A push event is an invalidation or resynchronization signal, not a complete replacement for fetching current objects"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "jmap-rfc8620",
+        "jmap-mail-rfc8621",
+        "stalwart-jmap-api",
+        "stalwart-jmap-changes",
+        "stalwart-jmap-push"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "multi-protocol-mail-store",
+      "benefits": ["One canonical service state can serve legacy and modern clients"],
+      "costs": ["Protocol-specific identity and concurrency rules complicate consistency reasoning"]
+    },
+    {
+      "feature_id": "smtp-envelope-queue-pipeline",
+      "benefits": ["Durable queueing separates peer connection lifetime from outbound retry"],
+      "costs": ["Queue, policy, DNS, and remote response states increase operational complexity"]
+    },
+    {
+      "feature_id": "imap-session-mailbox-state",
+      "benefits": ["Supports established stateful and offline-capable mailbox clients"],
+      "costs": ["Selected sessions and dual message numbering require durable synchronization rules"]
+    },
+    {
+      "feature_id": "jmap-stateful-json-sync",
+      "benefits": ["Batched requests and deltas reduce synchronization round trips"],
+      "costs": ["State tokens, push invalidation, and cross-protocol mapping add server/client coordination"]
+    },
+    {
+      "feature_id": "shared-policy-and-storage-adapters",
+      "benefits": ["Common identity and persistence policy can be reused across protocols"],
+      "costs": ["Backend and configuration variation can produce deployment-specific behavior"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "stalwart-repository",
+      "kind": "source-code",
+      "title": "Stalwart source at fixed commit aa47d8ef7bfba7200d3293198ac2592747b20e73",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73",
+      "accessed": "2026-10-23",
+      "notes": "Fixed repository provenance. The commit was resolved from the official GitHub API for the repository default branch; source checkouts are not copied into Mathen."
+    },
+    {
+      "id": "stalwart-readme",
+      "kind": "official-doc",
+      "title": "Stalwart README at fixed commit",
+      "uri": "https://github.com/stalwartlabs/stalwart/blob/aa47d8ef7bfba7200d3293198ac2592747b20e73/README.md",
+      "accessed": "2026-10-23",
+      "notes": "Official project overview describing JMAP, IMAP4, SMTP, storage backends, filtering, queueing, authentication, and multi-tenancy."
+    },
+    {
+      "id": "stalwart-smtp-module",
+      "kind": "source-code",
+      "title": "Stalwart SMTP crate at fixed commit",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/smtp",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source boundary for SMTP inbound, outbound, queue, reporting, and policy implementation."
+    },
+    {
+      "id": "stalwart-smtp-inbound",
+      "kind": "source-code",
+      "title": "Stalwart SMTP inbound session and transaction handlers",
+      "uri": "https://github.com/stalwartlabs/stalwart/blob/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/smtp/src/inbound/session.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for inbound session lifecycle, EHLO, authentication, MAIL, RCPT, DATA, and policy integration."
+    },
+    {
+      "id": "stalwart-smtp-outbound",
+      "kind": "source-code",
+      "title": "Stalwart SMTP outbound delivery implementation",
+      "uri": "https://github.com/stalwartlabs/stalwart/blob/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/smtp/src/outbound/delivery.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for outbound delivery, response handling, retry inputs, and next-hop delivery state."
+    },
+    {
+      "id": "stalwart-smtp-queue",
+      "kind": "source-code",
+      "title": "Stalwart SMTP queue and outbound coordination modules",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/smtp/src/queue",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source boundary for queue persistence and delivery scheduling."
+    },
+    {
+      "id": "stalwart-imap-module",
+      "kind": "source-code",
+      "title": "Stalwart IMAP crate at fixed commit",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/imap",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source boundary for IMAP protocol, session, mailbox, and message operations."
+    },
+    {
+      "id": "stalwart-imap-core",
+      "kind": "source-code",
+      "title": "Stalwart IMAP core state modules",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/imap/src/core",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source boundary for IMAP client, session, mailbox, and message state."
+    },
+    {
+      "id": "stalwart-imap-session",
+      "kind": "source-code",
+      "title": "Stalwart IMAP session implementation",
+      "uri": "https://github.com/stalwartlabs/stalwart/blob/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/imap/src/core/session.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for connection/session state and command processing."
+    },
+    {
+      "id": "stalwart-imap-mailbox",
+      "kind": "source-code",
+      "title": "Stalwart IMAP mailbox implementation",
+      "uri": "https://github.com/stalwartlabs/stalwart/blob/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/imap/src/core/mailbox.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for selected mailbox state and mailbox operations."
+    },
+    {
+      "id": "stalwart-imap-message",
+      "kind": "source-code",
+      "title": "Stalwart IMAP message implementation",
+      "uri": "https://github.com/stalwartlabs/stalwart/blob/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/imap/src/core/message.rs",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for IMAP message attributes and message operation state."
+    },
+    {
+      "id": "stalwart-jmap-module",
+      "kind": "source-code",
+      "title": "Stalwart JMAP crate at fixed commit",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/jmap",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source boundary for JMAP API, mail, submission, changes, and push modules."
+    },
+    {
+      "id": "stalwart-jmap-api",
+      "kind": "source-code",
+      "title": "Stalwart JMAP API request and session modules",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/jmap/src/api",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for JMAP session discovery, authentication, method requests, query processing, and ACL entry points."
+    },
+    {
+      "id": "stalwart-jmap-changes",
+      "kind": "source-code",
+      "title": "Stalwart JMAP changes modules",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/jmap/src/changes",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for JMAP get/query/state change processing."
+    },
+    {
+      "id": "stalwart-jmap-mail",
+      "kind": "source-code",
+      "title": "Stalwart JMAP mail modules",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/jmap/src/email",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for JMAP email data model and mail operations."
+    },
+    {
+      "id": "stalwart-jmap-submission",
+      "kind": "source-code",
+      "title": "Stalwart JMAP submission modules",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/jmap/src/submission",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for JMAP EmailSubmission operations and their SMTP delivery boundary."
+    },
+    {
+      "id": "stalwart-jmap-push",
+      "kind": "source-code",
+      "title": "Stalwart JMAP push and event-source modules",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/jmap/src/push",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source for JMAP push/event-source support."
+    },
+    {
+      "id": "stalwart-store-module",
+      "kind": "source-code",
+      "title": "Stalwart shared store crate at fixed commit",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/store",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source boundary for backend, query, search, write, and storage dispatch abstractions shared by protocol crates."
+    },
+    {
+      "id": "stalwart-common-module",
+      "kind": "source-code",
+      "title": "Stalwart common crate at fixed commit",
+      "uri": "https://github.com/stalwartlabs/stalwart/tree/aa47d8ef7bfba7200d3293198ac2592747b20e73/crates/common",
+      "accessed": "2026-10-23",
+      "notes": "Fixed source boundary for authentication, configuration, IPC, networking, storage, and telemetry facilities."
+    },
+    {
+      "id": "smtp-rfc5321",
+      "kind": "official-doc",
+      "title": "RFC 5321: Simple Mail Transfer Protocol",
+      "uri": "https://www.rfc-editor.org/rfc/rfc5321",
+      "accessed": "2026-10-23",
+      "notes": "Normative protocol evidence for SMTP client/server roles, envelope transactions, replies, relaying, queueing expectations, and extension negotiation."
+    },
+    {
+      "id": "smtp-submission-rfc6409",
+      "kind": "official-doc",
+      "title": "RFC 6409: Message Submission for Mail",
+      "uri": "https://www.rfc-editor.org/rfc/rfc6409",
+      "accessed": "2026-10-23",
+      "notes": "Normative evidence for separating authenticated submission from relay and for MSA policy boundaries."
+    },
+    {
+      "id": "imap-rfc9051",
+      "kind": "official-doc",
+      "title": "RFC 9051: Internet Message Access Protocol (IMAP) - Version 4rev2",
+      "uri": "https://www.rfc-editor.org/rfc/rfc9051",
+      "accessed": "2026-10-23",
+      "notes": "Normative protocol evidence for IMAP states, tagged command/response flow, mailbox/message attributes, UIDs, flags, and resynchronization."
+    },
+    {
+      "id": "jmap-rfc8620",
+      "kind": "official-doc",
+      "title": "RFC 8620: The JSON Meta Application Protocol (JMAP)",
+      "uri": "https://www.rfc-editor.org/rfc/rfc8620",
+      "accessed": "2026-10-23",
+      "notes": "Normative protocol evidence for JMAP sessions, capabilities, ordered method calls, object IDs, state tokens, deltas, push, and binary endpoints."
+    },
+    {
+      "id": "jmap-mail-rfc8621",
+      "kind": "official-doc",
+      "title": "RFC 8621: The JSON Meta Application Protocol (JMAP) for Mail",
+      "uri": "https://www.rfc-editor.org/rfc/rfc8621",
+      "accessed": "2026-10-23",
+      "notes": "Normative protocol evidence for mailboxes, emails, threads, submission, IMAP compatibility, and email-delivery push state."
+    }
+  ],
+  "related_systems": ["rabbitmq", "nats", "mosquitto", "curl", "postgresql"],
+  "temporal_context": {
+    "version": "aa47d8ef7bfba7200d3293198ac2592747b20e73",
+    "valid_from": "2026-10-18",
+    "status": "current",
+    "claim_status": "accepted",
+    "evidence_ids": ["stalwart-repository"]
+  }
+}

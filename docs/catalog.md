@@ -108,6 +108,7 @@ These entries are already present in the repository at different review levels:
 | `laravel` | Laravel | web framework | `reviewed` | Compare service-container resolution, provider bootstrap, deferred services, and middleware pipelines using fixed-commit evidence |
 | `spring-boot` | Spring Boot | web framework | `reviewed` | Compare application-context startup, conditional auto-configuration, environment binding, and embedded web deployment using fixed-commit evidence |
 | `nestjs` | NestJS | web framework | `reviewed` | Compare module graph scanning, provider resolution, initialization phases, and transport adapters using fixed-commit evidence |
+| `stalwart` | Stalwart Mail Server | mail server | `reviewed` | Compare SMTP envelope/queue delivery, IMAP mailbox sessions, JMAP stateful synchronization, and shared store adapters using fixed-commit evidence |
 
 The operational manifest now contains 52 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
