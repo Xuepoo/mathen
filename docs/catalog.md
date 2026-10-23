@@ -123,6 +123,10 @@ These entries are already present in the repository at different review levels:
 | `spring-boot` | Spring Boot | web framework | `reviewed` | Compare application-context startup, conditional auto-configuration, environment binding, and embedded web deployment using fixed-commit evidence |
 | `nestjs` | NestJS | web framework | `reviewed` | Compare module graph scanning, provider resolution, initialization phases, and transport adapters using fixed-commit evidence |
 | `stalwart` | Stalwart Mail Server | mail server | `reviewed` | Compare SMTP envelope/queue delivery, IMAP mailbox sessions, JMAP stateful synchronization, and shared store adapters using fixed-commit evidence |
+| `n8n` | n8n | AI workflow automation | `reviewed` | Compare node-graph workflow composition, execution records, integration/code extensions, and agent/tool approval steps using fixed-commit evidence |
+| `langchain` | LangChain | agent and LLM framework | `reviewed` | Compare provider-independent model interfaces, Runnable composition, typed tools, and agent-harness/orchestration boundaries using fixed-commit evidence |
+| `mcp` | Model Context Protocol | AI integration protocol | `reviewed` | Compare host/client/server roles, JSON-RPC sessions, capability negotiation, context primitives, and trust boundaries using the pinned specification repository |
+| `openclaw` | OpenClaw | self-hosted AI assistant | `reviewed` | Compare Gateway control-plane ownership, WebSocket client/node protocol, plugin channel routing, and session-scoped tool execution using fixed-commit evidence |
 
 The operational manifest now contains 52 repositories. The following entries
 were added during the foundational catalog expansion and are ready for bounded
@@ -412,7 +416,7 @@ identifiers, not claims that the projects share the same architecture.
 ### Identity, API, workflow, and application services
 
 | ID | Target | Priority | Modeling focus |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | `keycloak` | Keycloak | `reviewed` | Compare realm/tenant boundaries, identity flows, token issuance, and adapters using fixed-commit evidence |
 | `kong` | Kong Gateway | `reviewed` | Compare plugin pipeline, route/service abstraction, control/data plane, and credentials using fixed-commit evidence |
 | `apisix` | Apache APISIX | `reviewed` | Compare dynamic routing, phase-aware plugins, etcd-backed configuration, and upstream proxy boundaries using fixed-commit evidence |
@@ -422,11 +426,20 @@ identifiers, not claims that the projects share the same architecture.
 | `oauth2-proxy` | OAuth2 Proxy | `reviewed` | Compare middleware-chain authentication, provider adapters, encrypted cookie/Redis sessions, and upstream forwarding using fixed-commit evidence |
 | `authentik` | authentik | `reviewed` | Compare staged flow planning, policy aggregation, provider/application boundaries, and managed outpost reconciliation using fixed-commit evidence |
 
+### AI workflow and agent infrastructure
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- | --- |
+| `n8n` | n8n | `reviewed` | Node-graph workflow composition, execution lifecycle controls, integration/code extension, and AI agent/tool steps using fixed-commit evidence |
+| `langchain` | LangChain | `reviewed` | Provider-independent model interfaces, Runnable composition, typed tools, and the agent-harness boundary over LangGraph using fixed-commit evidence |
+| `mcp` | Model Context Protocol | `reviewed` | Host/client/server protocol roles, JSON-RPC sessions, capability negotiation, resources/prompts/tools, and trust boundaries using the pinned specification repository |
+| `openclaw` | OpenClaw | `reviewed` | Gateway control plane, WebSocket clients and nodes, plugin channel routing, and session-scoped agent/tool execution using fixed-commit evidence |
+
 
 ### Machine learning and computer vision
 
 | ID | Target | Priority | Modeling focus |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | `pytorch` | PyTorch | `P1` | Tensor/autograd graphs, eager execution, dispatch, and accelerator backends |
 | `tensorflow` | TensorFlow | `P1` | Tensor graphs, runtime devices, saved models, and distributed execution |
 | `jax` | JAX | `reviewed` | Compare functional transformations, tracing, XLA compilation, and sharding using fixed-commit evidence |
@@ -439,7 +452,7 @@ identifiers, not claims that the projects share the same architecture.
 ### Storage, data platforms, and infrastructure services
 
 | ID | Target | Priority | Modeling focus |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | `dbt` | dbt Core | `P1` | Declarative resource DAGs, ref ordering, adapter execution, materialization strategies, and tests |
 | `dagster` | Dagster | `P1` | Software-defined asset dependencies, schedules, sensors, daemon coordination, and run state |
 | `minio` | MinIO | `P1` | S3 object namespace, erasure-coded fragment layout, quorum, and background healing |

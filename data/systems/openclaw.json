@@ -1,0 +1,223 @@
+{
+  "id": "openclaw",
+  "name": "OpenClaw",
+  "version_context": "commit b19bade1d3ad29533784228947e7a729c70a0961 (2026-10-23; repository default branch)",
+  "summary": "A self-hosted AI assistant centered on one long-lived Gateway that owns sessions, routing, events, and channel connections, with WebSocket clients, channel plugins, agent tools, and device nodes around that control plane.",
+  "scope": [
+    "Gateway daemon and WebSocket protocol",
+    "chat channel plugins and routing",
+    "agent sessions, tools, and model providers",
+    "control UI, CLI, and device nodes"
+  ],
+  "features": [
+    {
+      "id": "single-gateway-control-plane",
+      "name": "Single Gateway control plane",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "The fixed README and architecture documentation describe one Gateway process as the control plane and source of truth for sessions, routing, and channel connections. Clients including the Control UI, CLI, TUI, and nodes connect to it.",
+      "benefits": [
+        "Centralizes routing, sessions, events, and channel ownership",
+        "Allows the same deployment shape to serve personal or shared use through configuration"
+      ],
+      "costs": [
+        "The Gateway becomes a concentration point for availability, authorization, and operational state",
+        "A single control plane does not imply single-process execution for every agent or tool action"
+      ],
+      "evidence_ids": [
+        "openclaw-fixed-source",
+        "openclaw-readme",
+        "openclaw-architecture"
+      ]
+    },
+    {
+      "id": "websocket-client-and-node-protocol",
+      "name": "WebSocket client and node protocol",
+      "category": "protocol-model",
+      "claim_type": "fact",
+      "description": "The fixed architecture documentation specifies JSON text frames over WebSocket, a connect handshake, request/response methods, event subscriptions, and node clients with role, capabilities, commands, and device identity.",
+      "benefits": [
+        "Provides one protocol boundary for operators, UIs, and device nodes",
+        "Supports request acknowledgements and streamed agent events"
+      ],
+      "costs": [
+        "Connection, pairing, identity, and reconnection states add protocol complexity",
+        "Device capabilities and permissions must be checked at invocation boundaries"
+      ],
+      "evidence_ids": [
+        "openclaw-architecture"
+      ]
+    },
+    {
+      "id": "plugin-channel-routing-surface",
+      "name": "Plugin channel routing surface",
+      "category": "integration-model",
+      "claim_type": "fact",
+      "description": "The fixed README describes messaging channels and plugins, and the fixed source exposes a registry facade for channel IDs, metadata, aliases, and plugin lookup. The claim is limited to the registration boundary, not the behavior of each channel implementation.",
+      "benefits": [
+        "Adds channels without changing the central Gateway contract",
+        "Provides normalized identifiers and metadata for setup and routing"
+      ],
+      "costs": [
+        "Provider-specific delivery semantics and availability vary by plugin",
+        "Plugin registration and credentials expand the trust and lifecycle surface"
+      ],
+      "evidence_ids": [
+        "openclaw-readme",
+        "openclaw-channels"
+      ]
+    },
+    {
+      "id": "session-scoped-agent-tool-execution",
+      "name": "Session-scoped agent and tool execution",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The fixed README and architecture docs place agents, tools, skills, model providers, and sessions behind the Gateway, while the security documentation warns that tools run on the host for the main session unless sandboxing is configured.",
+      "benefits": [
+        "Connects conversational sessions to model and tool capabilities",
+        "Makes sandboxing and inbound-message trust explicit operational boundaries"
+      ],
+      "costs": [
+        "Host-side tools can have broad effects if sandboxing and access policy are absent",
+        "Long-lived sessions and multi-agent routing require explicit identity and isolation policy"
+      ],
+      "evidence_ids": [
+        "openclaw-readme",
+        "openclaw-architecture",
+        "openclaw-security"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Gateway-mediated session transition system",
+      "question": "How do connect, request, streamed event, final response, and shutdown transitions coordinate one Gateway client session?",
+      "assumptions": [
+        "WebSocket text frames carry JSON protocol messages",
+        "A client connects and receives a hello/snapshot response before ordinary requests",
+        "Agent requests may be acknowledged, streamed as events, and finalized",
+        "The model abstracts internal persistence and provider execution"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "openclaw-architecture"
+      ]
+    },
+    {
+      "model": "Channel-to-session routing graph",
+      "question": "How do channel plugins, senders, sessions, and agents map inbound messages to one Gateway-owned execution context?",
+      "assumptions": [
+        "Channel plugins provide normalized identities and delivery adapters",
+        "The Gateway owns routing and session state",
+        "A route may select an agent/session according to configuration",
+        "The view does not infer that all channels have identical delivery guarantees"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "openclaw-readme",
+        "openclaw-channels",
+        "openclaw-architecture"
+      ]
+    },
+    {
+      "model": "Trusted control plane with untrusted ingress and effectful tools",
+      "question": "Which boundaries preserve operator control when inbound chat content selects agent and host-side tool behavior?",
+      "assumptions": [
+        "Inbound messages are treated as untrusted input according to the README",
+        "Tool execution occurs on the host unless sandboxing is configured",
+        "Pairing, authentication, permissions, and sandboxing are deployment/configuration controls",
+        "This is a candidate security model, not a proof of safe deployment"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "openclaw-readme",
+        "openclaw-architecture",
+        "openclaw-security"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "single-gateway-control-plane",
+      "benefits": [
+        "One operational boundary for sessions and channels"
+      ],
+      "costs": [
+        "Gateway availability and policy become central dependencies"
+      ]
+    },
+    {
+      "feature_id": "websocket-client-and-node-protocol",
+      "benefits": [
+        "Unified interactive protocol for clients and devices"
+      ],
+      "costs": [
+        "Pairing, capability, identity, and stream lifecycle increase complexity"
+      ]
+    },
+    {
+      "feature_id": "plugin-channel-routing-surface",
+      "benefits": [
+        "Extensible multi-channel reach"
+      ],
+      "costs": [
+        "Plugin/provider behavior expands operational variance"
+      ]
+    },
+    {
+      "feature_id": "session-scoped-agent-tool-execution",
+      "benefits": [
+        "Conversational context connects to agent tools"
+      ],
+      "costs": [
+        "Host-side effects require sandbox and authorization discipline"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "openclaw-fixed-source",
+      "kind": "source-code",
+      "title": "OpenClaw source at fixed commit",
+      "uri": "https://github.com/openclaw/openclaw/commit/b19bade1d3ad29533784228947e7a729c70a0961",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official OpenClaw repository revision used for this card."
+    },
+    {
+      "id": "openclaw-readme",
+      "kind": "official-doc",
+      "title": "OpenClaw README at fixed commit",
+      "uri": "https://github.com/openclaw/openclaw/blob/b19bade1d3ad29533784228947e7a729c70a0961/README.md",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official README for the self-hosted assistant, Gateway, channels, agents, tools, plugins, and security guidance."
+    },
+    {
+      "id": "openclaw-architecture",
+      "kind": "official-doc",
+      "title": "OpenClaw Gateway architecture at fixed commit",
+      "uri": "https://github.com/openclaw/openclaw/blob/b19bade1d3ad29533784228947e7a729c70a0961/docs/concepts/architecture.md",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed repository architecture documentation for Gateway ownership, WebSocket protocol, client/node roles, request/event flow, and pairing."
+    },
+    {
+      "id": "openclaw-channels",
+      "kind": "source-code",
+      "title": "OpenClaw channel registry facade",
+      "uri": "https://github.com/openclaw/openclaw/blob/b19bade1d3ad29533784228947e7a729c70a0961/src/channels/registry.ts",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed source for registered channel IDs, plugin metadata, aliases, and lookup facade."
+    },
+    {
+      "id": "openclaw-security",
+      "kind": "official-doc",
+      "title": "OpenClaw security guidance",
+      "uri": "https://docs.openclaw.ai/gateway/security",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official security documentation accessed 2026-10-24; used only for the documented host-tool, sandbox, pairing, and authorization boundary."
+    }
+  ],
+  "related_systems": [
+    "mcp",
+    "langchain"
+  ]
+}

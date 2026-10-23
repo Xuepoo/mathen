@@ -1,0 +1,220 @@
+{
+  "id": "mcp",
+  "name": "Model Context Protocol",
+  "version_context": "commit dae694f61a31f7a3ec2af3aff709e11f70f61e48d (2026-10-23; repository default branch)",
+  "summary": "An open protocol specification and TypeScript-first schema for connecting host applications to servers through JSON-RPC sessions, capability negotiation, and composable resources, prompts, and tools. This card targets the protocol/specification repository, not an MCP language SDK.",
+  "scope": [
+    "MCP protocol and schema",
+    "host/client/server roles",
+    "capability negotiation and session lifecycle",
+    "resources, prompts, tools, and transport boundary"
+  ],
+  "features": [
+    {
+      "id": "host-client-server-role-separation",
+      "name": "Host, client, and server role separation",
+      "category": "protocol-model",
+      "claim_type": "fact",
+      "description": "The official architecture documentation separates a host application from one or more clients and specialized servers. Clients attach to servers, while servers expose focused context and capabilities; the host retains orchestration and security responsibility.",
+      "benefits": [
+        "Allows one host to compose multiple specialized servers",
+        "Keeps server capabilities bounded by explicit protocol connections"
+      ],
+      "costs": [
+        "Cross-server orchestration and consent remain host responsibilities",
+        "Role separation does not itself guarantee authorization or safe tool behavior"
+      ],
+      "evidence_ids": [
+        "mcp-fixed-source",
+        "mcp-architecture",
+        "mcp-readme"
+      ]
+    },
+    {
+      "id": "json-rpc-session-and-capability-negotiation",
+      "name": "JSON-RPC session and capability negotiation",
+      "category": "protocol-model",
+      "claim_type": "fact",
+      "description": "The fixed schema defines JSON-RPC request/response/notification types, initialization fields, client and server capabilities, and feature declarations for prompts, resources, and tools. The official specification describes stateful connections and negotiated capabilities.",
+      "benefits": [
+        "Provides a typed wire contract with explicit initialization and feature discovery",
+        "Allows clients and servers to evolve through declared capabilities"
+      ],
+      "costs": [
+        "Version and capability mismatches require explicit failure handling",
+        "A negotiated capability is an interface declaration, not proof that the implementation is secure or available"
+      ],
+      "evidence_ids": [
+        "mcp-schema",
+        "mcp-specification"
+      ]
+    },
+    {
+      "id": "composable-context-primitives",
+      "name": "Composable resources, prompts, and tools",
+      "category": "interface-model",
+      "claim_type": "fact",
+      "description": "The protocol specification defines server-side resources, prompts, and tools as distinct primitives, while the schema gives each a typed protocol representation. Their separation lets a host present context, templates, and executable actions through one protocol family.",
+      "benefits": [
+        "Supports composition of read context, user-facing templates, and model-invoked actions",
+        "Keeps primitive-specific discovery and invocation semantics explicit"
+      ],
+      "costs": [
+        "Tools can reach arbitrary code or data and need user consent and authorization",
+        "Different primitives have different lifecycle, streaming, and error semantics"
+      ],
+      "evidence_ids": [
+        "mcp-specification",
+        "mcp-schema"
+      ]
+    },
+    {
+      "id": "transport-and-security-boundary",
+      "name": "Transport and security boundary",
+      "category": "protocol-boundary",
+      "claim_type": "fact",
+      "description": "The official specification uses JSON-RPC over protocol transports and places consent, authorization, privacy, and tool-safety responsibilities primarily on hosts and implementors. The card records these as protocol boundary guidance, not as automatic enforcement by the wire format.",
+      "benefits": [
+        "Makes transport and trust assumptions visible to implementors",
+        "Preserves host control over data sharing and tool invocation"
+      ],
+      "costs": [
+        "Protocol messages cannot enforce all policy or prevent malicious server behavior",
+        "Remote transports and server-initiated capabilities expand the trust boundary"
+      ],
+      "evidence_ids": [
+        "mcp-specification",
+        "mcp-architecture"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Capability-negotiated protocol state machine",
+      "question": "How do initialization, capability declaration, requests, notifications, and shutdown define a valid MCP session?",
+      "assumptions": [
+        "A session carries protocol version and capability information",
+        "Requests and notifications follow JSON-RPC message rules",
+        "Only declared capabilities are assumed available",
+        "The model abstracts transport framing and authentication"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mcp-schema",
+        "mcp-specification"
+      ]
+    },
+    {
+      "model": "Host-mediated composition of context primitives",
+      "question": "How can one host compose resources, prompts, and tools from multiple servers without treating them as the same operation?",
+      "assumptions": [
+        "Clients connect host applications to specialized servers",
+        "Resources, prompts, and tools remain distinct primitive types",
+        "The host controls context presentation and authorization decisions",
+        "The view does not claim cross-server atomicity"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mcp-architecture",
+        "mcp-specification",
+        "mcp-schema"
+      ]
+    },
+    {
+      "model": "Trust boundary for model-invoked actions",
+      "question": "Where do consent and authorization obligations enter when a model uses a server-exposed tool?",
+      "assumptions": [
+        "Tool descriptions and annotations are untrusted unless obtained from a trusted server",
+        "Hosts obtain user consent before tool invocation according to official security guidance",
+        "The protocol schema cannot prove the safety of arbitrary tool implementations"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "mcp-specification"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "host-client-server-role-separation",
+      "benefits": [
+        "Composable specialized servers under host control"
+      ],
+      "costs": [
+        "Orchestration and trust remain distributed across the host and servers"
+      ]
+    },
+    {
+      "feature_id": "json-rpc-session-and-capability-negotiation",
+      "benefits": [
+        "Typed interoperable session contract"
+      ],
+      "costs": [
+        "Version/capability negotiation adds compatibility states"
+      ]
+    },
+    {
+      "feature_id": "composable-context-primitives",
+      "benefits": [
+        "Distinct primitives for context, templates, and actions"
+      ],
+      "costs": [
+        "Multiple primitive lifecycles and security semantics must be reconciled"
+      ]
+    },
+    {
+      "feature_id": "transport-and-security-boundary",
+      "benefits": [
+        "Explicit trust and consent boundary"
+      ],
+      "costs": [
+        "Wire protocol cannot replace host authorization and operational hardening"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "mcp-fixed-source",
+      "kind": "source-code",
+      "title": "MCP specification repository at fixed commit",
+      "uri": "https://github.com/modelcontextprotocol/modelcontextprotocol/commit/dae694f61a31f7a3ec2af3aff709e11f70f61e48d",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official Model Context Protocol repository revision; this is the specification/schema project, not an SDK implementation."
+    },
+    {
+      "id": "mcp-readme",
+      "kind": "official-doc",
+      "title": "MCP repository README at fixed commit",
+      "uri": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/dae694f61a31f7a3ec2af3aff709e11f70f61e48d/README.md",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official README states that the repository contains the specification, protocol schema, and official documentation."
+    },
+    {
+      "id": "mcp-schema",
+      "kind": "source-code",
+      "title": "MCP TypeScript schema for 2025-06-18",
+      "uri": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/dae694f61a31f7a3ec2af3aff709e11f70f61e48d/schema/2025-06-18/schema.ts",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed TypeScript-first protocol schema for JSON-RPC messages, initialization, capabilities, and protocol primitives."
+    },
+    {
+      "id": "mcp-architecture",
+      "kind": "official-doc",
+      "title": "MCP architecture specification at fixed commit",
+      "uri": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/dae694f61a31f7a3ec2af3aff709e11f70f61e48d/docs/specification/draft/architecture/index.mdx",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official architecture documentation at the fixed repository revision for host/client/server roles, composability, and trust boundaries."
+    },
+    {
+      "id": "mcp-specification",
+      "kind": "official-doc",
+      "title": "MCP 2025-06-18 specification",
+      "uri": "https://modelcontextprotocol.io/specification/2025-06-18",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official protocol specification accessed 2026-10-24; current specification page describes JSON-RPC, stateful connections, capability negotiation, resources, prompts, tools, and security guidance. The fixed repository remains the source anchor."
+    }
+  ],
+  "related_systems": [
+    "lsp"
+  ]
+}

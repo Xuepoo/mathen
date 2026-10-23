@@ -1,0 +1,224 @@
+{
+  "id": "langchain",
+  "name": "LangChain",
+  "version_context": "commit 3d3b0034a94e49c8547ec38b371a31f8620850d9 (2026-10-23; repository default branch)",
+  "summary": "A Python agent and LLM application framework that composes provider-independent model interfaces, runnable units, tools, messages, and agent harnesses, with LangGraph providing lower-level orchestration.",
+  "scope": [
+    "Python core abstractions",
+    "model, message, and tool interfaces",
+    "Runnable composition and execution",
+    "agent harness and LangGraph boundary"
+  ],
+  "features": [
+    {
+      "id": "provider-independent-model-interface",
+      "name": "Provider-independent model interface",
+      "category": "interface-model",
+      "claim_type": "fact",
+      "description": "The official README describes standard interfaces for models, embeddings, vector stores, and integrations, while the fixed source contains the core message and runnable packages. The claim is about the abstraction boundary, not identical provider behavior.",
+      "benefits": [
+        "Allows model and integration choices to change behind shared application interfaces",
+        "Separates application composition from individual provider adapters"
+      ],
+      "costs": [
+        "Provider-specific capabilities and error semantics still leak through adapters",
+        "A shared interface does not guarantee equivalent latency, output, or safety properties"
+      ],
+      "evidence_ids": [
+        "langchain-fixed-source",
+        "langchain-readme",
+        "langchain-core-tree"
+      ]
+    },
+    {
+      "id": "runnable-composition-and-execution",
+      "name": "Runnable composition and execution",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The fixed Runnable source defines a unit of work that can be invoked, batched, streamed, transformed, and composed. It documents sequential RunnableSequence and concurrent RunnableParallel composition, plus configuration for tracing and runtime behavior.",
+      "benefits": [
+        "Supports reusable pipelines with sequential and concurrent composition",
+        "Makes execution and tracing configuration explicit at the runnable boundary"
+      ],
+      "costs": [
+        "Composition changes data shape and concurrency semantics",
+        "Batching and parallel execution introduce resource and ordering concerns"
+      ],
+      "evidence_ids": [
+        "langchain-runnable"
+      ]
+    },
+    {
+      "id": "typed-tool-call-boundary",
+      "name": "Typed tool-call boundary",
+      "category": "interface-model",
+      "claim_type": "fact",
+      "description": "The fixed tool source defines BaseTool as the interface for agent actions, including a name, description, input schema, invocation hooks, callbacks, metadata, and tool-error handling.",
+      "benefits": [
+        "Makes model-to-action invocation inspectable through a named schema",
+        "Allows tool errors and callbacks to be handled without collapsing the entire agent run"
+      ],
+      "costs": [
+        "Tool descriptions and schemas become part of the model-facing contract",
+        "External effects remain application-specific and may be repeated or partially completed"
+      ],
+      "evidence_ids": [
+        "langchain-tools"
+      ]
+    },
+    {
+      "id": "agent-harness-over-orchestration-layer",
+      "name": "Agent harness over orchestration layer",
+      "category": "model-definition",
+      "claim_type": "fact",
+      "description": "Current official documentation describes create_agent as a configurable harness around model, tools, prompt, and middleware, and states that LangChain agents are built on LangGraph for durable execution, persistence, and human-in-the-loop support. The LangChain repository itself remains the fixed source for the core framework boundary; the LangGraph relationship is documented ecosystem context.",
+      "benefits": [
+        "Composes agent behavior from model, tool, prompt, and middleware choices",
+        "Separates a high-level agent API from lower-level orchestration capabilities"
+      ],
+      "costs": [
+        "Middleware and orchestration state expand the control-flow surface",
+        "Durability or persistence claims depend on the LangGraph/runtime configuration and are not unconditional LangChain guarantees"
+      ],
+      "evidence_ids": [
+        "langchain-docs-overview",
+        "langchain-readme"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Runnable algebra over typed inputs and outputs",
+      "question": "How do sequential, parallel, batched, streamed, and transformed runnable executions compose?",
+      "assumptions": [
+        "A Runnable maps an input to an output or execution error",
+        "Sequence composes output-to-input edges; parallel evaluates branches over shared input",
+        "The view abstracts provider I/O and does not assume all runnables are pure"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "langchain-runnable"
+      ]
+    },
+    {
+      "model": "Agent-tool message transition system",
+      "question": "How do model messages, tool calls, tool results, and middleware produce the next agent state?",
+      "assumptions": [
+        "Tool calls are represented as named, schema-constrained actions",
+        "Tool execution may fail and return an observation according to configured handling",
+        "The view abstracts a specific model provider and does not prove policy compliance"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "langchain-tools",
+        "langchain-docs-overview"
+      ]
+    },
+    {
+      "model": "Abstraction refinement from harness to graph runtime",
+      "question": "Which properties belong to the LangChain agent harness and which require the LangGraph orchestration layer?",
+      "assumptions": [
+        "The official docs distinguish LangChain create_agent from low-level LangGraph orchestration",
+        "Durability, persistence, and human-in-the-loop are treated as documented layer capabilities, not inferred from the core Runnable alone",
+        "This is a candidate architectural relation, not a proof of implementation equivalence"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "langchain-docs-overview",
+        "langchain-readme"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "provider-independent-model-interface",
+      "benefits": [
+        "Portable model and integration contracts"
+      ],
+      "costs": [
+        "Provider differences remain at the adapter edge"
+      ]
+    },
+    {
+      "feature_id": "runnable-composition-and-execution",
+      "benefits": [
+        "Reusable sequential and concurrent execution units"
+      ],
+      "costs": [
+        "Data-shape and concurrency semantics require composition discipline"
+      ]
+    },
+    {
+      "feature_id": "typed-tool-call-boundary",
+      "benefits": [
+        "Explicit model-to-action contract and error boundary"
+      ],
+      "costs": [
+        "Schemas and external side effects remain coupled"
+      ]
+    },
+    {
+      "feature_id": "agent-harness-over-orchestration-layer",
+      "benefits": [
+        "High-level agent API with a lower-level orchestration escape hatch"
+      ],
+      "costs": [
+        "Layer selection and persistence configuration affect guarantees"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "langchain-fixed-source",
+      "kind": "source-code",
+      "title": "LangChain source at fixed commit",
+      "uri": "https://github.com/langchain-ai/langchain/commit/3d3b0034a94e49c8547ec38b371a31f8620850d9",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official LangChain Python repository revision used for this card."
+    },
+    {
+      "id": "langchain-readme",
+      "kind": "official-doc",
+      "title": "LangChain README at fixed commit",
+      "uri": "https://github.com/langchain-ai/langchain/blob/3d3b0034a94e49c8547ec38b371a31f8620850d9/README.md",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official README for agent/LLM application scope, standard interfaces, integrations, and LangGraph ecosystem boundary."
+    },
+    {
+      "id": "langchain-core-tree",
+      "kind": "source-code",
+      "title": "LangChain core package tree",
+      "uri": "https://github.com/langchain-ai/langchain/tree/3d3b0034a94e49c8547ec38b371a31f8620850d9/libs/core/langchain_core",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed source tree containing messages, runnables, and tools packages."
+    },
+    {
+      "id": "langchain-runnable",
+      "kind": "source-code",
+      "title": "LangChain Runnable base",
+      "uri": "https://github.com/langchain-ai/langchain/blob/3d3b0034a94e49c8547ec38b371a31f8620850d9/libs/core/langchain_core/runnables/base.py",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed source for Runnable invocation, batching, streaming, composition, and configuration behavior."
+    },
+    {
+      "id": "langchain-tools",
+      "kind": "source-code",
+      "title": "LangChain BaseTool",
+      "uri": "https://github.com/langchain-ai/langchain/blob/3d3b0034a94e49c8547ec38b371a31f8620850d9/libs/core/langchain_core/tools/base.py",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed source for named tool schemas, invocation, callbacks, metadata, and tool-error handling."
+    },
+    {
+      "id": "langchain-docs-overview",
+      "kind": "official-doc",
+      "title": "LangChain architecture overview",
+      "uri": "https://docs.langchain.com/oss/python/langchain/overview",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Current official documentation accessed 2026-10-24; documents create_agent, middleware, LangGraph foundation, and product-layer distinctions. Applicability to the fixed commit is limited to claims explicitly corroborated by the source."
+    }
+  ],
+  "related_systems": [
+    "langgraph",
+    "transformers"
+  ]
+}
