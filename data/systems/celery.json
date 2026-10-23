@@ -75,6 +75,28 @@
     {"feature_id": "result-backend-state", "benefits": ["Queryable asynchronous task outcomes"], "costs": ["Backend storage, cleanup, and semantic variation add operational work"]},
     {"feature_id": "routing-retry-canvas-composition", "benefits": ["Flexible task specialization and multi-step coordination"], "costs": ["More messages and distributed failure paths complicate reasoning"]}
   ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "rabbitmq",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "celery-introduction"
+      ],
+      "notes": "Celery's official introduction explicitly identifies RabbitMQ as a feature-complete message transport used by clients and workers."
+    },
+    {
+      "type": "uses",
+      "target": "redis",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "celery-introduction"
+      ],
+      "notes": "Celery's official introduction explicitly identifies Redis as a feature-complete message transport and result backend option."
+    }
+  ],
   "evidence": [
     {"id": "celery-source-commit", "kind": "source-code", "title": "Celery source at 682754c16ac9", "uri": "https://github.com/celery/celery/commit/682754c16ac9cd0768275eab5325b78b5342b0b0", "accessed": "2026-10-23", "notes": "Fixed official repository revision used as the provenance boundary for this card."},
     {"id": "celery-introduction", "kind": "official-doc", "title": "Celery Introduction", "uri": "https://docs.celeryq.dev/en/stable/getting-started/introduction.html", "accessed": "2026-10-23", "notes": "Official documentation for task queues, brokers, workers, scaling, result stores, and task protocol."},

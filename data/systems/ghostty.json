@@ -299,5 +299,18 @@
       "notes": "Official documentation for native GUI and embeddable library scope."
     }
   ],
-  "related_systems": []
+  "related_systems": [],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "gtk",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "ghostty-runtime-source",
+        "ghostty-readme"
+      ],
+      "notes": "Ghostty's pinned runtime source selects GTK as the default Linux/FreeBSD windowed runtime; this records the runtime integration, not GTK implementation ownership."
+    }
+  ]
 }

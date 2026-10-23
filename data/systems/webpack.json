@@ -177,6 +177,19 @@
       ]
     }
   ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "node",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "webpack-compiler-source",
+        "webpack-plugin-doc"
+      ],
+      "notes": "The reviewed webpack compiler/plugin surface is a JavaScript implementation and its official documentation shows Node.js core-module use in webpack configuration; a runtime-specific edge is proposed pending a direct package-runtime evidence item."
+    }
+  ],
   "evidence": [
     {
       "id": "repository-commit",

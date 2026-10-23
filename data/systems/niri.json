@@ -73,6 +73,20 @@
     {"feature_id": "output-surface-resource-lifecycle", "benefits": ["Logical workspaces can outlive individual output resources"], "costs": ["Hotplug and destruction paths require coordinated state updates"]},
     {"feature_id": "transactional-render-failure-boundary", "benefits": ["Resource failures can be reasoned about separately from layout intent"], "costs": ["Partial update and backend failure behavior is difficult to observe"]}
   ],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "wayland",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": [
+        "niri-source-commit",
+        "niri-source-tree",
+        "niri-wayland-doc"
+      ],
+      "notes": "The pinned niri entry point constructs a Wayland server display, creates a Wayland socket, and exports WAYLAND_DISPLAY for children."
+    }
+  ],
   "evidence": [
     {"id": "niri-source-commit", "kind": "source-code", "title": "niri source at e19df12cf81f", "uri": "https://github.com/niri-wm/niri/commit/e19df12cf81ffe805609fee497da1a097066ad2f", "accessed": "2026-10-23", "notes": "Fixed official niri repository revision used for compositor, layout, input, state, and rendering claims."},
     {"id": "niri-source-tree", "kind": "source-code", "title": "niri source tree at fixed revision", "uri": "https://github.com/niri-wm/niri/tree/e19df12cf81ffe805609fee497da1a097066ad2f/src", "accessed": "2026-10-23", "notes": "Pinned source tree for compositor and Smithay integration boundaries."},
