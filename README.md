@@ -213,10 +213,12 @@ The repository currently provides:
   orchestration, isolation, virtualization, networking, compilers, media, and
   backend platforms;
 - fixed-commit repository analysis with Git and GitHub archive transports;
-- deterministic reports for source structure, build surfaces, and navigation
-  signals;
+- deterministic repository observations for source structure, build surfaces,
+  and navigation signals without assigning semantic facts;
 - portable modeling bundles and a provider-neutral OpenAI-compatible LLM
   adapter;
+- a bounded composition candidate explorer whose results remain
+  `proven: false`;
 - a Cloudflare-first Hono Worker API backed by D1;
 - a Vite browser client for browsing reviewed architecture cards;
 - read-only API queries for source-card-owned feature relations and composition

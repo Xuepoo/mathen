@@ -411,8 +411,12 @@ Resolves the many-to-many relationship between features and evidence.
 Store source-card-owned directed relations between features, including the
 target system and feature, claim metadata, and optional notes. The evidence join
 table keeps relation evidence local to the source card and exposes card-local
-IDs in API projections. These tables are intentionally separate from the
-system-only graph tables.
+IDs in API projections. Migration `0005_feature_relation_evidence_integrity.sql`
+enforces that ownership in SQLite/D1, and the API omits corrupted rows rather
+than serving cross-system evidence. The authoritative importer is
+`apps/api/scripts/seed.ts`; it reads reviewed cards from `data/systems/` and
+stores relation evidence as `${source_system_id}:${evidence_id}`. These tables
+are intentionally separate from the system-only graph tables.
 
 ### `mathematical_views`
 
