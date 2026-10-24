@@ -32,6 +32,10 @@ export type FeatureRelation = {
   notes?: string;
 };
 
+export type FeatureRelationResult = FeatureRelation & {
+  source_system_id: string;
+};
+
 export type ArchitectureCard = {
   id: string;
   name: string;
@@ -80,6 +84,14 @@ export interface Backend {
     includeDrafts: boolean,
     limit: number,
   ): Promise<FeatureSearchResult[]>;
+  listFeatureRelations(
+    systemId: string | undefined,
+    featureId: string | undefined,
+    targetSystemId: string | undefined,
+    type: string | undefined,
+    includeDrafts: boolean,
+    limit: number,
+  ): Promise<FeatureRelationResult[]>;
   listCompositions(
     inputSystem: string | undefined,
     claimStatus: string | undefined,
@@ -151,6 +163,38 @@ export class FilesystemBackend implements Backend {
         })),
     );
     return results.slice(0, limit);
+  }
+
+  async listFeatureRelations(
+    systemId: string | undefined,
+    featureId: string | undefined,
+    targetSystemId: string | undefined,
+    type: string | undefined,
+    includeDrafts: boolean,
+    limit: number,
+  ): Promise<FeatureRelationResult[]> {
+    const cards = await this.loadAllCards(includeDrafts);
+    return cards
+      .flatMap((card) =>
+        (card.feature_relations ?? [])
+          .filter(
+            (relation) =>
+              (!systemId || card.id === systemId) &&
+              (!featureId || relation.source_feature_id === featureId) &&
+              (!targetSystemId || relation.target_system_id === targetSystemId) &&
+              (!type || relation.type === type),
+          )
+          .map((relation) => ({ source_system_id: card.id, ...relation })),
+      )
+      .sort(
+        (left, right) =>
+          left.source_system_id.localeCompare(right.source_system_id) ||
+          left.source_feature_id.localeCompare(right.source_feature_id) ||
+          left.target_system_id.localeCompare(right.target_system_id) ||
+          left.target_feature_id.localeCompare(right.target_feature_id) ||
+          left.type.localeCompare(right.type),
+      )
+      .slice(0, limit);
   }
 
   async getModelingBundle(systemId: string): Promise<unknown> {
@@ -270,6 +314,29 @@ export class ApiBackend implements Backend {
         feature: normalizeFeature(record.feature ?? record),
       };
     });
+  }
+
+  async listFeatureRelations(
+    systemId: string | undefined,
+    featureId: string | undefined,
+    targetSystemId: string | undefined,
+    type: string | undefined,
+    includeDrafts: boolean,
+    limit: number,
+  ): Promise<FeatureRelationResult[]> {
+    this.rejectDrafts(includeDrafts);
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (systemId) params.set("system_id", systemId);
+    if (featureId) params.set("feature_id", featureId);
+    if (targetSystemId) params.set("target_system_id", targetSystemId);
+    if (type) params.set("type", type);
+    const data = await this.request<unknown[]>(`/feature-relations?${params}`);
+    if (!Array.isArray(data)) {
+      throw new BackendError(
+        "API response for GET /api/feature-relations has invalid data",
+      );
+    }
+    return data.map((relation) => normalizeFeatureRelationResult(relation));
   }
 
   async getModelingBundle(systemId: string): Promise<unknown> {
@@ -419,6 +486,33 @@ function normalizeCompositionResult(value: unknown): CompositionSearchResult {
   };
 }
 
+function normalizeFeatureRelationResult(value: unknown): FeatureRelationResult {
+  const relation = asRecord(value);
+  return {
+    source_system_id: requiredString(
+      relation.source_system_id,
+      "source_system_id",
+      "/api/feature-relations",
+    ),
+    ...normalizeFeatureRelation(relation, "/api/feature-relations"),
+  };
+}
+
+function normalizeFeatureRelation(value: unknown, endpoint: string): FeatureRelation {
+  const relation = asRecord(value);
+  const notes = optionalString(relation.notes);
+  return {
+    source_feature_id: requiredString(relation.source_feature_id, "source_feature_id", endpoint),
+    target_system_id: requiredString(relation.target_system_id, "target_system_id", endpoint),
+    target_feature_id: requiredString(relation.target_feature_id, "target_feature_id", endpoint),
+    type: requiredString(relation.type, "type", endpoint),
+    claim_type: requiredString(relation.claim_type, "claim_type", endpoint),
+    claim_status: requiredString(relation.claim_status, "claim_status", endpoint),
+    evidence_ids: stringArray(relation.evidence_ids),
+    ...(notes ? { notes } : {}),
+  };
+}
+
 function normalizeEvidence(value: unknown): Evidence {
   const evidence = asRecord(value);
   const accessed = optionalString(evidence.accessed);
@@ -466,28 +560,9 @@ function recordArray(value: unknown): Array<Record<string, unknown>> {
 
 function relationArray(value: unknown): FeatureRelation[] {
   if (!Array.isArray(value)) return [];
-  return value.filter(isRecord).map((relation) => ({
-    source_feature_id: requiredString(
-      relation.source_feature_id,
-      "source_feature_id",
-      "/api/systems/:id",
-    ),
-    target_system_id: requiredString(
-      relation.target_system_id,
-      "target_system_id",
-      "/api/systems/:id",
-    ),
-    target_feature_id: requiredString(
-      relation.target_feature_id,
-      "target_feature_id",
-      "/api/systems/:id",
-    ),
-    type: requiredString(relation.type, "type", "/api/systems/:id"),
-    claim_type: requiredString(relation.claim_type, "claim_type", "/api/systems/:id"),
-    claim_status: requiredString(relation.claim_status, "claim_status", "/api/systems/:id"),
-    evidence_ids: stringArray(relation.evidence_ids),
-    ...(optionalString(relation.notes) ? { notes: optionalString(relation.notes) } : {}),
-  }));
+  return value
+    .filter(isRecord)
+    .map((relation) => normalizeFeatureRelation(relation, "/api/systems/:id"));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

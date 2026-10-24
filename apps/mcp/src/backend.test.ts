@@ -79,6 +79,65 @@ test("API backend calls the Hono endpoints and preserves MCP result records", as
   );
 });
 
+test("API backend lists bounded feature relations and preserves empty data", async () => {
+  const requests: string[] = [];
+  const backend = new ApiBackend("https://api.example.test", async (input) => {
+    requests.push(String(input));
+    return jsonResponse({
+      data: [
+        {
+          source_system_id: "duckdb",
+          source_feature_id: "embedded",
+          target_system_id: "base-system",
+          target_feature_id: "embedded",
+          type: "resembles",
+          claim_type: "analogy",
+          claim_status: "proposed",
+          evidence_ids: ["architecture"],
+          notes: "Bounded comparison.",
+        },
+      ],
+    });
+  });
+  const relations = await backend.listFeatureRelations(
+    "duckdb",
+    "embedded",
+    "base-system",
+    "resembles",
+    false,
+    10,
+  );
+  assert.deepEqual(relations, [
+    {
+      source_system_id: "duckdb",
+      source_feature_id: "embedded",
+      target_system_id: "base-system",
+      target_feature_id: "embedded",
+      type: "resembles",
+      claim_type: "analogy",
+      claim_status: "proposed",
+      evidence_ids: ["architecture"],
+      notes: "Bounded comparison.",
+    },
+  ]);
+  const requestUrl = new URL(requests[0] ?? "https://invalid.test");
+  assert.deepEqual([...requestUrl.searchParams.entries()], [
+    ["limit", "10"],
+    ["system_id", "duckdb"],
+    ["feature_id", "embedded"],
+    ["target_system_id", "base-system"],
+    ["type", "resembles"],
+  ]);
+
+  const emptyBackend = new ApiBackend("https://api.example.test", async () =>
+    jsonResponse({ data: [] }),
+  );
+  assert.deepEqual(
+    await emptyBackend.listFeatureRelations(undefined, undefined, undefined, undefined, false, 20),
+    [],
+  );
+});
+
 test("API backend reads modeling bundles and rejects drafts explicitly", async () => {
   const backend = new ApiBackend("https://api.example.test", async (input) => {
     assert.match(String(input), /\/api\/modeling\/duckdb$/);

@@ -65,7 +65,13 @@ const featureRelationTypes = new Set([
   "resembles",
 ]);
 const claimTypes = new Set(["fact", "inference", "hypothesis", "analogy"]);
-const claimStatuses = new Set(["proposed", "under-review", "accepted", "rejected", "deprecated"]);
+const claimStatuses = new Set([
+  "proposed",
+  "under-review",
+  "accepted",
+  "rejected",
+  "deprecated",
+]);
 
 const root = resolve(import.meta.dir, "../../../data/systems");
 const modelingRoot = resolve(import.meta.dir, "../../../data/modeling");
@@ -94,31 +100,47 @@ const statements = [
 ];
 
 await writeFile(output, `${statements.join("\n")}\n`, "utf8");
-const childProcess = Bun.spawn(["wrangler", "d1", "execute", "mathen-db", mode, "--file", output], {
-  cwd: resolve(import.meta.dir, ".."),
-  stdout: "inherit",
-  stderr: "inherit",
-});
+const childProcess = Bun.spawn(
+  ["wrangler", "d1", "execute", "mathen-db", mode, "--file", output],
+  {
+    cwd: resolve(import.meta.dir, ".."),
+    stdout: "inherit",
+    stderr: "inherit",
+  },
+);
 const exitCode = await childProcess.exited;
 if (exitCode !== 0) {
   throw new Error(`Wrangler seed command failed with exit code ${exitCode}`);
 }
 
 async function loadCards() {
-  const files = (await readdir(root)).filter((file) => file.endsWith(".json")).sort();
+  const files = (await readdir(root))
+    .filter((file) => file.endsWith(".json"))
+    .sort();
   return Promise.all(
-    files.map(async (file) => JSON.parse(await readFile(resolve(root, file), "utf8")) as Card),
+    files.map(
+      async (file) =>
+        JSON.parse(await readFile(resolve(root, file), "utf8")) as Card,
+    ),
   );
 }
 
 async function loadModelingBundles() {
-  const files = (await readdir(modelingRoot)).filter((file) => file.endsWith(".json")).sort();
+  const files = (await readdir(modelingRoot))
+    .filter((file) => file.endsWith(".json"))
+    .sort();
   return Promise.all(
     files.map(async (file) => {
-      const bundle = JSON.parse(await readFile(resolve(modelingRoot, file), "utf8")) as {
+      const bundle = JSON.parse(
+        await readFile(resolve(modelingRoot, file), "utf8"),
+      ) as {
         system?: { id?: string; commit?: string; provenance?: string };
       };
-      if (!bundle.system?.id || !bundle.system.commit || !bundle.system.provenance) {
+      if (
+        !bundle.system?.id ||
+        !bundle.system.commit ||
+        !bundle.system.provenance
+      ) {
         throw new Error(`Invalid modeling bundle: ${file}`);
       }
       return {
@@ -138,9 +160,13 @@ function toStatements(card: Card) {
       id: card.id,
       name: card.name,
       version_context: card.version_context ?? null,
-      temporal_context_json: card.temporal_context ? JSON.stringify(card.temporal_context) : null,
+      temporal_context_json: card.temporal_context
+        ? JSON.stringify(card.temporal_context)
+        : null,
       relations_json: card.relations ? JSON.stringify(card.relations) : null,
-      composition_json: card.composition ? JSON.stringify(card.composition) : null,
+      composition_json: card.composition
+        ? JSON.stringify(card.composition)
+        : null,
       summary: card.summary,
       scope_json: JSON.stringify(card.scope),
       related_systems_json: JSON.stringify(card.related_systems ?? []),
@@ -257,28 +283,44 @@ function validateFeatureRelation(card: Card, relation: FeatureRelation) {
     ["target_system_id", relation.target_system_id],
     ["target_feature_id", relation.target_feature_id],
   ] as const) {
-    if (!value) throw new Error(`Invalid feature relation in ${card.id}: ${field} is required`);
+    if (!value)
+      throw new Error(
+        `Invalid feature relation in ${card.id}: ${field} is required`,
+      );
   }
   if (!featureRelationTypes.has(relation.type)) {
     throw new Error(`Invalid feature relation in ${card.id}: type is invalid`);
   }
   if (!claimTypes.has(relation.claim_type)) {
-    throw new Error(`Invalid feature relation in ${card.id}: claim_type is invalid`);
+    throw new Error(
+      `Invalid feature relation in ${card.id}: claim_type is invalid`,
+    );
   }
   if (!claimStatuses.has(relation.claim_status)) {
-    throw new Error(`Invalid feature relation in ${card.id}: claim_status is invalid`);
+    throw new Error(
+      `Invalid feature relation in ${card.id}: claim_status is invalid`,
+    );
   }
-  if (!Array.isArray(relation.evidence_ids) || relation.evidence_ids.length === 0) {
-    throw new Error(`Invalid feature relation in ${card.id}: evidence_ids is required`);
+  if (
+    !Array.isArray(relation.evidence_ids) ||
+    relation.evidence_ids.length === 0
+  ) {
+    throw new Error(
+      `Invalid feature relation in ${card.id}: evidence_ids is required`,
+    );
   }
   const evidenceIds = new Set(card.evidence.map((evidence) => evidence.id));
   for (const evidenceId of relation.evidence_ids) {
     if (!evidenceIds.has(evidenceId)) {
-      throw new Error(`Invalid feature relation in ${card.id}: unknown evidence ${evidenceId}`);
+      throw new Error(
+        `Invalid feature relation in ${card.id}: unknown evidence ${evidenceId}`,
+      );
     }
   }
   if (relation.notes !== undefined && typeof relation.notes !== "string") {
-    throw new Error(`Invalid feature relation in ${card.id}: notes must be a string`);
+    throw new Error(
+      `Invalid feature relation in ${card.id}: notes must be a string`,
+    );
   }
 }
 
@@ -288,7 +330,9 @@ function evidenceKey(systemId: string, evidenceId: string) {
 
 function insert(table: string, values: Record<string, unknown>) {
   const columns = Object.keys(values);
-  const encoded = columns.map((column) => `${quoteIdentifier(column)}`).join(", ");
+  const encoded = columns
+    .map((column) => `${quoteIdentifier(column)}`)
+    .join(", ");
   const data = columns.map((column) => quote(values[column])).join(", ");
   return `INSERT INTO ${quoteIdentifier(table)} (${encoded}) VALUES (${data});`;
 }

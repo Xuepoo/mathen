@@ -411,18 +411,29 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
   );
   assert.match(queries[0]!, /WHERE mve\.view_id = mathematical_views\.id/);
   assert.equal(
-    body.data.nodes.some((node) => node.id === "model:state-transition-systems"),
+    body.data.nodes.some(
+      (node) => node.id === "model:state-transition-systems",
+    ),
     true,
   );
   assert.equal(body.data.edges.length, 2);
-  const temporalEdge = body.data.edges.find((edge) => edge.metadata.some((view) => view.id === 7));
+  const temporalEdge = body.data.edges.find((edge) =>
+    edge.metadata.some((view) => view.id === 7),
+  );
   assert.equal(temporalEdge?.claim_type, "mixed");
-  assert.equal(body.data.edges.find((edge) => edge.source === "other")?.claim_type, "hypothesis");
+  assert.equal(
+    body.data.edges.find((edge) => edge.source === "other")?.claim_type,
+    "hypothesis",
+  );
   assert.deepEqual(
     temporalEdge?.metadata.find((view) => view.id === 7),
     {
       id: 7,
-      key: modelViewKey("temporal", "Queue-mediated workflow state machine", "How does work move?"),
+      key: modelViewKey(
+        "temporal",
+        "Queue-mediated workflow state machine",
+        "How does work move?",
+      ),
       model: "Queue-mediated workflow state machine",
       question: "How does work move?",
       assumptions: ["workers poll"],
@@ -452,7 +463,9 @@ test("system detail view keys match graph identity across database ids", async (
             },
             all() {
               return Promise.resolve({
-                results: sql.includes("FROM mathematical_views WHERE") ? [view] : [],
+                results: sql.includes("FROM mathematical_views WHERE")
+                  ? [view]
+                  : [],
               });
             },
           };
@@ -483,7 +496,9 @@ test("system detail view keys match graph identity across database ids", async (
     modelViewKey(system.id, view.model, view.question),
   );
   assert.equal(body.data.mathematical_views[0]?.claim_type, "hypothesis");
-  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, ["architecture"]);
+  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, [
+    "architecture",
+  ]);
   assert.deepEqual(body.data.feature_relations, []);
 });
 
