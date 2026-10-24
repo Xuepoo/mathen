@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { handleMcpRequest, mcpAuthorized } from "./mcp.js";
+import { handleMcpRequest, mcpAuthorized, mcpCorsHeaders, mcpOriginAllowed } from "./mcp.js";
 
 const backend = {
   listSystems: async () => [{ id: "git" }],
@@ -38,6 +38,20 @@ describe("hosted MCP boundary", () => {
         "secret",
       ),
     ).toBe(true);
+  });
+
+  test("allows only configured browser origins and emits CORS headers", () => {
+    const allowed = new Request("https://example.test/api/mcp", {
+      headers: { Origin: "https://client.example" },
+    });
+    const denied = new Request("https://example.test/api/mcp", {
+      headers: { Origin: "https://other.example" },
+    });
+    expect(mcpOriginAllowed(allowed, "https://client.example")).toBe(true);
+    expect(mcpOriginAllowed(denied, "https://client.example")).toBe(false);
+    expect(
+      mcpCorsHeaders(allowed, "https://client.example").get("Access-Control-Allow-Origin"),
+    ).toBe("https://client.example");
   });
 
   test("serves initialize and tools/list as JSON-RPC", async () => {

@@ -12,10 +12,7 @@ import {
 } from "./index.js";
 
 test("hosted MCP uses the /api prefix on any deployment origin", async () => {
-  for (const origin of [
-    "https://preview.example.test",
-    "http://localhost:8787",
-  ]) {
+  for (const origin of ["https://preview.example.test", "http://localhost:8787"]) {
     const response = await app.request(
       `${origin}/api/mcp`,
       { method: "POST" },
@@ -134,15 +131,52 @@ test("hosted MCP requires its bearer token and stays read-only", async () => {
   assert.equal(authorized.status, 200);
   const body = (await authorized.json()) as { jsonrpc: string };
   assert.equal(body.jsonrpc, "2.0");
+  assert.match(authorized.headers.get("x-request-id") ?? "", /^[0-9a-f-]{36}$/);
+});
+
+test("hosted MCP applies configured origin and request limits", async () => {
+  const env = {
+    DB: {} as D1Database,
+    APP_ENV: "production",
+    ASSETS: {} as Fetcher,
+    API_ACCESS_TOKEN: "service-token",
+    MCP_ALLOWED_ORIGINS: "https://client.example",
+    MCP_RATE_LIMIT_PER_MINUTE: "1",
+  };
+  const request = (origin: string, ip: string) =>
+    app.request(
+      "/api/mcp",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer service-token",
+          Origin: origin,
+          "CF-Connecting-IP": ip,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+      },
+      env,
+    );
+
+  const allowed = await request("https://client.example", "mcp-test-limit");
+  assert.equal(allowed.status, 200);
+  assert.equal(allowed.headers.get("access-control-allow-origin"), "https://client.example");
+  const limited = await request("https://client.example", "mcp-test-limit");
+  assert.equal(limited.status, 429);
+  assert.equal(limited.headers.get("retry-after"), "60");
+  const denied = await request("https://other.example", "mcp-test-origin");
+  assert.equal(denied.status, 403);
+  assert.deepEqual(await denied.json(), {
+    error: "MCP origin is not allowed",
+    code: "origin_denied",
+  });
 });
 
 test("artifact route rejects traversal before accessing R2", async () => {
   assert.equal(artifactKey("/api/artifacts/%2e%2e/secret.json"), undefined);
   assert.equal(artifactKey("/api/artifacts/%5c/secret.json"), undefined);
-  assert.equal(
-    artifactKey("/api/artifacts/reports/v1.json"),
-    "reports/v1.json",
-  );
+  assert.equal(artifactKey("/api/artifacts/reports/v1.json"), "reports/v1.json");
 
   let requestedKey: string | undefined;
   const env = {
@@ -563,29 +597,18 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
   );
   assert.match(queries[0]!, /WHERE mve\.view_id = mathematical_views\.id/);
   assert.equal(
-    body.data.nodes.some(
-      (node) => node.id === "model:state-transition-systems",
-    ),
+    body.data.nodes.some((node) => node.id === "model:state-transition-systems"),
     true,
   );
   assert.equal(body.data.edges.length, 2);
-  const temporalEdge = body.data.edges.find((edge) =>
-    edge.metadata.some((view) => view.id === 7),
-  );
+  const temporalEdge = body.data.edges.find((edge) => edge.metadata.some((view) => view.id === 7));
   assert.equal(temporalEdge?.claim_type, "mixed");
-  assert.equal(
-    body.data.edges.find((edge) => edge.source === "other")?.claim_type,
-    "hypothesis",
-  );
+  assert.equal(body.data.edges.find((edge) => edge.source === "other")?.claim_type, "hypothesis");
   assert.deepEqual(
     temporalEdge?.metadata.find((view) => view.id === 7),
     {
       id: 7,
-      key: modelViewKey(
-        "temporal",
-        "Queue-mediated workflow state machine",
-        "How does work move?",
-      ),
+      key: modelViewKey("temporal", "Queue-mediated workflow state machine", "How does work move?"),
       model: "Queue-mediated workflow state machine",
       question: "How does work move?",
       assumptions: ["workers poll"],
@@ -615,9 +638,7 @@ test("system detail view keys match graph identity across database ids", async (
             },
             all() {
               return Promise.resolve({
-                results: sql.includes("FROM mathematical_views WHERE")
-                  ? [view]
-                  : [],
+                results: sql.includes("FROM mathematical_views WHERE") ? [view] : [],
               });
             },
           };
@@ -648,9 +669,7 @@ test("system detail view keys match graph identity across database ids", async (
     modelViewKey(system.id, view.model, view.question),
   );
   assert.equal(body.data.mathematical_views[0]?.claim_type, "hypothesis");
-  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, [
-    "architecture",
-  ]);
+  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, ["architecture"]);
   assert.deepEqual(body.data.feature_relations, []);
 });
 
@@ -729,18 +748,15 @@ test("GET /api/graph/layers preserves D1 document and view metadata", async () =
   };
   assert.deepEqual(Object.keys(body), ["data"]);
   assert.deepEqual(
-    body.data.nodes.find((node) => node.id === "microstructure:loop")?.metadata
-      .payload,
+    body.data.nodes.find((node) => node.id === "microstructure:loop")?.metadata.payload,
     document,
   );
   assert.equal(
-    body.data.nodes.find((node) => node.id === "property:alpha:state")?.metadata
-      .claim_status,
+    body.data.nodes.find((node) => node.id === "property:alpha:state")?.metadata.claim_status,
     "accepted",
   );
   assert.deepEqual(
-    body.data.nodes.find((node) => node.id === "math:alpha:stable-view")
-      ?.metadata.contract,
+    body.data.nodes.find((node) => node.id === "math:alpha:stable-view")?.metadata.contract,
     { family: "state_machine" },
   );
 });

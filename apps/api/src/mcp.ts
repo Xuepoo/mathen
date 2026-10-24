@@ -33,6 +33,30 @@ export function mcpAuthorized(request: Request, token?: string): boolean {
   return Boolean(expected && request.headers.get("Authorization")?.trim() === `Bearer ${expected}`);
 }
 
+export function mcpOriginAllowed(request: Request, configuredOrigins?: string): boolean {
+  const origin = request.headers.get("Origin")?.trim();
+  if (!origin) return true;
+  const allowed = configuredOrigins
+    ?.split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return Boolean(allowed?.includes("*") || allowed?.includes(origin));
+}
+
+export function mcpCorsHeaders(request: Request, configuredOrigins?: string): Headers {
+  const headers = new Headers({
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Mcp-Protocol-Version",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "600",
+    Vary: "Origin",
+  });
+  const origin = request.headers.get("Origin")?.trim();
+  if (origin && mcpOriginAllowed(request, configuredOrigins)) {
+    headers.set("Access-Control-Allow-Origin", origin);
+  }
+  return headers;
+}
+
 export async function handleMcpRequest(request: Request, backend: McpBackend): Promise<Response> {
   if (request.method !== "POST") {
     return new Response(null, { status: 405, headers: { Allow: "POST" } });
