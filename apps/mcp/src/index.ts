@@ -15,23 +15,37 @@ function jsonResult(value: unknown) {
 
 function errorResult(error: unknown) {
   return jsonResult({
-    error:
-      error instanceof BackendError ? error.message : "backend request failed",
+    error: error instanceof BackendError ? error.message : "backend request failed",
   });
 }
 
 const server = new McpServer({ name: "mathen", version: "0.0.2" });
 
 server.registerTool(
-  "list_systems",
+  "get_layered_graph",
   {
     description:
-      "List reviewed Mathen architecture cards, optionally including drafts.",
-    inputSchema: { include_drafts: z.boolean().optional() },
+      "Get the deterministic read-only projection of reviewed graph layers. Drafts and navigation categories are excluded.",
+    inputSchema: { origin: z.string().min(1).optional() },
   },
-  async ({ include_drafts }) => {
+  async ({ origin }) => {
     try {
-      return jsonResult(await backend.listSystems(include_drafts ?? false));
+      return jsonResult(await backend.getLayeredGraph(origin));
+    } catch (error) {
+      return errorResult(error);
+    }
+  },
+);
+
+server.registerTool(
+  "list_systems",
+  {
+    description: "List reviewed Mathen architecture cards.",
+    inputSchema: {},
+  },
+  async () => {
+    try {
+      return jsonResult(await backend.listSystems(false));
     } catch (error) {
       return errorResult(error);
     }
@@ -41,15 +55,12 @@ server.registerTool(
 server.registerTool(
   "get_system",
   {
-    description: "Get one reviewed or draft architecture card by ID.",
-    inputSchema: {
-      system_id: z.string().regex(/^[a-z0-9-]+$/),
-      include_drafts: z.boolean().optional(),
-    },
+    description: "Get one reviewed architecture card by ID.",
+    inputSchema: { system_id: z.string().regex(/^[a-z0-9-]+$/) },
   },
-  async ({ system_id, include_drafts }) => {
+  async ({ system_id }) => {
     try {
-      const card = await backend.getSystem(system_id, include_drafts ?? false);
+      const card = await backend.getSystem(system_id, false);
       return jsonResult(card ?? { error: `system not found: ${system_id}` });
     } catch (error) {
       return errorResult(error);
@@ -60,26 +71,18 @@ server.registerTool(
 server.registerTool(
   "search_features",
   {
-    description:
-      "Search reusable architecture features across reviewed cards and optional drafts.",
+    description: "Search reusable architecture features across reviewed cards.",
     inputSchema: {
       query: z.string().min(1),
       category: z.string().optional(),
       claim_type: z.string().optional(),
-      include_drafts: z.boolean().optional(),
       limit: z.number().int().min(1).max(50).optional(),
     },
   },
-  async ({ query, category, claim_type, include_drafts, limit }) => {
+  async ({ query, category, claim_type, limit }) => {
     try {
       return jsonResult(
-        await backend.searchFeatures(
-          query,
-          category,
-          claim_type,
-          include_drafts ?? false,
-          limit ?? 20,
-        ),
+        await backend.searchFeatures(query, category, claim_type, false, limit ?? 20),
       );
     } catch (error) {
       return errorResult(error);
@@ -90,8 +93,7 @@ server.registerTool(
 server.registerTool(
   "list_feature_relations",
   {
-    description:
-      "List evidence-backed feature relations from reviewed cards and optional drafts.",
+    description: "List evidence-backed feature relations from reviewed cards.",
     inputSchema: {
       system_id: z
         .string()
@@ -116,18 +118,10 @@ server.registerTool(
           "resembles",
         ])
         .optional(),
-      include_drafts: z.boolean().optional(),
       limit: z.number().int().min(1).max(50).optional(),
     },
   },
-  async ({
-    system_id,
-    feature_id,
-    target_system_id,
-    type,
-    include_drafts,
-    limit,
-  }) => {
+  async ({ system_id, feature_id, target_system_id, type, limit }) => {
     try {
       return jsonResult({
         data: await backend.listFeatureRelations(
@@ -135,7 +129,7 @@ server.registerTool(
           feature_id,
           target_system_id,
           type,
-          include_drafts ?? false,
+          false,
           limit ?? 20,
         ),
       });
@@ -156,27 +150,15 @@ server.registerTool(
         .regex(/^[a-z0-9-]+$/)
         .optional(),
       claim_status: z
-        .enum([
-          "proposed",
-          "under-review",
-          "accepted",
-          "rejected",
-          "deprecated",
-        ])
+        .enum(["proposed", "under-review", "accepted", "rejected", "deprecated"])
         .optional(),
-      include_drafts: z.boolean().optional(),
       limit: z.number().int().min(1).max(50).optional(),
     },
   },
-  async ({ input_system, claim_status, include_drafts, limit }) => {
+  async ({ input_system, claim_status, limit }) => {
     try {
       return jsonResult(
-        await backend.listCompositions(
-          input_system,
-          claim_status,
-          include_drafts ?? false,
-          limit ?? 20,
-        ),
+        await backend.listCompositions(input_system, claim_status, false, limit ?? 20),
       );
     } catch (error) {
       return errorResult(error);
@@ -187,8 +169,7 @@ server.registerTool(
 server.registerTool(
   "get_modeling_bundle",
   {
-    description:
-      "Get a fixed-commit evidence bundle for LLM-assisted modeling.",
+    description: "Get a fixed-commit evidence bundle for LLM-assisted modeling.",
     inputSchema: { system_id: z.string().regex(/^[a-z0-9-]+$/) },
   },
   async ({ system_id }) => {
@@ -204,8 +185,5 @@ const transport = new StdioServerTransport();
 await server.connect(transport);
 
 function resolveRepositoryRoot(): string {
-  return (
-    process.env.MATHEN_ROOT ??
-    fileURLToPath(new URL("../../..", import.meta.url))
-  );
+  return process.env.MATHEN_ROOT ?? fileURLToPath(new URL("../../..", import.meta.url));
 }

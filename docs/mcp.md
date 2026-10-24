@@ -44,11 +44,11 @@ MATHEN_API_URL=https://mathen.example.com/api bun run mcp
 ```
 
 API mode uses `GET /api/systems`, `GET /api/systems/:id`, `GET /api/features`,
-`GET /api/feature-relations`, `GET /api/compositions`, and `GET /api/modeling/:id`. Requests have a
+`GET /api/feature-relations`, `GET /api/compositions`, `GET /api/graph/layers`,
+and `GET /api/modeling/:id`. Requests have a
 10-second timeout and API
 failures are returned as concise JSON tool errors. Draft cards are
-filesystem-only, so `include_drafts: true` returns an explicit
-unsupported-backend error when `MATHEN_API_URL` is set.
+filesystem-only and are not exposed by the MCP tools or graph projection.
 
 If the deployed API has Turnstile protection enabled, configure the matching
 read-only service token with `MATHEN_API_TOKEN`. The token is sent as a Bearer
@@ -60,8 +60,9 @@ queries; system detail responses include the source card's relation array.
 
 ## Tools
 
-- `list_systems`: list reviewed cards, or include drafts explicitly;
-- `get_system`: retrieve one reviewed card or explicitly requested draft;
+- `list_systems`: list reviewed cards;
+- `get_layered_graph`: retrieve the deterministic reviewed-only layered graph;
+- `get_system`: retrieve one reviewed card;
 - `search_features`: find reusable features by text and optional category;
 - `list_feature_relations`: list source-card-owned feature relations with optional
   system, feature, target-system, and relation-type filters. Results preserve
@@ -73,7 +74,7 @@ queries; system detail responses include the source card's relation array.
 
 Tool errors are returned as JSON text so an agent can inspect missing IDs or
 files without receiving an unstructured process failure. Drafts are never
-included unless the caller sets `include_drafts: true`.
+included in MCP output.
 
 `list_feature_relations` is a read-only query. It does not infer a relation,
 select its type, change claim status, or write to a card. The same

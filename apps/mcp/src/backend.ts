@@ -1,5 +1,14 @@
 import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import {
+  buildLayeredGraphProjection,
+  type LayeredGraphProjection,
+  type ProjectionAnalogy,
+  type ProjectionEdge,
+  type ProjectionLayer,
+  type ProjectionMicrostructure,
+  type ProjectionSystem,
+} from "../../api/src/graph-projection.js";
 
 export type Evidence = {
   id: string;
@@ -19,6 +28,7 @@ export type Feature = {
   benefits?: string[];
   costs?: string[];
   evidence_ids: string[];
+  metadata?: Record<string, unknown>;
 };
 
 export type FeatureRelation = {
@@ -75,6 +85,7 @@ export type CompositionSearchResult = {
 };
 
 export interface Backend {
+  getLayeredGraph(origin?: string): Promise<LayeredGraphProjection>;
   listSystems(includeDrafts: boolean): Promise<SystemSummary[]>;
   getSystem(
     systemId: string,
@@ -113,14 +124,32 @@ async function readJson<T>(path: string): Promise<T> {
 }
 
 export class FilesystemBackend implements Backend {
+  private readonly repositoryRoot: string;
   private readonly systemsDirectory: string;
   private readonly draftsDirectory: string;
   private readonly bundlesDirectory: string;
 
   constructor(repositoryRoot: string) {
+    this.repositoryRoot = repositoryRoot;
     this.systemsDirectory = resolve(repositoryRoot, "data/systems");
     this.draftsDirectory = resolve(repositoryRoot, "data/drafts");
     this.bundlesDirectory = resolve(repositoryRoot, "data/modeling");
+  }
+
+  async getLayeredGraph(origin?: string): Promise<LayeredGraphProjection> {
+    const [cards, analogies, microstructures] = await Promise.all([
+      this.loadCards(this.systemsDirectory),
+      this.loadDocuments(resolve(this.repositoryRoot, "data/analogies")),
+      this.loadDocuments(resolve(this.repositoryRoot, "data/microstructures")),
+    ]);
+    return buildLayeredGraphProjection(
+      {
+        systems: cards.map(toProjectionSystem),
+        analogies: analogies.map(toProjectionAnalogy),
+        microstructures: microstructures.map(toProjectionMicrostructure),
+      },
+      origin,
+    );
   }
 
   async listSystems(includeDrafts: boolean): Promise<SystemSummary[]> {
@@ -264,6 +293,26 @@ export class FilesystemBackend implements Backend {
         .map((entry) => readJson<ArchitectureCard>(resolve(directory, entry))),
     );
   }
+
+  private async loadDocuments(
+    directory: string,
+  ): Promise<Array<Record<string, unknown>>> {
+    let entries;
+    try {
+      entries = await readdir(directory, { withFileTypes: true });
+    } catch (error) {
+      if (isRecord(error) && error.code === "ENOENT") return [];
+      throw error;
+    }
+    return Promise.all(
+      entries
+        .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+        .sort((left, right) => left.name.localeCompare(right.name))
+        .map((entry) =>
+          readJson<Record<string, unknown>>(resolve(directory, entry.name)),
+        ),
+    );
+  }
 }
 
 type Fetcher = (input: string | URL, init?: RequestInit) => Promise<Response>;
@@ -305,6 +354,11 @@ export class ApiBackend implements Backend {
         status: "reviewed" as const,
       };
     });
+  }
+
+  async getLayeredGraph(origin?: string): Promise<LayeredGraphProjection> {
+    const suffix = origin ? `?origin=${encodeURIComponent(origin)}` : "";
+    return normalizeLayeredGraph(await this.request(`/graph/layers${suffix}`));
   }
 
   async getSystem(
@@ -522,6 +576,53 @@ function normalizeCard(value: unknown): ArchitectureCard {
   };
 }
 
+function toProjectionSystem(card: ArchitectureCard): ProjectionSystem {
+  return {
+    id: card.id,
+    name: card.name,
+    scope: card.scope,
+    features: card.features,
+    mathematical_views: card.mathematical_views.flatMap((view, index) => [
+      {
+        id:
+          typeof view.id === "string" || typeof view.id === "number"
+            ? view.id
+            : index,
+        model:
+          typeof view.model === "string" ? view.model : "Unclassified model",
+        question: typeof view.question === "string" ? view.question : "",
+        assumptions: stringArray(view.assumptions),
+        claim_type:
+          typeof view.claim_type === "string" ? view.claim_type : "inference",
+        claim_status: optionalString(view.claim_status),
+        evidence_ids: stringArray(view.evidence_ids),
+        metadata: optionalRecord(view.metadata),
+      },
+    ]),
+    composition: card.composition ?? null,
+  };
+}
+
+function toProjectionAnalogy(
+  document: Record<string, unknown>,
+): ProjectionAnalogy {
+  return {
+    id: requiredString(document.id, "id", "filesystem analogy"),
+    name: requiredString(document.name, "name", "filesystem analogy"),
+    document,
+  };
+}
+
+function toProjectionMicrostructure(
+  document: Record<string, unknown>,
+): ProjectionMicrostructure {
+  return {
+    id: requiredString(document.id, "id", "filesystem microstructure"),
+    name: requiredString(document.name, "name", "filesystem microstructure"),
+    document,
+  };
+}
+
 function normalizeFeature(value: unknown): Feature {
   const feature = asRecord(value);
   return {
@@ -541,6 +642,7 @@ function normalizeFeature(value: unknown): Feature {
     benefits: stringArray(feature.benefits),
     costs: stringArray(feature.costs),
     evidence_ids: stringArray(feature.evidence_ids),
+    metadata: optionalRecord(feature.metadata),
   };
 }
 
@@ -646,6 +748,81 @@ function requiredString(
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
+}
+
+function normalizeLayeredGraph(value: unknown): LayeredGraphProjection {
+  const graph = asRecord(value);
+  if (
+    graph.schema_version !== "1.0" ||
+    !Array.isArray(graph.nodes) ||
+    !Array.isArray(graph.edges)
+  ) {
+    throw new BackendError(
+      "API response for GET /api/graph/layers has invalid data",
+    );
+  }
+  return {
+    schema_version: "1.0",
+    ...(typeof graph.origin === "string" ? { origin: graph.origin } : {}),
+    nodes: graph.nodes.filter(isRecord).map((node) => ({
+      id: requiredString(node.id, "id", "/api/graph/layers"),
+      layer: projectionLayer(node.layer),
+      kind: requiredString(node.kind, "kind", "/api/graph/layers"),
+      label: requiredString(node.label, "label", "/api/graph/layers"),
+      metadata: optionalRecord(node.metadata) ?? {},
+    })),
+    edges: graph.edges.filter(isRecord).flatMap(normalizeProjectionEdge),
+  };
+}
+
+function projectionLayer(value: unknown): ProjectionLayer {
+  const layer = requiredString(value, "layer", "/api/graph/layers");
+  const allowed: ProjectionLayer[] = [
+    "system",
+    "property",
+    "microstructure",
+    "mathematical-contract",
+    "composition",
+    "component",
+    "property-effect",
+    "relation",
+    "analogy",
+  ];
+  if (!allowed.includes(layer as ProjectionLayer)) {
+    throw new BackendError(
+      `API response for GET /api/graph/layers has invalid layer`,
+    );
+  }
+  return layer as ProjectionLayer;
+}
+
+function normalizeProjectionEdge(
+  value: Record<string, unknown>,
+): ProjectionEdge[] {
+  const source = optionalString(value.source);
+  const target = optionalString(value.target);
+  const type = optionalString(value.type);
+  if (!source || !target || !type) return [];
+  return [
+    {
+      source,
+      target,
+      type,
+      ...(optionalString(value.claim_type)
+        ? { claim_type: optionalString(value.claim_type) }
+        : {}),
+      ...(optionalString(value.claim_status)
+        ? { claim_status: optionalString(value.claim_status) }
+        : {}),
+      evidence_ids: stringArray(value.evidence_ids),
+      ...(optionalString(value.notes)
+        ? { notes: optionalString(value.notes) }
+        : {}),
+      ...(optionalRecord(value.metadata)
+        ? { metadata: optionalRecord(value.metadata) }
+        : {}),
+    },
+  ];
 }
 
 function stringArray(value: unknown): string[] {

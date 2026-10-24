@@ -1,9 +1,5 @@
 import { Hono } from "hono";
-import {
-  buildModelGraph,
-  modelViewKey,
-  type ModelViewRow,
-} from "./model-graph.js";
+import { buildModelGraph, modelViewKey, type ModelViewRow } from "./model-graph.js";
 import {
   accessCookieName,
   accessProtectionEnabled,
@@ -18,6 +14,12 @@ import {
   turnstileHostname,
 } from "./access.js";
 import { createMcpApiBackend, handleMcpRequest, mcpAuthorized } from "./mcp.js";
+import {
+  buildLayeredGraphProjection,
+  type ProjectionAnalogy,
+  type ProjectionMicrostructure,
+  type ProjectionSystem,
+} from "./graph-projection.js";
 
 type Bindings = {
   DB: D1Database;
@@ -53,6 +55,7 @@ type FeatureRow = {
   benefits_json: string;
   costs_json: string;
   evidence_ids_json: string;
+  metadata_json?: string;
 };
 
 type EvidenceRow = {
@@ -77,16 +80,26 @@ type FeatureRelationRow = {
   evidence_ids_json: string;
 };
 
-type GraphSystem = Pick<
-  SystemRow,
-  "id" | "name" | "related_systems_json" | "relations_json"
->;
+type GraphSystem = Pick<SystemRow, "id" | "name" | "related_systems_json" | "relations_json">;
 
-type CompositionSystem = Pick<
-  SystemRow,
-  "id" | "name" | "version_context" | "composition_json"
-> & {
+type CompositionSystem = Pick<SystemRow, "id" | "name" | "version_context" | "composition_json"> & {
   evidence_json?: string | null;
+};
+
+type GraphDocumentRow = {
+  id: string;
+  kind: "microstructure" | "analogy";
+  name: string;
+  document_json: string;
+};
+
+type GraphLayerSystemRow = {
+  id: string;
+  name: string;
+  scope_json: string;
+  composition_json: string | null;
+  features_json: string;
+  views_json: string;
 };
 
 export type GraphEdge = {
@@ -125,14 +138,8 @@ app.use("*", async (c, next) => {
     });
   }
   if (accessProtectionEnabled(c.env)) {
-    const cookie = parseCookie(
-      c.req.header("Cookie") ?? null,
-      accessCookieName(),
-    );
-    if (
-      !hasServiceToken(c.req.raw, c.env) &&
-      !(await verifyAccessCookie(cookie, c.env))
-    ) {
+    const cookie = parseCookie(c.req.header("Cookie") ?? null, accessCookieName());
+    if (!hasServiceToken(c.req.raw, c.env) && !(await verifyAccessCookie(cookie, c.env))) {
       return c.json(
         {
           error: "Turnstile access verification required",
@@ -151,13 +158,9 @@ app.get("/health", (c) =>
 
 app.all("/mcp", async (c) => {
   if (!mcpAuthorized(c.req.raw, c.env.API_ACCESS_TOKEN)) {
-    return c.json(
-      { error: "MCP bearer authentication required", code: "unauthorized" },
-      401,
-      {
-        "WWW-Authenticate": "Bearer",
-      },
-    );
+    return c.json({ error: "MCP bearer authentication required", code: "unauthorized" }, 401, {
+      "WWW-Authenticate": "Bearer",
+    });
   }
   const apiToken = c.env.API_ACCESS_TOKEN?.trim();
   const backend = createMcpApiBackend(async (path) => {
@@ -180,8 +183,7 @@ app.all("/mcp", async (c) => {
 app.get("/artifacts/*", async (c) => {
   const key = artifactKey(c.req.path);
   if (!key) return c.json({ error: "Invalid artifact key" }, 400);
-  if (!c.env.ARTIFACTS)
-    return c.json({ error: "Artifact storage is not configured" }, 503);
+  if (!c.env.ARTIFACTS) return c.json({ error: "Artifact storage is not configured" }, 503);
   const object = await c.env.ARTIFACTS.get(key);
   if (!object) return c.json({ error: "Artifact not found" }, 404);
   const headers = new Headers();
@@ -232,18 +234,13 @@ app.get("/access/config", async (c) =>
 );
 
 app.post("/access/turnstile", async (c) => {
-  if (!accessProtectionEnabled(c.env))
-    return c.json({ data: { enabled: false } });
+  if (!accessProtectionEnabled(c.env)) return c.json({ data: { enabled: false } });
   const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
   const limit = accessRateLimiter.consume(`turnstile:${ip}`, 10, 10 * 60_000);
   if (!limit.allowed) {
-    return c.json(
-      { error: "Too many verification attempts", code: "rate_limited" },
-      429,
-      {
-        "Retry-After": String(limit.retryAfterSeconds),
-      },
-    );
+    return c.json({ error: "Too many verification attempts", code: "rate_limited" }, 429, {
+      "Retry-After": String(limit.retryAfterSeconds),
+    });
   }
   let token: string | undefined;
   try {
@@ -253,10 +250,7 @@ app.post("/access/turnstile", async (c) => {
     token = undefined;
   }
   if (!token || token.length > 2_048) {
-    return c.json(
-      { error: "A Turnstile token is required", code: "invalid_token" },
-      400,
-    );
+    return c.json({ error: "A Turnstile token is required", code: "invalid_token" }, 400);
   }
   let verified = false;
   try {
@@ -276,31 +270,19 @@ app.post("/access/turnstile", async (c) => {
     );
   }
   if (!verified) {
-    return c.json(
-      { error: "Turnstile verification failed", code: "verification_failed" },
-      403,
-    );
+    return c.json({ error: "Turnstile verification failed", code: "verification_failed" }, 403);
   }
   const cookie = await createAccessCookie(c.env);
   return c.json({ data: { enabled: true, expires_in: cookie.maxAge } }, 200, {
     "Cache-Control": "no-store",
-    "Set-Cookie": accessSetCookie(
-      cookie.value,
-      cookie.maxAge,
-      c.env.APP_ENV === "production",
-    ),
+    "Set-Cookie": accessSetCookie(cookie.value, cookie.maxAge, c.env.APP_ENV === "production"),
   });
 });
 
 app.get("/systems", async (c) => {
   const query = c.req.query("query")?.trim() ?? "";
   const limit = boundedInteger(c.req.query("limit"), 50, 1, 100);
-  const offset = boundedInteger(
-    c.req.query("offset"),
-    0,
-    0,
-    Number.MAX_SAFE_INTEGER,
-  );
+  const offset = boundedInteger(c.req.query("offset"), 0, 0, Number.MAX_SAFE_INTEGER);
   const pattern = `%${query}%`;
   const result = await c.env.DB.prepare(
     `SELECT id, name, version_context, summary, scope_json, related_systems_json,
@@ -329,10 +311,10 @@ app.get("/systems/:id", async (c) => {
     return c.json({ error: "System not found" }, 404);
   }
 
-  const [features, views, tradeOffs, evidence, featureRelations] =
-    await Promise.all([
-      c.env.DB.prepare(
-        `SELECT id, name, category, claim_type, description, benefits_json, costs_json
+  const [features, views, tradeOffs, evidence, featureRelations] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT id, name, category, claim_type, description, benefits_json, costs_json,
+                metadata_json
               , COALESCE((
                 SELECT json_group_array(substr(fe.evidence_id, length(fe.system_id) + 2))
                 FROM feature_evidence fe
@@ -340,11 +322,11 @@ app.get("/systems/:id", async (c) => {
                 ORDER BY fe.evidence_id
               ), '[]') AS evidence_ids_json
        FROM features WHERE system_id = ?1 ORDER BY category, name`,
-      )
-        .bind(system.id)
-        .all<FeatureRow>(),
-      c.env.DB.prepare(
-        `SELECT id, model, question, assumptions_json, claim_type,
+    )
+      .bind(system.id)
+      .all<FeatureRow>(),
+    c.env.DB.prepare(
+      `SELECT id, model, question, assumptions_json, claim_type, metadata_json,
               COALESCE((
                 SELECT json_group_array(substr(mve.evidence_id, length(mathematical_views.system_id) + 2))
                 FROM mathematical_view_evidence mve
@@ -352,37 +334,38 @@ app.get("/systems/:id", async (c) => {
                 ORDER BY mve.evidence_id
               ), '[]') AS evidence_ids_json
        FROM mathematical_views WHERE system_id = ?1 ORDER BY id`,
-      )
-        .bind(system.id)
-        .all<{
-          id: number;
-          model: string;
-          question: string;
-          assumptions_json: string;
-          claim_type: string;
-          evidence_ids_json: string;
-        }>(),
-      c.env.DB.prepare(
-        `SELECT id, feature_id, benefits_json, costs_json
+    )
+      .bind(system.id)
+      .all<{
+        id: number;
+        model: string;
+        question: string;
+        assumptions_json: string;
+        claim_type: string;
+        metadata_json: string;
+        evidence_ids_json: string;
+      }>(),
+    c.env.DB.prepare(
+      `SELECT id, feature_id, benefits_json, costs_json
        FROM trade_offs WHERE system_id = ?1 ORDER BY id`,
-      )
-        .bind(system.id)
-        .all<{
-          id: number;
-          feature_id: string;
-          benefits_json: string;
-          costs_json: string;
-        }>(),
-      c.env.DB.prepare(
-        `SELECT substr(id, length(system_id) + 2) AS id, kind, title, uri, accessed, notes
+    )
+      .bind(system.id)
+      .all<{
+        id: number;
+        feature_id: string;
+        benefits_json: string;
+        costs_json: string;
+      }>(),
+    c.env.DB.prepare(
+      `SELECT substr(id, length(system_id) + 2) AS id, kind, title, uri, accessed, notes
        FROM evidence WHERE system_id = ?1 ORDER BY id`,
-      )
-        .bind(system.id)
-        .all<EvidenceRow>(),
-      c.env.DB.prepare(featureRelationQuery("source_system_id = ?1"))
-        .bind(system.id)
-        .all<FeatureRelationRow>(),
-    ]);
+    )
+      .bind(system.id)
+      .all<EvidenceRow>(),
+    c.env.DB.prepare(featureRelationQuery("source_system_id = ?1"))
+      .bind(system.id)
+      .all<FeatureRelationRow>(),
+  ]);
 
   return c.json({
     data: {
@@ -395,6 +378,7 @@ app.get("/systems/:id", async (c) => {
         question: view.question,
         assumptions: parseJson<string[]>(view.assumptions_json, []),
         claim_type: view.claim_type,
+        metadata: parseJson<Record<string, unknown>>(view.metadata_json, {}),
         evidence_ids: parseJsonArray<string>(view.evidence_ids_json),
       })),
       trade_offs: tradeOffs.results.map((tradeOff) => ({
@@ -427,9 +411,7 @@ app.get("/feature-relations", async (c) => {
   const limit = boundedInteger(c.req.query("limit"), 100, 1, 200);
   bindings.push(limit);
   const where = filters.length ? filters.join(" AND ") : "1 = 1";
-  const result = await c.env.DB.prepare(
-    featureRelationQuery(where, `LIMIT ?${bindings.length}`),
-  )
+  const result = await c.env.DB.prepare(featureRelationQuery(where, `LIMIT ?${bindings.length}`))
     .bind(...bindings)
     .all<FeatureRelationRow>();
 
@@ -448,7 +430,7 @@ app.get("/features", async (c) => {
   const limit = boundedInteger(c.req.query("limit"), 100, 1, 200);
   const result = await c.env.DB.prepare(
     `SELECT f.id, f.system_id, s.name AS system_name, f.name, f.category,
-            f.claim_type, f.description, f.benefits_json, f.costs_json,
+            f.claim_type, f.description, f.benefits_json, f.costs_json, f.metadata_json,
             COALESCE((
               SELECT json_group_array(substr(fe.evidence_id, length(fe.system_id) + 2))
               FROM feature_evidence fe
@@ -518,12 +500,8 @@ app.get("/modeling/:id", async (c) => {
     }>();
 
   if (!row) return c.json({ error: "Modeling bundle not found" }, 404);
-  const bundle = parseJson<Record<string, unknown> | null>(
-    row.bundle_json,
-    null,
-  );
-  if (!bundle)
-    return c.json({ error: "Stored modeling bundle is invalid" }, 500);
+  const bundle = parseJson<Record<string, unknown> | null>(row.bundle_json, null);
+  if (!bundle) return c.json({ error: "Stored modeling bundle is invalid" }, 500);
   return c.json({ data: bundle });
 });
 
@@ -533,6 +511,54 @@ app.get("/graph", async (c) => {
   ).all<GraphSystem>();
 
   return c.json(buildGraph(systems.results));
+});
+
+app.get("/graph/layers", async (c) => {
+  const origin = c.req.query("origin")?.trim() || undefined;
+  const [systems, documents] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT s.id, s.name, s.scope_json, s.composition_json,
+       COALESCE((SELECT json_group_array(json_object(
+         'id', f.id, 'name', f.name, 'category', f.category,
+         'claim_type', f.claim_type, 'description', f.description,
+         'evidence_ids', COALESCE((SELECT json_group_array(
+           substr(fe.evidence_id, length(fe.system_id) + 2)
+         ) FROM feature_evidence fe WHERE fe.system_id = f.system_id
+           AND fe.feature_id = f.id ORDER BY fe.evidence_id), '[]'),
+         'metadata_json', f.metadata_json
+       )) FROM features f WHERE f.system_id = s.id ORDER BY f.id), '[]') AS features_json,
+       COALESCE((SELECT json_group_array(json_object(
+         'id', v.id, 'model', v.model, 'question', v.question,
+         'assumptions', v.assumptions_json, 'claim_type', v.claim_type,
+         'evidence_ids', COALESCE((SELECT json_group_array(
+           substr(mve.evidence_id, length(v.system_id) + 2)
+         ) FROM mathematical_view_evidence mve WHERE mve.view_id = v.id
+           ORDER BY mve.evidence_id), '[]'),
+         'metadata_json', v.metadata_json
+       )) FROM mathematical_views v WHERE v.system_id = s.id ORDER BY v.id), '[]') AS views_json
+       FROM systems s ORDER BY s.id`,
+    ).all<GraphLayerSystemRow>(),
+    c.env.DB.prepare(
+      "SELECT id, kind, name, document_json FROM graph_documents ORDER BY kind, id",
+    ).all<GraphDocumentRow>(),
+  ]);
+  const documentsFor = (kind: GraphDocumentRow["kind"]) =>
+    documents.results
+      .filter((row) => row.kind === kind)
+      .flatMap((row) => {
+        const document = parseJson<Record<string, unknown> | null>(row.document_json, null);
+        return document ? [{ id: row.id, name: row.name, document }] : [];
+      });
+  return c.json({
+    data: buildLayeredGraphProjection(
+      {
+        systems: systems.results.map(toProjectionSystem),
+        microstructures: documentsFor("microstructure") as ProjectionMicrostructure[],
+        analogies: documentsFor("analogy") as ProjectionAnalogy[],
+      },
+      origin,
+    ),
+  });
 });
 
 app.get("/graph/models", async (c) => {
@@ -588,15 +614,9 @@ export function buildCompositions(
 ): CompositionResult[] {
   return systems
     .flatMap((system) => {
-      const composition = parseJson<Record<string, unknown> | null>(
-        system.composition_json,
-        null,
-      );
+      const composition = parseJson<Record<string, unknown> | null>(system.composition_json, null);
       if (!isCompositionRecord(composition)) return [];
-      if (
-        inputSystem &&
-        !composition.inputs.some((input) => input.system_id === inputSystem)
-      ) {
+      if (inputSystem && !composition.inputs.some((input) => input.system_id === inputSystem)) {
         return [];
       }
       if (claimStatus && composition.claim_status !== claimStatus) return [];
@@ -619,9 +639,10 @@ function compositionEvidence(
   composition: { evidence_ids: string[] },
 ): EvidenceRow[] {
   const byId = new Map(
-    parseJsonArray<EvidenceRow>(system.evidence_json ?? null).map(
-      (evidence) => [evidence.id, evidence],
-    ),
+    parseJsonArray<EvidenceRow>(system.evidence_json ?? null).map((evidence) => [
+      evidence.id,
+      evidence,
+    ]),
   );
   return composition.evidence_ids.flatMap((id) => {
     const evidence = byId.get(id);
@@ -629,13 +650,8 @@ function compositionEvidence(
   });
 }
 
-function typedRelationEdges(
-  system: GraphSystem,
-  knownSystemIds: Set<string>,
-): GraphEdge[] {
-  const relations = parseJsonArray<Record<string, unknown>>(
-    system.relations_json,
-  ).filter(isRecord);
+function typedRelationEdges(system: GraphSystem, knownSystemIds: Set<string>): GraphEdge[] {
+  const relations = parseJsonArray<Record<string, unknown>>(system.relations_json).filter(isRecord);
   return relations.flatMap((relation) => {
     const target = stringValue(relation.target);
     const type = stringValue(relation.type);
@@ -654,18 +670,13 @@ function typedRelationEdges(
   });
 }
 
-function legacyRelationEdges(
-  system: GraphSystem,
-  knownSystemIds: Set<string>,
-): GraphEdge[] {
-  return parseJsonArray<string>(system.related_systems_json).flatMap(
-    (target) => {
-      const normalizedTarget = stringValue(target);
-      return normalizedTarget && knownSystemIds.has(normalizedTarget)
-        ? [{ source: system.id, target: normalizedTarget, type: "related" }]
-        : [];
-    },
-  );
+function legacyRelationEdges(system: GraphSystem, knownSystemIds: Set<string>): GraphEdge[] {
+  return parseJsonArray<string>(system.related_systems_json).flatMap((target) => {
+    const normalizedTarget = stringValue(target);
+    return normalizedTarget && knownSystemIds.has(normalizedTarget)
+      ? [{ source: system.id, target: normalizedTarget, type: "related" }]
+      : [];
+  });
 }
 
 function serializeSystem(system: SystemRow) {
@@ -676,23 +687,15 @@ function serializeSystem(system: SystemRow) {
     summary: system.summary,
     scope: parseJson<string[]>(system.scope_json, []),
     related_systems: parseJson<string[]>(system.related_systems_json, []),
-    temporal_context: parseJson<Record<string, unknown> | null>(
-      system.temporal_context_json,
-      null,
-    ),
-    relations: parseJson<Array<Record<string, unknown>>>(
-      system.relations_json,
-      [],
-    ),
-    composition: parseJson<Record<string, unknown> | null>(
-      system.composition_json,
-      null,
-    ),
+    temporal_context: parseJson<Record<string, unknown> | null>(system.temporal_context_json, null),
+    relations: parseJson<Array<Record<string, unknown>>>(system.relations_json, []),
+    composition: parseJson<Record<string, unknown> | null>(system.composition_json, null),
     source_path: system.source_path,
   };
 }
 
 export function serializeFeature(feature: FeatureRow) {
+  const metadata = parseJson<Record<string, unknown>>(feature.metadata_json ?? null, {});
   return {
     id: feature.id,
     name: feature.name,
@@ -702,6 +705,7 @@ export function serializeFeature(feature: FeatureRow) {
     benefits: parseJson<string[]>(feature.benefits_json, []),
     costs: parseJson<string[]>(feature.costs_json, []),
     evidence_ids: parseJsonArray<string>(feature.evidence_ids_json),
+    ...(Object.keys(metadata).length ? { metadata } : {}),
   };
 }
 
@@ -751,8 +755,10 @@ export function serializeMathematicalView(view: {
   question: string;
   assumptions_json: string;
   claim_type: string;
+  metadata_json?: string;
   evidence_ids_json: string;
 }) {
+  const metadata = parseJson<Record<string, unknown>>(view.metadata_json ?? null, {});
   return {
     id: view.id,
     model: view.model,
@@ -760,6 +766,7 @@ export function serializeMathematicalView(view: {
     assumptions: parseJson<string[]>(view.assumptions_json, []),
     claim_type: view.claim_type,
     evidence_ids: parseJsonArray<string>(view.evidence_ids_json),
+    ...(Object.keys(metadata).length ? { metadata } : {}),
   };
 }
 
@@ -777,13 +784,70 @@ function parseJsonArray<T>(value: string | null): T[] {
   return Array.isArray(parsed) ? (parsed as T[]) : [];
 }
 
+function toProjectionSystem(row: GraphLayerSystemRow): ProjectionSystem {
+  return {
+    id: row.id,
+    name: row.name,
+    scope: parseJson<string[]>(row.scope_json, []),
+    features: parseJsonArray<Record<string, unknown>>(row.features_json).flatMap((feature) => {
+      if (!isRecord(feature) || typeof feature.id !== "string" || typeof feature.name !== "string")
+        return [];
+      const metadata = parseJson<Record<string, unknown>>(
+        typeof feature.metadata_json === "string" ? feature.metadata_json : null,
+        {},
+      );
+      return [
+        {
+          id: feature.id,
+          name: feature.name,
+          category: stringValue(feature.category) ?? "unclassified",
+          claim_type: stringValue(feature.claim_type) ?? "inference",
+          claim_status: stringValue(metadata.claim_status),
+          description: stringValue(feature.description) ?? "",
+          evidence_ids: parseStringArray(feature.evidence_ids),
+          metadata,
+        },
+      ];
+    }),
+    mathematical_views: parseJsonArray<Record<string, unknown>>(row.views_json).flatMap((view) => {
+      if (!isRecord(view) || (typeof view.id !== "string" && typeof view.id !== "number"))
+        return [];
+      const metadata = parseJson<Record<string, unknown>>(
+        typeof view.metadata_json === "string" ? view.metadata_json : null,
+        {},
+      );
+      return [
+        {
+          id: view.id,
+          model: stringValue(view.model) ?? "Unclassified model",
+          question: stringValue(view.question) ?? "",
+          assumptions: parseStringArray(view.assumptions),
+          claim_type: stringValue(view.claim_type) ?? "inference",
+          claim_status: stringValue(metadata.claim_status),
+          evidence_ids: parseStringArray(view.evidence_ids),
+          metadata,
+        },
+      ];
+    }),
+    composition: parseJson<Record<string, unknown> | null>(row.composition_json, null),
+  };
+}
+
+function parseStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  return typeof value === "string"
+    ? parseJson<string[]>(value, []).filter((item): item is string => typeof item === "string")
+    : [];
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isCompositionRecord(
-  value: Record<string, unknown> | null,
-): value is Record<string, unknown> & {
+function isCompositionRecord(value: Record<string, unknown> | null): value is Record<
+  string,
+  unknown
+> & {
   inputs: Array<Record<string, unknown> & { system_id: string }>;
   claim_status: string;
   constraints: unknown[];
@@ -799,15 +863,11 @@ function isCompositionRecord(
   if (
     !Array.isArray(value.evidence_ids) ||
     value.evidence_ids.length === 0 ||
-    !value.evidence_ids.every(
-      (item) => typeof item === "string" && item.length > 0,
-    )
+    !value.evidence_ids.every((item) => typeof item === "string" && item.length > 0)
   ) {
     return false;
   }
-  return value.inputs.every(
-    (input) => isRecord(input) && Boolean(stringValue(input.system_id)),
-  );
+  return value.inputs.every((input) => isRecord(input) && Boolean(stringValue(input.system_id)));
 }
 
 function stringValue(value: unknown): string | undefined {
@@ -822,12 +882,7 @@ function stringArrayValue(value: unknown): string[] | undefined {
   return values.length ? values : undefined;
 }
 
-function boundedInteger(
-  value: string | undefined,
-  fallback: number,
-  min: number,
-  max: number,
-) {
+function boundedInteger(value: string | undefined, fallback: number, min: number, max: number) {
   const parsed = Number.parseInt(value ?? "", 10);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(Math.max(parsed, min), max);

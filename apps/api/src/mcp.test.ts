@@ -8,6 +8,7 @@ const backend = {
   listFeatureRelations: async () => [],
   listCompositions: async () => [],
   getModelingBundle: async (id: string) => ({ id }),
+  getLayeredGraph: async () => ({ nodes: [], edges: [] }),
 };
 
 function jsonRequest(body: unknown) {
@@ -55,7 +56,35 @@ describe("hosted MCP boundary", () => {
       backend,
     );
     const listed = (await tools.json()) as { result: { tools: unknown[] } };
-    expect(listed.result.tools).toHaveLength(6);
+    expect(listed.result.tools).toHaveLength(7);
+    expect(
+      (listed.result.tools as Array<{ name: string }>).some(
+        (tool) => tool.name === "get_layered_graph",
+      ),
+    ).toBe(true);
+  });
+
+  test("calls the reviewed layered graph projection with an origin", async () => {
+    const response = await handleMcpRequest(
+      jsonRequest({
+        jsonrpc: "2.0",
+        id: 4,
+        method: "tools/call",
+        params: {
+          name: "get_layered_graph",
+          arguments: { origin: "local-analysis" },
+        },
+      }),
+      backend,
+    );
+    expect(response.status).toBe(200);
+    const result = (await response.json()) as {
+      result: { content: Array<{ text: string }> };
+    };
+    expect(JSON.parse(result.result.content[0]!.text)).toEqual({
+      nodes: [],
+      edges: [],
+    });
   });
 
   test("calls reviewed tools without draft arguments", async () => {

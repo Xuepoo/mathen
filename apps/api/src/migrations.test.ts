@@ -12,6 +12,7 @@ test("feature relation evidence rejects evidence owned by another system", async
     "0003_temporal_composition_contract.sql",
     "0004_feature_relations.sql",
     "0005_feature_relation_evidence_integrity.sql",
+    "0006_graph_projection_metadata.sql",
   ]) {
     database.exec(
       await readFile(
@@ -56,5 +57,39 @@ test("feature relation evidence rejects evidence owned by another system", async
     /feature relation evidence must belong to relation source system/,
   );
 
+  database.close();
+});
+
+test("graph projection migration stores reviewed document metadata", async () => {
+  const database = new Database(":memory:");
+  for (const migration of [
+    "0001_initial.sql",
+    "0002_modeling_bundles.sql",
+    "0003_temporal_composition_contract.sql",
+    "0004_feature_relations.sql",
+    "0005_feature_relation_evidence_integrity.sql",
+    "0006_graph_projection_metadata.sql",
+  ]) {
+    database.exec(
+      await readFile(
+        resolve(import.meta.dir, "../migrations", migration),
+        "utf8",
+      ),
+    );
+  }
+  database.exec(
+    `INSERT INTO graph_documents (id, kind, name, document_json, source_path)
+     VALUES ('analogy', 'analogy', 'Analogy', '{"claim_type":"analogy"}', 'data/analogies/analogy.json');
+     INSERT INTO features (system_id, id, name, category, claim_type, description, benefits_json, costs_json, metadata_json)
+     VALUES ('missing', 'feature', 'Feature', 'navigation-only', 'fact', 'Feature', '[]', '[]', '{"claim_status":"accepted"}');`,
+  );
+  const feature = database
+    .query("SELECT metadata_json FROM features WHERE id = 'feature'")
+    .get() as { metadata_json: string };
+  assert.equal(feature.metadata_json, '{"claim_status":"accepted"}');
+  const documents = database
+    .query("SELECT COUNT(*) AS count FROM graph_documents")
+    .get() as { count: number };
+  assert.equal(documents.count, 1);
   database.close();
 });

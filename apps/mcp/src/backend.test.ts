@@ -18,75 +18,98 @@ test("API backend accepts a deployment origin or its /api base URL", async () =>
   }
 });
 
+test("API backend reads and normalizes the reviewed layered projection", async () => {
+  let requestUrl = "";
+  const backend = new ApiBackend("https://api.example.test", async (input) => {
+    requestUrl = String(input);
+    return jsonResponse({
+      data: {
+        schema_version: "1.0",
+        origin: "local analysis",
+        nodes: [
+          {
+            id: "system:alpha",
+            layer: "system",
+            kind: "architecture-card",
+            label: "Alpha",
+            metadata: {
+              claim_type: "fact",
+              evidence_ids: ["architecture"],
+              proven: false,
+              non_equivalence: { statement: "not equal" },
+            },
+          },
+        ],
+        edges: [],
+      },
+    });
+  });
+  const graph = await backend.getLayeredGraph("local analysis");
+  assert.match(requestUrl, /\/api\/graph\/layers\?origin=local%20analysis$/);
+  assert.equal(graph.nodes[0]?.metadata.proven, false);
+  assert.deepEqual(graph.nodes[0]?.metadata.non_equivalence, {
+    statement: "not equal",
+  });
+});
+
 test("API backend calls the Hono endpoints and preserves MCP result records", async () => {
   const requests: Array<{ url: string; init?: RequestInit }> = [];
-  const backend = new ApiBackend(
-    "https://api.example.test",
-    async (input, init) => {
-      requests.push({ url: String(input), init });
-      const url = String(input);
-      if (url.includes("/systems/duckdb")) {
-        return jsonResponse({
-          data: {
-            id: "duckdb",
-            name: "DuckDB",
-            summary: "Analytical database",
-            scope: ["analytics"],
-            features: [],
-            mathematical_views: [],
-            trade_offs: [],
-            evidence: [],
-            temporal_context: { version: "2.0", claim_status: "accepted" },
-            relations: [{ type: "extends", target: "base-system" }],
-            feature_relations: [
-              {
-                source_feature_id: "embedded",
-                target_system_id: "base-system",
-                target_feature_id: "embedded",
-                type: "resembles",
-                claim_type: "analogy",
-                claim_status: "proposed",
-                evidence_ids: ["architecture"],
-              },
-            ],
-            composition: { inputs: [{ system_id: "base-system" }] },
-          },
-        });
-      }
-      if (url.includes("/features?")) {
-        return jsonResponse({
-          data: [
+  const backend = new ApiBackend("https://api.example.test", async (input, init) => {
+    requests.push({ url: String(input), init });
+    const url = String(input);
+    if (url.includes("/systems/duckdb")) {
+      return jsonResponse({
+        data: {
+          id: "duckdb",
+          name: "DuckDB",
+          summary: "Analytical database",
+          scope: ["analytics"],
+          features: [],
+          mathematical_views: [],
+          trade_offs: [],
+          evidence: [],
+          temporal_context: { version: "2.0", claim_status: "accepted" },
+          relations: [{ type: "extends", target: "base-system" }],
+          feature_relations: [
             {
-              system_id: "duckdb",
-              system_name: "DuckDB",
-              id: "embedded",
-              name: "Embedded",
-              category: "deployment-model",
-              claim_type: "fact",
-              description: "Runs in process",
-              benefits: [],
-              costs: [],
+              source_feature_id: "embedded",
+              target_system_id: "base-system",
+              target_feature_id: "embedded",
+              type: "resembles",
+              claim_type: "analogy",
+              claim_status: "proposed",
+              evidence_ids: ["architecture"],
             },
           ],
-        });
-      }
+          composition: { inputs: [{ system_id: "base-system" }] },
+        },
+      });
+    }
+    if (url.includes("/features?")) {
       return jsonResponse({
         data: [
-          { id: "duckdb", name: "DuckDB", summary: "Analytical database" },
+          {
+            system_id: "duckdb",
+            system_name: "DuckDB",
+            id: "embedded",
+            name: "Embedded",
+            category: "deployment-model",
+            claim_type: "fact",
+            description: "Runs in process",
+            benefits: [],
+            costs: [],
+          },
         ],
       });
-    },
-  );
+    }
+    return jsonResponse({
+      data: [{ id: "duckdb", name: "DuckDB", summary: "Analytical database" }],
+    });
+  });
 
   const systems = await backend.listSystems(false);
   const card = await backend.getSystem("duckdb", false);
-  const features = await backend.searchFeatures(
-    "embedded",
-    "deployment-model",
-    "fact",
-    false,
-    10,
-  );
+  const features = await backend.searchFeatures("embedded", "deployment-model", "fact", false, 10);
 
   assert.equal(systems[0]?.id, "duckdb");
   assert.equal(card?.name, "DuckDB");
@@ -94,16 +117,14 @@ test("API backend calls the Hono endpoints and preserves MCP result records", as
   assert.equal(card?.relations?.[0]?.type, "extends");
   assert.equal(card?.feature_relations?.[0]?.target_system_id, "base-system");
   assert.equal(
-    (card?.composition?.inputs as Array<{ system_id: string }> | undefined)?.[0]
-      ?.system_id,
+    (card?.composition?.inputs as Array<{ system_id: string }> | undefined)?.[0]?.system_id,
     "base-system",
   );
   assert.equal(features[0]?.feature.name, "Embedded");
   assert.match(requests[0]?.url ?? "", /\/api\/systems$/);
   assert.match(requests[2]?.url ?? "", /claim_type=fact/);
   assert.equal(
-    requests[0]?.init?.headers &&
-      new Headers(requests[0].init.headers).get("accept"),
+    requests[0]?.init?.headers && new Headers(requests[0].init.headers).get("accept"),
     "application/json",
   );
 });
@@ -180,14 +201,7 @@ test("API backend lists bounded feature relations and preserves empty data", asy
     jsonResponse({ data: [] }),
   );
   assert.deepEqual(
-    await emptyBackend.listFeatureRelations(
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      false,
-      20,
-    ),
+    await emptyBackend.listFeatureRelations(undefined, undefined, undefined, undefined, false, 20),
     [],
   );
 });
@@ -202,10 +216,7 @@ test("API backend reads modeling bundles and rejects drafts explicitly", async (
 
   const bundle = await backend.getModelingBundle("duckdb");
   assert.deepEqual(bundle, { contract_version: 1, system: { id: "duckdb" } });
-  await assert.rejects(
-    backend.listSystems(true),
-    /include_drafts is unavailable/,
-  );
+  await assert.rejects(backend.listSystems(true), /include_drafts is unavailable/);
 });
 
 test("API backend reports request timeouts without exposing the URL", async () => {
