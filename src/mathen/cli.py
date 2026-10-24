@@ -11,6 +11,11 @@ from urllib.request import Request, urlopen
 
 from . import __version__
 from .analogies import AnalogyValidationError, discover_analogies, load_analogy
+from .benchmark import (
+    BenchmarkManifestValidationError,
+    discover_benchmark_manifests,
+    load_benchmark_manifest,
+)
 from .cards import (
     CardValidationError,
     discover_cards,
@@ -83,6 +88,10 @@ def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
     negative_knowledge.add_argument(
         "path", nargs="?", type=Path, default=Path("data/negative-knowledge")
     )
+    benchmark = subparsers.add_parser(
+        "validate-benchmark", help="validate research benchmark run manifests"
+    )
+    benchmark.add_argument("path", nargs="?", type=Path, default=Path("data/benchmark"))
 
     listing = subparsers.add_parser("list", help="list architecture cards")
     listing.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
@@ -231,6 +240,8 @@ def main() -> int:
             return validate_analogies_command(args.path)
         if args.command == "validate-negative-knowledge":
             return validate_negative_knowledge_command(args.path)
+        if args.command == "validate-benchmark":
+            return validate_benchmark_command(args.path)
         if args.command == "list":
             return list_command(args.path)
         if args.command == "show":
@@ -280,6 +291,7 @@ def main() -> int:
         MicrostructureValidationError,
         AnalogyValidationError,
         NegativeKnowledgeValidationError,
+        BenchmarkManifestValidationError,
     ) as error:
         print(f"ERROR: {error}")
         return 1
@@ -341,6 +353,19 @@ def validate_negative_knowledge_command(path: Path) -> int:
     for record_path in paths:
         load_negative_knowledge(record_path)
         print(f"valid  {record_path}")
+    return 0
+
+
+def validate_benchmark_command(path: Path) -> int:
+    """Validate research-only benchmark run manifests."""
+
+    paths = discover_benchmark_manifests(path)
+    if not paths:
+        print(f"No benchmark manifests found in {path}; nothing to validate")
+        return 0
+    for manifest_path in paths:
+        load_benchmark_manifest(manifest_path)
+        print(f"valid  {manifest_path}")
     return 0
 
 

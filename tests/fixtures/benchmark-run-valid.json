@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "run_id": "pilot-001",
+  "protocol_version": "mth-0118-v1",
+  "benchmark_version": "pilot-1",
+  "source_revisions": [
+    {"repository_id": "fixture-repository", "commit": "0123456789abcdef"}
+  ],
+  "evidence_bundle": {
+    "id": "fixture-bundle",
+    "digest": "sha256:bundle",
+    "evidence_ids": ["source-evidence", "review-evidence"]
+  },
+  "input_ids": {
+    "systems": ["fixture-system"],
+    "features": [],
+    "views": [],
+    "microstructures": [],
+    "compositions": [],
+    "analogies": [],
+    "negative_knowledge": []
+  },
+  "method": {"name": "structured-pilot", "baseline": "structured"},
+  "provenance": {
+    "provider": null,
+    "exact_model_id": null,
+    "prompt_digest": null,
+    "input_bundle_digest": "sha256:bundle",
+    "deterministic_inspector": "mathen-test-inspector-1"
+  },
+  "deployment": {
+    "origin": "fixture-origin",
+    "version": "v1",
+    "conditions": ["controlled"],
+    "exclusions": ["production"],
+    "workload": null
+  },
+  "randomness": {"seed": 7, "decoding_parameters": {}},
+  "candidates": [
+    {
+      "id": "candidate-1",
+      "evidence_ids": ["source-evidence"],
+      "claims": [
+        {
+          "id": "claim-1",
+          "description": "The candidate has a bounded interface.",
+          "claim_type": "inference",
+          "claim_status": "proposed",
+          "evidence_ids": ["source-evidence"]
+        }
+      ],
+      "validation_logs": [
+        {"check": "evidence-locality", "result": "pass", "reason": "Local citation."}
+      ],
+      "proven": false
+    }
+  ],
+  "review": {
+    "reviewer_pool": ["reviewer-a"],
+    "rubric_version": "rubric-1",
+    "blinded_assignment": true,
+    "adjudication_record": []
+  },
+  "outcome": {"status": "not-evaluated", "reason": "Fixture contains no result."}
+}
