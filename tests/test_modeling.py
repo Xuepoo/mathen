@@ -68,6 +68,10 @@ class ModelingContractTests(unittest.TestCase):
             "unknown or out of scope",
             render_modeling_prompt(build_modeling_bundle(spec, analysis, draft)),
         )
+        analogy = task["cross_domain_analogy_mapping"]
+        self.assertEqual(analogy["schema_version"], "1.0")
+        self.assertIn("non_equivalence", analogy["required_dimensions"])
+        self.assertIn("historical influence", analogy["boundary"])
 
     def test_protocol_run_record_is_secret_safe_and_reproducible(self) -> None:
         spec = SimpleNamespace(

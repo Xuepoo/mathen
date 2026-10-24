@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/cross-domain-analogy.schema.json",
+  "title": "Mathen Cross-Domain Structural Analogy Mapping",
+  "description": "A bounded, evidence-backed resemblance between concepts in distinct domains; not an equivalence or historical relation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "summary",
+    "source_domain",
+    "target_domain",
+    "source_concepts",
+    "target_concepts",
+    "correspondences",
+    "mapping_type",
+    "scale",
+    "shared_properties",
+    "preserved_properties",
+    "non_preserved_properties",
+    "scope",
+    "counterexamples",
+    "non_equivalence",
+    "claim_type",
+    "claim_status",
+    "evidence_ids",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "source_domain": { "$ref": "#/$defs/domain" },
+    "target_domain": { "$ref": "#/$defs/domain" },
+    "source_concepts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/concept" }
+    },
+    "target_concepts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/concept" }
+    },
+    "correspondences": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/correspondence" }
+    },
+    "mapping_type": {
+      "type": "string",
+      "enum": [
+        "structural",
+        "functional",
+        "relational",
+        "process",
+        "behavioral"
+      ]
+    },
+    "scale": { "$ref": "#/$defs/scale" },
+    "shared_properties": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/property" }
+    },
+    "preserved_properties": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/property" }
+    },
+    "non_preserved_properties": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/property" }
+    },
+    "scope": { "$ref": "#/$defs/scope" },
+    "counterexamples": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/counterexample" }
+    },
+    "non_equivalence": { "$ref": "#/$defs/nonEquivalence" },
+    "claim_type": { "const": "analogy" },
+    "claim_status": { "$ref": "#/$defs/claimStatus" },
+    "evidence_ids": { "$ref": "#/$defs/evidenceIds" },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/evidence" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "claimStatus": {
+      "type": "string",
+      "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"]
+    },
+    "claimFields": {
+      "type": "object",
+      "required": ["claim_type", "claim_status", "evidence_ids"],
+      "properties": {
+        "claim_type": {
+          "type": "string",
+          "enum": ["fact", "inference", "hypothesis", "analogy"]
+        },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": { "$ref": "#/$defs/evidenceIds" }
+      }
+    },
+    "evidenceIds": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "domain": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "description"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 },
+            "claim_type": {},
+            "claim_status": {},
+            "evidence_ids": {}
+          }
+        }
+      ]
+    },
+    "concept": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "name", "description"],
+          "properties": {
+            "id": { "$ref": "#/$defs/id" },
+            "name": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 },
+            "role": { "type": "string", "minLength": 1 },
+            "claim_type": {},
+            "claim_status": {},
+            "evidence_ids": {}
+          }
+        }
+      ]
+    },
+    "correspondence": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "source_concept_ids",
+            "target_concept_ids",
+            "relation",
+            "rationale"
+          ],
+          "properties": {
+            "id": { "$ref": "#/$defs/id" },
+            "source_concept_ids": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/id" }
+            },
+            "target_concept_ids": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/id" }
+            },
+            "relation": { "type": "string", "minLength": 1 },
+            "rationale": { "type": "string", "minLength": 1 },
+            "claim_type": {},
+            "claim_status": {},
+            "evidence_ids": {}
+          }
+        }
+      ]
+    },
+    "scale": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "target", "description"],
+          "properties": {
+            "source": { "type": "string", "minLength": 1 },
+            "target": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 },
+            "claim_type": {},
+            "claim_status": {},
+            "evidence_ids": {}
+          }
+        }
+      ]
+    },
+    "property": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "name", "description"],
+          "properties": {
+            "id": { "$ref": "#/$defs/id" },
+            "name": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 },
+            "boundary": { "type": "string", "minLength": 1 },
+            "claim_type": {},
+            "claim_status": {},
+            "evidence_ids": {}
+          }
+        }
+      ]
+    },
+    "scope": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_versions",
+            "target_versions",
+            "deployment_origins",
+            "conditions",
+            "exclusions"
+          ],
+          "properties": {
+            "source_versions": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "target_versions": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "deployment_origins": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "conditions": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "exclusions": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "claim_type": {},
+            "claim_status": {},
+            "evidence_ids": {}
+          }
+        }
+      ]
+    },
+    "counterexample": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "description", "implication"],
+          "properties": {
+            "id": { "$ref": "#/$defs/id" },
+            "description": { "type": "string", "minLength": 1 },
+            "implication": { "type": "string", "minLength": 1 },
+            "claim_type": {},
+            "claim_status": {},
+            "evidence_ids": {}
+          }
+        }
+      ]
+    },
+    "nonEquivalence": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["statement", "reasons", "substitutability"],
+          "properties": {
+            "statement": { "type": "string", "minLength": 1 },
+            "reasons": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "substitutability": { "type": "string", "minLength": 1 },
+            "claim_type": {},
+            "claim_status": {},
+            "evidence_ids": {}
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "title", "uri"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "official-doc",
+            "paper",
+            "source-code",
+            "experiment",
+            "secondary"
+          ]
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "uri": { "type": "string", "minLength": 1 },
+        "accessed": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

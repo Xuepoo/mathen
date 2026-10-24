@@ -11,6 +11,7 @@ from mathen.repositories import load_manifest
 
 MODELING_CONTRACT_VERSION = 2
 LLM_RESEARCH_PROTOCOL_VERSION = "mth-0112-v1"
+CROSS_DOMAIN_ANALOGY_SCHEMA_VERSION = "1.0"
 
 
 class ModelingBundleError(RuntimeError):
@@ -201,6 +202,37 @@ def build_modeling_bundle(
                     "Label it analogy, name the shared structure and boundary, "
                     "and do not imply equivalence, dependency, composition, or "
                     "historical influence without direct evidence."
+                ),
+            },
+            "cross_domain_analogy_mapping": {
+                "schema_version": CROSS_DOMAIN_ANALOGY_SCHEMA_VERSION,
+                "schema": "schemas/cross-domain-analogy.schema.json",
+                "required_dimensions": [
+                    "source_domain",
+                    "target_domain",
+                    "source_concepts",
+                    "target_concepts",
+                    "mapping_type",
+                    "scale",
+                    "shared_properties",
+                    "preserved_properties",
+                    "non_preserved_properties",
+                    "scope",
+                    "counterexamples",
+                    "non_equivalence",
+                    "claim_type",
+                    "claim_status",
+                    "evidence",
+                ],
+                "boundary": (
+                    "Use a standalone analogy mapping for cross-domain resemblance. "
+                    "Do not turn it into a canonical relation or claim equivalence, "
+                    "dependency, composition, substitutability, proof, or historical "
+                    "influence."
+                ),
+                "evidence_rule": (
+                    "Every mapping claim must cite evidence already present in the "
+                    "mapping; unknown evidence remains unknown or out of scope."
                 ),
             },
             "evidence_rules": [

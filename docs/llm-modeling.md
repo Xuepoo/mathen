@@ -47,6 +47,12 @@ The modeling bundle's protocol version is `mth-0112-v1`. A run must preserve:
   the shared structure and its boundary. It must not imply equivalence,
   dependency, composition, substitutability, or historical influence without
   direct evidence.
+- **Analogy mapping contract:** when a cross-domain comparison is useful, use
+  the standalone versioned contract in
+  [`schemas/cross-domain-analogy.schema.json`](../schemas/cross-domain-analogy.schema.json).
+  It requires source/target concepts, mapping type and scale, shared and
+  preserved properties, explicitly non-preserved properties, scope,
+  counterexamples, local evidence, and an explicit non-equivalence statement.
 - **Uncertainty and disagreement:** missing evidence is recorded as unknown or
   out of scope; conflicting evidence or reviewer disagreement is recorded in
   the protocol envelope rather than silently resolved by the model.

@@ -10,6 +10,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from . import __version__
+from .analogies import AnalogyValidationError, discover_analogies, load_analogy
 from .cards import (
     CardValidationError,
     discover_cards,
@@ -66,6 +67,10 @@ def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
     microstructure.add_argument(
         "path", nargs="?", type=Path, default=Path("data/microstructures")
     )
+    analogy = subparsers.add_parser(
+        "validate-analogies", help="validate cross-domain analogy mappings"
+    )
+    analogy.add_argument("path", nargs="?", type=Path, default=Path("data/analogies"))
 
     listing = subparsers.add_parser("list", help="list architecture cards")
     listing.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
@@ -210,6 +215,8 @@ def main() -> int:
             return validate_command(args.path, config)
         if args.command == "validate-microstructures":
             return validate_microstructures_command(args.path)
+        if args.command == "validate-analogies":
+            return validate_analogies_command(args.path)
         if args.command == "list":
             return list_command(args.path)
         if args.command == "show":
@@ -257,6 +264,7 @@ def main() -> int:
         RepositoryAnalysisError,
         RelationCandidateError,
         MicrostructureValidationError,
+        AnalogyValidationError,
     ) as error:
         print(f"ERROR: {error}")
         return 1
@@ -292,6 +300,19 @@ def validate_microstructures_command(path: Path) -> int:
     for microstructure_path in paths:
         load_microstructure(microstructure_path)
         print(f"valid  {microstructure_path}")
+    return 0
+
+
+def validate_analogies_command(path: Path) -> int:
+    """Validate all standalone cross-domain analogy mappings at ``path``."""
+
+    paths = discover_analogies(path)
+    if not paths:
+        print(f"No analogies found in {path}; nothing to validate")
+        return 0
+    for analogy_path in paths:
+        load_analogy(analogy_path)
+        print(f"valid  {analogy_path}")
     return 0
 
 
