@@ -1,6 +1,8 @@
 import copy
 import io
 import json
+import shutil
+import subprocess
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -68,6 +70,56 @@ class MicrostructureTests(unittest.TestCase):
         self.assertEqual(model.schema_version, MICROSTRUCTURE_SCHEMA_VERSION)
         self.assertEqual(model.scale["level"], "mechanism")
         self.assertEqual(model.to_dict(), value)
+
+    def test_json_schema_accepts_non_empty_documented_shapes(self) -> None:
+        validator = shutil.which("check-jsonschema")
+        if validator is None:
+            self.skipTest("check-jsonschema is not installed")
+
+        result = subprocess.run(
+            [
+                validator,
+                "--schemafile",
+                str(
+                    Path(__file__).parents[1]
+                    / "schemas"
+                    / "architecture-microstructure.schema.json"
+                ),
+                "-",
+            ],
+            cwd=Path(__file__).parents[1],
+            input=json.dumps(self._fixture()),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_json_schema_rejects_unknown_element_fields(self) -> None:
+        validator = shutil.which("check-jsonschema")
+        if validator is None:
+            self.skipTest("check-jsonschema is not installed")
+
+        value = self._fixture()
+        value["events"][0]["undocumented"] = "must be rejected"
+        result = subprocess.run(
+            [
+                validator,
+                "--schemafile",
+                str(
+                    Path(__file__).parents[1]
+                    / "schemas"
+                    / "architecture-microstructure.schema.json"
+                ),
+                "-",
+            ],
+            cwd=Path(__file__).parents[1],
+            input=json.dumps(value),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotEqual(result.returncode, 0)
 
     def test_unknown_evidence_is_rejected_for_every_claim(self) -> None:
         value = self._fixture()
