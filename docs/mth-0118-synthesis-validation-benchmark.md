@@ -103,7 +103,11 @@ The unit must retain a run manifest containing at least:
 The run manifest is an audit record, not evidence by itself. Evidence must be
 linked from the source bundle or an explicitly produced experiment. A URI or
 citation that was not available to the run cannot be counted as run-local
-support.
+support. The manifest must also map every input ID to local evidence, bind the
+input-bundle digest to the evidence-bundle digest, declare disjoint exhaustive
+train/evaluation/holdout partitions, and record temporal leakage controls. A
+negative-knowledge input belongs to an undisclosed holdout and must be excluded
+from candidate generation.
 
 ### 2.1 Staged protocol
 
@@ -226,6 +230,9 @@ evidence record that was also supplied as a hidden answer to a baseline.
 Use per-task, macro-averaged metrics as the primary report; provide
 micro-averages and system/bootstrap confidence intervals as secondary views.
 Report denominators, abstentions, and `undetermined` results explicitly.
+Treat abstention as a first-class outcome: report coverage, abstention rate,
+known-case accuracy, and recall of the `undetermined`/unknown reference class;
+never silently remove unknowns from a denominator.
 
 ### 5.1 Evidence and claim discipline
 
@@ -402,6 +409,9 @@ proof. Reviewers must explain the structural difference and identify the
 nearest prior art. Report novelty precision at top-k only after independent
 review; report coverage of known novel references separately. Leave the label
 `undetermined` when the reference window or representation is incomplete.
+The run manifest must declare the reference window, representation, all six
+novelty dimensions, and stratification fields. No aggregate novelty score is a
+release gate.
 
 Novelty must be stratified by source community, system scale, version, and
 deployment origin. Otherwise a candidate can appear novel solely because its
@@ -526,6 +536,10 @@ A future implementation is ready for a larger study only when it can:
 - support blinded review and preserve raw reviewer/adjudication data;
 - pass a red-team review for leakage, unsupported citations, and accidental
   canonical promotion.
+
+Every benchmark result remains a research/draft artifact. Manifest validation
+must reject `canonical: true`; promotion requires a separate, human-reviewed
+workflow and is outside the benchmark harness.
 
 ## 10. Expected artifacts
 

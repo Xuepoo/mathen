@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mathen.dev/schemas/benchmark-run-manifest.schema.json",
   "title": "Mathen MTH-0118 benchmark run manifest",
-  "description": "An audit record for an evidence-bounded research run; it is not evidence or a result.",
+  "description": "An audit record for an evidence-bounded research run; it is not evidence or a canonical result.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -27,7 +27,7 @@
     "outcome"
   ],
   "properties": {
-    "schema_version": { "const": "1.0" },
+    "schema_version": { "const": "1.1" },
     "run_id": { "type": "string", "minLength": 1 },
     "protocol_version": { "type": "string", "minLength": 1 },
     "benchmark_version": { "type": "string", "minLength": 1 },
@@ -52,10 +52,14 @@
     "evidence_bundle": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "digest", "evidence_ids"],
+      "required": ["id", "digest", "source_revision_digests", "evidence_ids"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "digest": { "type": "string", "minLength": 1 },
+        "source_revision_digests": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
         "evidence_ids": { "$ref": "#/$defs/stringList", "uniqueItems": true }
       }
     },
@@ -79,6 +83,35 @@
         "compositions": { "$ref": "#/$defs/stringList" },
         "analogies": { "$ref": "#/$defs/stringList" },
         "negative_knowledge": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "input_evidence": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/nonEmptyStringList" }
+    },
+    "split": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strategy", "partitions", "temporal_cutoff", "leakage_controls",
+        "negative_knowledge_holdout_ids", "candidate_generation_exclusions"
+      ],
+      "properties": {
+        "strategy": { "type": "string", "minLength": 1 },
+        "partitions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["train", "evaluation", "holdout"],
+          "properties": {
+            "train": { "$ref": "#/$defs/stringList" },
+            "evaluation": { "$ref": "#/$defs/stringList" },
+            "holdout": { "$ref": "#/$defs/stringList" }
+          }
+        },
+        "temporal_cutoff": { "type": ["string", "null"], "minLength": 1 },
+        "leakage_controls": { "$ref": "#/$defs/stringList" },
+        "negative_knowledge_holdout_ids": { "$ref": "#/$defs/stringList" },
+        "candidate_generation_exclusions": { "$ref": "#/$defs/stringList" }
       }
     },
     "method": {
@@ -138,6 +171,35 @@
         "decoding_parameters": { "type": "object" }
       }
     },
+    "novelty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference_window", "representation", "dimensions", "strata",
+        "aggregate_score_allowed"
+      ],
+      "properties": {
+        "reference_window": { "type": "string", "minLength": 1 },
+        "representation": { "type": "string", "minLength": 1 },
+        "dimensions": { "$ref": "#/$defs/nonEmptyStringList", "uniqueItems": true },
+        "strata": { "$ref": "#/$defs/nonEmptyStringList" },
+        "aggregate_score_allowed": { "const": false }
+      }
+    },
+    "analogy_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "non_equivalence_required",
+        "historical_influence_requires_direct_evidence",
+        "substitutability_not_implied"
+      ],
+      "properties": {
+        "non_equivalence_required": { "const": true },
+        "historical_influence_requires_direct_evidence": { "const": true },
+        "substitutability_not_implied": { "const": true }
+      }
+    },
     "candidates": {
       "type": "array",
       "minItems": 0,
@@ -157,6 +219,16 @@
         "rubric_version": { "type": "string", "minLength": 1 },
         "blinded_assignment": { "type": "boolean" },
         "adjudication_record": { "type": "array", "minItems": 0 }
+      }
+    },
+    "result_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical", "promotion_requires_human_review", "storage_scope"],
+      "properties": {
+        "canonical": { "const": false },
+        "promotion_requires_human_review": { "const": true },
+        "storage_scope": { "enum": ["research", "draft"] }
       }
     },
     "outcome": {

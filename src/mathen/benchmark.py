@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-BENCHMARK_MANIFEST_SCHEMA_VERSION = "1.0"
+BENCHMARK_MANIFEST_SCHEMA_VERSION = "1.1"
 CLAIM_TYPES = frozenset({"fact", "inference", "hypothesis", "analogy"})
 CLAIM_STATUSES = frozenset(
     {"proposed", "under-review", "accepted", "rejected", "deprecated"}
@@ -33,6 +33,17 @@ INPUT_ID_FIELDS = (
     "analogies",
     "negative_knowledge",
 )
+NOVELTY_DIMENSIONS = frozenset(
+    {
+        "topology",
+        "composition",
+        "constraints",
+        "behavior",
+        "deployment",
+        "historical",
+    }
+)
+SPLIT_PARTITIONS = ("train", "evaluation", "holdout")
 
 
 class BenchmarkManifestValidationError(ValueError):
@@ -123,12 +134,17 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
         "source_revisions",
         "evidence_bundle",
         "input_ids",
+        "input_evidence",
+        "split",
         "method",
         "provenance",
         "deployment",
         "randomness",
+        "novelty",
+        "analogy_policy",
         "candidates",
         "review",
+        "result_boundary",
         "outcome",
     }
     _allowed("manifest", value, required)
@@ -174,9 +190,34 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
 
     bundle = value["evidence_bundle"]
     _object("evidence_bundle", bundle)
-    _allowed("evidence_bundle", bundle, {"id", "digest", "evidence_ids"})
+    _allowed(
+        "evidence_bundle",
+        bundle,
+        {"id", "digest", "evidence_ids", "source_revision_digests"},
+    )
     for field in ("id", "digest"):
         _text(bundle, field, "evidence_bundle")
+    source_revision_digests = bundle.get("source_revision_digests")
+    _object("evidence_bundle.source_revision_digests", source_revision_digests)
+    if set(source_revision_digests) != revision_ids:
+        raise BenchmarkManifestValidationError(
+            "evidence_bundle.source_revision_digests must cover exactly "
+            "source repositories"
+        )
+    for repository_id, digest in source_revision_digests.items():
+        if not isinstance(digest, str) or not digest:
+            raise BenchmarkManifestValidationError(
+                f"evidence_bundle.source_revision_digests[{repository_id}] "
+                "needs a non-empty string"
+            )
+        revision = next(
+            item for item in revisions if item["repository_id"] == repository_id
+        )
+        archive_digest = revision.get("archive_digest")
+        if archive_digest is not None and digest != archive_digest:
+            raise BenchmarkManifestValidationError(
+                f"source digest mismatch for repository: {repository_id}"
+            )
     evidence_ids = _string_list(bundle, "evidence_ids", "evidence_bundle")
     if len(set(evidence_ids)) != len(evidence_ids):
         raise BenchmarkManifestValidationError(
@@ -192,6 +233,81 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
         )
     for field in INPUT_ID_FIELDS:
         _string_list(inputs, field, "input_ids")
+
+    input_evidence = value["input_evidence"]
+    _object("input_evidence", input_evidence)
+    expected_input_refs = {
+        f"{field}:{item}" for field in INPUT_ID_FIELDS for item in inputs[field]
+    }
+    if set(input_evidence) != expected_input_refs:
+        raise BenchmarkManifestValidationError(
+            "input_evidence must contain exactly one entry for every input ID"
+        )
+    for input_ref in expected_input_refs:
+        _evidence_ids(input_evidence, input_ref, evidence_set, "input_evidence")
+
+    split = value["split"]
+    _object("split", split)
+    _allowed(
+        "split",
+        split,
+        {
+            "strategy",
+            "partitions",
+            "temporal_cutoff",
+            "leakage_controls",
+            "negative_knowledge_holdout_ids",
+            "candidate_generation_exclusions",
+        },
+    )
+    _text(split, "strategy", "split")
+    partitions = split.get("partitions")
+    _object("split.partitions", partitions)
+    if set(partitions) != set(SPLIT_PARTITIONS):
+        raise BenchmarkManifestValidationError(
+            f"split.partitions must contain exactly {list(SPLIT_PARTITIONS)}"
+        )
+    partition_refs: list[str] = []
+    for partition in SPLIT_PARTITIONS:
+        refs = _string_list(partitions, partition, "split.partitions")
+        partition_refs.extend(refs)
+    if len(set(partition_refs)) != len(partition_refs):
+        raise BenchmarkManifestValidationError("split partitions must be disjoint")
+    if set(partition_refs) != expected_input_refs:
+        raise BenchmarkManifestValidationError(
+            "split partitions must cover exactly all input IDs"
+        )
+    temporal_cutoff = split.get("temporal_cutoff")
+    if temporal_cutoff is not None and (
+        not isinstance(temporal_cutoff, str) or not temporal_cutoff
+    ):
+        raise BenchmarkManifestValidationError(
+            "split.temporal_cutoff must be a non-empty string or null"
+        )
+    if "temporal" in split["strategy"].lower() and temporal_cutoff is None:
+        raise BenchmarkManifestValidationError(
+            "temporal split strategies require split.temporal_cutoff"
+        )
+    _string_list(split, "leakage_controls", "split")
+    holdout_negative = _string_list(split, "negative_knowledge_holdout_ids", "split")
+    if set(holdout_negative) != set(inputs["negative_knowledge"]):
+        raise BenchmarkManifestValidationError(
+            "all negative-knowledge inputs must be held out exactly"
+        )
+    holdout_refs = set(partitions["holdout"])
+    if any(
+        f"negative_knowledge:{item}" not in holdout_refs for item in holdout_negative
+    ):
+        raise BenchmarkManifestValidationError(
+            "all negative-knowledge inputs must be in the holdout partition"
+        )
+    exclusions = set(_string_list(split, "candidate_generation_exclusions", "split"))
+    required_exclusions = {f"negative_knowledge:{item}" for item in holdout_negative}
+    if not required_exclusions.issubset(exclusions):
+        raise BenchmarkManifestValidationError(
+            "candidate_generation_exclusions must include every "
+            "negative-knowledge holdout"
+        )
 
     method = value["method"]
     _object("method", method)
@@ -225,6 +341,10 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
         raise BenchmarkManifestValidationError(
             "provenance.provider and exact_model_id must be supplied together"
         )
+    if provenance["input_bundle_digest"] != bundle["digest"]:
+        raise BenchmarkManifestValidationError(
+            "provenance.input_bundle_digest must equal evidence_bundle.digest"
+        )
 
     deployment = value["deployment"]
     _object("deployment", deployment)
@@ -255,6 +375,56 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
         raise BenchmarkManifestValidationError(
             "randomness.decoding_parameters must be an object"
         )
+
+    novelty = value["novelty"]
+    _object("novelty", novelty)
+    _allowed(
+        "novelty",
+        novelty,
+        {
+            "reference_window",
+            "representation",
+            "dimensions",
+            "strata",
+            "aggregate_score_allowed",
+        },
+    )
+    _text(novelty, "reference_window", "novelty")
+    _text(novelty, "representation", "novelty")
+    dimensions = _string_list(novelty, "dimensions", "novelty")
+    if set(dimensions) != NOVELTY_DIMENSIONS:
+        raise BenchmarkManifestValidationError(
+            "novelty.dimensions must declare all six novelty dimensions exactly"
+        )
+    if len(dimensions) != len(set(dimensions)):
+        raise BenchmarkManifestValidationError("novelty.dimensions must be unique")
+    if not _string_list(novelty, "strata", "novelty"):
+        raise BenchmarkManifestValidationError("novelty.strata must not be empty")
+    if novelty.get("aggregate_score_allowed") is not False:
+        raise BenchmarkManifestValidationError(
+            "novelty.aggregate_score_allowed must remain false"
+        )
+
+    analogy_policy = value["analogy_policy"]
+    _object("analogy_policy", analogy_policy)
+    _allowed(
+        "analogy_policy",
+        analogy_policy,
+        {
+            "non_equivalence_required",
+            "historical_influence_requires_direct_evidence",
+            "substitutability_not_implied",
+        },
+    )
+    for field in (
+        "non_equivalence_required",
+        "historical_influence_requires_direct_evidence",
+        "substitutability_not_implied",
+    ):
+        if analogy_policy.get(field) is not True:
+            raise BenchmarkManifestValidationError(
+                f"analogy_policy.{field} must remain true"
+            )
 
     candidates = _list(value, "candidates")
     candidate_ids: set[str] = set()
@@ -308,6 +478,26 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
     if not isinstance(review.get("adjudication_record"), list):
         raise BenchmarkManifestValidationError(
             "review.adjudication_record must be a list"
+        )
+
+    result_boundary = value["result_boundary"]
+    _object("result_boundary", result_boundary)
+    _allowed(
+        "result_boundary",
+        result_boundary,
+        {"canonical", "promotion_requires_human_review", "storage_scope"},
+    )
+    if result_boundary.get("canonical") is not False:
+        raise BenchmarkManifestValidationError(
+            "result_boundary.canonical must remain false"
+        )
+    if result_boundary.get("promotion_requires_human_review") is not True:
+        raise BenchmarkManifestValidationError(
+            "result_boundary.promotion_requires_human_review must remain true"
+        )
+    if result_boundary.get("storage_scope") not in {"research", "draft"}:
+        raise BenchmarkManifestValidationError(
+            "result_boundary.storage_scope must be research or draft"
         )
 
     outcome = value["outcome"]
@@ -407,6 +597,20 @@ def classification_metrics(
                 f"{outcome}_precision", true_positive, predicted_total
             ),
         }
+    abstentions = sum(record["predicted"] == "undetermined" for record in observations)
+    scored = [
+        record
+        for record in observations
+        if record["expected"] != "undetermined"
+        and record["predicted"] != "undetermined"
+    ]
+    unknown_reference = sum(
+        record["expected"] == "undetermined" for record in observations
+    )
+    unknown_correct = sum(
+        record["expected"] == "undetermined" and record["predicted"] == "undetermined"
+        for record in observations
+    )
     return {
         "accuracy": _metric(
             "classification_accuracy",
@@ -415,6 +619,18 @@ def classification_metrics(
         ),
         "confusion": confusion,
         "by_outcome": by_outcome,
+        "abstention_rate": _metric("abstention_rate", abstentions, len(observations)),
+        "coverage": _metric(
+            "classification_coverage",
+            len(observations) - abstentions,
+            len(observations),
+        ),
+        "known_accuracy": _metric(
+            "known_accuracy",
+            sum(record["expected"] == record["predicted"] for record in scored),
+            len(scored),
+        ),
+        "unknown_recall": _metric("unknown_recall", unknown_correct, unknown_reference),
     }
 
 
@@ -450,6 +666,46 @@ def counterexample_recall(
     known = set(known_counterexample_ids)
     found = set(found_counterexample_ids)
     return _metric("counterexample_recall", len(known & found), len(known))
+
+
+def heldout_counterexample_recall(
+    held_out_ids: Iterable[str],
+    found_ids: Iterable[str],
+    exposed_ids: Iterable[str] = (),
+) -> Metric:
+    """Score held-out negative knowledge and reject generator leakage."""
+
+    held_out = set(held_out_ids)
+    found = set(found_ids)
+    exposed = set(exposed_ids)
+    leaked = held_out & exposed
+    if leaked:
+        raise ValueError(f"held-out counterexamples were exposed: {sorted(leaked)}")
+    return _metric(
+        "heldout_counterexample_recall", len(held_out & found), len(held_out)
+    )
+
+
+def novelty_scope_completeness(records: Iterable[Mapping[str, Any]]) -> Metric:
+    """Measure novelty records with bounded comparison and falsifier scope."""
+
+    observations = list(records)
+    complete = 0
+    for record in observations:
+        fields = (
+            "dimension",
+            "reference_window",
+            "representation",
+            "scope",
+            "falsifiers",
+        )
+        if all(record.get(field) for field in fields) and record.get("claim_type") in {
+            "hypothesis",
+            "inference",
+            "analogy",
+        }:
+            complete += 1
+    return _metric("novelty_scope_completeness", complete, len(observations))
 
 
 def _metric(name: str, numerator: int, denominator: int) -> Metric:

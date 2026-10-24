@@ -12,7 +12,9 @@ from mathen.benchmark import (
     classification_metrics,
     counterexample_recall,
     evidence_locality,
+    heldout_counterexample_recall,
     load_benchmark_manifest,
+    novelty_scope_completeness,
     typed_obligation_satisfaction,
     validate_benchmark_manifest,
 )
@@ -29,6 +31,7 @@ class BenchmarkManifestTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        self.assertEqual(schema["properties"]["schema_version"]["const"], "1.1")
         self.assertEqual(schema["properties"]["source_revisions"]["minItems"], 1)
         self.assertEqual(schema["$defs"]["stringList"]["minItems"], 0)
         self.assertEqual(schema["$defs"]["nonEmptyStringList"]["minItems"], 1)
@@ -72,6 +75,11 @@ class BenchmarkManifestTests(unittest.TestCase):
         self.assertEqual(
             schema["$defs"]["candidate"]["properties"]["proven"], {"const": False}
         )
+        self.assertIn("input_evidence", schema["required"])
+        self.assertIn("split", schema["required"])
+        self.assertIn("novelty", schema["required"])
+        self.assertIn("analogy_policy", schema["required"])
+        self.assertIn("result_boundary", schema["required"])
 
     def test_fixture_round_trips_and_cli_validates(self) -> None:
         value = json.loads(FIXTURE.read_text(encoding="utf-8"))
@@ -120,6 +128,8 @@ class BenchmarkManifestTests(unittest.TestCase):
     def test_empty_input_and_deployment_lists_remain_valid(self) -> None:
         value = json.loads(FIXTURE.read_text(encoding="utf-8"))
         value["input_ids"]["systems"] = []
+        del value["input_evidence"]["systems:fixture-system"]
+        value["split"]["partitions"]["evaluation"] = []
         value["deployment"]["conditions"] = []
         value["deployment"]["exclusions"] = []
         value["deployment"]["origin"] = "another-configured-origin"
@@ -140,6 +150,49 @@ class BenchmarkManifestTests(unittest.TestCase):
         value = json.loads(FIXTURE.read_text(encoding="utf-8"))
         value["unexpected"] = True
         with self.assertRaisesRegex(BenchmarkManifestValidationError, "unknown fields"):
+            validate_benchmark_manifest(value)
+
+    def test_manifest_rejects_archive_digest_mismatch(self) -> None:
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["source_revisions"][0]["archive_digest"] = "sha256:archive"
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "digest mismatch"
+        ):
+            validate_benchmark_manifest(value)
+
+    def test_manifest_requires_source_bundle_digest_linkage(self) -> None:
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        del value["evidence_bundle"]["source_revision_digests"]["fixture-repository"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "cover exactly"):
+            validate_benchmark_manifest(value)
+
+    def test_manifest_closes_digest_split_and_boundary_contracts(self) -> None:
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["provenance"]["input_bundle_digest"] = "sha256:other"
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "must equal"):
+            validate_benchmark_manifest(value)
+
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["split"]["partitions"]["train"] = ["systems:fixture-system"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "disjoint"):
+            validate_benchmark_manifest(value)
+
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["result_boundary"]["canonical"] = True
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "canonical"):
+            validate_benchmark_manifest(value)
+
+    def test_manifest_rejects_missing_input_evidence_and_holdout_exposure(self) -> None:
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        del value["input_evidence"]["systems:fixture-system"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "exactly"):
+            validate_benchmark_manifest(value)
+
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["input_ids"]["negative_knowledge"] = ["nk-1"]
+        value["input_evidence"]["negative_knowledge:nk-1"] = ["source-evidence"]
+        value["split"]["partitions"]["holdout"] = ["negative_knowledge:nk-1"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "held out"):
             validate_benchmark_manifest(value)
 
     def test_model_is_detached(self) -> None:
@@ -195,6 +248,9 @@ class BenchmarkMetricTests(unittest.TestCase):
         self.assertEqual(result["accuracy"].value, 2 / 3)
         self.assertEqual(result["confusion"]["invalid"]["valid"], 1)
         self.assertEqual(result["by_outcome"]["invalid"]["recall"].value, 0.0)
+        self.assertEqual(result["abstention_rate"].value, 1 / 3)
+        self.assertEqual(result["coverage"].value, 2 / 3)
+        self.assertEqual(result["unknown_recall"].value, 1.0)
 
     def test_typed_obligations_require_explicit_provisions_or_adapters(self) -> None:
         result = typed_obligation_satisfaction(
@@ -211,6 +267,29 @@ class BenchmarkMetricTests(unittest.TestCase):
         result = counterexample_recall(["a", "b"], ["b", "c"])
         self.assertEqual((result.numerator, result.denominator), (1, 2))
         self.assertIsNone(counterexample_recall([], ["a"]).value)
+
+    def test_heldout_counterexample_recall_rejects_leakage(self) -> None:
+        result = heldout_counterexample_recall(["a", "b"], ["b"])
+        self.assertEqual((result.numerator, result.denominator), (1, 2))
+        with self.assertRaisesRegex(ValueError, "exposed"):
+            heldout_counterexample_recall(["a"], [], ["a"])
+
+    def test_novelty_scope_completeness_keeps_empty_denominator(self) -> None:
+        self.assertIsNone(novelty_scope_completeness([]).value)
+        result = novelty_scope_completeness(
+            [
+                {
+                    "dimension": "topology",
+                    "reference_window": "window-1",
+                    "representation": "graph-v1",
+                    "scope": "system-x@v1",
+                    "falsifiers": ["prior-art"],
+                    "claim_type": "hypothesis",
+                },
+                {"dimension": "behavior", "claim_type": "fact"},
+            ]
+        )
+        self.assertEqual((result.numerator, result.denominator), (1, 2))
 
 
 if __name__ == "__main__":

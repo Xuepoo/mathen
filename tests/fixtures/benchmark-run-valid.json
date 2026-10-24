@@ -1,14 +1,15 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "run_id": "pilot-001",
   "protocol_version": "mth-0118-v1",
   "benchmark_version": "pilot-1",
   "source_revisions": [
-    {"repository_id": "fixture-repository", "commit": "0123456789abcdef"}
+    { "repository_id": "fixture-repository", "commit": "0123456789abcdef" }
   ],
   "evidence_bundle": {
     "id": "fixture-bundle",
     "digest": "sha256:bundle",
+    "source_revision_digests": {"fixture-repository": "sha256:source"},
     "evidence_ids": ["source-evidence", "review-evidence"]
   },
   "input_ids": {
@@ -20,7 +21,24 @@
     "analogies": [],
     "negative_knowledge": []
   },
-  "method": {"name": "structured-pilot", "baseline": "structured"},
+  "input_evidence": {
+    "systems:fixture-system": ["source-evidence"]
+  },
+  "split": {
+    "strategy": "system-temporal-holdout",
+    "partitions": {
+      "train": [],
+      "evaluation": ["systems:fixture-system"],
+      "holdout": []
+    },
+    "temporal_cutoff": "2026-01-01",
+    "leakage_controls": [
+      "future revisions and reviewer judgments excluded from prompts"
+    ],
+    "negative_knowledge_holdout_ids": [],
+    "candidate_generation_exclusions": []
+  },
+  "method": { "name": "structured-pilot", "baseline": "structured" },
   "provenance": {
     "provider": null,
     "exact_model_id": null,
@@ -35,7 +53,26 @@
     "exclusions": ["production"],
     "workload": null
   },
-  "randomness": {"seed": 7, "decoding_parameters": {}},
+  "randomness": { "seed": 7, "decoding_parameters": {} },
+  "novelty": {
+    "reference_window": "fixture-reference-window",
+    "representation": "typed-architecture-graph-v1",
+    "dimensions": [
+      "topology",
+      "composition",
+      "constraints",
+      "behavior",
+      "deployment",
+      "historical"
+    ],
+    "strata": ["system", "version", "deployment-origin"],
+    "aggregate_score_allowed": false
+  },
+  "analogy_policy": {
+    "non_equivalence_required": true,
+    "historical_influence_requires_direct_evidence": true,
+    "substitutability_not_implied": true
+  },
   "candidates": [
     {
       "id": "candidate-1",
@@ -50,7 +87,11 @@
         }
       ],
       "validation_logs": [
-        {"check": "evidence-locality", "result": "pass", "reason": "Local citation."}
+        {
+          "check": "evidence-locality",
+          "result": "pass",
+          "reason": "Local citation."
+        }
       ],
       "proven": false
     }
@@ -61,5 +102,13 @@
     "blinded_assignment": true,
     "adjudication_record": []
   },
-  "outcome": {"status": "not-evaluated", "reason": "Fixture contains no result."}
+  "result_boundary": {
+    "canonical": false,
+    "promotion_requires_human_review": true,
+    "storage_scope": "research"
+  },
+  "outcome": {
+    "status": "not-evaluated",
+    "reason": "Fixture contains no result."
+  }
 }
