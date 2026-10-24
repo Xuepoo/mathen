@@ -10,6 +10,10 @@ from pathlib import Path
 from typing import Any
 
 from .mathviews import MathematicalViewValidationError, validate_math_view_contract
+from .typed_composition import (
+    TypedCompositionValidationError,
+    validate_typed_composition,
+)
 
 REQUIRED_TOP_LEVEL = {
     "id",
@@ -341,6 +345,15 @@ def _validate_composition(
     _check_evidence_ids(
         label, "composition", composition.get("evidence_ids"), evidence_ids
     )
+    if "typed_semantics" in composition:
+        try:
+            validate_typed_composition(
+                composition["typed_semantics"], evidence_ids=evidence_ids
+            )
+        except TypedCompositionValidationError as error:
+            raise CardValidationError(
+                f"{label}: typed composition semantics are invalid: {error}"
+            ) from error
 
 
 def _require_object(label: str, field: str, value: Any) -> dict[str, Any]:

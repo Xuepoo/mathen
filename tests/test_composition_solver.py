@@ -6,14 +6,78 @@ from mathen.composition_solver import (
     FeatureRecord,
     ReviewedFeatureSpec,
     adapt_reviewed_cards,
+    adapt_typed_composition,
     solve_compositions,
     solve_reviewed_compositions,
+    solve_typed_compositions,
+)
+from mathen.typed_composition import (
+    TypedCompositionValidationError,
+    validate_typed_composition,
 )
 
 ROOT = Path(__file__).parents[1]
 
 
 class CompositionSolverTests(unittest.TestCase):
+    def test_typed_solver_reports_explicit_semantics_without_proof(self) -> None:
+        candidates = solve_typed_compositions(
+            [
+                {
+                    "id": "consumer",
+                    "provides": ["result"],
+                    "requires": ["input"],
+                    "consumes": ["input"],
+                    "adapters": ["json-boundary"],
+                    "boundaries": ["process-boundary"],
+                    "preserves": ["ordering"],
+                    "weakens": ["latency"],
+                    "preconditions": ["input-valid"],
+                    "postconditions": ["result-emitted"],
+                    "resource_effects": ["buffer-memory"],
+                    "failure_modes": ["timeout"],
+                    "evidence_ids": ["consumer-doc"],
+                },
+                {
+                    "id": "provider",
+                    "provides": ["input"],
+                    "evidence_ids": ["provider-doc"],
+                },
+            ],
+            ["result"],
+            max_components=2,
+        )
+        candidate = next(
+            item for item in candidates if item.feature_ids == ("consumer",)
+        )
+        self.assertEqual(candidate.dependency_ids, ("provider",))
+        self.assertEqual(candidate.consumed_capabilities, ("input",))
+        self.assertEqual(candidate.adapters, ("json-boundary",))
+        self.assertIn("preserves:ordering", candidate.property_effects)
+        self.assertIn("weakens:latency", candidate.property_effects)
+        self.assertIn("typed semantics remain a candidate", candidate.explanation[-1])
+        self.assertFalse(candidate.proven)
+
+    def test_typed_adapter_does_not_use_discovery_as_compatibility(self) -> None:
+        contract = _typed_contract()
+        specs = adapt_typed_composition(contract, evidence_ids={"source"})
+        self.assertEqual(tuple(item.id for item in specs), ("source", "target"))
+        candidates = solve_typed_compositions(specs, ["output"], max_components=1)
+        self.assertEqual(candidates[0].unresolved_requirements, ())
+
+    def test_typed_contract_requires_proven_false_and_local_evidence(self) -> None:
+        contract = _typed_contract()
+        validate_typed_composition(contract, evidence_ids={"source"})
+        contract["proven"] = True
+        with self.assertRaisesRegex(TypedCompositionValidationError, "proven"):
+            validate_typed_composition(contract, evidence_ids={"source"})
+        contract = _typed_contract()
+        contract["components"][0]["evidence_ids"] = ["unknown"]
+        with self.assertRaisesRegex(
+            TypedCompositionValidationError, "unknown evidence"
+        ):
+            validate_typed_composition(contract, evidence_ids={"source"})
+
     def test_dependency_closure_is_explained(self) -> None:
         candidates = solve_compositions(
             [
@@ -275,6 +339,49 @@ class CompositionSolverTests(unittest.TestCase):
         self.assertEqual(
             first[0].dependency_ids, ("carryctx:local-sqlite-project-state",)
         )
+
+
+def _typed_contract() -> dict:
+    claim = {
+        "claim_type": "hypothesis",
+        "claim_status": "proposed",
+        "evidence_ids": ["source"],
+    }
+    return {
+        "schema_version": "1.0",
+        "components": [
+            {"id": "source", "role": "producer", "provides": ["output"], **claim},
+            {"id": "target", "role": "consumer", "requires": ["output"], **claim},
+        ],
+        "adapters": [],
+        "boundaries": [],
+        "property_effects": [],
+        "preconditions": [],
+        "postconditions": [],
+        "resource_effects": [],
+        "failure_modes": [],
+        "examples": [],
+        "counterexamples": [],
+        "uncertainties": [],
+        "disagreements": [],
+        "discovery": {
+            "method": "graph-and-llm-review",
+            "provenance": ["graph:source->target", "llm:review-1"],
+            "source_community": "storage",
+            "target_community": "execution",
+            "path": ["storage", "boundary", "execution"],
+            "candidate_status": "candidate",
+        },
+        "validity_scope": {
+            "systems": ["source", "target"],
+            "versions": ["unversioned"],
+            "deployment_origins": ["local"],
+            "conditions": ["declared interface"],
+            "exclusions": ["production compatibility"],
+        },
+        **claim,
+        "proven": False,
+    }
 
 
 if __name__ == "__main__":

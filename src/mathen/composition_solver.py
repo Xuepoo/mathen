@@ -11,6 +11,12 @@ from dataclasses import dataclass
 from itertools import combinations
 from typing import Any, Iterable, Mapping
 
+from .typed_composition import (
+    TypedFeatureSpec,
+    typed_spec_from_mapping,
+    validate_typed_composition,
+)
+
 
 @dataclass(frozen=True, slots=True)
 class FeatureRecord:
@@ -66,6 +72,195 @@ class ReviewedFeatureSpec:
     provides: frozenset[str] = frozenset()
     requires: frozenset[str] = frozenset()
     conflicts: frozenset[str] = frozenset()
+
+
+@dataclass(frozen=True, slots=True)
+class TypedCompositionCandidate:
+    """Evidence-bounded typed candidate; ``proven`` is always ``False``."""
+
+    feature_ids: tuple[str, ...]
+    dependency_ids: tuple[str, ...]
+    provided_capabilities: tuple[str, ...]
+    required_capabilities: tuple[str, ...]
+    consumed_capabilities: tuple[str, ...]
+    unresolved_requirements: tuple[str, ...]
+    adapters: tuple[str, ...]
+    boundaries: tuple[str, ...]
+    preconditions: tuple[str, ...]
+    postconditions: tuple[str, ...]
+    resource_effects: tuple[str, ...]
+    failure_modes: tuple[str, ...]
+    property_effects: tuple[str, ...]
+    conflicts: tuple[str, ...]
+    explanation: tuple[str, ...]
+    evidence_ids: tuple[str, ...] = ()
+    proven: bool = False
+
+    @property
+    def selected_ids(self) -> tuple[str, ...]:
+        return self.feature_ids
+
+
+def solve_typed_compositions(
+    features: Iterable[TypedFeatureSpec | Mapping[str, Any]],
+    required_capabilities: Iterable[str],
+    *,
+    max_components: int = 4,
+    max_depth: int = 3,
+    max_results: int = 20,
+) -> list[TypedCompositionCandidate]:
+    """Explore explicit typed interfaces with deterministic bounded semantics.
+
+    ``requires`` and ``consumes`` are both obligations for a candidate, while
+    ``adapters`` and ``boundaries`` are only reported from explicit input. No
+    name, embedding, graph position, or LLM interpretation creates an edge.
+    The returned records are review candidates and never proofs.
+    """
+
+    specs = _normalise_typed_specs(features)
+    records = [
+        FeatureRecord(
+            spec.id,
+            provides=spec.provides,
+            requires=spec.requires | spec.consumes,
+            conflicts=spec.conflicts,
+            evidence_ids=spec.evidence_ids,
+        )
+        for spec in specs
+    ]
+    candidates = solve_compositions(
+        records,
+        required_capabilities,
+        max_components=max_components,
+        max_depth=max_depth,
+        max_results=max_results,
+    )
+    by_id = {spec.id: spec for spec in specs}
+    typed: list[TypedCompositionCandidate] = []
+    for candidate in candidates:
+        all_ids = candidate.feature_ids + candidate.dependency_ids
+        selected_specs = tuple(by_id[item] for item in all_ids)
+        consumed = frozenset(item for spec in selected_specs for item in spec.consumes)
+        unresolved = frozenset(candidate.unresolved_requirements)
+        typed_conflicts = _typed_conflicts(selected_specs)
+        conflicts = tuple(sorted(set(candidate.conflicts) | set(typed_conflicts)))
+        adapters = tuple(
+            sorted({item for spec in selected_specs for item in spec.adapters})
+        )
+        boundaries = tuple(
+            sorted({item for spec in selected_specs for item in spec.boundaries})
+        )
+        preconditions = tuple(
+            sorted({item for spec in selected_specs for item in spec.preconditions})
+        )
+        postconditions = tuple(
+            sorted({item for spec in selected_specs for item in spec.postconditions})
+        )
+        resources = tuple(
+            sorted({item for spec in selected_specs for item in spec.resource_effects})
+        )
+        failures = tuple(
+            sorted({item for spec in selected_specs for item in spec.failure_modes})
+        )
+        property_effects = tuple(
+            f"{relation}:{item}"
+            for relation in (
+                "shared",
+                "preserves",
+                "refines",
+                "weakens",
+                "strengthens",
+                "unverified",
+            )
+            for item in sorted(
+                {value for spec in selected_specs for value in getattr(spec, relation)}
+            )
+        )
+        explanation = list(candidate.explanation)
+        if consumed:
+            explanation.append("consumed capabilities: " + ", ".join(sorted(consumed)))
+        if adapters:
+            explanation.append(
+                "explicit adapters/boundaries only: " + ", ".join(adapters)
+            )
+        if typed_conflicts:
+            explanation.append("typed conflicts: " + ", ".join(typed_conflicts))
+        explanation.append("typed semantics remain a candidate; validation is required")
+        typed.append(
+            TypedCompositionCandidate(
+                feature_ids=candidate.feature_ids,
+                dependency_ids=candidate.dependency_ids,
+                provided_capabilities=candidate.provided_capabilities,
+                required_capabilities=candidate.required_capabilities,
+                consumed_capabilities=tuple(sorted(consumed)),
+                unresolved_requirements=tuple(sorted(unresolved)),
+                adapters=adapters,
+                boundaries=boundaries,
+                preconditions=preconditions,
+                postconditions=postconditions,
+                resource_effects=resources,
+                failure_modes=failures,
+                property_effects=property_effects,
+                conflicts=conflicts,
+                explanation=tuple(explanation),
+                evidence_ids=tuple(
+                    sorted(
+                        {item for spec in selected_specs for item in spec.evidence_ids}
+                    )
+                ),
+            )
+        )
+    return typed
+
+
+def _normalise_typed_specs(
+    features: Iterable[TypedFeatureSpec | Mapping[str, Any]],
+) -> tuple[TypedFeatureSpec, ...]:
+    specs = tuple(
+        item if isinstance(item, TypedFeatureSpec) else typed_spec_from_mapping(item)
+        for item in features
+    )
+    ids = [item.id for item in specs]
+    if len(ids) != len(set(ids)):
+        raise ValueError("duplicate typed feature id")
+    return tuple(sorted(specs, key=lambda item: item.id))
+
+
+def _typed_conflicts(specs: tuple[TypedFeatureSpec, ...]) -> tuple[str, ...]:
+    provided = {item for spec in specs for item in spec.provides}
+    conflicts = {
+        f"{spec.id}:{conflict}"
+        for spec in specs
+        for conflict in spec.conflicts
+        if conflict in provided
+    }
+    return tuple(sorted(conflicts))
+
+
+def adapt_typed_composition(
+    value: Mapping[str, Any], *, evidence_ids: set[str] | None = None
+) -> tuple[TypedFeatureSpec, ...]:
+    """Adapt declared typed component semantics into solver specifications.
+
+    Discovery paths, vector similarity, graph position, and LLM explanations
+    are provenance only; this adapter never treats them as compatibility edges.
+    """
+
+    validate_typed_composition(value, evidence_ids=evidence_ids)
+    return tuple(
+        typed_spec_from_mapping(
+            {
+                "id": component["id"],
+                "provides": component.get("provides", []),
+                "requires": component.get("requires", []),
+                "consumes": component.get("consumes", []),
+                "adapters": component.get("adapters", []),
+                "boundaries": component.get("boundaries", []),
+                "evidence_ids": component["evidence_ids"],
+            }
+        )
+        for component in value["components"]
+    )
 
 
 def adapt_reviewed_cards(

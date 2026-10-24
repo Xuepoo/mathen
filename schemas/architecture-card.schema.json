@@ -228,6 +228,9 @@
           "type": "array",
           "items": { "$ref": "#/$defs/claimEvidence" }
         },
+        "typed_semantics": {
+          "$ref": "architecture-typed-composition.schema.json"
+        },
         "claim_status": { "$ref": "#/$defs/claimStatus" },
         "evidence_ids": {
           "type": "array",

@@ -285,6 +285,18 @@ def build_modeling_bundle(
                     "mapping; unknown evidence remains unknown or out of scope."
                 ),
             },
+            "typed_composition_semantics": {
+                "schema": "schemas/architecture-typed-composition.schema.json",
+                "boundary": (
+                    "Use explicit requires/provides/consumes, adapters, boundaries, "
+                    "property effects, pre/postconditions, resources, failures, "
+                    "examples, counterexamples, uncertainty, and disagreement. "
+                    "Preserve discovery method/provenance and cross-community "
+                    "source-target paths; never infer compatibility from names, "
+                    "vectors, graph position, or LLM interpretation. Keep proven "
+                    "false until a contract or experiment validates the candidate."
+                ),
+            },
             "evidence_rules": [
                 "Do not promote a path name or file count into a semantic fact.",
                 "Every feature and mathematical view must cite evidence IDs.",

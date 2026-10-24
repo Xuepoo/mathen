@@ -72,6 +72,17 @@ the draft reduces review effort without hiding uncertainty). These dimensions
 should be reported separately against a reviewed reference or reviewer audit;
 they are not collapsed into an ungrounded confidence score.
 
+LLMs are broad structural-discovery instruments, not autonomous architecture
+oracles. Humans provide problem reframing, curiosity, direction, and final
+review; graphs and vectors expose candidate paths; an LLM retrieves, explains,
+or proposes mappings; typed mathematical contracts and experiments validate
+them. The typed composition contract preserves discovery method and provenance,
+source/target communities and path, shared/preserved/weakened/unverified
+properties, uncertainty, counterexamples, and disagreement. Vector similarity,
+graph position, LLM interpretation, and validated relations remain separate
+fields. Distant cross-community candidates are intentionally allowed, but stay
+candidates with `proven: false` until validation.
+
 ## Configuration
 
 The command accepts explicit flags or environment variables. Explicit flags
