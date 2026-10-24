@@ -100,6 +100,55 @@ class RelationCandidateTests(unittest.TestCase):
             report["candidates"][0]["evidence_candidates"], ["source-evidence"]
         )
 
+    def test_mention_only_existing_target_is_score_70(self) -> None:
+        report = generate_relation_candidate_report(
+            [
+                card(
+                    "source",
+                    feature_description="The source integrates with Target.",
+                ),
+                card("target", name="Target"),
+            ]
+        )
+
+        self.assertEqual(
+            report["candidates"],
+            [
+                {
+                    "source": "source",
+                    "target": "target",
+                    "target_exists": True,
+                    "status": "needs-review",
+                    "reasons": ["source_local_target_mention"],
+                    "score": 70,
+                    "evidence_candidates": ["source-evidence"],
+                }
+            ],
+        )
+
+    def test_mention_only_missing_target_is_catalog_boundary(self) -> None:
+        report = generate_relation_candidate_report(
+            [
+                card(
+                    "source",
+                    feature_description="The source integrates with Unreviewed.",
+                ),
+                card("catalog-anchor", related_systems=["unreviewed"]),
+            ]
+        )
+
+        candidate = next(
+            item for item in report["candidates"] if item["source"] == "source"
+        )
+        self.assertEqual(candidate["target"], "unreviewed")
+        self.assertFalse(candidate["target_exists"])
+        self.assertEqual(candidate["status"], "missing-target")
+        self.assertEqual(
+            candidate["reasons"], ["source_local_target_mention", "missing_target"]
+        )
+        self.assertEqual(candidate["score"], 70)
+        self.assertEqual(candidate["evidence_candidates"], ["source-evidence"])
+
     def test_target_mention_needs_source_local_evidence_boundary(self) -> None:
         source = card(
             "source",

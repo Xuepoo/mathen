@@ -25,7 +25,11 @@ class FeatureRecord:
 
 @dataclass(frozen=True, slots=True)
 class CompositionCandidate:
-    """An explainable candidate returned by :func:`solve_compositions`."""
+    """An explainable candidate returned by :func:`solve_compositions`.
+
+    ``score`` is an uncalibrated deterministic review-priority heuristic. It is
+    not a probability, compatibility score, or proof.
+    """
 
     feature_ids: tuple[str, ...]
     dependency_ids: tuple[str, ...]
@@ -181,18 +185,7 @@ def solve_compositions(
             )
             candidates[candidate.feature_ids] = candidate
 
-    ordered = sorted(
-        candidates.values(),
-        key=lambda candidate: (
-            candidate.unresolved_requirements != (),
-            candidate.conflicts != (),
-            -candidate.score,
-            -candidate.coverage_score,
-            -candidate.evidence_score,
-            len(candidate.feature_ids),
-            candidate.feature_ids,
-        ),
-    )
+    ordered = sorted(candidates.values(), key=_candidate_order_key)
     return ordered[:max_results]
 
 
@@ -277,35 +270,96 @@ def _build_candidate(
     max_components: int,
     max_depth: int,
 ) -> CompositionCandidate:
-    chosen: dict[str, FeatureRecord] = {record.id: record for record in selected}
-    unresolved: set[str] = set()
-    pending = sorted(
-        (capability, 0)
-        for capability in {
-            requirement for record in selected for requirement in record.requires
-        }
+    closures = _provider_closures(
+        selected,
+        providers,
+        max_components=max_components,
+        max_depth=max_depth,
     )
-    visited_requirements: set[str] = set()
-    while pending:
-        pending.sort(key=lambda item: (item[1], item[0]))
-        capability, depth = pending.pop(0)
-        if capability in visited_requirements:
-            continue
-        visited_requirements.add(capability)
-        if any(capability in record.provides for record in chosen.values()):
-            continue
-        if depth > max_depth or len(chosen) >= max_components:
-            unresolved.add(capability)
-            continue
-        options = providers.get(capability, ())
-        provider = next((record for record in options if record.id not in chosen), None)
-        if provider is None:
-            unresolved.add(capability)
-            continue
-        chosen[provider.id] = provider
-        pending.extend((requirement, depth + 1) for requirement in provider.requires)
+    return min(
+        (
+            _build_candidate_for_closure(selected, closure, required, unresolved)
+            for closure, unresolved in closures
+        ),
+        key=_candidate_order_key,
+    )
 
-    all_records = tuple(sorted(chosen.values(), key=lambda record: record.id))
+
+def _provider_closures(
+    selected: tuple[FeatureRecord, ...],
+    providers: dict[str, tuple[FeatureRecord, ...]],
+    *,
+    max_components: int,
+    max_depth: int,
+) -> tuple[tuple[tuple[FeatureRecord, ...], frozenset[str]], ...]:
+    """Enumerate deterministic, bounded provider closures for ``selected``."""
+
+    records_by_id = {
+        record.id: record for options in providers.values() for record in options
+    }
+    records_by_id.update({record.id: record for record in selected})
+    closures: set[tuple[tuple[str, ...], frozenset[str]]] = set()
+
+    def visit(
+        chosen: dict[str, FeatureRecord],
+        pending: tuple[tuple[str, int], ...],
+        unresolved: frozenset[str],
+    ) -> None:
+        if not pending:
+            closure = tuple(sorted(chosen))
+            closures.add((closure, unresolved))
+            return
+
+        capability, depth = min(pending, key=lambda item: (item[1], item[0]))
+        remaining = tuple(item for item in pending if item[0] != capability)
+        if any(capability in record.provides for record in chosen.values()):
+            visit(chosen, remaining, unresolved)
+            return
+
+        if depth > max_depth or len(chosen) >= max_components:
+            visit(chosen, remaining, unresolved | {capability})
+            return
+
+        options = providers.get(capability, ())
+        added_provider = False
+        for provider in options:
+            if provider.id in chosen:
+                continue
+            added_provider = True
+            expanded = dict(chosen)
+            expanded[provider.id] = provider
+            expanded_pending = remaining + tuple(
+                (requirement, depth + 1) for requirement in provider.requires
+            )
+            visit(expanded, expanded_pending, unresolved)
+        if not added_provider:
+            visit(chosen, remaining, unresolved | {capability})
+
+    visit(
+        {record.id: record for record in selected},
+        tuple(
+            (requirement, 0) for record in selected for requirement in record.requires
+        ),
+        frozenset(),
+    )
+    return tuple(
+        (
+            tuple(records_by_id[record_id] for record_id in closure),
+            unresolved,
+        )
+        for closure, unresolved in sorted(
+            closures, key=lambda item: (item[0], tuple(sorted(item[1])))
+        )
+    )
+
+
+def _build_candidate_for_closure(
+    selected: tuple[FeatureRecord, ...],
+    closure: tuple[FeatureRecord, ...],
+    required: frozenset[str],
+    closure_unresolved: frozenset[str],
+) -> CompositionCandidate:
+    all_records = tuple(sorted(closure, key=lambda record: record.id))
     provided = frozenset(
         capability for record in all_records for capability in record.provides
     )
@@ -315,7 +369,7 @@ def _build_candidate(
         )
         | required
     )
-    unresolved.update(required - provided)
+    unresolved = set(required_with_dependencies - provided) | set(closure_unresolved)
     conflict_ids = _find_conflicts(all_records)
     dependencies = tuple(
         record.id
@@ -362,13 +416,26 @@ def _build_candidate(
     )
 
 
+def _candidate_order_key(candidate: CompositionCandidate) -> tuple[Any, ...]:
+    return (
+        candidate.unresolved_requirements != (),
+        candidate.conflicts != (),
+        -candidate.score,
+        -candidate.coverage_score,
+        -candidate.evidence_score,
+        len(candidate.feature_ids),
+        candidate.feature_ids,
+        candidate.dependency_ids,
+    )
+
+
 def _find_conflicts(records: tuple[FeatureRecord, ...]) -> tuple[str, ...]:
+    """Match conflict tokens only against provided capability names."""
     conflicts: set[str] = set()
-    ids = {record.id for record in records}
     provided = {capability for record in records for capability in record.provides}
     for record in records:
         for conflict in record.conflicts:
-            if conflict in ids or conflict in provided:
+            if conflict in provided:
                 conflicts.add(f"{record.id}:{conflict}")
     return tuple(sorted(conflicts))
 

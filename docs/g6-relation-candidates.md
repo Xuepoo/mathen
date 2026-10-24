@@ -19,9 +19,10 @@ uv run mathen relation-candidates data/systems \
 
 ## Signals and boundaries
 
-The generator uses only high-confidence, card-visible signals:
+The generator uses bounded, card-visible review signals:
 
-- `related_systems` produces a navigation candidate, not a typed relation;
+- `related_systems` produces a navigation-only signal, not a typed relation or
+  semantic confidence claim;
 - an exact source-local target mention in an evidence-backed descriptive field
   produces a stronger signal only when it appears near an explicit
   integration/dependency cue such as `uses`, `depends on`, or `integrates with`;
@@ -43,17 +44,19 @@ The report contains `analysis_version`, sorted `card_ids`, an inventory of
 existing typed relations, deterministic scoring weights, and sorted
 `candidates`. Each candidate contains:
 
-| Field                 | Meaning                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------ |
-| `source`, `target`    | Directed card IDs or a missing target ID                                                   |
-| `target_exists`       | Whether the target is present in this card set                                             |
-| `status`              | `needs-review` or `missing-target`                                                         |
-| `reasons`             | Ordered signals: `related_systems`, `source_local_target_mention`, and/or `missing_target` |
-| `score`               | 70 for an evidence-bound mention plus 30 for `related_systems`                             |
-| `evidence_candidates` | Sorted source-local evidence IDs suitable for human review                                 |
+| Field                 | Meaning                                                                                                                                                                |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source`, `target`    | Directed card IDs or a missing target ID                                                                                                                               |
+| `target_exists`       | Whether the target is present in this card set                                                                                                                         |
+| `status`              | Processing state: `needs-review` means the target is cataloged and relation review remains; `missing-target` means catalog resolution is needed before relation review |
+| `reasons`             | Ordered signals: `related_systems`, `source_local_target_mention`, and/or `missing_target`                                                                             |
+| `score`               | Triage priority: 70 when an evidence-bound mention is present, independently of `related_systems`; add 30 when the navigation signal is also present                   |
+| `evidence_candidates` | Sorted source-local evidence IDs suitable for human review                                                                                                             |
 
-Candidates are merged by directed `(source, target)` pair. The score ranks
-review work; it is not a probability or a semantic confidence proof. Human
+Candidates are merged by directed `(source, target)` pair. A mention-only
+candidate is valid and receives score 70. `missing_target` changes catalog
+status only; it does not add score. The score ranks review work; it is not a
+probability or a semantic confidence proof. Human
 review must choose the relation type, claim type, notes, status, direction, and
 whether any canonical card edit is justified. The report intentionally cannot
 distinguish a universal dependency from an optional integration when the card

@@ -71,6 +71,16 @@ claims. A source archive is sufficient for tree inspection but does not preserve
 history-sensitive evidence; use a Git checkout when commit history or blame is
 part of the question.
 
+Bounded composition and relation-candidate scores are uncalibrated deterministic
+review-priority heuristics. They prioritize human inspection; they are not
+probabilities, compatibility scores, semantic confidence measures, or proofs.
+Composition conflict tokens use the explicit capability namespace only: a token
+matches when a composed record provides that capability, never merely because
+it equals a feature ID.
+Relation-candidate `missing-target` results identify a catalog boundary that
+must be resolved before relation review, while `related_systems` remains a
+navigation-only signal.
+
 ### Experiment evidence
 
 Evidence with `kind: "experiment"` carries a reproducibility record in addition

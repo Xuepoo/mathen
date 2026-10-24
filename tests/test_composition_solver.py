@@ -34,6 +34,27 @@ class CompositionSolverTests(unittest.TestCase):
         self.assertIn("dependency closure added: database", candidate.explanation)
         self.assertFalse(candidate.proven)
 
+    def test_provider_backtracking_chooses_usable_provider(self) -> None:
+        candidates = solve_compositions(
+            [
+                FeatureRecord(
+                    "app", provides=frozenset({"app"}), requires=frozenset({"runtime"})
+                ),
+                FeatureRecord(
+                    "a-bad-provider",
+                    provides=frozenset({"runtime"}),
+                    requires=frozenset({"missing"}),
+                ),
+                FeatureRecord("z-good-provider", provides=frozenset({"runtime"})),
+            ],
+            {"app"},
+            max_components=2,
+        )
+
+        candidate = next(item for item in candidates if item.feature_ids == ("app",))
+        self.assertEqual(candidate.dependency_ids, ("z-good-provider",))
+        self.assertEqual(candidate.unresolved_requirements, ())
+
     def test_conflicts_are_reported(self) -> None:
         candidates = solve_compositions(
             [
@@ -51,6 +72,23 @@ class CompositionSolverTests(unittest.TestCase):
         )
         self.assertEqual(candidate.conflicts, ("left:right",))
         self.assertIn("detected conflicts: left:right", candidate.explanation)
+
+    def test_feature_ids_are_not_conflict_tokens(self) -> None:
+        candidates = solve_compositions(
+            [
+                FeatureRecord(
+                    "left", provides=frozenset({"left"}), conflicts=frozenset({"right"})
+                ),
+                FeatureRecord("right", provides=frozenset({"other-capability"})),
+            ],
+            {"left", "other-capability"},
+            max_components=2,
+        )
+
+        candidate = next(
+            item for item in candidates if item.feature_ids == ("left", "right")
+        )
+        self.assertEqual(candidate.conflicts, ())
 
     def test_results_are_bounded(self) -> None:
         features = [
@@ -164,6 +202,8 @@ class CompositionSolverTests(unittest.TestCase):
             candidate.required_capabilities, ("application", "missing", "storage")
         )
         self.assertEqual(candidate.unresolved_requirements, ("missing",))
+        self.assertEqual(candidate.coverage_score, 0.5)
+        self.assertEqual(candidate.evidence_score, 1.0)
         self.assertEqual(
             candidate.evidence_ids,
             ("app-system:app-source", "storage-system:storage-source"),

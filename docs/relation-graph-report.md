@@ -8,6 +8,21 @@ snapshot distinguishes typed evidence-backed relations from legacy navigation
 metadata and from the separate mathematical-model projection. It does not add
 edges merely to remove isolated nodes.
 
+## Current inventory (219-card tree)
+
+The current canonical tree contains **219 systems**, **830 features**, **608
+mathematical views**, and **1,531 evidence records**. It has **46 proposed typed
+relations** (`uses`: 30, `resembles`: 12, `composes`: 4), **375 valid legacy
+related edges**, and **421 combined directed edges**. The combined graph has 27
+undirected components: one of size 186, seven of size 2, and 19 singletons.
+The current singleton list is `alacritty`, `bazel`, `cassandra`, `flutter`,
+`foundationdb`, `haproxy`, `javafx`, `just`, `leveldb`, `mihomo`, `mongodb`,
+`oauth2-proxy`, `pulsar`, `qt`, `tailscale`, `traefik`, `v2ray`, `wxwidgets`,
+and `xray`.
+
+The historical 172-card inventory and component list below remain useful for
+reproducing the earlier G6 review, but must not be read as current counts.
+
 A typed relation is directional and remains `proposed` until deliberate review accepts it. Its evidence IDs must be local to the source card. A legacy `related` edge is navigation context and carries no typed claim. A model-neighborhood edge groups explicitly named mathematical views; it is not a dependency or equivalence claim.
 
 ## Inventory
