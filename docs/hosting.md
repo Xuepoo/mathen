@@ -42,6 +42,29 @@ and deploys the Worker:
 just deploy
 ```
 
+## Public API protection
+
+When `TURNSTILE_SECRET_KEY` and `TURNSTILE_SITE_KEY` are configured on the
+Worker, all D1-backed API routes require a short-lived, signed
+`mathen_access` HttpOnly cookie issued after a successful Cloudflare Turnstile
+check. The public health and access-bootstrap routes remain available so a
+browser can complete the check. API clients such as the read-only MCP backend
+may use the optional `API_ACCESS_TOKEN` service token instead of a browser
+cookie; keep that token outside the repository.
+
+Configure the site key as a non-secret Worker variable and the secret as a
+Worker secret. `TURNSTILE_HOSTNAME` defaults to `mathen.xuepoo.xyz` and should
+only be changed for an explicitly configured preview deployment. The widget
+must be restricted to the matching hostname, use the `mathen-access` action,
+and use the managed mode. The application also applies a per-IP in-memory request limit
+and a short Worker Cache TTL for successful public GET responses. These are
+defense-in-depth measures; Cloudflare WAF/rate-limiting rules remain the
+authoritative protection against distributed floods.
+
+Until both Turnstile variables are configured, protection stays disabled so
+local development and deployments do not fail closed accidentally. Do not use
+a site key or secret belonging to another application or hostname.
+
 Reviewed cards and modeling bundles are seeded separately because seeding
 replaces the structured contents of the target database:
 

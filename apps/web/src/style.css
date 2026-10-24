@@ -106,7 +106,12 @@ h4 {
   height: 100dvh;
   overflow: hidden;
   position: relative;
-  background: radial-gradient(ellipse at 55% 40%, #1c2c3b 0%, #121e2a 42%, #0d151f 100%);
+  background: radial-gradient(
+    ellipse at 55% 40%,
+    #1c2c3b 0%,
+    #121e2a 42%,
+    #0d151f 100%
+  );
 }
 .explorer::before {
   content: "";
@@ -710,6 +715,20 @@ dialog::backdrop {
 }
 .detail-drawer {
   width: min(760px, calc(100% - 24px));
+}
+.access-dialog {
+  width: min(460px, calc(100% - 32px));
+  max-width: none;
+  margin: auto;
+  border-radius: 18px;
+}
+.access-dialog p {
+  max-width: 42ch;
+  line-height: 1.7;
+}
+.turnstile-widget {
+  min-height: 70px;
+  margin: 22px 0 8px;
 }
 .dialog-header {
   display: flex;

@@ -1,7 +1,11 @@
 import "./style.css";
 import ForceGraph3D, { type ForceGraph3DInstance } from "3d-force-graph";
 import { createLabelPool } from "./graph-labels";
-import { frameNodes, seedCoordinates, worldUnitsPerPixel } from "./graph-viewport";
+import {
+  frameNodes,
+  seedCoordinates,
+  worldUnitsPerPixel,
+} from "./graph-viewport";
 import { applyView, expandOneHop, applyPin, type Pin } from "./graph-view";
 import { movablePanel } from "./movable-panel";
 import { configureNavigation } from "./navigation-controls";
@@ -28,6 +32,26 @@ import {
   type SimulationNode,
 } from "./model-data";
 import { renderDetail, type SystemDetail } from "./system-detail";
+
+type TurnstileWidget = {
+  render: (
+    container: HTMLElement,
+    options: {
+      sitekey: string;
+      action: string;
+      callback: (token: string) => void;
+      "error-callback": () => void;
+      "expired-callback": () => void;
+    },
+  ) => string;
+  reset: (widgetId?: string) => void;
+};
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileWidget;
+  }
+}
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root is missing");
@@ -69,6 +93,12 @@ app.innerHTML = `
 
     <div id="state" class="state-panel glass" role="status"><span class="state-orbit" aria-hidden="true"></span><h1>Connecting the atlas</h1><p>Loading reviewed systems and their relationships…</p></div>
     <div id="metadata-notice" class="metadata-notice glass" role="status" hidden></div>
+    <dialog id="access-dialog" class="access-dialog" aria-labelledby="access-title">
+      <div class="dialog-header"><div><p class="eyebrow">Public access check</p><h2 id="access-title">Verify to explore Mathen</h2></div></div>
+      <p>Complete the Cloudflare check to protect the shared architecture database from automated query floods.</p>
+      <div id="turnstile-widget" class="turnstile-widget"></div>
+      <p id="access-status" class="muted" role="status">Preparing verification…</p>
+    </dialog>
     <aside id="inspector" class="inspector glass" aria-label="Selection" hidden></aside>
     <div id="node-menu" class="node-menu glass" role="menu" aria-label="Node actions" hidden></div>
     <footer class="map-footer">
@@ -102,6 +132,8 @@ const expandedNodes = new Set<string>();
 const state = required<HTMLDivElement>("state");
 const catalog = required<HTMLDialogElement>("catalog-dialog");
 const detailDialog = required<HTMLDialogElement>("detail-dialog");
+const accessDialog = required<HTMLDialogElement>("access-dialog");
+const accessStatus = required<HTMLParagraphElement>("access-status");
 const helpDialog = required<HTMLDialogElement>("help-dialog");
 helpDialog.insertAdjacentHTML(
   "beforeend",
@@ -130,6 +162,8 @@ let initialFitPending = false;
 let allNames = true;
 let detailRequest = 0;
 let metadataLoaded = false;
+let accessReady = false;
+let accessRequest: Promise<void> | undefined;
 type LabelAnchor = {
   scale: { setScalar: (scale: number) => void };
   updateMatrixWorld: (force: boolean) => void;
@@ -160,7 +194,10 @@ const labels = createLabelPool<SimulationNode, HTMLSpanElement>({
     return label;
   },
   update: (label, node) => {
-    label.classList.toggle("active", node.id === selectedId || node.id === hoveredId);
+    label.classList.toggle(
+      "active",
+      node.id === selectedId || node.id === hoveredId,
+    );
   },
   dispose: (label) => {
     labelElements.delete(label.dataset.nodeId!);
@@ -176,8 +213,10 @@ const relationColor = (type: string) =>
     : type === "related"
       ? "#8c9cab"
       : relationColors[
-          [...type].reduce((sum, character) => sum + character.charCodeAt(0), 0) %
-            relationColors.length
+          [...type].reduce(
+            (sum, character) => sum + character.charCodeAt(0),
+            0,
+          ) % relationColors.length
         ];
 const duration = () => (reducedMotion.matches ? 0 : 500);
 
@@ -185,8 +224,9 @@ function escapeHtml(value: string) {
   return value.replace(
     /[&<>"']/g,
     (character) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ??
-      character,
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        character
+      ] ?? character,
   );
 }
 
@@ -194,9 +234,120 @@ function showDialog(dialog: HTMLDialogElement) {
   closeNodeMenu();
   if (!dialog.open) dialog.showModal();
 }
-document.querySelectorAll<HTMLButtonElement>("[data-close]").forEach((button) => {
-  button.addEventListener("click", () => button.closest("dialog")?.close());
-});
+
+function loadTurnstileScript() {
+  return new Promise<void>((resolve, reject) => {
+    if (window.turnstile) {
+      resolve();
+      return;
+    }
+    const existing = document.querySelector<HTMLScriptElement>(
+      "script[data-mathen-turnstile]",
+    );
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener(
+        "error",
+        () => reject(new Error("Turnstile failed to load")),
+        {
+          once: true,
+        },
+      );
+      return;
+    }
+    const script = document.createElement("script");
+    script.src =
+      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.dataset.mathenTurnstile = "true";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Turnstile failed to load"));
+    document.head.append(script);
+  });
+}
+
+async function startAccess() {
+  if (accessReady || accessRequest) return accessRequest;
+  accessRequest = (async () => {
+    const response = await fetch("/api/access/config", {
+      credentials: "include",
+    });
+    if (!response.ok)
+      throw new Error(`Access config returned ${response.status}`);
+    const body = (await response.json()) as {
+      data?: {
+        enabled?: boolean;
+        authenticated?: boolean;
+        site_key?: string | null;
+      };
+    };
+    const config = body.data;
+    if (!config?.enabled || config.authenticated) {
+      accessReady = true;
+      void loadGraph();
+      void loadMetadata();
+      return;
+    }
+    if (!config.site_key) throw new Error("Turnstile site key is unavailable");
+    showDialog(accessDialog);
+    accessStatus.textContent = "Complete the Cloudflare check to continue.";
+    await loadTurnstileScript();
+    if (!window.turnstile) throw new Error("Turnstile is unavailable");
+    const widgetId = window.turnstile.render(required("turnstile-widget"), {
+      sitekey: config.site_key,
+      action: "mathen-access",
+      callback: (token) => {
+        void fetch("/api/access/turnstile", {
+          method: "POST",
+          credentials: "include",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ token }),
+        })
+          .then(async (verification) => {
+            if (!verification.ok)
+              throw new Error("Turnstile verification failed");
+            accessReady = true;
+            accessDialog.close();
+            void loadGraph();
+            void loadMetadata();
+          })
+          .catch(() => {
+            accessStatus.textContent = "Verification failed. Please try again.";
+            window.turnstile?.reset(widgetId);
+          });
+      },
+      "error-callback": () => {
+        accessStatus.textContent =
+          "Turnstile could not verify this browser. Retry the check.";
+      },
+      "expired-callback": () => {
+        accessStatus.textContent =
+          "The verification expired. Please complete it again.";
+      },
+    });
+  })().catch(() => {
+    accessStatus.textContent =
+      "Access verification is unavailable. Please retry later.";
+    accessStatus.insertAdjacentHTML(
+      "afterend",
+      '<button id="retry-access" class="primary-button">Retry verification</button>',
+    );
+    required("retry-access").onclick = () => {
+      document.getElementById("retry-access")?.remove();
+      accessRequest = undefined;
+      void startAccess();
+    };
+  });
+  return accessRequest;
+}
+
+accessDialog.addEventListener("cancel", (event) => event.preventDefault());
+document
+  .querySelectorAll<HTMLButtonElement>("[data-close]")
+  .forEach((button) => {
+    button.addEventListener("click", () => button.closest("dialog")?.close());
+  });
 for (const dialog of [catalog, detailDialog, helpDialog]) {
   let opener: HTMLElement | null = null;
   let backdropDown = false;
@@ -234,7 +385,10 @@ for (const dialog of [catalog, detailDialog, helpDialog]) {
 
 function configureCamera() {
   if (!graph) return;
-  configureNavigation(graph.controls() as Parameters<typeof configureNavigation>[0], dimensions);
+  configureNavigation(
+    graph.controls() as Parameters<typeof configureNavigation>[0],
+    dimensions,
+  );
   required("gesture-hint").textContent =
     dimensions === 2
       ? "Drag space to pan. Drag a node to reshape its neighborhood. Scroll to zoom."
@@ -259,7 +413,8 @@ function createGraph() {
     .nodeRelSize(4)
     .nodeResolution(16)
     .nodeVal(
-      (node: SimulationNode) => (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65,
+      (node: SimulationNode) =>
+        (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65,
     )
     .nodeColor(nodeColor)
     .nodeOpacity(0.95)
@@ -353,8 +508,12 @@ function createGraph() {
   graph.d3Force("charge")?.strength(-140).distanceMax(650);
   graph
     .d3Force("link")
-    ?.distance((link: SimulationLink) => (link.type === "modeled-by" ? 220 : 150))
-    .strength((link: SimulationLink) => (link.type === "related" ? 0.12 : 0.35));
+    ?.distance((link: SimulationLink) =>
+      link.type === "modeled-by" ? 220 : 150,
+    )
+    .strength((link: SimulationLink) =>
+      link.type === "related" ? 0.12 : 0.35,
+    );
   graph.d3Force("center")?.strength(0.08);
   configureCamera();
   new ResizeObserver(() => {
@@ -387,7 +546,9 @@ function nodeName(id: string) {
   );
 }
 function graphSource(): ExplorerPayload {
-  return graphMode === "models" ? (modelCanonical ?? { nodes: [], edges: [] }) : canonical;
+  return graphMode === "models"
+    ? (modelCanonical ?? { nodes: [], edges: [] })
+    : canonical;
 }
 function closeNodeMenu(restore = true) {
   if (nodeMenu.hidden) return;
@@ -405,42 +566,44 @@ function openNodeMenu(id: string, x?: number, y?: number) {
   nodeMenu.hidden = false;
   nodeMenu.style.left = `${Math.max(8, Math.min(x ?? point.x + 14, window.innerWidth - nodeMenu.offsetWidth - 8))}px`;
   nodeMenu.style.top = `${Math.max(8, Math.min(y ?? point.y, window.innerHeight - nodeMenu.offsetHeight - 8))}px`;
-  nodeMenu.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
-    button.onclick = () => {
-      closeNodeMenu();
-      switch (button.dataset.action) {
-        case "pin":
-          if (pins.has(id)) pins.delete(id);
-          else pins.set(id, { x: node.x!, y: node.y!, z: node.z! });
-          applyPin(node, pins.get(id), dimensions);
-          required("simulation-status").textContent =
-            `${node.name} ${pins.has(id) ? "pinned" : "unpinned"}`;
-          break;
-        case "expand":
-          expandOneHop(
-            graphSource(),
-            id,
-            expandedNodes,
-            graphMode === "models" ? "all" : relationSelect.value,
-          );
-          updateGraph();
-          required("simulation-status").textContent =
-            "Expanded actual neighbors · domain exceptions active";
-          break;
-        case "hide":
-          hiddenNodes.add(id);
-          updateGraph();
-          required("restore-hidden").focus();
-          break;
-        case "details":
-          if (node.type === "model") {
-            selectNode(id);
-            required("node-actions").focus();
-          } else void openDetail(id);
-          break;
-      }
-    };
-  });
+  nodeMenu
+    .querySelectorAll<HTMLButtonElement>("[data-action]")
+    .forEach((button) => {
+      button.onclick = () => {
+        closeNodeMenu();
+        switch (button.dataset.action) {
+          case "pin":
+            if (pins.has(id)) pins.delete(id);
+            else pins.set(id, { x: node.x!, y: node.y!, z: node.z! });
+            applyPin(node, pins.get(id), dimensions);
+            required("simulation-status").textContent =
+              `${node.name} ${pins.has(id) ? "pinned" : "unpinned"}`;
+            break;
+          case "expand":
+            expandOneHop(
+              graphSource(),
+              id,
+              expandedNodes,
+              graphMode === "models" ? "all" : relationSelect.value,
+            );
+            updateGraph();
+            required("simulation-status").textContent =
+              "Expanded actual neighbors · domain exceptions active";
+            break;
+          case "hide":
+            hiddenNodes.add(id);
+            updateGraph();
+            required("restore-hidden").focus();
+            break;
+          case "details":
+            if (node.type === "model") {
+              selectNode(id);
+              required("node-actions").focus();
+            } else void openDetail(id);
+            break;
+        }
+      };
+    });
   nodeMenu.querySelector<HTMLButtonElement>("button")?.focus();
 }
 nodeMenu.addEventListener("keydown", (event) => {
@@ -453,7 +616,8 @@ nodeMenu.addEventListener("keydown", (event) => {
         ? 0
         : event.key === "End"
           ? items.length - 1
-          : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
+          : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) %
+            items.length
     ]?.focus();
   }
   if (event.key === "Tab") closeNodeMenu(false);
@@ -463,13 +627,18 @@ function nodeColor(node: SimulationNode) {
   const active =
     (!highlighted.size || highlighted.has(node.id)) &&
     (!searchMatches || searchMatches.has(node.id));
-  return active ? (node.type === "model" ? "#d5afff" : domainFor(node.id).color) : "#34404c";
+  return active
+    ? node.type === "model"
+      ? "#d5afff"
+      : domainFor(node.id).color
+    : "#34404c";
 }
 function linkColor(link: SimulationLink) {
   if (selectedEdge?.id === link.id) return "#ffffff";
   if (
     highlighted.size &&
-    (!highlighted.has(endpointId(link.source)) || !highlighted.has(endpointId(link.target)))
+    (!highlighted.has(endpointId(link.source)) ||
+      !highlighted.has(endpointId(link.target)))
   )
     return "#29323d";
   return relationColor(link.type);
@@ -512,7 +681,10 @@ function updateGraph() {
   initialFitPending = true;
   visible =
     graphMode === "models"
-      ? filterModelGraph(modelCanonical ?? { nodes: [], edges: [] }, domainSelect.value)
+      ? filterModelGraph(
+          modelCanonical ?? { nodes: [], edges: [] },
+          domainSelect.value,
+        )
       : filterGraph(canonical, domainSelect.value, relationSelect.value);
   visible = applyView(
     graphSource(),
@@ -521,7 +693,8 @@ function updateGraph() {
     hiddenNodes,
     graphMode === "models" ? "all" : relationSelect.value,
   );
-  if (selectedId && !visible.nodes.some((node) => node.id === selectedId)) clearSelection();
+  if (selectedId && !visible.nodes.some((node) => node.id === selectedId))
+    clearSelection();
   selectedEdge = undefined;
   const next = modelSimulationData(visible);
   const old = new Map(graph?.graphData().nodes.map((node) => [node.id, node]));
@@ -549,7 +722,8 @@ function updateGraph() {
     graphMode === "models"
       ? `${visible.nodes.filter((node) => node.type === "system").length} systems / ${visible.nodes.filter((node) => node.type === "model").length} models / ${visible.edges.length} model links`
       : `${visible.nodes.length} systems / ${visible.edges.length} relations`;
-  if (expandedNodes.size) required("counts").textContent += " · expanded beyond group";
+  if (expandedNodes.size)
+    required("counts").textContent += " · expanded beyond group";
   if (visible.nodes.length) state.hidden = true;
   else {
     state.hidden = false;
@@ -558,7 +732,8 @@ function updateGraph() {
   }
   updateSearch();
   required("restore-hidden").hidden = !hiddenNodes.size;
-  required("restore-hidden").textContent = `Restore hidden (${hiddenNodes.size})`;
+  required("restore-hidden").textContent =
+    `Restore hidden (${hiddenNodes.size})`;
   renderCatalog();
   updateStyles();
   if (!paused) reheat();
@@ -568,9 +743,13 @@ function updateGraph() {
 function safeViewport() {
   const width = host.clientWidth;
   const height = host.clientHeight;
-  const tools = required("fit").closest(".graph-tools")!.getBoundingClientRect();
+  const tools = required("fit")
+    .closest(".graph-tools")!
+    .getBoundingClientRect();
   const filters = domainSelect.closest(".filters")!.getBoundingClientRect();
-  const footer = required("counts").closest(".map-key")!.getBoundingClientRect();
+  const footer = required("counts")
+    .closest(".map-key")!
+    .getBoundingClientRect();
   const mobile = width <= 700;
   return {
     width,
@@ -583,14 +762,17 @@ function safeViewport() {
 }
 function flatten2D() {
   // The engine deletes z when changing dimensions, including while forces are paused.
-  if (dimensions === 2) for (const node of graph?.graphData().nodes ?? []) node.z = 0;
+  if (dimensions === 2)
+    for (const node of graph?.graphData().nodes ?? []) node.z = 0;
 }
 function fit(ms = duration(), only?: Set<string>) {
   if (!graph) return;
   const nodes = graph
     .graphData()
     .nodes.filter(
-      (node) => (!only || only.has(node.id)) && [node.x, node.y, node.z].every(Number.isFinite),
+      (node) =>
+        (!only || only.has(node.id)) &&
+        [node.x, node.y, node.z].every(Number.isFinite),
     ) as (SimulationNode & { x: number; y: number; z: number })[];
   if (!nodes.length) return;
   const camera = graph.camera() as unknown as { fov: number };
@@ -619,7 +801,10 @@ function renderScreenGeometry() {
       const depth = -(m[2] * x + m[6] * y + m[10] * z + m[14]);
       const radius = node.type === "model" ? 12 : 10;
       const baseRadius =
-        4 * Math.cbrt((node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65);
+        4 *
+        Math.cbrt(
+          (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65,
+        );
       const anchor = labelAnchors.get(node.id);
       if (anchor) {
         anchor.scale.setScalar(
@@ -639,11 +824,15 @@ function renderScreenGeometry() {
         point.y < -radius ||
         point.y > height + radius;
       if (!label.hidden) {
-        if (!labelWidths.has(node.id)) labelWidths.set(node.id, label.offsetWidth);
+        if (!labelWidths.has(node.id))
+          labelWidths.set(node.id, label.offsetWidth);
         const labelWidth = labelWidths.get(node.id)!;
         // Keep labels adjacent, flipping at the right edge without moving the node.
         const right = point.x + radius + 5;
-        const left = right + labelWidth < width - 8 ? right : point.x - radius - 5 - labelWidth;
+        const left =
+          right + labelWidth < width - 8
+            ? right
+            : point.x - radius - 5 - labelWidth;
         label.style.transform = `translate(${Math.max(8, left)}px, ${Math.max(4, Math.min(height - 24, point.y - 10))}px)`;
       }
     }
@@ -656,7 +845,8 @@ function renderScreenGeometry() {
       const y = ((source.y ?? 0) + (target.y ?? 0)) / 2;
       const z = ((source.z ?? 0) + (target.z ?? 0)) / 2;
       const depth = -(m[2] * x + m[6] * y + m[10] * z + m[14]);
-      const pixels = selectedEdge?.id === link.id ? 3 : link.type === "related" ? 1.2 : 2;
+      const pixels =
+        selectedEdge?.id === link.id ? 3 : link.type === "related" ? 1.2 : 2;
       anchor.scale.x = anchor.scale.y =
         (pixels * worldUnitsPerPixel(depth, camera.fov, height)) /
         (2 * anchor.geometry.parameters.radiusTop);
@@ -689,11 +879,15 @@ function selectNode(id: string) {
   selectedId = id;
   selectedEdge = undefined;
   highlighted = neighborhood(visible, id);
-  required<HTMLButtonElement>("focus").disabled = !visible.nodes.some((node) => node.id === id);
+  required<HTMLButtonElement>("focus").disabled = !visible.nodes.some(
+    (node) => node.id === id,
+  );
   results.hidden = true;
   renderNodeInspector(id);
   updateStyles();
-  const node = graph?.graphData().nodes.find((candidate) => candidate.id === id);
+  const node = graph
+    ?.graphData()
+    .nodes.find((candidate) => candidate.id === id);
   if (graph && node && [node.x, node.y, node.z].every(Number.isFinite)) {
     autoFit = false;
     initialFitPending = false;
@@ -718,10 +912,13 @@ function renderNodeInspector(id: string) {
     return;
   }
   const system = details.get(id) ?? systems.find((item) => item.id === id);
-  const edges = visible.edges.filter((edge) => edge.source === id || edge.target === id);
+  const edges = visible.edges.filter(
+    (edge) => edge.source === id || edge.target === id,
+  );
   inspector.hidden = false;
   inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow">${escapeHtml(domainFor(id).name)} · navigation group</p><h2>${escapeHtml(nodeName(id))}</h2><p class="selection-summary">${escapeHtml(system?.summary ?? "Open the architecture card for reviewed scope, features, and evidence.")}</p><div class="tag-row">${system ? system.scope.map((scope) => `<span>${escapeHtml(scope)}</span>`).join("") : "<span>Card scope loading on demand</span>"}</div><div class="inspector-bottom"><span>${edges.length} visible relation${edges.length === 1 ? "" : "s"}</span><button id="open-card" class="primary-button">Open card ↗</button></div>`;
-  if (graphMode === "models") inspector.insertAdjacentHTML("beforeend", modelConnections(id));
+  if (graphMode === "models")
+    inspector.insertAdjacentHTML("beforeend", modelConnections(id));
   bindInspector();
   required("open-card").onclick = () => void openDetail(id);
 }
@@ -729,7 +926,11 @@ function renderNodeInspector(id: string) {
 function modelConnections(id: string) {
   return `<div class="model-connections">${visible.edges
     .flatMap((edge) => {
-      if (edge.type !== "modeled-by" || (edge.source !== id && edge.target !== id)) return [];
+      if (
+        edge.type !== "modeled-by" ||
+        (edge.source !== id && edge.target !== id)
+      )
+        return [];
       const other = edge.source === id ? edge.target : edge.source;
       return [
         `<div><button data-inspect-node="${escapeHtml(other)}">${escapeHtml(nodeName(other))}</button><button data-view-edge="${escapeHtml(simulationEdgeId(edge.source, edge.target))}">Inspect ${edge.metadata?.length ?? 0} view${edge.metadata?.length === 1 ? "" : "s"} ↗</button></div>`,
@@ -749,16 +950,24 @@ function bindInspector() {
       if (selectedId) openNodeMenu(selectedId);
     };
   panel.clamp();
-  inspector.querySelector(".inspector-close")?.addEventListener("click", clearSelection);
-  inspector.querySelectorAll<HTMLButtonElement>("[data-inspect-node]").forEach((button) => {
-    button.onclick = () => selectNode(button.dataset.inspectNode!);
-  });
-  inspector.querySelectorAll<HTMLButtonElement>("[data-view-edge]").forEach((button) => {
-    button.onclick = () => {
-      const edge = graph?.graphData().links.find((link) => link.id === button.dataset.viewEdge);
-      if (edge) selectEdge(edge);
-    };
-  });
+  inspector
+    .querySelector(".inspector-close")
+    ?.addEventListener("click", clearSelection);
+  inspector
+    .querySelectorAll<HTMLButtonElement>("[data-inspect-node]")
+    .forEach((button) => {
+      button.onclick = () => selectNode(button.dataset.inspectNode!);
+    });
+  inspector
+    .querySelectorAll<HTMLButtonElement>("[data-view-edge]")
+    .forEach((button) => {
+      button.onclick = () => {
+        const edge = graph
+          ?.graphData()
+          .links.find((link) => link.id === button.dataset.viewEdge);
+        if (edge) selectEdge(edge);
+      };
+    });
 }
 function selectEdge(edge: SimulationLink) {
   closeNodeMenu(false);
@@ -770,7 +979,8 @@ function selectEdge(edge: SimulationLink) {
   if (edge.type === "modeled-by") {
     inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow model-family">Candidate mathematical views · ${escapeHtml(edge.claim_type ?? "")}</p><h2>${escapeHtml(nodeName(endpointId(edge.target)))}</h2><p>${escapeHtml(nodeName(endpointId(edge.source)))} → modeled by</p><div class="model-views">${(edge.metadata ?? []).map((view) => `<section><h3>${escapeHtml(view.model)}</h3><dl><dt>Question</dt><dd>${escapeHtml(view.question) || "Not supplied"}</dd><dt>Assumptions</dt><dd>${view.assumptions.length ? `<ul>${view.assumptions.map((assumption) => `<li>${escapeHtml(assumption)}</li>`).join("")}</ul>` : "None supplied"}</dd><dt>Claim</dt><dd>${escapeHtml(view.claim_type)}</dd><dt>Evidence IDs · source card</dt><dd>${view.evidence_ids.length ? view.evidence_ids.map(escapeHtml).join(", ") : "None supplied"}</dd></dl></section>`).join("") || "<p>No view metadata supplied.</p>"}</div><button id="source-card" class="primary-button">Open source card & evidence ↗</button>`;
     bindInspector();
-    required("source-card").onclick = () => void openDetail(endpointId(edge.source));
+    required("source-card").onclick = () =>
+      void openDetail(endpointId(edge.source));
     updateStyles();
     return;
   }
@@ -784,13 +994,21 @@ function selectEdge(edge: SimulationLink) {
       "",
     )}</div>${edge.notes ? `<p class="selection-summary">${escapeHtml(edge.notes)}</p>` : ""}<p class="muted">${edge.evidence_ids?.length ? `Evidence: ${edge.evidence_ids.map(escapeHtml).join(", ")}` : "No relation evidence supplied."}</p><button id="source-card" class="primary-button">Open source card & evidence ↗</button>`;
   bindInspector();
-  required("source-card").onclick = () => void openDetail(endpointId(edge.source));
+  required("source-card").onclick = () =>
+    void openDetail(endpointId(edge.source));
   updateStyles();
 }
 
 function updateSearch() {
-  const matches = searchNodes(visible.nodes, systems, search.value, visible.edges);
-  searchMatches = search.value.trim() ? new Set(matches.map((node) => node.id)) : undefined;
+  const matches = searchNodes(
+    visible.nodes,
+    systems,
+    search.value,
+    visible.edges,
+  );
+  searchMatches = search.value.trim()
+    ? new Set(matches.map((node) => node.id))
+    : undefined;
   results.hidden = !search.value.trim() || document.activeElement !== search;
   results.innerHTML = matches.length
     ? `${matches
@@ -799,7 +1017,9 @@ function updateSearch() {
           (node) =>
             `<button data-result="${escapeHtml(node.id)}"><strong>${escapeHtml(node.name)}</strong><small>${escapeHtml(node.type === "model" ? "Model family" : domainFor(node.id).name)}</small></button>`,
         )
-        .join("")}<button id="all-results">Browse all ${matches.length} results ↗</button>`
+        .join(
+          "",
+        )}<button id="all-results">Browse all ${matches.length} results ↗</button>`
     : `<p>No matching nodes in this navigation group.</p>`;
   results.querySelectorAll<HTMLButtonElement>("[data-result]").forEach(
     (button) =>
@@ -818,7 +1038,9 @@ function updateSearch() {
   updateStyles();
 }
 function renderCatalog() {
-  const nodes = (graphMode === "models" ? modelCanonical : canonical.nodes.length)
+  const nodes = (
+    graphMode === "models" ? modelCanonical : canonical.nodes.length
+  )
     ? visible.nodes
     : systems.map((system) => ({
         id: system.id,
@@ -839,7 +1061,10 @@ function renderCatalog() {
     : `<p class="muted">No nodes match this search. Change the query or navigation group.</p>`;
   required("catalog-list")
     .querySelectorAll<HTMLButtonElement>("[data-card]")
-    .forEach((button) => (button.onclick = () => void openDetail(button.dataset.card!)));
+    .forEach(
+      (button) =>
+        (button.onclick = () => void openDetail(button.dataset.card!)),
+    );
   required("catalog-list")
     .querySelectorAll<HTMLButtonElement>("[data-locate]")
     .forEach(
@@ -869,7 +1094,10 @@ async function openDetail(id: string) {
     detailContent.innerHTML = renderDetail(system, canonical);
     detailContent
       .querySelectorAll<HTMLButtonElement>("[data-related]")
-      .forEach((button) => (button.onclick = () => void openDetail(button.dataset.related!)));
+      .forEach(
+        (button) =>
+          (button.onclick = () => void openDetail(button.dataset.related!)),
+      );
     if (selectedId === id) renderNodeInspector(id);
   } catch {
     if (request !== detailRequest) return;
@@ -931,8 +1159,10 @@ async function loadGraph() {
       modelCanonical ??= await loadModelGraph();
     } else {
       const response = await fetch("/api/graph");
-      if (!response.ok) throw new Error(`Graph API returned ${response.status}`);
-      const payload = (await response.json()) as GraphPayload | { data: GraphPayload };
+      if (!response.ok)
+        throw new Error(`Graph API returned ${response.status}`);
+      const payload = (await response.json()) as
+        GraphPayload | { data: GraphPayload };
       canonical = "data" in payload ? payload.data : payload;
       if (!Array.isArray(canonical.nodes) || !Array.isArray(canonical.edges))
         throw new Error("Invalid graph payload");
@@ -941,7 +1171,9 @@ async function loadGraph() {
     if (!graph) createGraph();
     relationSelect.innerHTML = `<option value="all">All relations</option>${[
       ...new Set(
-        (mode === "models" ? modelCanonical!.edges : canonical.edges).map((edge) => edge.type),
+        (mode === "models" ? modelCanonical!.edges : canonical.edges).map(
+          (edge) => edge.type,
+        ),
       ),
     ]
       .sort()
@@ -982,9 +1214,16 @@ function switchGraphMode(mode: "systems" | "models") {
   graph?.graphData({ nodes: [], links: [] });
   relationSelect.value = "all";
   relationSelect.disabled = mode === "models";
-  required("graph-systems").setAttribute("aria-pressed", String(mode === "systems"));
-  required("graph-models").setAttribute("aria-pressed", String(mode === "models"));
-  search.placeholder = mode === "models" ? "Find a system or model…" : "Find a system…";
+  required("graph-systems").setAttribute(
+    "aria-pressed",
+    String(mode === "systems"),
+  );
+  required("graph-models").setAttribute(
+    "aria-pressed",
+    String(mode === "models"),
+  );
+  search.placeholder =
+    mode === "models" ? "Find a system or model…" : "Find a system…";
   search.setAttribute(
     "aria-label",
     mode === "models"
@@ -1018,7 +1257,12 @@ search.addEventListener("keydown", (event) => {
     results.querySelector<HTMLButtonElement>("button")?.focus();
   }
   if (event.key === "Enter") {
-    const first = searchNodes(visible.nodes, systems, search.value, visible.edges)[0];
+    const first = searchNodes(
+      visible.nodes,
+      systems,
+      search.value,
+      visible.edges,
+    )[0];
     if (first) {
       selectNode(first.id);
       search.blur();
@@ -1027,7 +1271,8 @@ search.addEventListener("keydown", (event) => {
 });
 document.addEventListener("pointerdown", (event) => {
   if (!(event.target as Element).closest(".search-wrap")) results.hidden = true;
-  if (!(event.target as Element).closest("#node-menu, #node-actions")) closeNodeMenu(false);
+  if (!(event.target as Element).closest("#node-menu, #node-actions"))
+    closeNodeMenu(false);
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !nodeMenu.hidden) {
@@ -1062,7 +1307,8 @@ required("catalog-open").onclick = () => {
   renderCatalog();
   showDialog(catalog);
 };
-required("help-open").onclick = required("legend-open").onclick = () => showDialog(helpDialog);
+required("help-open").onclick = required("legend-open").onclick = () =>
+  showDialog(helpDialog);
 domainSelect.onchange = () => {
   expandedNodes.clear();
   updateGraph();
@@ -1096,7 +1342,8 @@ required("pause").onclick = () => {
   updatePauseButton();
   if (paused) {
     graph?.cooldownTicks(0);
-    required("simulation-status").textContent = "Forces paused · navigation active";
+    required("simulation-status").textContent =
+      "Forces paused · navigation active";
   } else reheat();
 };
 for (const mode of [2, 3] as const)
@@ -1107,10 +1354,12 @@ for (const mode of [2, 3] as const)
     required("mode-2").setAttribute("aria-pressed", String(mode === 2));
     required("mode-3").setAttribute("aria-pressed", String(mode === 3));
     seedCoordinates(graph?.graphData().nodes ?? [], mode);
-    for (const node of graph?.graphData().nodes ?? []) applyPin(node, pins.get(node.id), mode);
+    for (const node of graph?.graphData().nodes ?? [])
+      applyPin(node, pins.get(node.id), mode);
     graph?.numDimensions(mode);
     configureCamera();
-    if (mode === 2) graph?.cameraPosition({ x: 0, y: 0, z: 700 }, { x: 0, y: 0, z: 0 }, 0);
+    if (mode === 2)
+      graph?.cameraPosition({ x: 0, y: 0, z: 700 }, { x: 0, y: 0, z: 0 }, 0);
     if (!paused) reheat();
     else graph?.cooldownTicks(0);
     autoFit = true;
@@ -1123,5 +1372,4 @@ reducedMotion.addEventListener("change", () => {
     updatePauseButton();
   }
 });
-void loadGraph();
-void loadMetadata();
+void startAccess();

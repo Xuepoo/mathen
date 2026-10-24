@@ -76,7 +76,10 @@ export type CompositionSearchResult = {
 
 export interface Backend {
   listSystems(includeDrafts: boolean): Promise<SystemSummary[]>;
-  getSystem(systemId: string, includeDrafts: boolean): Promise<ArchitectureCard | undefined>;
+  getSystem(
+    systemId: string,
+    includeDrafts: boolean,
+  ): Promise<ArchitectureCard | undefined>;
   searchFeatures(
     query: string,
     category: string | undefined,
@@ -131,7 +134,10 @@ export class FilesystemBackend implements Backend {
     }));
   }
 
-  async getSystem(systemId: string, includeDrafts: boolean): Promise<ArchitectureCard | undefined> {
+  async getSystem(
+    systemId: string,
+    includeDrafts: boolean,
+  ): Promise<ArchitectureCard | undefined> {
     const cards = await this.loadAllCards(includeDrafts);
     return cards.find((candidate) => candidate.id === systemId);
   }
@@ -181,7 +187,8 @@ export class FilesystemBackend implements Backend {
             (relation) =>
               (!systemId || card.id === systemId) &&
               (!featureId || relation.source_feature_id === featureId) &&
-              (!targetSystemId || relation.target_system_id === targetSystemId) &&
+              (!targetSystemId ||
+                relation.target_system_id === targetSystemId) &&
               (!type || relation.type === type),
           )
           .map((relation) => ({ source_system_id: card.id, ...relation })),
@@ -216,7 +223,10 @@ export class FilesystemBackend implements Backend {
       .flatMap((card) => {
         const composition = card.composition;
         if (!isCompositionRecord(composition)) return [];
-        if (inputSystem && !composition.inputs.some((input) => input.system_id === inputSystem)) {
+        if (
+          inputSystem &&
+          !composition.inputs.some((input) => input.system_id === inputSystem)
+        ) {
           return [];
         }
         if (claimStatus && composition.claim_status !== claimStatus) return [];
@@ -230,13 +240,17 @@ export class FilesystemBackend implements Backend {
       .slice(0, limit);
   }
 
-  private async loadAllCards(includeDrafts: boolean): Promise<ArchitectureCard[]> {
+  private async loadAllCards(
+    includeDrafts: boolean,
+  ): Promise<ArchitectureCard[]> {
     const reviewed = await this.loadCards(this.systemsDirectory);
     if (!includeDrafts) return reviewed;
     const drafts = await this.loadCards(this.draftsDirectory);
     return [
       ...reviewed,
-      ...drafts.filter((draft) => !reviewed.some((card) => card.id === draft.id)),
+      ...drafts.filter(
+        (draft) => !reviewed.some((card) => card.id === draft.id),
+      ),
     ];
   }
 
@@ -245,7 +259,9 @@ export class FilesystemBackend implements Backend {
       .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
       .map((entry) => entry.name);
     return Promise.all(
-      entries.sort().map((entry) => readJson<ArchitectureCard>(resolve(directory, entry))),
+      entries
+        .sort()
+        .map((entry) => readJson<ArchitectureCard>(resolve(directory, entry))),
     );
   }
 }
@@ -258,18 +274,27 @@ export class ApiBackend implements Backend {
   private readonly baseUrl: URL;
   private readonly fetcher: Fetcher;
   private readonly timeoutMs: number;
+  private readonly apiToken: string | undefined;
 
-  constructor(baseUrl: string, fetcher: Fetcher = fetch, timeoutMs = 10_000) {
+  constructor(
+    baseUrl: string,
+    fetcher: Fetcher = fetch,
+    timeoutMs = 10_000,
+    apiToken?: string,
+  ) {
     this.baseUrl = normalizeBaseUrl(baseUrl);
     this.fetcher = fetcher;
     this.timeoutMs = timeoutMs;
+    this.apiToken = apiToken?.trim() || undefined;
   }
 
   async listSystems(includeDrafts: boolean): Promise<SystemSummary[]> {
     this.rejectDrafts(includeDrafts);
     const data = await this.request<unknown[]>("/systems");
     if (!Array.isArray(data))
-      throw new BackendError("API response for GET /api/systems has invalid data");
+      throw new BackendError(
+        "API response for GET /api/systems has invalid data",
+      );
     return data.map((system) => {
       const card = asRecord(system);
       return {
@@ -282,12 +307,18 @@ export class ApiBackend implements Backend {
     });
   }
 
-  async getSystem(systemId: string, includeDrafts: boolean): Promise<ArchitectureCard | undefined> {
+  async getSystem(
+    systemId: string,
+    includeDrafts: boolean,
+  ): Promise<ArchitectureCard | undefined> {
     this.rejectDrafts(includeDrafts);
     try {
-      return normalizeCard(await this.request<unknown>(`/systems/${encodeURIComponent(systemId)}`));
+      return normalizeCard(
+        await this.request<unknown>(`/systems/${encodeURIComponent(systemId)}`),
+      );
     } catch (error) {
-      if (error instanceof ApiHttpError && error.status === 404) return undefined;
+      if (error instanceof ApiHttpError && error.status === 404)
+        return undefined;
       throw error;
     }
   }
@@ -305,12 +336,22 @@ export class ApiBackend implements Backend {
     if (claimType) params.set("claim_type", claimType);
     const data = await this.request<unknown[]>(`/features?${params}`);
     if (!Array.isArray(data))
-      throw new BackendError("API response for GET /api/features has invalid data");
+      throw new BackendError(
+        "API response for GET /api/features has invalid data",
+      );
     return data.map((result) => {
       const record = asRecord(result);
       return {
-        system_id: requiredString(record.system_id, "system_id", "/api/features"),
-        system_name: requiredString(record.system_name, "system_name", "/api/features"),
+        system_id: requiredString(
+          record.system_id,
+          "system_id",
+          "/api/features",
+        ),
+        system_name: requiredString(
+          record.system_name,
+          "system_name",
+          "/api/features",
+        ),
         feature: normalizeFeature(record.feature ?? record),
       };
     });
@@ -341,7 +382,9 @@ export class ApiBackend implements Backend {
 
   async getModelingBundle(systemId: string): Promise<unknown> {
     try {
-      return await this.request<unknown>(`/modeling/${encodeURIComponent(systemId)}`);
+      return await this.request<unknown>(
+        `/modeling/${encodeURIComponent(systemId)}`,
+      );
     } catch (error) {
       if (error instanceof ApiHttpError && error.status === 404) {
         throw new BackendError(`modeling bundle not found: ${systemId}`);
@@ -362,7 +405,9 @@ export class ApiBackend implements Backend {
     if (claimStatus) params.set("claim_status", claimStatus);
     const data = await this.request<unknown[]>(`/compositions?${params}`);
     if (!Array.isArray(data))
-      throw new BackendError("API response for GET /api/compositions has invalid data");
+      throw new BackendError(
+        "API response for GET /api/compositions has invalid data",
+      );
     return data.map(normalizeCompositionResult);
   }
 
@@ -380,7 +425,12 @@ export class ApiBackend implements Backend {
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
       const response = await this.fetcher(endpoint, {
-        headers: { accept: "application/json" },
+        headers: {
+          accept: "application/json",
+          ...(this.apiToken
+            ? { authorization: `Bearer ${this.apiToken}` }
+            : {}),
+        },
         signal: controller.signal,
       });
       if (!response.ok) throw new ApiHttpError(response.status, path);
@@ -388,15 +438,20 @@ export class ApiBackend implements Backend {
       try {
         body = await response.json();
       } catch {
-        throw new BackendError(`API response for GET /api${path} was not valid JSON`);
+        throw new BackendError(
+          `API response for GET /api${path} was not valid JSON`,
+        );
       }
       if (!isRecord(body) || !("data" in body)) {
-        throw new BackendError(`API response for GET /api${path} did not contain data`);
+        throw new BackendError(
+          `API response for GET /api${path} did not contain data`,
+        );
       }
       return (body as ApiEnvelope<T>).data;
     } catch (error) {
       if (error instanceof BackendError) throw error;
-      if (isAbortError(error)) throw new BackendError(`API request timed out: GET /api${path}`);
+      if (isAbortError(error))
+        throw new BackendError(`API request timed out: GET /api${path}`);
       throw new BackendError(`API request failed: GET /api${path}`);
     } finally {
       clearTimeout(timeout);
@@ -417,7 +472,9 @@ export function createBackend(
   repositoryRoot: string,
   apiUrl = process.env.MATHEN_API_URL,
 ): Backend {
-  return apiUrl?.trim() ? new ApiBackend(apiUrl.trim()) : new FilesystemBackend(repositoryRoot);
+  return apiUrl?.trim()
+    ? new ApiBackend(apiUrl.trim(), fetch, 10_000, process.env.MATHEN_API_TOKEN)
+    : new FilesystemBackend(repositoryRoot);
 }
 
 function normalizeBaseUrl(value: string): URL {
@@ -444,14 +501,18 @@ function normalizeCard(value: unknown): ArchitectureCard {
     name: requiredString(card.name, "name", "/api/systems/:id"),
     summary: requiredString(card.summary, "summary", "/api/systems/:id"),
     scope: stringArray(card.scope),
-    features: Array.isArray(card.features) ? card.features.map(normalizeFeature) : [],
+    features: Array.isArray(card.features)
+      ? card.features.map(normalizeFeature)
+      : [],
     mathematical_views: Array.isArray(card.mathematical_views)
       ? card.mathematical_views.map((view) => asRecord(view))
       : [],
     trade_offs: Array.isArray(card.trade_offs)
       ? card.trade_offs.map((tradeOff) => asRecord(tradeOff))
       : [],
-    evidence: Array.isArray(card.evidence) ? card.evidence.map(normalizeEvidence) : [],
+    evidence: Array.isArray(card.evidence)
+      ? card.evidence.map(normalizeEvidence)
+      : [],
     related_systems: stringArray(card.related_systems),
     version_context: optionalString(card.version_context),
     temporal_context: optionalRecord(card.temporal_context),
@@ -467,8 +528,16 @@ function normalizeFeature(value: unknown): Feature {
     id: requiredString(feature.id, "id", "/api/features"),
     name: requiredString(feature.name, "name", "/api/features"),
     category: requiredString(feature.category, "category", "/api/features"),
-    claim_type: requiredString(feature.claim_type, "claim_type", "/api/features"),
-    description: requiredString(feature.description, "description", "/api/features"),
+    claim_type: requiredString(
+      feature.claim_type,
+      "claim_type",
+      "/api/features",
+    ),
+    description: requiredString(
+      feature.description,
+      "description",
+      "/api/features",
+    ),
     benefits: stringArray(feature.benefits),
     costs: stringArray(feature.costs),
     evidence_ids: stringArray(feature.evidence_ids),
@@ -478,11 +547,21 @@ function normalizeFeature(value: unknown): Feature {
 function normalizeCompositionResult(value: unknown): CompositionSearchResult {
   const result = asRecord(value);
   return {
-    system_id: requiredString(result.system_id, "system_id", "/api/compositions"),
-    system_name: requiredString(result.system_name, "system_name", "/api/compositions"),
+    system_id: requiredString(
+      result.system_id,
+      "system_id",
+      "/api/compositions",
+    ),
+    system_name: requiredString(
+      result.system_name,
+      "system_name",
+      "/api/compositions",
+    ),
     version_context: optionalString(result.version_context) ?? null,
     composition: asRecord(result.composition),
-    evidence: Array.isArray(result.evidence) ? result.evidence.map(normalizeEvidence) : [],
+    evidence: Array.isArray(result.evidence)
+      ? result.evidence.map(normalizeEvidence)
+      : [],
   };
 }
 
@@ -498,16 +577,35 @@ function normalizeFeatureRelationResult(value: unknown): FeatureRelationResult {
   };
 }
 
-function normalizeFeatureRelation(value: unknown, endpoint: string): FeatureRelation {
+function normalizeFeatureRelation(
+  value: unknown,
+  endpoint: string,
+): FeatureRelation {
   const relation = asRecord(value);
   const notes = optionalString(relation.notes);
   return {
-    source_feature_id: requiredString(relation.source_feature_id, "source_feature_id", endpoint),
-    target_system_id: requiredString(relation.target_system_id, "target_system_id", endpoint),
-    target_feature_id: requiredString(relation.target_feature_id, "target_feature_id", endpoint),
+    source_feature_id: requiredString(
+      relation.source_feature_id,
+      "source_feature_id",
+      endpoint,
+    ),
+    target_system_id: requiredString(
+      relation.target_system_id,
+      "target_system_id",
+      endpoint,
+    ),
+    target_feature_id: requiredString(
+      relation.target_feature_id,
+      "target_feature_id",
+      endpoint,
+    ),
     type: requiredString(relation.type, "type", endpoint),
     claim_type: requiredString(relation.claim_type, "claim_type", endpoint),
-    claim_status: requiredString(relation.claim_status, "claim_status", endpoint),
+    claim_status: requiredString(
+      relation.claim_status,
+      "claim_status",
+      endpoint,
+    ),
     evidence_ids: stringArray(relation.evidence_ids),
     ...(notes ? { notes } : {}),
   };
@@ -534,9 +632,15 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
-function requiredString(value: unknown, field: string, endpoint: string): string {
+function requiredString(
+  value: unknown,
+  field: string,
+  endpoint: string,
+): string {
   if (typeof value !== "string")
-    throw new BackendError(`API response for GET ${endpoint} has invalid ${field}`);
+    throw new BackendError(
+      `API response for GET ${endpoint} has invalid ${field}`,
+    );
   return value;
 }
 
@@ -569,10 +673,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function isCompositionRecord(value: Record<string, unknown> | undefined): value is Record<
-  string,
-  unknown
-> & {
+function isCompositionRecord(
+  value: Record<string, unknown> | undefined,
+): value is Record<string, unknown> & {
   inputs: Array<Record<string, unknown> & { system_id: string }>;
   claim_status: string;
   constraints: unknown[];
@@ -588,12 +691,17 @@ function isCompositionRecord(value: Record<string, unknown> | undefined): value 
   if (
     !Array.isArray(value.evidence_ids) ||
     value.evidence_ids.length === 0 ||
-    !value.evidence_ids.every((item) => typeof item === "string" && item.length > 0)
+    !value.evidence_ids.every(
+      (item) => typeof item === "string" && item.length > 0,
+    )
   ) {
     return false;
   }
   return value.inputs.every(
-    (input) => isRecord(input) && typeof input.system_id === "string" && input.system_id.length > 0,
+    (input) =>
+      isRecord(input) &&
+      typeof input.system_id === "string" &&
+      input.system_id.length > 0,
   );
 }
 

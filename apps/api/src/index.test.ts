@@ -10,6 +10,45 @@ import {
   serializeMathematicalView,
 } from "./index.js";
 
+test("D1-backed routes require Turnstile access when protection is configured", async () => {
+  const response = await app.request(
+    "/api/systems",
+    {},
+    {
+      DB: {} as D1Database,
+      APP_ENV: "production",
+      ASSETS: {} as Fetcher,
+      TURNSTILE_SECRET_KEY: "secret",
+      TURNSTILE_SITE_KEY: "site",
+    },
+  );
+
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), {
+    error: "Turnstile access verification required",
+    code: "access_required",
+  });
+});
+
+test("configured API service token bypasses browser access sessions", async () => {
+  const calls: { sql: string; bindings: unknown[] }[] = [];
+  const response = await app.request(
+    "/api/systems?limit=1",
+    { headers: { Authorization: "Bearer service-token" } },
+    {
+      DB: mockSystemsDatabase([systemRow(0)], calls),
+      APP_ENV: "production",
+      ASSETS: {} as Fetcher,
+      TURNSTILE_SECRET_KEY: "secret",
+      TURNSTILE_SITE_KEY: "site",
+      API_ACCESS_TOKEN: "service-token",
+    },
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.length, 1);
+});
+
 test("GET /api/systems defaults to the first page with deterministic ordering", async () => {
   const rows = Array.from({ length: 101 }, (_, index) => systemRow(index));
   const calls: { sql: string; bindings: unknown[] }[] = [];

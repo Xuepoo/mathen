@@ -46,6 +46,11 @@ failures are returned as concise JSON tool errors. Draft cards are
 filesystem-only, so `include_drafts: true` returns an explicit
 unsupported-backend error when `MATHEN_API_URL` is set.
 
+If the deployed API has Turnstile protection enabled, configure the matching
+read-only service token with `MATHEN_API_TOKEN`. The token is sent as a Bearer
+credential and is never stored in cards or MCP output. Browser Turnstile
+cookies are intentionally not used by the stdio client.
+
 The Hono API also exposes `GET /api/feature-relations` for focused relation
 queries; system detail responses include the source card's relation array.
 
