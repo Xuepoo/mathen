@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0",
+  "id": "contract-boundaries",
+  "name": "Common contract boundary counterexamples",
+  "summary": "Review-only negative knowledge for similarities that do not establish stronger guarantees.",
+  "kind": "misleading-similarity",
+  "negative_claim": "For the listed interfaces and conditions, a shared storage or coordination shape does not establish the stronger guarantee named by the target concept.",
+  "bounded": true,
+  "scope": {
+    "systems": ["architecture-contracts"],
+    "versions": ["reviewed-contract-v1"],
+    "deployment_origins": ["configured-origin"],
+    "conditions": ["concept comparison", "evidence-backed review"],
+    "exclusions": [
+      "all implementations",
+      "unobserved versions",
+      "formal impossibility proof"
+    ]
+  },
+  "counterexamples": [
+    {
+      "id": "append-only-not-immutable",
+      "description": "An append-only log can still permit deletion, compaction, or retention-based loss.",
+      "implication": "Append-only must not be upgraded to immutable without evidence about retention and deletion semantics.",
+      "claim_type": "inference",
+      "claim_status": "accepted",
+      "evidence_ids": ["contract-review"]
+    },
+    {
+      "id": "replication-not-consensus",
+      "description": "Replicas may copy state without agreeing on a single ordered decision under faults.",
+      "implication": "Replication alone does not justify a consensus or linearizability claim.",
+      "claim_type": "inference",
+      "claim_status": "accepted",
+      "evidence_ids": ["contract-review"]
+    },
+    {
+      "id": "snapshot-not-isolation",
+      "description": "A point-in-time snapshot can coexist with writes that violate transaction isolation guarantees.",
+      "implication": "Snapshot semantics must not be treated as proof of transaction isolation.",
+      "claim_type": "inference",
+      "claim_status": "accepted",
+      "evidence_ids": ["contract-review"]
+    },
+    {
+      "id": "reconciliation-not-convergence-proof",
+      "description": "A reconciliation procedure can terminate while unresolved conflicts or non-idempotent rules remain.",
+      "implication": "Reconciliation is not a convergence proof without stated laws and checked outcomes.",
+      "claim_type": "inference",
+      "claim_status": "accepted",
+      "evidence_ids": ["contract-review"]
+    }
+  ],
+  "claim_type": "inference",
+  "claim_status": "accepted",
+  "evidence_ids": ["contract-review"],
+  "evidence": [
+    {
+      "id": "contract-review",
+      "kind": "secondary",
+      "title": "Mathen contract boundary review",
+      "uri": "https://mathen.dev/docs/methodology#negative-knowledge",
+      "notes": "Representative bounded implications; not a universal theorem."
+    }
+  ],
+  "notes": "This record remains outside data/systems and cannot promote or overwrite a canonical card."
+}

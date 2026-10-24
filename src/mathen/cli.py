@@ -40,6 +40,11 @@ from .modeling import (
     build_modeling_bundles,
     write_modeling_prompts,
 )
+from .negative_knowledge import (
+    NegativeKnowledgeValidationError,
+    discover_negative_knowledge,
+    load_negative_knowledge,
+)
 from .relation_candidates import (
     RelationCandidateError,
     write_relation_candidate_report,
@@ -71,6 +76,13 @@ def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
         "validate-analogies", help="validate cross-domain analogy mappings"
     )
     analogy.add_argument("path", nargs="?", type=Path, default=Path("data/analogies"))
+    negative_knowledge = subparsers.add_parser(
+        "validate-negative-knowledge",
+        help="validate evidence-bounded negative-knowledge records",
+    )
+    negative_knowledge.add_argument(
+        "path", nargs="?", type=Path, default=Path("data/negative-knowledge")
+    )
 
     listing = subparsers.add_parser("list", help="list architecture cards")
     listing.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
@@ -217,6 +229,8 @@ def main() -> int:
             return validate_microstructures_command(args.path)
         if args.command == "validate-analogies":
             return validate_analogies_command(args.path)
+        if args.command == "validate-negative-knowledge":
+            return validate_negative_knowledge_command(args.path)
         if args.command == "list":
             return list_command(args.path)
         if args.command == "show":
@@ -265,6 +279,7 @@ def main() -> int:
         RelationCandidateError,
         MicrostructureValidationError,
         AnalogyValidationError,
+        NegativeKnowledgeValidationError,
     ) as error:
         print(f"ERROR: {error}")
         return 1
@@ -313,6 +328,19 @@ def validate_analogies_command(path: Path) -> int:
     for analogy_path in paths:
         load_analogy(analogy_path)
         print(f"valid  {analogy_path}")
+    return 0
+
+
+def validate_negative_knowledge_command(path: Path) -> int:
+    """Validate standalone evidence-bounded negative-knowledge records."""
+
+    paths = discover_negative_knowledge(path)
+    if not paths:
+        print(f"No negative-knowledge records found in {path}; nothing to validate")
+        return 0
+    for record_path in paths:
+        load_negative_knowledge(record_path)
+        print(f"valid  {record_path}")
     return 0
 
 

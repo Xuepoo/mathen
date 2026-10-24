@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/architecture-negative-knowledge.schema.json",
+  "title": "Mathen Evidence-Bounded Negative Knowledge",
+  "description": "A versioned, scoped record of a counterexample, failed claim, retraction, or supersession. It is not a canonical Architecture Card and cannot express an unbounded universal claim.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "summary",
+    "kind",
+    "negative_claim",
+    "bounded",
+    "scope",
+    "counterexamples",
+    "claim_type",
+    "claim_status",
+    "evidence_ids",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "invalid-composition",
+        "misleading-similarity",
+        "scope-violation",
+        "failed-hypothesis",
+        "falsified-experiment",
+        "retraction",
+        "supersession"
+      ]
+    },
+    "negative_claim": { "type": "string", "minLength": 1 },
+    "bounded": { "const": true },
+    "scope": { "$ref": "#/$defs/scope" },
+    "counterexamples": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/counterexample" }
+    },
+    "claim_type": { "$ref": "#/$defs/claimType" },
+    "claim_status": { "$ref": "#/$defs/claimStatus" },
+    "evidence_ids": { "$ref": "#/$defs/evidenceIds" },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/evidence" }
+    },
+    "composition": { "$ref": "#/$defs/composition" },
+    "related_claim_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "replacement_id": { "$ref": "#/$defs/id" },
+    "notes": { "type": "string", "minLength": 1 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "invalid-composition" } } },
+      "then": { "required": ["composition"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "retraction" } } },
+      "then": { "required": ["related_claim_ids"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "supersession" } } },
+      "then": { "required": ["related_claim_ids", "replacement_id"] }
+    }
+  ],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "claimType": {
+      "type": "string",
+      "enum": ["fact", "inference", "hypothesis", "analogy"]
+    },
+    "claimStatus": {
+      "type": "string",
+      "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"]
+    },
+    "evidenceIds": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "systems",
+        "versions",
+        "deployment_origins",
+        "conditions",
+        "exclusions"
+      ],
+      "properties": {
+        "systems": { "$ref": "#/$defs/strings" },
+        "versions": { "$ref": "#/$defs/strings" },
+        "deployment_origins": { "$ref": "#/$defs/strings" },
+        "conditions": { "$ref": "#/$defs/strings" },
+        "exclusions": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "strings": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "claimFields": {
+      "type": "object",
+      "required": ["claim_type", "claim_status", "evidence_ids"],
+      "properties": {
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": { "$ref": "#/$defs/evidenceIds" }
+      }
+    },
+    "counterexample": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "description", "implication", "evidence_ids"],
+          "properties": {
+            "id": { "$ref": "#/$defs/id" },
+            "description": { "type": "string", "minLength": 1 },
+            "implication": { "type": "string", "minLength": 1 },
+            "claim_type": {},
+            "claim_status": {},
+            "evidence_ids": {}
+          }
+        }
+      ]
+    },
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "operation", "failure_mode"],
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "operation": { "type": "string", "minLength": 1 },
+        "failure_mode": { "type": "string", "minLength": 1 }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "title", "uri"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "official-doc",
+            "paper",
+            "source-code",
+            "experiment",
+            "secondary"
+          ]
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "uri": { "type": "string", "minLength": 1 },
+        "accessed": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

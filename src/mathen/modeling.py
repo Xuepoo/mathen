@@ -12,6 +12,7 @@ from mathen.repositories import load_manifest
 MODELING_CONTRACT_VERSION = 2
 LLM_RESEARCH_PROTOCOL_VERSION = "mth-0112-v1"
 CROSS_DOMAIN_ANALOGY_SCHEMA_VERSION = "1.0"
+NEGATIVE_KNOWLEDGE_SCHEMA_VERSION = "1.0"
 
 
 class ModelingBundleError(RuntimeError):
@@ -295,6 +296,36 @@ def build_modeling_bundle(
                     "source-target paths; never infer compatibility from names, "
                     "vectors, graph position, or LLM interpretation. Keep proven "
                     "false until a contract or experiment validates the candidate."
+                ),
+            },
+            "negative_knowledge": {
+                "schema_version": NEGATIVE_KNOWLEDGE_SCHEMA_VERSION,
+                "schema": "schemas/architecture-negative-knowledge.schema.json",
+                "boundary": (
+                    "Use a standalone review artifact for invalid compositions, "
+                    "misleading similarities, scope violations, failed hypotheses, "
+                    "falsified experiments, retractions, and supersession. Never "
+                    "overwrite or promote canonical cards automatically."
+                ),
+                "required_dimensions": [
+                    "kind",
+                    "negative_claim",
+                    "bounded",
+                    "scope",
+                    "counterexamples",
+                    "claim_type",
+                    "claim_status",
+                    "evidence_ids",
+                ],
+                "examples": [
+                    "append-only != immutable",
+                    "replication != consensus",
+                    "snapshot != transaction isolation",
+                    "reconciliation != convergence proof",
+                ],
+                "universal_claim_rule": (
+                    "A counterexample limits a claim in its declared scope; it is "
+                    "not evidence for a universal claim or evidence of absence."
                 ),
             },
             "evidence_rules": [
