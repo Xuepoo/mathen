@@ -69,6 +69,13 @@ class MathematicalViewContractTests(unittest.TestCase):
                 self.assertEqual(validate_mathviews_command(empty_path), 0)
             self.assertIn("nothing to validate", output.getvalue())
 
+    def test_discovery_includes_nested_collection_members(self) -> None:
+        with TemporaryDirectory() as directory:
+            nested = Path(directory) / "batch" / "nested.json"
+            nested.parent.mkdir()
+            nested.write_text("{}", encoding="utf-8")
+            self.assertEqual(discover_math_view_contracts(Path(directory)), [nested])
+
     def test_mathview_cli_reports_invalid_contract_path(self) -> None:
         with TemporaryDirectory() as directory:
             invalid_path = Path(directory) / "invalid.json"

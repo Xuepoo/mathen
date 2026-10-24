@@ -88,6 +88,18 @@ def load_typed_composition(path: Path) -> TypedCompositionSemantics:
         raise TypedCompositionValidationError(f"{path}: {error}") from error
 
 
+def discover_typed_compositions(path: Path) -> list[Path]:
+    """Return standalone typed-composition contracts in deterministic order."""
+
+    if path.is_file():
+        return [path]
+    if not path.is_dir():
+        return []
+    return sorted(
+        candidate for candidate in path.rglob("*.json") if candidate.is_file()
+    )
+
+
 def validate_typed_composition(
     value: Mapping[str, Any], *, evidence_ids: set[str] | None = None
 ) -> None:
@@ -385,6 +397,8 @@ def _claim_fields(
         raise TypedCompositionValidationError(
             f"{label}: evidence_ids must not be empty"
         )
+    if len(set(ids)) != len(ids):
+        raise TypedCompositionValidationError(f"{label}: evidence_ids must be unique")
     if evidence_ids is not None:
         unknown = sorted(set(ids) - evidence_ids)
         if unknown:

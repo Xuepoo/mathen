@@ -172,7 +172,9 @@ def discover_microstructures(path: Path) -> list[Path]:
         return [path]
     if not path.is_dir():
         return []
-    return sorted(candidate for candidate in path.glob("*.json") if candidate.is_file())
+    return sorted(
+        candidate for candidate in path.rglob("*.json") if candidate.is_file()
+    )
 
 
 def validate_microstructure(

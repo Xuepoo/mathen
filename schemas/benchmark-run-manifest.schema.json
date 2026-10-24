@@ -213,7 +213,10 @@
             "deprecated"
           ]
         },
-        "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" }
+        "evidence_ids": {
+          "$ref": "#/$defs/nonEmptyStringList",
+          "uniqueItems": true
+        }
       }
     },
     "candidate": {
@@ -222,7 +225,10 @@
       "required": ["id", "evidence_ids", "claims", "validation_logs", "proven"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
-        "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" },
+        "evidence_ids": {
+          "$ref": "#/$defs/nonEmptyStringList",
+          "uniqueItems": true
+        },
         "claims": {
           "type": "array",
           "minItems": 0,

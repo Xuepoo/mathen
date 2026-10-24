@@ -47,6 +47,15 @@ class NegativeKnowledgeTests(unittest.TestCase):
                 )
             self.assertIn("nothing to validate", output.getvalue())
 
+    def test_discovery_includes_nested_collection_members(self) -> None:
+        from mathen.negative_knowledge import discover_negative_knowledge
+
+        with tempfile.TemporaryDirectory() as directory:
+            nested = Path(directory) / "batch" / "nested.json"
+            nested.parent.mkdir()
+            nested.write_text("{}", encoding="utf-8")
+            self.assertEqual(discover_negative_knowledge(Path(directory)), [nested])
+
     def test_unbounded_language_is_rejected(self) -> None:
         value = self._fixture()
         value["negative_claim"] = "This never composes."

@@ -88,6 +88,11 @@ class BenchmarkManifestTests(unittest.TestCase):
         value["candidates"][0]["proven"] = True
         with self.assertRaisesRegex(BenchmarkManifestValidationError, "proven"):
             validate_benchmark_manifest(value)
+
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["candidates"][0]["evidence_ids"] = ["evidence-1", "evidence-1"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "unique"):
+            validate_benchmark_manifest(value)
         value = json.loads(FIXTURE.read_text(encoding="utf-8"))
         value["candidates"][0]["claims"][0]["evidence_ids"] = ["missing"]
         with self.assertRaisesRegex(BenchmarkManifestValidationError, "unknown"):

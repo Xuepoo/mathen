@@ -105,7 +105,9 @@ def discover_benchmark_manifests(path: Path) -> list[Path]:
         return [path]
     if not path.is_dir():
         return []
-    return sorted(candidate for candidate in path.glob("*.json") if candidate.is_file())
+    return sorted(
+        candidate for candidate in path.rglob("*.json") if candidate.is_file()
+    )
 
 
 def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
@@ -501,6 +503,8 @@ def _evidence_ids(
     ids = _string_list(value, field, label)
     if not ids:
         raise BenchmarkManifestValidationError(f"{label}.{field} must not be empty")
+    if len(set(ids)) != len(ids):
+        raise BenchmarkManifestValidationError(f"{label}.{field} must be unique")
     unknown = sorted(set(ids) - evidence_set)
     if unknown:
         raise BenchmarkManifestValidationError(

@@ -13,6 +13,7 @@ from mathen.composition_solver import (
 )
 from mathen.typed_composition import (
     TypedCompositionValidationError,
+    discover_typed_compositions,
     validate_typed_composition,
 )
 
@@ -20,6 +21,15 @@ ROOT = Path(__file__).parents[1]
 
 
 class CompositionSolverTests(unittest.TestCase):
+    def test_typed_composition_discovery_includes_nested_contracts(self) -> None:
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as directory:
+            nested = Path(directory) / "batch" / "nested.json"
+            nested.parent.mkdir()
+            nested.write_text("{}", encoding="utf-8")
+            self.assertEqual(discover_typed_compositions(Path(directory)), [nested])
+
     def test_typed_solver_reports_explicit_semantics_without_proof(self) -> None:
         candidates = solve_typed_compositions(
             [
@@ -153,6 +163,11 @@ class CompositionSolverTests(unittest.TestCase):
         with self.assertRaisesRegex(
             TypedCompositionValidationError, "unknown evidence"
         ):
+            validate_typed_composition(contract, evidence_ids={"source"})
+
+        contract = _typed_contract()
+        contract["components"][0]["evidence_ids"] = ["source", "source"]
+        with self.assertRaisesRegex(TypedCompositionValidationError, "unique"):
             validate_typed_composition(contract, evidence_ids={"source"})
 
     def test_dependency_closure_is_explained(self) -> None:

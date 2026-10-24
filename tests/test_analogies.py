@@ -98,6 +98,15 @@ class AnalogyTests(unittest.TestCase):
                 self.assertEqual(validate_analogies_command(Path(directory)), 0)
             self.assertIn("nothing to validate", output.getvalue())
 
+    def test_discovery_includes_nested_collection_members(self) -> None:
+        from mathen.analogies import discover_analogies
+
+        with tempfile.TemporaryDirectory() as directory:
+            nested = Path(directory) / "batch" / "nested.json"
+            nested.parent.mkdir()
+            nested.write_text("{}", encoding="utf-8")
+            self.assertEqual(discover_analogies(Path(directory)), [nested])
+
     @staticmethod
     def _fixture() -> dict:
         evidence = {

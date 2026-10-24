@@ -169,6 +169,15 @@ class MicrostructureTests(unittest.TestCase):
                 self.assertEqual(validate_microstructures_command(empty_path), 0)
             self.assertIn("nothing to validate", output.getvalue())
 
+    def test_discovery_includes_nested_collection_members(self) -> None:
+        from mathen.microstructures import discover_microstructures
+
+        with tempfile.TemporaryDirectory() as directory:
+            nested = Path(directory) / "batch" / "nested.json"
+            nested.parent.mkdir()
+            nested.write_text("{}", encoding="utf-8")
+            self.assertEqual(discover_microstructures(Path(directory)), [nested])
+
     @staticmethod
     def _fixture() -> dict:
         evidence = {
