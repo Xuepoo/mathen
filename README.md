@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Mathen
 
 Mathen is an evidence-backed, temporal knowledge graph for software
@@ -37,6 +39,148 @@ makes it difficult to answer questions such as:
 
 Mathen makes these questions machine-readable without reducing architecture to
 ungrounded labels or a single oversimplified definition.
+
+## The research position
+
+Mathen investigates whether a reviewed bridge between evidence, architectural
+microstructure, and checkable contracts can make cross-domain comparison and
+architecture synthesis more useful and more falsifiable. It is an
+evidence-backed intermediate representation for studying reusable software
+architecture—not a system that reduces a product to one essence, asks an LLM to
+invent a final architecture, or treats similarity as proof.
+
+The intended workflow is a loop, not an `LLM in → architecture out` pipeline:
+
+```text
+evidence
+  → deterministic observation
+  → reviewed architectural microstructure
+  → mathematical or interface contract
+  → bounded composition candidate
+  → candidate macro-architecture
+  → prototype, benchmark, or failure experiment
+  → new evidence, counterexample, or negative knowledge
+  ↺ human review and question reformulation
+```
+
+Each step has a bounded meaning:
+
+1. **Evidence** starts with source code, fixed revisions, design documents,
+   papers, benchmarks, protocol specifications, or reproducible operational
+   observations. Provenance, version, and deployment origin remain visible.
+2. **Deterministic observation** records reproducible signals such as tracked
+   paths, language counts, build markers, and navigation hints. These guide
+   review; they do not establish semantic architecture facts by themselves.
+3. **Microstructure** is a reusable unit at an explicit scale—primitive,
+   mechanism, subsystem, system, or ecosystem—with possible states, events,
+   boundaries, resources, and failures. It is an evidence-linked candidate,
+   not an automatic promotion to a reviewed card.
+4. **Contract** makes carriers, operations, interfaces, assumptions, checks,
+   and failure modes explicit where the data permits. A finite `valid` result
+   means that the supplied model data passed the check; it does not prove that
+   the implementation has the modeled semantics. Missing data remains
+   `undetermined`.
+5. **Composition** records inputs, roles, constraints, preserved or weakened
+   properties, conflicts, assumptions, and validation gaps. Composition
+   candidates remain `proven: false`; names, vector similarity, graph
+   position, or LLM prose cannot silently create compatibility claims.
+6. **Macro-architecture** is a design hypothesis assembled under a workload,
+   deployment boundary, and constraints. It is not canonical merely because
+   its parts are documented.
+7. **Experiment** means a bounded prototype, benchmark, property test, fault
+   injection, or failure test with its protocol and scope retained. Results
+   can strengthen, narrow, reject, or leave a candidate undetermined.
+
+### Who does what
+
+These participants and mechanisms are complementary, not interchangeable:
+
+| Role | Contribution | Boundary |
+| --- | --- | --- |
+| Human researcher | Reframes questions and reviews claims | Judgment is not automatically reproducible |
+| Deterministic tooling | Records fixed-revision observations | Signals guide review; they are not semantic claims |
+| LLM | Explains evidence and drafts abstractions | It is not proof or an architecture authority |
+| Graph analysis | Exposes typed paths and neighborhoods | Position is not truth, causality, or compatibility |
+| Vector retrieval | Recovers terminology variants | Similarity is not a typed relation |
+| Contracts and microstructures | Make scope and checks explicit | Contracts cannot validate omitted behavior |
+| Experiments and failure tests | Measure behavior and counterexamples | Results are deployment-scoped |
+
+```text
+vector similarity ≠ graph position ≠ LLM interpretation
+                ≠ contract classification ≠ runtime compatibility
+                ≠ historical influence
+```
+
+### Reading cross-domain comparisons
+
+Mathen uses `fact`, `inference`, `hypothesis`, and `analogy` to keep evidence
+and interpretation separate. Chemistry and biology can provide a bounded
+analogy: a reaction network and a gene-regulation network may share a
+qualitative directed-motif question, but they do not thereby share parameters,
+substrates, governing laws, units, causal semantics, or historical influence.
+**A representation can transfer a question about connectivity without
+transferring the mechanism that produces the behavior.**
+
+Materials science is an analogy for the explanatory term *microstructure*:
+phases, defects, interfaces, and conditions can illustrate why bounded
+structures and properties matter. Software does not thereby acquire crystal
+structure, thermodynamic laws, constitutive equations, scale invariance, or
+material-property predictions. Taxonomy is likewise a controlled vocabulary
+for retrieval and review, not a discovery of natural kinds or complete,
+mutually exclusive classes. A taxonomic resemblance does not establish
+dependency, lineage, compatibility, or historical influence. Every published
+analogy should state its scale, shared and non-preserved properties, exclusions,
+evidence, and at least one counterexample.
+
+### Discovery, novelty, and current limits
+
+Here, **discovery** initially means that a search or researcher surfaced a
+candidate path, mapping, counterexample, or question not previously recorded
+in the current dataset. It does not mean that Mathen created a new fact,
+established historical influence, or generated a useful architecture. Novelty
+must be scoped to topology, a composition boundary, constraints, behavior,
+trade-offs, deployment context, or merely wording. A cross-community path,
+larger graph, vector neighbor, or fluent LLM proposal is not evidence of
+architectural originality. A stronger claim needs a defined reference set,
+source review, explicit scope, and—when usefulness or behavior is claimed—a
+prototype or experiment. See the open evaluation questions in
+[`docs/research-instrument.md`](docs/research-instrument.md).
+
+The current implementation provides reviewed, evidence-linked cards; fixed-
+commit analysis and modeling bundles; deterministic repository observations;
+an evidence-bounded OpenAI-compatible LLM adapter that writes drafts and
+protocol sidecars; scale-aware microstructure documents; finite mathematical
+view classifications; bounded composition candidates; analogy and negative-
+knowledge records; D1-backed API/browser/MCP boundaries; and optional,
+rebuildable semantic retrieval. It does **not** automatically prove
+implementation semantics, produce theorems, promote LLM output or analogies,
+guarantee graph/vector recall or compatibility, assign calibrated originality
+or quality scores, infer historical influence, replace source review and
+experiments, or demonstrate that the full loop improves architecture quality.
+The graph projection and novelty benchmark work remain future research; see
+the planning references for [MTH-0117](https://github.com/Xuepoo/mathen/issues/47)
+and [MTH-0118](https://github.com/Xuepoo/mathen/issues/48).
+
+### Deployment and provenance boundary
+
+A deployment hostname is not part of Mathen's research identity. Validity
+scope should record versions, conditions, exclusions, and applicable
+`deployment_origins`; an origin says where a claim was evaluated or accessed,
+not that it is true. D1 remains the structured source of truth while semantic
+indexes are rebuildable. Browser requests use the deployment's same-origin
+`/api` boundary, while MCP and synchronization origins are configured through
+`MATHEN_API_URL`, `MATHEN_MCP_URL`, `MATHEN_SYNC_SOURCE`, and related settings
+described in [`docs/configuration.md`](docs/configuration.md). OpenAI-compatible
+LLM endpoints are also explicit configuration, and secrets stay outside URLs
+and checked-in research records.
+
+The detailed contracts and boundaries are documented in the
+[`research position proposal`](docs/research-position-proposal.md),
+[`microstructure ontology`](docs/microstructure-ontology.md),
+[`mathematical-view contracts`](docs/mathematical-view-contracts.md),
+[`temporal composition contract`](docs/temporal-composition-contract.md),
+[`cross-domain analogies`](docs/cross-domain-analogies.md), and
+[`negative-knowledge contract`](docs/negative-knowledge-contract.md).
 
 ## Project status
 
