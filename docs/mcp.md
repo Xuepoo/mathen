@@ -7,16 +7,16 @@ canonical system cards.
 
 ## Hosted endpoint direction
 
-The planned hosted MCP endpoint is a remote HTTPS service, for example:
+The hosted MCP endpoint is a remote HTTPS service:
 
 ```text
 https://mathen.xuepoo.xyz/mcp
 ```
 
-This endpoint is not implemented yet. Until the remote transport, authentication,
-session handling, and deployment boundary are specified and tested, use the
-stdio server described below. The future endpoint must expose the same
-reviewed-only read contract and must not expose filesystem-only drafts.
+The endpoint is stateless and reviewed-only. It requires the `API_ACCESS_TOKEN`
+Bearer credential and supports JSON Streamable HTTP requests for `initialize`,
+`tools/list`, and `tools/call`. It does not expose filesystem-only drafts. Use
+the stdio server below for offline filesystem access.
 
 ## Start
 

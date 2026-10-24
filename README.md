@@ -254,6 +254,16 @@ The repository's first package release is `v0.0.1`. Pushing a matching version
 tag builds and publishes the Python distributions to PyPI through the
 `PYPI_API_TOKEN` GitHub Actions secret.
 
+For an installed CLI, download the reviewed cards before browsing them:
+
+```bash
+mathen data sync
+mathen data status
+mathen doctor
+mathen list
+mathen show git
+```
+
 Analyze the representative repository catalog into reviewable draft cards:
 
 ```bash

@@ -1,5 +1,5 @@
 import "./style.css";
-import ForceGraph3D, { type ForceGraph3DInstance } from "3d-force-graph";
+import type { ForceGraph3DInstance } from "3d-force-graph";
 import { createLabelPool } from "./graph-labels";
 import {
   frameNodes,
@@ -149,6 +149,7 @@ let graphRequest = 0;
 let systems: SystemSummary[] = [];
 let visible: ExplorerPayload = canonical;
 let graph: ForceGraph3DInstance<SimulationNode, SimulationLink> | undefined;
+let forceGraphModule: typeof import("3d-force-graph") | undefined;
 let selectedId: string | undefined;
 let selectedEdge: SimulationLink | undefined;
 let styledEdgeId: string | undefined;
@@ -395,8 +396,10 @@ function configureCamera() {
       : "Drag a node to reshape its neighborhood. Drag space to orbit.";
 }
 
-function createGraph() {
+async function createGraph() {
   styledEdgeId = undefined;
+  forceGraphModule ??= await import("3d-force-graph");
+  const ForceGraph3D = forceGraphModule.default;
   graph = new ForceGraph3D(host, {
     controlType: "orbit",
     rendererConfig: { antialias: true, alpha: true },
@@ -1168,7 +1171,7 @@ async function loadGraph() {
         throw new Error("Invalid graph payload");
     }
     if (request !== graphRequest) return;
-    if (!graph) createGraph();
+    if (!graph) await createGraph();
     relationSelect.innerHTML = `<option value="all">All relations</option>${[
       ...new Set(
         (mode === "models" ? modelCanonical!.edges : canonical.edges).map(

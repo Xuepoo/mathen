@@ -48,6 +48,36 @@ MATHEN_LLM_BASE_URL, MATHEN_LLM_MODEL, OPENAI_API_KEY
 [llm] in config.toml
 ```
 
+Multiple OpenAI-compatible providers can be declared and selected with
+`llm.provider`:
+
+```toml
+[llm]
+provider = "local"
+
+[llm.providers.openai]
+base_url = "https://api.openai.com/v1"
+model = "gpt-4.1-mini"
+api_key_env = "OPENAI_API_KEY"
+
+[llm.providers.local]
+base_url = "http://localhost:11434/v1"
+model = "qwen3"
+api_key = "local"
+```
+
+Hosted MCP and reviewed-card synchronization can also be configured:
+
+```toml
+[mcp]
+url = "https://mathen.xuepoo.xyz/mcp"
+token_env = "MATHEN_API_TOKEN"
+
+[sync]
+source = "https://github.com/Xuepoo/mathen/archive/refs/heads/main.tar.gz"
+ref = "main"
+```
+
 ## Available commands
 
 ```text
@@ -58,6 +88,8 @@ mathen analyze [MANIFEST]
 mathen prepare-modeling [MANIFEST]
 mathen model [BUNDLE_DIR]
 mathen relation-candidates [PATH]
+mathen data {status,sync}
+mathen doctor
 mathen config {init,show,path,set,unset}
 mathen version
 ```

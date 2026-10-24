@@ -6,6 +6,8 @@ import argparse
 import json
 import os
 from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from . import __version__
 from .cards import (
@@ -24,6 +26,8 @@ from .config import (
     set_config_value,
     unset_config_value,
 )
+from .data_sync import SyncError, sync_reviewed_cards
+from .data_sync import status as sync_status
 from .llm import LLMModelError, client_from_environment, model_bundles
 from .modeling import (
     ModelingBundleError,
@@ -155,6 +159,17 @@ def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
     config_unset = config_subparsers.add_parser("unset", help="remove a TOML value")
     config_unset.add_argument("key")
     subparsers.add_parser("version", help="print the Mathen version")
+    sync = subparsers.add_parser("data", help="manage the local reviewed-card dataset")
+    sync_subparsers = sync.add_subparsers(dest="data_command", required=True)
+    sync_subparsers.add_parser("status", help="show the local dataset status")
+    sync_subparsers.add_parser("sync", help="download and validate reviewed cards")
+    mcp = subparsers.add_parser("mcp", help="check the configured hosted MCP endpoint")
+    mcp_subparsers = mcp.add_subparsers(dest="mcp_command", required=True)
+    mcp_subparsers.add_parser("path", help="print the configured MCP endpoint")
+    mcp_subparsers.add_parser(
+        "check", help="perform an authenticated MCP initialize request"
+    )
+    subparsers.add_parser("doctor", help="diagnose the local Mathen installation")
     return parser
 
 
@@ -173,6 +188,12 @@ def main() -> int:
         if args.command == "version":
             print(VERSION)
             return 0
+        if args.command == "data":
+            return data_command(args, config)
+        if args.command == "doctor":
+            return doctor_command(config)
+        if args.command == "mcp":
+            return mcp_command(args, config)
         if args.command == "validate":
             return validate_command(args.path, config)
         if args.command == "list":
@@ -216,6 +237,7 @@ def main() -> int:
     except (
         CardValidationError,
         ConfigError,
+        SyncError,
         LLMModelError,
         ModelingBundleError,
         RepositoryAnalysisError,
@@ -337,16 +359,24 @@ def model_command(
         print(f"ERROR: model output must stay under {required_root}")
         return 1
     llm = resolved_config.llm
+    provider = (llm.providers or {}).get(llm.provider, {})
     client = client_from_environment(
-        base_url=base_url or os.environ.get("MATHEN_LLM_BASE_URL") or llm.base_url,
+        base_url=base_url
+        or os.environ.get("MATHEN_LLM_BASE_URL")
+        or provider.get("base_url")
+        or llm.base_url,
         api_key=(
             api_key
-            or os.environ.get(llm.api_key_env)
+            or os.environ.get(str(provider.get("api_key_env", llm.api_key_env)))
             or os.environ.get("OPENAI_API_KEY")
+            or provider.get("api_key")
             or llm.api_key
         ),
-        model=model or os.environ.get("MATHEN_LLM_MODEL") or llm.model,
-        timeout=effective_timeout,
+        model=model
+        or os.environ.get("MATHEN_LLM_MODEL")
+        or provider.get("model")
+        or llm.model,
+        timeout=float(provider.get("timeout", effective_timeout)),
     )
     for path in model_bundles(
         bundle_dir, output_dir, client, system_ids or None, overwrite=force
@@ -394,6 +424,96 @@ def config_command(args: argparse.Namespace, config: MathenConfig) -> int:
         print(f"updated  {path}")
         return 0
     return 2
+
+
+def data_command(args: argparse.Namespace, config: MathenConfig) -> int:
+    """Show or update the locally cached reviewed cards."""
+
+    current = sync_status(config)
+    if args.data_command == "status":
+        print(f"directory  {current.directory}")
+        print(f"cards      {current.card_count}")
+        if current.source:
+            print(f"source     {current.source}")
+        if current.ref:
+            print(f"ref        {current.ref}")
+        if current.digest:
+            print(f"digest     {current.digest}")
+        return 0
+    if args.data_command == "sync":
+        updated = sync_reviewed_cards(config)
+        print(f"synced     {updated.card_count} cards")
+        print(f"directory  {updated.directory}")
+        return 0
+    return 2
+
+
+def doctor_command(config: MathenConfig) -> int:
+    """Print actionable local installation diagnostics without contacting APIs."""
+
+    dataset = sync_status(config)
+    api_key_configured = bool(
+        config.llm.api_key or os.environ.get(config.llm.api_key_env)
+    )
+    print(f"Mathen version: {VERSION}")
+    print(f"Config: {config.path} ({'loaded' if config.loaded else 'defaults'})")
+    print(f"Data directory: {config.paths.data_dir}")
+    print(f"Reviewed cards: {dataset.card_count}")
+    print(f"Cache directory: {config.paths.cache_dir}")
+    print(f"LLM provider: {config.llm.provider}")
+    print(f"LLM model: {config.llm.model or 'not configured'}")
+    print(f"LLM API key: {'configured' if api_key_configured else 'not configured'}")
+    print(f"MCP: {config.mcp.url or 'not configured'}")
+    return 0
+
+
+def mcp_command(args: argparse.Namespace, config: MathenConfig) -> int:
+    """Inspect or verify the configured hosted MCP endpoint."""
+
+    if args.mcp_command == "path":
+        print(config.mcp.url or "not configured")
+        return 0
+    if args.mcp_command != "check":
+        return 2
+    if not config.mcp.url:
+        print("ERROR: configure mcp.url first")
+        return 1
+    token = os.environ.get(config.mcp.token_env)
+    if not token:
+        print(f"ERROR: set {config.mcp.token_env} before checking MCP")
+        return 1
+    request = Request(
+        config.mcp.url,
+        data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}).encode(
+            "utf-8"
+        ),
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=config.mcp.timeout) as response:
+            body = json.loads(response.read(256_000))
+    except HTTPError as error:
+        print(f"ERROR: MCP endpoint returned HTTP {error.code}")
+        return 1
+    except URLError as error:
+        print(f"ERROR: MCP endpoint request failed: {error.reason}")
+        return 1
+    except (TimeoutError, json.JSONDecodeError) as error:
+        print(f"ERROR: MCP endpoint response was invalid: {error}")
+        return 1
+    if not isinstance(body, dict) or "result" not in body:
+        print("ERROR: MCP endpoint returned an invalid initialize response")
+        return 1
+    result = body["result"]
+    server_info = result.get("serverInfo") if isinstance(result, dict) else None
+    name = server_info.get("name") if isinstance(server_info, dict) else None
+    print(f"connected  {name or 'Mathen MCP'}")
+    return 0
 
 
 if __name__ == "__main__":

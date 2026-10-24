@@ -52,6 +52,25 @@ class LLMSettings:
     api_key: str | None = None
     api_key_env: str = "OPENAI_API_KEY"
     timeout: float = 120.0
+    provider: str = "default"
+    providers: dict[str, dict[str, Any]] | None = None
+
+
+@dataclass(frozen=True)
+class MCPSettings:
+    """Hosted MCP endpoint settings."""
+
+    url: str | None = None
+    token_env: str = "MATHEN_API_TOKEN"
+    timeout: float = 10.0
+
+
+@dataclass(frozen=True)
+class SyncSettings:
+    """Reviewed-card synchronization settings."""
+
+    source: str = "https://github.com/Xuepoo/mathen/archive/refs/heads/main.tar.gz"
+    ref: str = "main"
 
 
 @dataclass(frozen=True)
@@ -61,6 +80,8 @@ class MathenConfig:
     path: Path
     paths: PathSettings
     llm: LLMSettings
+    mcp: MCPSettings
+    sync: SyncSettings
     loaded: bool = False
 
 
@@ -131,6 +152,8 @@ def default_config() -> MathenConfig:
             ),
         ),
         llm=LLMSettings(),
+        mcp=MCPSettings(),
+        sync=SyncSettings(),
     )
 
 
@@ -159,6 +182,8 @@ def load_config(
             path=config_path,
             paths=defaults.paths,
             llm=defaults.llm,
+            mcp=defaults.mcp,
+            sync=defaults.sync,
             loaded=False,
         )
     try:
@@ -196,11 +221,13 @@ def set_config_value(
     config = load_config(config_path)
     raw = config_to_dict(config)
     parts = key.split(".")
-    if len(parts) != 2 or parts[0] not in {"paths", "llm"}:
-        raise ConfigError("config keys must use the paths.* or llm.* form")
+    if len(parts) != 2 or parts[0] not in {"paths", "llm", "mcp", "sync"}:
+        raise ConfigError("config keys must use paths.*, llm.*, mcp.*, or sync.*")
     allowed = {
         "paths": set(PathSettings.__dataclass_fields__),
         "llm": set(LLMSettings.__dataclass_fields__),
+        "mcp": set(MCPSettings.__dataclass_fields__),
+        "sync": set(SyncSettings.__dataclass_fields__),
     }[parts[0]]
     if parts[1] not in allowed:
         raise ConfigError(f"unsupported config key: {key}")
@@ -253,6 +280,17 @@ def config_to_dict(
             "api_key": api_key,
             "api_key_env": config.llm.api_key_env,
             "timeout": config.llm.timeout,
+            "provider": config.llm.provider,
+            "providers": config.llm.providers or {},
+        },
+        "mcp": {
+            "url": config.mcp.url,
+            "token_env": config.mcp.token_env,
+            "timeout": config.mcp.timeout,
+        },
+        "sync": {
+            "source": config.sync.source,
+            "ref": config.sync.ref,
         },
     }
 
@@ -262,8 +300,12 @@ def _merge_config(
 ) -> MathenConfig:
     paths = _section(raw, "paths")
     llm = _section(raw, "llm")
+    mcp = _section(raw, "mcp")
+    sync = _section(raw, "sync")
     default_paths = config_to_dict(defaults)["paths"]
     default_llm = config_to_dict(defaults)["llm"]
+    default_mcp = config_to_dict(defaults)["mcp"]
+    default_sync = config_to_dict(defaults)["sync"]
     for key, value in paths.items():
         if key not in default_paths:
             raise ConfigError(f"{path}: unsupported paths key: {key}")
@@ -274,7 +316,7 @@ def _merge_config(
         if key not in default_llm:
             raise ConfigError(f"{path}: unsupported llm key: {key}")
         if (
-            key in {"model", "api_key", "api_key_env"}
+            key in {"model", "api_key", "api_key_env", "provider"}
             and value is not None
             and not isinstance(value, str)
         ):
@@ -286,15 +328,39 @@ def _merge_config(
         if key == "base_url" and not isinstance(value, str):
             raise ConfigError(f"{path}: llm.base_url must be a string")
         default_llm[key] = value
+    if "providers" in llm:
+        providers = llm["providers"]
+        if not isinstance(providers, dict):
+            raise ConfigError(f"{path}: llm.providers must be a table")
+        default_llm["providers"] = _validate_providers(path, providers)
     timeout = float(default_llm["timeout"])
     if timeout <= 0:
         raise ConfigError(f"{path}: llm.timeout must be positive")
+    for key, value in mcp.items():
+        if key not in default_mcp:
+            raise ConfigError(f"{path}: unsupported mcp key: {key}")
+        if key == "timeout":
+            if (
+                not isinstance(value, (int, float))
+                or isinstance(value, bool)
+                or value <= 0
+            ):
+                raise ConfigError(f"{path}: mcp.timeout must be a positive number")
+        elif value is not None and not isinstance(value, str):
+            raise ConfigError(f"{path}: mcp.{key} must be a string or null")
+        default_mcp[key] = value
+    for key, value in sync.items():
+        if key not in default_sync or not isinstance(value, str):
+            raise ConfigError(f"{path}: sync.{key} must be a string")
+        default_sync[key] = value
     return MathenConfig(
         path=path,
         paths=PathSettings(
             **{key: Path(value) for key, value in default_paths.items()}
         ),
         llm=LLMSettings(**default_llm),
+        mcp=MCPSettings(**default_mcp),
+        sync=SyncSettings(**default_sync),
         loaded=True,
     )
 
@@ -304,6 +370,20 @@ def _section(raw: Mapping[str, Any], name: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ConfigError(f"{name} must be a TOML table")
     return dict(value)
+
+
+def _validate_providers(
+    path: Path, providers: Mapping[str, Any]
+) -> dict[str, dict[str, Any]]:
+    validated: dict[str, dict[str, Any]] = {}
+    for name, value in providers.items():
+        if not isinstance(name, str) or not isinstance(value, dict):
+            raise ConfigError(f"{path}: each llm provider must be a TOML table")
+        for key in value:
+            if key not in {"base_url", "model", "api_key", "api_key_env", "timeout"}:
+                raise ConfigError(f"{path}: unsupported provider key: {name}.{key}")
+        validated[name] = dict(value)
+    return validated
 
 
 def _expand_path(value: str) -> str:
@@ -343,6 +423,16 @@ base_url = "https://api.openai.com/v1"
 # api_key = "your-api-key"
 api_key_env = "OPENAI_API_KEY"
 timeout = 120.0
+provider = "default"
+
+[mcp]
+# url = "https://mathen.xuepoo.xyz/mcp"
+token_env = "MATHEN_API_TOKEN"
+timeout = 10.0
+
+[sync]
+source = "https://github.com/Xuepoo/mathen/archive/refs/heads/main.tar.gz"
+ref = "main"
 """.format(
         **{
             key: _toml_string(str(value))
@@ -353,16 +443,33 @@ timeout = 120.0
 
 def _dump_toml(raw: Mapping[str, Any]) -> str:
     lines: list[str] = []
-    for section_name in ("paths", "llm"):
+    for section_name in ("paths", "llm", "mcp", "sync"):
         section = raw.get(section_name, {})
         if not isinstance(section, Mapping):
             continue
         lines.append(f"[{section_name}]")
         for key, value in section.items():
+            if (
+                section_name == "llm"
+                and key == "providers"
+                and isinstance(value, Mapping)
+            ):
+                continue
             if value is None:
                 continue
             lines.append(f"{key} = {_toml_value(value)}")
         lines.append("")
+        if section_name == "llm":
+            providers = section.get("providers")
+            if isinstance(providers, Mapping):
+                for provider_name, provider in sorted(providers.items()):
+                    if not isinstance(provider, Mapping):
+                        continue
+                    lines.append(f"[llm.providers.{provider_name}]")
+                    for key, value in provider.items():
+                        if value is not None:
+                            lines.append(f"{key} = {_toml_value(value)}")
+                    lines.append("")
     return "\n".join(lines)
 
 
@@ -373,6 +480,8 @@ def _toml_value(value: Any) -> str:
         return "true" if value else "false"
     if isinstance(value, (int, float)):
         return str(value)
+    if value is None:
+        return '""'
     raise ConfigError(f"unsupported TOML value: {value!r}")
 
 

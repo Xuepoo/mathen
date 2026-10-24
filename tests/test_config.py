@@ -101,6 +101,32 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(view["llm"]["api_key"], "***")
         json.dumps(view)
 
+    def test_provider_and_mcp_settings_load(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.toml"
+            path.write_text(
+                '[llm]\nprovider = "local"\n'
+                '[llm.providers.local]\nbase_url = "http://localhost:11434/v1"\n'
+                'model = "qwen"\napi_key = "local"\n'
+                '[mcp]\nurl = "https://example.com/mcp"\n'
+                '[sync]\nref = "v0.0.1"\n',
+                encoding="utf-8",
+            )
+            config = load_config(path)
+
+        self.assertEqual(config.llm.provider, "local")
+        self.assertEqual(config.llm.providers["local"]["model"], "qwen")
+        self.assertEqual(config.mcp.url, "https://example.com/mcp")
+        self.assertEqual(config.sync.ref, "v0.0.1")
+
+    def test_starter_config_contains_mcp_and_sync_sections(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = initialize_config(Path(directory) / "config.toml")
+            text = path.read_text(encoding="utf-8")
+
+        self.assertIn("[mcp]", text)
+        self.assertIn("[sync]", text)
+
 
 if __name__ == "__main__":
     unittest.main()

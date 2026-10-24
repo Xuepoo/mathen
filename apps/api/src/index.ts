@@ -17,6 +17,7 @@ import {
   verifyTurnstileToken,
   turnstileHostname,
 } from "./access.js";
+import { createMcpApiBackend, handleMcpRequest, mcpAuthorized } from "./mcp.js";
 
 type Bindings = {
   DB: D1Database;
@@ -27,6 +28,7 @@ type Bindings = {
   TURNSTILE_HOSTNAME?: string;
   TURNSTILE_SESSION_TTL_SECONDS?: string;
   API_ACCESS_TOKEN?: string;
+  ARTIFACTS?: R2Bucket;
 };
 
 type SystemRow = {
@@ -146,6 +148,45 @@ app.use("*", async (c, next) => {
 app.get("/health", (c) =>
   c.json({ status: "ok", service: "mathen-api", environment: c.env.APP_ENV }),
 );
+
+app.all("/mcp", async (c) => {
+  if (!mcpAuthorized(c.req.raw, c.env.API_ACCESS_TOKEN)) {
+    return c.json(
+      { error: "MCP bearer authentication required", code: "unauthorized" },
+      401,
+    );
+  }
+  const backend = createMcpApiBackend(async (path) => {
+    const request = new Request(new URL(`/api${path}`, c.req.url), {
+      method: "GET",
+      headers: { Authorization: `Bearer ${c.env.API_ACCESS_TOKEN}` },
+    });
+    const response = await app.fetch(request, c.env, c.executionCtx);
+    if (!response.ok) throw new Error(`API request failed: ${response.status}`);
+    const body = (await response.json()) as { data?: unknown };
+    return body.data;
+  });
+  try {
+    return await handleMcpRequest(c.req.raw, backend);
+  } catch {
+    return c.json({ error: "MCP request failed", code: "mcp_error" }, 500);
+  }
+});
+
+app.get("/artifacts/*", async (c) => {
+  const key = c.req.path.replace(/^\/api\/artifacts\//, "");
+  if (!key || key.includes(".."))
+    return c.json({ error: "Invalid artifact key" }, 400);
+  if (!c.env.ARTIFACTS)
+    return c.json({ error: "Artifact storage is not configured" }, 503);
+  const object = await c.env.ARTIFACTS.get(key);
+  if (!object) return c.json({ error: "Artifact not found" }, 404);
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("cache-control", "public, max-age=31536000, immutable");
+  return new Response(object.body, { headers });
+});
 
 app.get("/access/config", async (c) =>
   c.json(

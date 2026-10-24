@@ -11,6 +11,7 @@
     "db:seed:local": "bun run scripts/seed.ts --local",
     "db:seed:remote": "bun run scripts/seed.ts --remote",
     "db:reset:local": "rm -rf .wrangler/state/v3/d1 && bun run db:migrate:local && bun run db:seed:local",
+    "artifact:put": "bun run scripts/artifact.ts",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

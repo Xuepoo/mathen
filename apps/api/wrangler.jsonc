@@ -11,6 +11,12 @@
 			"migrations_dir": "migrations"
 		}
 	],
+	"r2_buckets": [
+		{
+			"binding": "ARTIFACTS",
+			"bucket_name": "mathen-artifacts-production"
+		}
+	],
 	"assets": {
 		"directory": "../web/dist",
 		"binding": "ASSETS",
