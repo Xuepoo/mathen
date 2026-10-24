@@ -260,6 +260,8 @@ For an installed CLI, download the reviewed cards before browsing them:
 mathen data sync
 mathen data status
 mathen doctor
+mathen mcp path
+mathen mcp check
 mathen list
 mathen show git
 ```

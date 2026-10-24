@@ -38,14 +38,15 @@ export OPENAI_API_KEY=...
 mathen model --system git
 ```
 
-An OpenAI-compatible provider can be selected by changing `llm.base_url`. The
-precedence for model execution is explicit CLI flags, environment variables,
-then the TOML file:
+An OpenAI-compatible provider can be selected with `llm.provider`. Provider
+values override the corresponding top-level LLM defaults. The precedence for
+model execution is explicit CLI flags, standard environment variables, the
+selected provider, then the top-level TOML values:
 
 ```text
 --api-key / --model / --base-url
 MATHEN_LLM_BASE_URL, MATHEN_LLM_MODEL, OPENAI_API_KEY
-[llm] in config.toml
+[llm.providers.<name>], then [llm] in config.toml
 ```
 
 Multiple OpenAI-compatible providers can be declared and selected with
@@ -78,6 +79,20 @@ source = "https://github.com/Xuepoo/mathen/archive/refs/heads/main.tar.gz"
 ref = "main"
 ```
 
+`mathen data sync` downloads only reviewed cards from the configured archive,
+validates every card and cross-card reference, and replaces the configured card
+directory atomically. It refuses to replace the repository's canonical
+`data/systems` directory. `mathen data status` reports the card count, source,
+digest, and whether the local copy still matches its synchronization metadata.
+The synchronization archive is treated as untrusted input: unsafe paths,
+duplicate card names, and oversized entries are rejected.
+
+`mathen doctor` performs local-only diagnostics. It does not contact the LLM or
+MCP endpoint, and it reports the selected provider without printing credentials.
+Use `mathen mcp path` to inspect the endpoint and `mathen mcp check` to send an
+authenticated JSON-RPC `initialize` request using `MATHEN_API_TOKEN` (or the
+configured token environment variable).
+
 ## Available commands
 
 ```text
@@ -89,6 +104,7 @@ mathen prepare-modeling [MANIFEST]
 mathen model [BUNDLE_DIR]
 mathen relation-candidates [PATH]
 mathen data {status,sync}
+mathen mcp {path,check}
 mathen doctor
 mathen config {init,show,path,set,unset}
 mathen version

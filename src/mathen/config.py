@@ -264,6 +264,13 @@ def config_to_dict(
     api_key = config.llm.api_key
     if redact_secrets and api_key:
         api_key = "***"
+    providers = {
+        name: dict(settings) for name, settings in (config.llm.providers or {}).items()
+    }
+    if redact_secrets:
+        for settings in providers.values():
+            if settings.get("api_key"):
+                settings["api_key"] = "***"
     return {
         "paths": {
             "data_dir": str(config.paths.data_dir),
@@ -281,7 +288,7 @@ def config_to_dict(
             "api_key_env": config.llm.api_key_env,
             "timeout": config.llm.timeout,
             "provider": config.llm.provider,
-            "providers": config.llm.providers or {},
+            "providers": providers,
         },
         "mcp": {
             "url": config.mcp.url,
@@ -333,6 +340,15 @@ def _merge_config(
         if not isinstance(providers, dict):
             raise ConfigError(f"{path}: llm.providers must be a table")
         default_llm["providers"] = _validate_providers(path, providers)
+    providers = default_llm["providers"] or {}
+    if (
+        default_llm["provider"] != "default"
+        and default_llm["provider"] not in providers
+    ):
+        raise ConfigError(
+            f"{path}: selected llm provider is not configured: "
+            f"{default_llm['provider']}"
+        )
     timeout = float(default_llm["timeout"])
     if timeout <= 0:
         raise ConfigError(f"{path}: llm.timeout must be positive")
@@ -377,11 +393,32 @@ def _validate_providers(
 ) -> dict[str, dict[str, Any]]:
     validated: dict[str, dict[str, Any]] = {}
     for name, value in providers.items():
-        if not isinstance(name, str) or not isinstance(value, dict):
+        if not isinstance(name, str) or not name or not isinstance(value, dict):
             raise ConfigError(f"{path}: each llm provider must be a TOML table")
         for key in value:
             if key not in {"base_url", "model", "api_key", "api_key_env", "timeout"}:
                 raise ConfigError(f"{path}: unsupported provider key: {name}.{key}")
+        for key, provider_value in value.items():
+            if key in {"base_url", "api_key_env"} and not isinstance(
+                provider_value, str
+            ):
+                raise ConfigError(f"{path}: provider {name}.{key} must be a string")
+            if (
+                key in {"model", "api_key"}
+                and provider_value is not None
+                and not isinstance(provider_value, str)
+            ):
+                raise ConfigError(
+                    f"{path}: provider {name}.{key} must be a string or null"
+                )
+            if key == "timeout" and (
+                not isinstance(provider_value, (int, float))
+                or isinstance(provider_value, bool)
+                or provider_value <= 0
+            ):
+                raise ConfigError(
+                    f"{path}: provider {name}.timeout must be a positive number"
+                )
         validated[name] = dict(value)
     return validated
 

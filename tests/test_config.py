@@ -129,6 +129,28 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(config.mcp.url, "https://example.com/mcp")
         self.assertEqual(config.sync.ref, "v0.0.1")
 
+    def test_provider_values_are_validated_and_redacted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.toml"
+            path.write_text(
+                '[llm]\nprovider = "local"\n'
+                '[llm.providers.local]\nmodel = "qwen"\napi_key = "secret"\n'
+                "timeout = 15\n",
+                encoding="utf-8",
+            )
+            config = load_config(path)
+
+            view = config_to_dict(config, redact_secrets=True)
+            self.assertEqual(view["llm"]["providers"]["local"]["api_key"], "***")
+
+            path.write_text('[llm]\nprovider = "missing"\n', encoding="utf-8")
+            with self.assertRaisesRegex(ConfigError, "not configured"):
+                load_config(path)
+
+            path.write_text("[llm.providers.local]\ntimeout = 0\n", encoding="utf-8")
+            with self.assertRaisesRegex(ConfigError, "positive number"):
+                load_config(path)
+
     def test_starter_config_contains_mcp_and_sync_sections(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = initialize_config(Path(directory) / "config.toml")

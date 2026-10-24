@@ -360,6 +360,10 @@ def model_command(
         return 1
     llm = resolved_config.llm
     provider = (llm.providers or {}).get(llm.provider, {})
+    provider_timeout = float(provider.get("timeout", effective_timeout))
+    if provider_timeout <= 0:
+        print("ERROR: provider timeout must be positive")
+        return 1
     client = client_from_environment(
         base_url=base_url
         or os.environ.get("MATHEN_LLM_BASE_URL")
@@ -376,7 +380,8 @@ def model_command(
         or os.environ.get("MATHEN_LLM_MODEL")
         or provider.get("model")
         or llm.model,
-        timeout=float(provider.get("timeout", effective_timeout)),
+        timeout=provider_timeout,
+        api_key_env=str(provider.get("api_key_env", llm.api_key_env)),
     )
     for path in model_bundles(
         bundle_dir, output_dir, client, system_ids or None, overwrite=force
@@ -439,6 +444,9 @@ def data_command(args: argparse.Namespace, config: MathenConfig) -> int:
             print(f"ref        {current.ref}")
         if current.digest:
             print(f"digest     {current.digest}")
+        print(f"valid      {'yes' if current.valid else 'no'}")
+        if current.error:
+            print(f"error      {current.error}")
         return 0
     if args.data_command == "sync":
         updated = sync_reviewed_cards(config)
@@ -452,16 +460,22 @@ def doctor_command(config: MathenConfig) -> int:
     """Print actionable local installation diagnostics without contacting APIs."""
 
     dataset = sync_status(config)
+    provider = (config.llm.providers or {}).get(config.llm.provider, {})
+    api_key_env = str(provider.get("api_key_env", config.llm.api_key_env))
     api_key_configured = bool(
-        config.llm.api_key or os.environ.get(config.llm.api_key_env)
+        provider.get("api_key")
+        or config.llm.api_key
+        or os.environ.get(api_key_env)
+        or os.environ.get("OPENAI_API_KEY")
     )
     print(f"Mathen version: {VERSION}")
     print(f"Config: {config.path} ({'loaded' if config.loaded else 'defaults'})")
     print(f"Data directory: {config.paths.data_dir}")
-    print(f"Reviewed cards: {dataset.card_count}")
+    reviewed_status = "valid" if dataset.valid else f"invalid ({dataset.error})"
+    print(f"Reviewed cards: {dataset.card_count} ({reviewed_status})")
     print(f"Cache directory: {config.paths.cache_dir}")
     print(f"LLM provider: {config.llm.provider}")
-    print(f"LLM model: {config.llm.model or 'not configured'}")
+    print(f"LLM model: {provider.get('model') or config.llm.model or 'not configured'}")
     print(f"LLM API key: {'configured' if api_key_configured else 'not configured'}")
     print(f"MCP: {config.mcp.url or 'not configured'}")
     return 0
@@ -484,13 +498,23 @@ def mcp_command(args: argparse.Namespace, config: MathenConfig) -> int:
         return 1
     request = Request(
         config.mcp.url,
-        data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}).encode(
-            "utf-8"
-        ),
+        data=json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2025-06-18",
+                    "capabilities": {},
+                    "clientInfo": {"name": "mathen-cli", "version": VERSION},
+                },
+            }
+        ).encode("utf-8"),
         headers={
-            "Accept": "application/json",
+            "Accept": "application/json, text/event-stream",
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
+            "Mcp-Protocol-Version": "2025-06-18",
         },
         method="POST",
     )
@@ -503,10 +527,19 @@ def mcp_command(args: argparse.Namespace, config: MathenConfig) -> int:
     except URLError as error:
         print(f"ERROR: MCP endpoint request failed: {error.reason}")
         return 1
-    except (TimeoutError, json.JSONDecodeError) as error:
+    except (TimeoutError, OSError, json.JSONDecodeError) as error:
         print(f"ERROR: MCP endpoint response was invalid: {error}")
         return 1
-    if not isinstance(body, dict) or "result" not in body:
+    if (
+        not isinstance(body, dict)
+        or body.get("jsonrpc") != "2.0"
+        or body.get("id") != 1
+        or "result" not in body
+        or not isinstance(body["result"], dict)
+        or not isinstance(body["result"].get("protocolVersion"), str)
+        or not isinstance(body["result"].get("capabilities"), dict)
+        or not isinstance(body["result"].get("serverInfo"), dict)
+    ):
         print("ERROR: MCP endpoint returned an invalid initialize response")
         return 1
     result = body["result"]
