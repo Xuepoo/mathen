@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/architecture-mathematical-view.schema.json",
+  "title": "Mathen checkable mathematical architecture-view contract",
+  "description": "A versioned, evidence-bounded candidate model. Classification is a deterministic bounded check, not a proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "family",
+    "question",
+    "carrier",
+    "operations",
+    "relations",
+    "transitions",
+    "laws_or_checks",
+    "assumptions",
+    "validity_scope",
+    "claim_type",
+    "claim_status",
+    "evidence_ids",
+    "classification"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "#/$defs/id" },
+    "family": {
+      "enum": [
+        "graph",
+        "dag",
+        "partial_order",
+        "state_machine",
+        "algebraic",
+        "semilattice",
+        "monotone_system",
+        "refinement",
+        "simulation",
+        "bisimulation",
+        "cost",
+        "complexity",
+        "queueing",
+        "reliability"
+      ]
+    },
+    "question": { "type": "string", "minLength": 1 },
+    "carrier": { "$ref": "#/$defs/carrier" },
+    "state_space": { "$ref": "#/$defs/stateSpace" },
+    "operations": { "type": "array", "items": { "$ref": "#/$defs/operation" } },
+    "relations": { "type": "array", "items": { "$ref": "#/$defs/relation" } },
+    "transitions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/transition" }
+    },
+    "laws_or_checks": { "type": "array", "items": { "$ref": "#/$defs/law" } },
+    "assumptions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "validity_scope": { "$ref": "#/$defs/validityScope" },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    },
+    "claim_type": { "$ref": "#/$defs/claimType" },
+    "claim_status": { "$ref": "#/$defs/claimStatus" },
+    "evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "classification": { "$ref": "#/$defs/classification" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "claimType": { "enum": ["fact", "inference", "hypothesis", "analogy"] },
+    "claimStatus": {
+      "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"]
+    },
+    "carrier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "description", "elements"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "elements": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "stateSpace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["states", "initial", "terminal", "description"],
+      "properties": {
+        "states": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "initial": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "terminal": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "arity"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "arity": { "type": "integer", "minimum": 0 },
+        "table": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "description": { "type": "string" }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "pairs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "pairs": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "description": { "type": "string" }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "source", "target", "label"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "system": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
+      }
+    },
+    "law": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "description", "check"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "check": { "type": "string", "minLength": 1 }
+      }
+    },
+    "validityScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "systems",
+        "versions",
+        "deployment_origins",
+        "conditions",
+        "exclusions"
+      ],
+      "properties": {
+        "systems": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "versions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "deployment_origins": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "exclusions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "reason", "checks"],
+      "properties": {
+        "result": { "enum": ["valid", "invalid", "undetermined"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "result"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "result": { "enum": ["pass", "fail", "not-run"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

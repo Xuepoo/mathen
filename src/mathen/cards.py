@@ -9,6 +9,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+from .mathviews import MathematicalViewValidationError, validate_math_view_contract
+
 REQUIRED_TOP_LEVEL = {
     "id",
     "name",
@@ -96,6 +98,10 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
         )
 
     for view in card["mathematical_views"]:
+        if not isinstance(view, dict):
+            raise CardValidationError(
+                f"{label}: every mathematical view must be an object"
+            )
         if view.get("claim_type") not in CLAIM_TYPES:
             raise CardValidationError(f"{label}: invalid mathematical view claim type")
         _check_optional_claim_status(
@@ -104,6 +110,13 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
         _check_evidence_ids(
             label, view.get("model", "view"), view.get("evidence_ids"), evidence_ids
         )
+        if "contract" in view:
+            try:
+                validate_math_view_contract(view["contract"], evidence_ids=evidence_ids)
+            except MathematicalViewValidationError as error:
+                raise CardValidationError(
+                    f"{label}: mathematical view contract is invalid: {error}"
+                ) from error
 
     for trade_off in card["trade_offs"]:
         if trade_off.get("feature_id") not in feature_ids:

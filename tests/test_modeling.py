@@ -50,6 +50,11 @@ class ModelingContractTests(unittest.TestCase):
             ],
         )
         self.assertTrue(any("quota" in rule for rule in task["evidence_rules"]))
+        self.assertEqual(task["mathematical_view_contract"]["version"], "1.0")
+        self.assertIn("partial_order", task["mathematical_view_contract"]["families"])
+        self.assertIn(
+            "classification", task["mathematical_view_contract"]["required_dimensions"]
+        )
         self.assertEqual(
             task["claim_protocol"]["required_fields"],
             ["claim_type", "claim_status", "evidence_ids"],

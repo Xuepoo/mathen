@@ -91,7 +91,13 @@
         "valid_to": { "type": "string", "minLength": 1 },
         "status": {
           "type": "string",
-          "enum": ["planned", "current", "superseded", "deprecated", "historical"]
+          "enum": [
+            "planned",
+            "current",
+            "superseded",
+            "deprecated",
+            "historical"
+          ]
         },
         "supersedes": {
           "type": "array",
@@ -112,7 +118,13 @@
     "relation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type", "target", "claim_type", "claim_status", "evidence_ids"],
+      "required": [
+        "type",
+        "target",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -267,7 +279,10 @@
         "assumptions": { "type": "array", "items": { "type": "string" } },
         "claim_type": { "$ref": "#/$defs/claimType" },
         "claim_status": { "$ref": "#/$defs/claimStatus" },
-        "evidence_ids": { "type": "array", "items": { "type": "string" } }
+        "evidence_ids": { "type": "array", "items": { "type": "string" } },
+        "contract": {
+          "$ref": "architecture-mathematical-view.schema.json"
+        }
       }
     },
     "tradeOff": {

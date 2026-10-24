@@ -180,6 +180,56 @@ def build_modeling_bundle(
                     "with later documentation marked as current-doc context?",
                 ],
             },
+            "mathematical_view_contract": {
+                "schema": "schemas/architecture-mathematical-view.schema.json",
+                "version": "1.0",
+                "optional_mapping": {
+                    "model": (
+                        "contract.family and contract carrier/operations/relations"
+                    ),
+                    "question": "contract.question",
+                    "assumptions": "contract.assumptions",
+                    "claim_type": "contract.claim_type",
+                    "claim_status": "contract.claim_status",
+                    "evidence_ids": "contract.evidence_ids",
+                },
+                "families": [
+                    "graph",
+                    "dag",
+                    "partial_order",
+                    "state_machine",
+                    "algebraic",
+                    "semilattice",
+                    "monotone_system",
+                    "refinement",
+                    "simulation",
+                    "bisimulation",
+                    "cost",
+                    "complexity",
+                    "queueing",
+                    "reliability",
+                ],
+                "required_dimensions": [
+                    "carrier",
+                    "operations",
+                    "relations",
+                    "transitions",
+                    "laws_or_checks",
+                    "assumptions",
+                    "validity_scope",
+                    "evidence_ids",
+                    "claim_type",
+                    "claim_status",
+                    "classification",
+                ],
+                "classification_rule": (
+                    "Classification is a deterministic finite-data consistency result: "
+                    "valid means the supplied checks pass, invalid means a check "
+                    "fails, and undetermined means the evidence or representation "
+                    "is insufficient. "
+                    "No classification is a formal proof."
+                ),
+            },
             "required_claim_types": ["fact", "inference", "hypothesis", "analogy"],
             "claim_protocol": {
                 "required_fields": [
