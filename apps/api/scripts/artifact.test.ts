@@ -39,7 +39,9 @@ test("upload uses a release key and verifies injected readback", async () => {
     key: "results.json",
     file: fixture.pathname,
     verify: true,
-    runner: async (args) => uploaded.push(args),
+    runner: async (args) => {
+      uploaded.push(args);
+    },
     readback: async () => content,
   });
   assert.equal(result.key, "releases/v1/results.json");
@@ -54,7 +56,7 @@ test("upload uses a release key and verifies injected readback", async () => {
 
 test("list paginates and prune dry-run never sends deletes", async () => {
   const requests: Array<{ url: string; method: string }> = [];
-  const fetcher: typeof fetch = async (input, init) => {
+  const fetcher = async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const method = init?.method ?? "GET";
     requests.push({ url, method });

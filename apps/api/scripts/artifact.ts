@@ -14,6 +14,7 @@ export type ArtifactObject = {
 };
 
 export type ArtifactRunner = (args: string[]) => Promise<void>;
+export type ArtifactFetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 export function normalizeRelease(value: string | undefined): string {
   const release = value?.trim() ?? "";
@@ -98,7 +99,7 @@ export async function listArtifacts(
     bucket: string;
     prefix?: string;
   },
-  fetcher: typeof fetch = fetch,
+  fetcher: ArtifactFetcher = fetch,
 ): Promise<ArtifactObject[]> {
   const objects: ArtifactObject[] = [];
   let cursor: string | undefined;
@@ -136,7 +137,7 @@ export async function pruneArtifacts(
     dryRun?: boolean;
     yes?: boolean;
   },
-  fetcher: typeof fetch = fetch,
+  fetcher: ArtifactFetcher = fetch,
 ) {
   if (!Number.isInteger(options.retentionDays) || options.retentionDays < 1) {
     throw new Error("retention days must be a positive integer");

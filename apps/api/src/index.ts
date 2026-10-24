@@ -183,7 +183,11 @@ app.all("/mcp", async (c) => {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
   if (!mcpOriginAllowed(c.req.raw, c.env.MCP_ALLOWED_ORIGINS)) {
-    return c.json({ error: "MCP origin is not allowed", code: "origin_denied" }, 403, corsHeaders);
+    return c.json(
+      { error: "MCP origin is not allowed", code: "origin_denied" },
+      403,
+      Object.fromEntries(corsHeaders),
+    );
   }
   if (!mcpAuthorized(c.req.raw, c.env.API_ACCESS_TOKEN)) {
     return c.json({ error: "MCP bearer authentication required", code: "unauthorized" }, 401, {
