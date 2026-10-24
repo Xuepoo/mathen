@@ -17,6 +17,7 @@ import {
   verifyTurnstileToken,
   turnstileHostname,
 } from "./access.js";
+import { createMcpApiBackend, handleMcpRequest, mcpAuthorized } from "./mcp.js";
 
 type Bindings = {
   DB: D1Database;
@@ -27,6 +28,7 @@ type Bindings = {
   TURNSTILE_HOSTNAME?: string;
   TURNSTILE_SESSION_TTL_SECONDS?: string;
   API_ACCESS_TOKEN?: string;
+  ARTIFACTS?: R2Bucket;
 };
 
 type SystemRow = {
@@ -147,6 +149,69 @@ app.get("/health", (c) =>
   c.json({ status: "ok", service: "mathen-api", environment: c.env.APP_ENV }),
 );
 
+app.all("/mcp", async (c) => {
+  if (!mcpAuthorized(c.req.raw, c.env.API_ACCESS_TOKEN)) {
+    return c.json(
+      { error: "MCP bearer authentication required", code: "unauthorized" },
+      401,
+      {
+        "WWW-Authenticate": "Bearer",
+      },
+    );
+  }
+  const apiToken = c.env.API_ACCESS_TOKEN?.trim();
+  const backend = createMcpApiBackend(async (path) => {
+    const request = new Request(new URL(`/api${path}`, c.req.url), {
+      method: "GET",
+      headers: { Authorization: `Bearer ${apiToken}` },
+    });
+    const response = await app.fetch(request, c.env, c.executionCtx);
+    if (!response.ok) throw new Error(`API request failed: ${response.status}`);
+    const body = (await response.json()) as { data?: unknown };
+    return body.data;
+  });
+  try {
+    return await handleMcpRequest(c.req.raw, backend);
+  } catch {
+    return c.json({ error: "MCP request failed", code: "mcp_error" }, 500);
+  }
+});
+
+app.get("/artifacts/*", async (c) => {
+  const key = artifactKey(c.req.path);
+  if (!key) return c.json({ error: "Invalid artifact key" }, 400);
+  if (!c.env.ARTIFACTS)
+    return c.json({ error: "Artifact storage is not configured" }, 503);
+  const object = await c.env.ARTIFACTS.get(key);
+  if (!object) return c.json({ error: "Artifact not found" }, 404);
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("cache-control", "public, max-age=31536000, immutable");
+  return new Response(object.body, { headers });
+});
+
+export function artifactKey(path: string): string | undefined {
+  const encoded = path.replace(/^\/api\/artifacts\//, "");
+  if (!encoded || encoded.includes("\\")) return undefined;
+  let key: string;
+  try {
+    key = decodeURIComponent(encoded);
+  } catch {
+    return undefined;
+  }
+  if (
+    !key ||
+    key.includes("\\") ||
+    key.startsWith("/") ||
+    key.endsWith("/") ||
+    key.split("/").some((part) => part === "" || part === "." || part === "..")
+  ) {
+    return undefined;
+  }
+  return key;
+}
+
 app.get("/access/config", async (c) =>
   c.json(
     {
@@ -175,7 +240,9 @@ app.post("/access/turnstile", async (c) => {
     return c.json(
       { error: "Too many verification attempts", code: "rate_limited" },
       429,
-      { "Retry-After": String(limit.retryAfterSeconds) },
+      {
+        "Retry-After": String(limit.retryAfterSeconds),
+      },
     );
   }
   let token: string | undefined;
@@ -197,7 +264,7 @@ app.post("/access/turnstile", async (c) => {
       token,
       c.env.TURNSTILE_SECRET_KEY!,
       fetch,
-      turnstileHostname(c.env),
+      turnstileHostname(c.env, c.req.raw),
     );
   } catch {
     return c.json(

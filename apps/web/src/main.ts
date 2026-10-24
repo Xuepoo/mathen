@@ -1,6 +1,7 @@
 import "./style.css";
-import ForceGraph3D, { type ForceGraph3DInstance } from "3d-force-graph";
+import type { ForceGraph3DInstance } from "3d-force-graph";
 import { createLabelPool } from "./graph-labels";
+import { lazyModule } from "./lazy-module";
 import {
   frameNodes,
   seedCoordinates,
@@ -149,6 +150,7 @@ let graphRequest = 0;
 let systems: SystemSummary[] = [];
 let visible: ExplorerPayload = canonical;
 let graph: ForceGraph3DInstance<SimulationNode, SimulationLink> | undefined;
+const loadForceGraphModule = lazyModule(() => import("3d-force-graph"));
 let selectedId: string | undefined;
 let selectedEdge: SimulationLink | undefined;
 let styledEdgeId: string | undefined;
@@ -395,8 +397,9 @@ function configureCamera() {
       : "Drag a node to reshape its neighborhood. Drag space to orbit.";
 }
 
-function createGraph() {
+async function createGraph() {
   styledEdgeId = undefined;
+  const { default: ForceGraph3D } = await loadForceGraphModule();
   graph = new ForceGraph3D(host, {
     controlType: "orbit",
     rendererConfig: { antialias: true, alpha: true },
@@ -1154,6 +1157,10 @@ async function loadGraph() {
   const mode = graphMode;
   state.hidden = false;
   state.innerHTML = `<span class="state-orbit" aria-hidden="true"></span><h1>Connecting the atlas</h1><p>Loading ${mode === "models" ? "mathematical model neighborhoods" : "systems and relationships"}…</p>`;
+  const graphModule = graph ? undefined : loadForceGraphModule();
+  // A superseded request may return before the parallel chunk settles.
+  // Attach a rejection handler without changing the promise awaited below.
+  void graphModule?.catch(() => undefined);
   try {
     if (mode === "models") {
       modelCanonical ??= await loadModelGraph();
@@ -1167,8 +1174,9 @@ async function loadGraph() {
       if (!Array.isArray(canonical.nodes) || !Array.isArray(canonical.edges))
         throw new Error("Invalid graph payload");
     }
+    if (!graph) await graphModule;
     if (request !== graphRequest) return;
-    if (!graph) createGraph();
+    if (!graph) await createGraph();
     relationSelect.innerHTML = `<option value="all">All relations</option>${[
       ...new Set(
         (mode === "models" ? modelCanonical!.edges : canonical.edges).map(

@@ -8,11 +8,13 @@ from unittest.mock import patch
 
 from mathen.config import (
     ConfigError,
+    SyncSettings,
     config_to_dict,
     initialize_config,
     load_config,
     platform_paths,
     set_config_value,
+    unset_config_value,
 )
 
 
@@ -63,16 +65,26 @@ class ConfigurationTests(unittest.TestCase):
                 set_config_value("unknown.value", "x", path)
 
     def test_platform_defaults_use_standard_directories(self) -> None:
-        with patch.dict(
-            os.environ,
+        environment = os.environ.copy()
+        for key in (
+            "MATHEN_CONFIG_DIR",
+            "MATHEN_DATA_DIR",
+            "MATHEN_CACHE_DIR",
+        ):
+            environment.pop(key, None)
+        environment.update(
             {
                 "APPDATA": "/windows/roaming",
                 "LOCALAPPDATA": "/windows/local",
                 "XDG_CONFIG_HOME": "/xdg/config",
                 "XDG_DATA_HOME": "/xdg/data",
                 "XDG_CACHE_HOME": "/xdg/cache",
-            },
-            clear=False,
+            }
+        )
+        with patch.dict(
+            os.environ,
+            environment,
+            clear=True,
         ):
             with patch("mathen.config.platform.system", return_value="Windows"):
                 windows = platform_paths()
@@ -100,6 +112,117 @@ class ConfigurationTests(unittest.TestCase):
         view = config_to_dict(config, redact_secrets=True)
         self.assertEqual(view["llm"]["api_key"], "***")
         json.dumps(view)
+
+    def test_provider_and_mcp_settings_load(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.toml"
+            path.write_text(
+                '[llm]\nprovider = "local"\n'
+                '[llm.providers.local]\nbase_url = "http://localhost:11434/v1"\n'
+                'model = "qwen"\napi_key = "local"\n'
+                '[mcp]\nurl = "https://example.com/mcp"\n'
+                '[sync]\nref = "v0.0.1"\n',
+                encoding="utf-8",
+            )
+            config = load_config(path)
+
+        self.assertEqual(config.llm.provider, "local")
+        self.assertEqual(config.llm.providers["local"]["model"], "qwen")
+        self.assertEqual(config.mcp.url, "https://example.com/mcp")
+        self.assertEqual(config.sync.ref, "v0.0.1")
+
+    def test_provider_values_are_validated_and_redacted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.toml"
+            path.write_text(
+                '[llm]\nprovider = "local"\n'
+                '[llm.providers.local]\nmodel = "qwen"\napi_key = "secret"\n'
+                "timeout = 15\n",
+                encoding="utf-8",
+            )
+            config = load_config(path)
+
+            view = config_to_dict(config, redact_secrets=True)
+            self.assertEqual(view["llm"]["providers"]["local"]["api_key"], "***")
+
+            path.write_text('[llm]\nprovider = "missing"\n', encoding="utf-8")
+            with self.assertRaisesRegex(ConfigError, "not configured"):
+                load_config(path)
+
+            path.write_text("[llm.providers.local]\ntimeout = 0\n", encoding="utf-8")
+            with self.assertRaisesRegex(ConfigError, "positive number"):
+                load_config(path)
+
+    def test_starter_config_contains_mcp_and_sync_sections(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = initialize_config(Path(directory) / "config.toml")
+            text = path.read_text(encoding="utf-8")
+
+        self.assertIn("[mcp]", text)
+        self.assertIn("[sync]", text)
+
+    def test_endpoint_environment_overrides_file_and_defaults(self) -> None:
+        environment = {
+            "MATHEN_MCP_URL": "https://preview.example.test/api/mcp",
+            "MATHEN_SYNC_SOURCE": "https://cards.example.test/reviewed.tar.gz",
+            "MATHEN_SYNC_REF": "v1.2.3",
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.toml"
+            path.write_text(
+                '[mcp]\nurl = "https://example.test/api/mcp"\n'
+                '[sync]\nsource = "https://example.test/cards.tar.gz"\n'
+                'ref = "main"\n',
+                encoding="utf-8",
+            )
+            with patch.dict(os.environ, environment):
+                for use_file in (True, False):
+                    config = load_config(path, use_file=use_file)
+                    self.assertEqual(config.mcp.url, environment["MATHEN_MCP_URL"])
+                    self.assertEqual(
+                        config.sync.source, environment["MATHEN_SYNC_SOURCE"]
+                    )
+                    self.assertEqual(config.sync.ref, "v1.2.3")
+                config = load_config(Path(directory) / "missing.toml")
+                self.assertEqual(config.mcp.url, environment["MATHEN_MCP_URL"])
+
+    def test_empty_endpoint_environment_preserves_file_settings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.toml"
+            path.write_text(
+                '[mcp]\nurl = "https://example.test/api/mcp"\n'
+                '[sync]\nsource = "https://example.test/cards.tar.gz"\n',
+                encoding="utf-8",
+            )
+            with patch.dict(
+                os.environ,
+                {
+                    "MATHEN_MCP_URL": " ",
+                    "MATHEN_SYNC_SOURCE": "",
+                    "MATHEN_SYNC_REF": "",
+                },
+            ):
+                config = load_config(path)
+            self.assertEqual(config.mcp.url, "https://example.test/api/mcp")
+            self.assertEqual(config.sync.source, "https://example.test/cards.tar.gz")
+            self.assertEqual(config.sync.ref, "main")
+
+    def test_config_edits_do_not_persist_endpoint_environment(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.dict(
+                os.environ,
+                {
+                    "MATHEN_MCP_URL": "https://preview.example.test/api/mcp",
+                    "MATHEN_SYNC_SOURCE": "https://cards.example.test/preview.tar.gz",
+                    "MATHEN_SYNC_REF": "preview",
+                },
+            ):
+                path = initialize_config(Path(directory) / "config.toml")
+                set_config_value("llm.model", "test-model", path)
+                unset_config_value("llm.model", path)
+            config = load_config(path)
+            self.assertIsNone(config.mcp.url)
+            self.assertEqual(config.sync, SyncSettings())
 
 
 if __name__ == "__main__":

@@ -94,14 +94,14 @@ export async function verifyTurnstileToken(
   );
 }
 
-export function turnstileHostname(env: AccessEnvironment) {
-  return env.TURNSTILE_HOSTNAME?.trim() || "mathen.xuepoo.xyz";
+export function turnstileHostname(env: AccessEnvironment, request: Request) {
+  return env.TURNSTILE_HOSTNAME?.trim() || new URL(request.url).hostname;
 }
 
 export function hasServiceToken(request: Request, env: AccessEnvironment) {
   const expected = env.API_ACCESS_TOKEN?.trim();
   if (!expected) return false;
-  const authorization = request.headers.get("Authorization");
+  const authorization = request.headers.get("Authorization")?.trim();
   return authorization === `Bearer ${expected}`;
 }
 

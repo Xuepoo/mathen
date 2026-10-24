@@ -3,7 +3,8 @@
 ## Current deployment target
 
 The first production target is a single Cloudflare Worker. It serves the Vite
-client and Hono API from the future `mathen.xuepoo.xyz` custom domain:
+client and Hono API from one deployment origin (for example,
+`https://mathen.example.com`):
 
 ```text
 Vite client
@@ -53,8 +54,10 @@ may use the optional `API_ACCESS_TOKEN` service token instead of a browser
 cookie; keep that token outside the repository.
 
 Configure the site key as a non-secret Worker variable and the secret as a
-Worker secret. `TURNSTILE_HOSTNAME` defaults to `mathen.xuepoo.xyz` and should
-only be changed for an explicitly configured preview deployment. The widget
+Worker secret. `TURNSTILE_HOSTNAME` can pin verification to one deployment
+hostname (for example, `mathen.example.com`). When unset or blank, verification
+requires the hostname of the incoming request URL, including for local or
+preview deployments; forwarded-host headers are not used. The widget
 must be restricted to the matching hostname, use the `mathen-access` action,
 and use the managed mode. The application also applies a per-IP in-memory request limit
 and bounded per-IP request counts. These are defense-in-depth measures;
@@ -65,15 +68,23 @@ authoritative protection against distributed floods.
 The repository deployment workflow reads these values from the `production`
 GitHub Actions environment:
 
-| GitHub Secret                   | Worker destination      | Required      | Value                                                                    |
-| ------------------------------- | ----------------------- | ------------- | ------------------------------------------------------------------------ |
-| `CLOUDFLARE_ACCOUNT_ID`         | Wrangler authentication | Yes           | Cloudflare account ID containing the D1 database and Turnstile widget    |
-| `CLOUDFLARE_API_KEY`            | Wrangler authentication | Yes           | Cloudflare API token with Workers edit and D1 migration permissions      |
-| `TURNSTILE_SITE_KEY`            | Worker variable         | For Turnstile | Public site key of the Mathen widget                                     |
-| `TURNSTILE_SECRET_KEY`          | Worker secret           | For Turnstile | Private secret of the same Mathen widget                                 |
-| `TURNSTILE_HOSTNAME`            | Worker variable         | Optional      | `mathen.xuepoo.xyz`; defaults to this value                              |
-| `TURNSTILE_SESSION_TTL_SECONDS` | Worker variable         | Optional      | Signed browser-session lifetime, from 300 to 86400 seconds; default 3600 |
-| `API_ACCESS_TOKEN`              | Worker secret           | Optional      | Private Bearer token for the read-only MCP/API client                    |
+| GitHub Environment setting               | Worker destination      | Required      | Value                                                                    |
+| ---------------------------------------- | ----------------------- | ------------- | ------------------------------------------------------------------------ |
+| Secret `CLOUDFLARE_ACCOUNT_ID`           | Wrangler authentication | Yes           | Cloudflare account ID containing the D1 database and Turnstile widget    |
+| Secret `CLOUDFLARE_API_KEY`              | Wrangler authentication | Yes           | Cloudflare API token with Workers edit and D1 migration permissions      |
+| Variable `TURNSTILE_SITE_KEY`            | Worker variable         | For Turnstile | Public site key of the Mathen widget                                     |
+| Secret `TURNSTILE_SECRET_KEY`            | Worker secret           | For Turnstile | Private secret of the same Mathen widget                                 |
+| Variable `TURNSTILE_HOSTNAME`            | Worker variable         | Optional      | Pinned hostname; blank uses the request URL hostname                     |
+| Variable `TURNSTILE_SESSION_TTL_SECONDS` | Worker variable         | Optional      | Signed browser-session lifetime, from 300 to 86400 seconds; default 3600 |
+| Secret `API_ACCESS_TOKEN`                | Worker secret           | Optional      | Private Bearer token for the read-only MCP/API client                    |
+
+Public defaults live in `apps/api/wrangler.jsonc` under `vars`. Non-empty
+GitHub Environment variables override those defaults at deployment; unset
+variables do not erase Wrangler configuration. Existing installations should
+move the public Turnstile settings from GitHub Secrets to Environment variables.
+Keep the account credentials, Turnstile secret, and service token in Secrets.
+For a manual deployment, edit the public Wrangler vars or pass explicit
+`wrangler deploy --var "TURNSTILE_HOSTNAME:mathen.example.com"` overrides.
 
 The workflow writes `TURNSTILE_SECRET_KEY` and `API_ACCESS_TOKEN` with
 `wrangler secret put`; they are never committed or passed as public Worker
@@ -93,9 +104,17 @@ replaces the structured contents of the target database:
 just db-seed-remote
 ```
 
-After deployment, attach the Worker custom domain `mathen.xuepoo.xyz` in
+After deployment, attach your Worker custom domain (for example,
+`mathen.example.com`) in
 Cloudflare. The repository does not configure the custom domain until the DNS
 binding is confirmed.
+
+The browser always uses same-origin `/api/*` requests, so changing the custom
+domain or using a `workers.dev` preview requires no browser build-time URL.
+The API prefix `/api` and hosted MCP path `/api/mcp` are stable route contracts,
+not deployment-specific configuration. The Vite development proxy still targets
+`http://127.0.0.1:8787` by default. Configure remote clients with their deployment
+origin rather than changing these paths in source.
 
 ## Future graph stores
 
@@ -129,30 +148,33 @@ filesystem for offline operation. The API currently serves reviewed systems,
 features, and fixed-commit modeling bundles; draft cards remain filesystem-only
 until an authenticated draft-review API exists.
 
-The intended hosted MCP shape is a remote HTTPS endpoint such as:
+The hosted MCP endpoint is a remote HTTPS endpoint:
 
 ```text
-https://mathen.xuepoo.xyz/mcp
+https://mathen.example.com/api/mcp
 ```
 
-That endpoint is a future deployment target, not a current API contract. The
-current implementation is the read-only stdio server in `apps/mcp/`, optionally
-backed by the Hono API through `MATHEN_API_URL`. A future remote adapter must
-preserve the same reviewed-only boundary, authentication decision, tool
-schemas, error contract, and draft isolation rather than exposing the local
-stdio process directly over the network.
+The Worker exposes a stateless, reviewed-only `POST /api/mcp` endpoint. It requires
+the `API_ACCESS_TOKEN` Bearer credential and supports JSON MCP requests for
+`initialize`, `tools/list`, and `tools/call`. It has no session state and never
+exposes filesystem-only drafts. The local stdio server remains available for
+offline use.
 
 ## Static asset storage boundary
 
-The current Worker serves the Vite build through Workers Static Assets. R2 is a
-possible future storage layer for versioned static assets, large reports, or
-experiment artifacts, but no R2 bucket is currently bound to the Worker. When
-introduced, manage it in Wrangler configuration with an explicit binding and
-production/preview bucket names, keep upload and cleanup commands in the
-repository, and treat the bucket as a deployment artifact store rather than
-the canonical Architecture Card database. D1 remains the structured source of
-truth; R2 objects must be addressable by release or artifact IDs and remain
-rebuildable from repository inputs where applicable.
+The current Worker serves the Vite build through Workers Static Assets. R2 is
+bound as `ARTIFACTS` to `mathen-artifacts-production` for versioned reports and
+experiment artifacts. The read-only route is `/api/artifacts/<key>`. Uploads are
+an operator action:
+
+```bash
+cd apps/api
+bun run artifact:put experiments/g5-minimal.json ../../data/experiments/g5-minimal.json
+```
+
+R2 is a deployment artifact store, not the canonical Architecture Card
+database. D1 remains the structured source of truth; objects must be addressed
+by release or artifact IDs and remain rebuildable from repository inputs.
 
 The MCP tools call the same canonical API or a shared service layer. Its first
 tools can be:

@@ -3,12 +3,36 @@ import { test } from "node:test";
 import { type ModelGraph, modelViewKey } from "./model-graph.js";
 import {
   app,
+  artifactKey,
   buildCompositions,
   buildGraph,
   serializeFeature,
   serializeFeatureRelation,
   serializeMathematicalView,
 } from "./index.js";
+
+test("hosted MCP uses the /api prefix on any deployment origin", async () => {
+  for (const origin of [
+    "https://preview.example.test",
+    "http://localhost:8787",
+  ]) {
+    const response = await app.request(
+      `${origin}/api/mcp`,
+      { method: "POST" },
+      {
+        DB: {} as D1Database,
+        APP_ENV: "test",
+        ASSETS: {} as Fetcher,
+        API_ACCESS_TOKEN: "test-token",
+      },
+    );
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), {
+      error: "MCP bearer authentication required",
+      code: "unauthorized",
+    });
+  }
+});
 
 test("D1-backed routes require Turnstile access when protection is configured", async () => {
   const response = await app.request(
@@ -47,6 +71,92 @@ test("configured API service token bypasses browser access sessions", async () =
 
   assert.equal(response.status, 200);
   assert.equal(calls.length, 1);
+});
+
+test("service-token auth normalizes surrounding header whitespace", async () => {
+  const calls: { sql: string; bindings: unknown[] }[] = [];
+  const response = await app.request(
+    "/api/systems?limit=1",
+    { headers: { Authorization: " Bearer service-token " } },
+    {
+      DB: mockSystemsDatabase([systemRow(0)], calls),
+      APP_ENV: "production",
+      ASSETS: {} as Fetcher,
+      TURNSTILE_SECRET_KEY: "secret",
+      TURNSTILE_SITE_KEY: "site",
+      API_ACCESS_TOKEN: "service-token",
+    },
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(calls.length, 1);
+});
+
+test("hosted MCP requires its bearer token and stays read-only", async () => {
+  const env = {
+    DB: {} as D1Database,
+    APP_ENV: "production",
+    ASSETS: {} as Fetcher,
+    API_ACCESS_TOKEN: "service-token",
+  };
+
+  const unauthorized = await app.request(
+    "/api/mcp",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+    },
+    env,
+  );
+  assert.equal(unauthorized.status, 401);
+
+  const wrongMethod = await app.request(
+    "/api/mcp",
+    { method: "GET", headers: { Authorization: "Bearer service-token" } },
+    env,
+  );
+  assert.equal(wrongMethod.status, 405);
+  assert.equal(wrongMethod.headers.get("allow"), "POST");
+
+  const authorized = await app.request(
+    "/api/mcp",
+    {
+      method: "POST",
+      headers: {
+        Authorization: " Bearer service-token ",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+    },
+    env,
+  );
+  assert.equal(authorized.status, 200);
+  const body = (await authorized.json()) as { jsonrpc: string };
+  assert.equal(body.jsonrpc, "2.0");
+});
+
+test("artifact route rejects traversal before accessing R2", async () => {
+  assert.equal(artifactKey("/api/artifacts/%2e%2e/secret.json"), undefined);
+  assert.equal(artifactKey("/api/artifacts/%5c/secret.json"), undefined);
+  assert.equal(artifactKey("/api/artifacts/reports/v1.json"), "reports/v1.json");
+
+  let requestedKey: string | undefined;
+  const env = {
+    DB: {} as D1Database,
+    APP_ENV: "test",
+    ASSETS: {} as Fetcher,
+    ARTIFACTS: {
+      get() {
+        requestedKey = arguments[0] as string;
+        return Promise.resolve(null);
+      },
+    } as unknown as R2Bucket,
+  };
+
+  const response = await app.request("/api/artifacts/reports/v1.json", {}, env);
+  assert.equal(response.status, 404);
+  assert.equal(requestedKey, "reports/v1.json");
 });
 
 test("GET /api/systems defaults to the first page with deterministic ordering", async () => {
@@ -450,29 +560,18 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
   );
   assert.match(queries[0]!, /WHERE mve\.view_id = mathematical_views\.id/);
   assert.equal(
-    body.data.nodes.some(
-      (node) => node.id === "model:state-transition-systems",
-    ),
+    body.data.nodes.some((node) => node.id === "model:state-transition-systems"),
     true,
   );
   assert.equal(body.data.edges.length, 2);
-  const temporalEdge = body.data.edges.find((edge) =>
-    edge.metadata.some((view) => view.id === 7),
-  );
+  const temporalEdge = body.data.edges.find((edge) => edge.metadata.some((view) => view.id === 7));
   assert.equal(temporalEdge?.claim_type, "mixed");
-  assert.equal(
-    body.data.edges.find((edge) => edge.source === "other")?.claim_type,
-    "hypothesis",
-  );
+  assert.equal(body.data.edges.find((edge) => edge.source === "other")?.claim_type, "hypothesis");
   assert.deepEqual(
     temporalEdge?.metadata.find((view) => view.id === 7),
     {
       id: 7,
-      key: modelViewKey(
-        "temporal",
-        "Queue-mediated workflow state machine",
-        "How does work move?",
-      ),
+      key: modelViewKey("temporal", "Queue-mediated workflow state machine", "How does work move?"),
       model: "Queue-mediated workflow state machine",
       question: "How does work move?",
       assumptions: ["workers poll"],
@@ -502,9 +601,7 @@ test("system detail view keys match graph identity across database ids", async (
             },
             all() {
               return Promise.resolve({
-                results: sql.includes("FROM mathematical_views WHERE")
-                  ? [view]
-                  : [],
+                results: sql.includes("FROM mathematical_views WHERE") ? [view] : [],
               });
             },
           };
@@ -535,9 +632,7 @@ test("system detail view keys match graph identity across database ids", async (
     modelViewKey(system.id, view.model, view.question),
   );
   assert.equal(body.data.mathematical_views[0]?.claim_type, "hypothesis");
-  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, [
-    "architecture",
-  ]);
+  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, ["architecture"]);
   assert.deepEqual(body.data.feature_relations, []);
 });
 

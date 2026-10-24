@@ -183,7 +183,7 @@ def build_report(repetitions: int, output: Path) -> dict[str, Any]:
                 "name": "per-repetition-observations",
                 "results": results,
                 "runner_sha256": hashlib.sha256(
-                    Path(__file__).read_bytes()
+                    Path(__file__).read_bytes().replace(b"\r\n", b"\n")
                 ).hexdigest(),
             }
         ],

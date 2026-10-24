@@ -7,16 +7,20 @@ canonical system cards.
 
 ## Hosted endpoint direction
 
-The planned hosted MCP endpoint is a remote HTTPS service, for example:
+The hosted MCP endpoint is a remote HTTPS service:
 
 ```text
-https://mathen.xuepoo.xyz/mcp
+https://mathen.example.com/api/mcp
 ```
 
-This endpoint is not implemented yet. Until the remote transport, authentication,
-session handling, and deployment boundary are specified and tested, use the
-stdio server described below. The future endpoint must expose the same
-reviewed-only read contract and must not expose filesystem-only drafts.
+Replace the example origin with your deployment. The route is `/api/mcp`, under
+the same `/api` prefix as the read API. Python CLI users can set `mcp.url` in
+TOML or override it with `MATHEN_MCP_URL`; no hosted origin is built in.
+
+The endpoint is stateless and reviewed-only. It requires the `API_ACCESS_TOKEN`
+Bearer credential and supports JSON Streamable HTTP requests for `initialize`,
+`tools/list`, and `tools/call`. It does not expose filesystem-only drafts. Use
+the stdio server below for offline filesystem access.
 
 ## Start
 
@@ -33,10 +37,10 @@ directory. `MATHEN_ROOT` can override repository discovery when the command is
 launched from another directory.
 
 To use the deployed Hono API instead of local files, set `MATHEN_API_URL` to
-the API origin before starting the server:
+the API origin or `/api` base URL before starting the server:
 
 ```bash
-MATHEN_API_URL=https://api.example.com bun run mcp
+MATHEN_API_URL=https://mathen.example.com/api bun run mcp
 ```
 
 API mode uses `GET /api/systems`, `GET /api/systems/:id`, `GET /api/features`,

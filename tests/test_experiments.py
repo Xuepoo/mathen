@@ -61,19 +61,23 @@ class SQLiteExperimentTests(unittest.TestCase):
 
     @staticmethod
     def validate_evidence(report: dict) -> None:
-        card = json.loads((ROOT / "data/systems/sqlite.json").read_text())
+        card = json.loads(
+            (ROOT / "data/systems/sqlite.json").read_text(encoding="utf-8")
+        )
         card["evidence"].append(report)
         validate_card(card)
 
     def test_recorded_evidence_is_valid_and_has_all_observations(self) -> None:
         report = json.loads(
-            (ROOT / "data/experiments/g5-sqlite-transaction-results.json").read_text()
+            (ROOT / "data/experiments/g5-sqlite-transaction-results.json").read_text(
+                encoding="utf-8"
+            )
         )
         self.validate_evidence(report)
         self.assertEqual(len(report["artifacts"][0]["results"]), report["repetitions"])
         self.assertEqual(
             report["artifacts"][0]["runner_sha256"],
-            hashlib.sha256(SCRIPT.read_bytes()).hexdigest(),
+            hashlib.sha256(SCRIPT.read_bytes().replace(b"\r\n", b"\n")).hexdigest(),
         )
         for result in report["artifacts"][0]["results"]:
             self.assertEqual(result["seeded"], result["after_rollback"])

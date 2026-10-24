@@ -31,14 +31,17 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_KEY }}
-          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
-          TURNSTILE_HOSTNAME: ${{ secrets.TURNSTILE_HOSTNAME }}
-          TURNSTILE_SESSION_TTL_SECONDS: ${{ secrets.TURNSTILE_SESSION_TTL_SECONDS }}
+          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          TURNSTILE_HOSTNAME: ${{ vars.TURNSTILE_HOSTNAME }}
+          TURNSTILE_SESSION_TTL_SECONDS: ${{ vars.TURNSTILE_SESSION_TTL_SECONDS }}
         run: |
-          bun run wrangler deploy \
-            --var "TURNSTILE_SITE_KEY:${TURNSTILE_SITE_KEY:-}" \
-            --var "TURNSTILE_HOSTNAME:${TURNSTILE_HOSTNAME:-}" \
-            --var "TURNSTILE_SESSION_TTL_SECONDS:${TURNSTILE_SESSION_TTL_SECONDS:-}"
+          args=()
+          for name in TURNSTILE_SITE_KEY TURNSTILE_HOSTNAME TURNSTILE_SESSION_TTL_SECONDS; do
+            if [ -n "${!name:-}" ]; then
+              args+=(--var "${name}:${!name}")
+            fi
+          done
+          bun run wrangler deploy "${args[@]}"
 
       - name: Configure Worker secrets
         working-directory: apps/api

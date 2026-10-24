@@ -8,7 +8,7 @@ import platform
 import stat
 import sys
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -52,15 +52,36 @@ class LLMSettings:
     api_key: str | None = None
     api_key_env: str = "OPENAI_API_KEY"
     timeout: float = 120.0
+    provider: str = "default"
+    providers: dict[str, dict[str, Any]] | None = None
+
+
+@dataclass(frozen=True)
+class MCPSettings:
+    """Hosted MCP endpoint settings."""
+
+    url: str | None = None
+    token_env: str = "MATHEN_API_TOKEN"
+    timeout: float = 10.0
+
+
+@dataclass(frozen=True)
+class SyncSettings:
+    """Reviewed-card synchronization settings."""
+
+    source: str = "https://github.com/Xuepoo/mathen/archive/refs/heads/main.tar.gz"
+    ref: str = "main"
 
 
 @dataclass(frozen=True)
 class MathenConfig:
-    """Resolved configuration after applying defaults and a TOML file."""
+    """Resolved configuration after defaults, TOML, and environment overrides."""
 
     path: Path
     paths: PathSettings
     llm: LLMSettings
+    mcp: MCPSettings
+    sync: SyncSettings
     loaded: bool = False
 
 
@@ -131,6 +152,8 @@ def default_config() -> MathenConfig:
             ),
         ),
         llm=LLMSettings(),
+        mcp=MCPSettings(),
+        sync=SyncSettings(),
     )
 
 
@@ -149,18 +172,22 @@ def load_config(
     path: Path | None = None,
     *,
     use_file: bool = True,
+    apply_environment: bool = True,
 ) -> MathenConfig:
-    """Load TOML configuration, returning defaults when no file exists."""
+    """Load defaults and TOML, then apply non-empty endpoint environment values."""
 
     defaults = default_config()
     config_path = discover_config_path(path)
     if not use_file or not config_path.exists():
-        return MathenConfig(
+        config = MathenConfig(
             path=config_path,
             paths=defaults.paths,
             llm=defaults.llm,
+            mcp=defaults.mcp,
+            sync=defaults.sync,
             loaded=False,
         )
+        return _endpoint_environment(config) if apply_environment else config
     try:
         with config_path.open("rb") as file:
             raw = tomllib.load(file)
@@ -170,7 +197,25 @@ def load_config(
         raise ConfigError(f"{config_path}: invalid TOML: {error}") from error
     if not isinstance(raw, dict):
         raise ConfigError(f"{config_path}: top-level TOML value must be a table")
-    return _merge_config(defaults, config_path, raw)
+    config = _merge_config(defaults, config_path, raw)
+    return _endpoint_environment(config) if apply_environment else config
+
+
+def _endpoint_environment(config: MathenConfig) -> MathenConfig:
+    """Keep machine-local endpoint overrides out of persisted configuration."""
+
+    mcp_url = os.environ.get("MATHEN_MCP_URL", "").strip()
+    sync_source = os.environ.get("MATHEN_SYNC_SOURCE", "").strip()
+    sync_ref = os.environ.get("MATHEN_SYNC_REF", "").strip()
+    return replace(
+        config,
+        mcp=replace(config.mcp, url=mcp_url or config.mcp.url),
+        sync=replace(
+            config.sync,
+            source=sync_source or config.sync.source,
+            ref=sync_ref or config.sync.ref,
+        ),
+    )
 
 
 def initialize_config(path: Path | None = None, *, force: bool = False) -> Path:
@@ -193,14 +238,16 @@ def set_config_value(
     """Set one supported dotted configuration key and preserve other values."""
 
     config_path = discover_config_path(path)
-    config = load_config(config_path)
+    config = load_config(config_path, apply_environment=False)
     raw = config_to_dict(config)
     parts = key.split(".")
-    if len(parts) != 2 or parts[0] not in {"paths", "llm"}:
-        raise ConfigError("config keys must use the paths.* or llm.* form")
+    if len(parts) != 2 or parts[0] not in {"paths", "llm", "mcp", "sync"}:
+        raise ConfigError("config keys must use paths.*, llm.*, mcp.*, or sync.*")
     allowed = {
         "paths": set(PathSettings.__dataclass_fields__),
         "llm": set(LLMSettings.__dataclass_fields__),
+        "mcp": set(MCPSettings.__dataclass_fields__),
+        "sync": set(SyncSettings.__dataclass_fields__),
     }[parts[0]]
     if parts[1] not in allowed:
         raise ConfigError(f"unsupported config key: {key}")
@@ -218,7 +265,7 @@ def unset_config_value(key: str, path: Path | None = None) -> Path:
     config_path = discover_config_path(path)
     if not config_path.exists():
         raise ConfigError(f"{config_path} does not exist")
-    config = load_config(config_path)
+    config = load_config(config_path, apply_environment=False)
     raw = config_to_dict(config)
     parts = key.split(".")
     if len(parts) != 2 or parts[0] not in raw or parts[1] not in raw[parts[0]]:
@@ -237,6 +284,13 @@ def config_to_dict(
     api_key = config.llm.api_key
     if redact_secrets and api_key:
         api_key = "***"
+    providers = {
+        name: dict(settings) for name, settings in (config.llm.providers or {}).items()
+    }
+    if redact_secrets:
+        for settings in providers.values():
+            if settings.get("api_key"):
+                settings["api_key"] = "***"
     return {
         "paths": {
             "data_dir": str(config.paths.data_dir),
@@ -253,6 +307,17 @@ def config_to_dict(
             "api_key": api_key,
             "api_key_env": config.llm.api_key_env,
             "timeout": config.llm.timeout,
+            "provider": config.llm.provider,
+            "providers": providers,
+        },
+        "mcp": {
+            "url": config.mcp.url,
+            "token_env": config.mcp.token_env,
+            "timeout": config.mcp.timeout,
+        },
+        "sync": {
+            "source": config.sync.source,
+            "ref": config.sync.ref,
         },
     }
 
@@ -262,8 +327,12 @@ def _merge_config(
 ) -> MathenConfig:
     paths = _section(raw, "paths")
     llm = _section(raw, "llm")
+    mcp = _section(raw, "mcp")
+    sync = _section(raw, "sync")
     default_paths = config_to_dict(defaults)["paths"]
     default_llm = config_to_dict(defaults)["llm"]
+    default_mcp = config_to_dict(defaults)["mcp"]
+    default_sync = config_to_dict(defaults)["sync"]
     for key, value in paths.items():
         if key not in default_paths:
             raise ConfigError(f"{path}: unsupported paths key: {key}")
@@ -274,7 +343,7 @@ def _merge_config(
         if key not in default_llm:
             raise ConfigError(f"{path}: unsupported llm key: {key}")
         if (
-            key in {"model", "api_key", "api_key_env"}
+            key in {"model", "api_key", "api_key_env", "provider"}
             and value is not None
             and not isinstance(value, str)
         ):
@@ -286,15 +355,48 @@ def _merge_config(
         if key == "base_url" and not isinstance(value, str):
             raise ConfigError(f"{path}: llm.base_url must be a string")
         default_llm[key] = value
+    if "providers" in llm:
+        providers = llm["providers"]
+        if not isinstance(providers, dict):
+            raise ConfigError(f"{path}: llm.providers must be a table")
+        default_llm["providers"] = _validate_providers(path, providers)
+    providers = default_llm["providers"] or {}
+    if (
+        default_llm["provider"] != "default"
+        and default_llm["provider"] not in providers
+    ):
+        raise ConfigError(
+            f"{path}: selected llm provider is not configured: "
+            f"{default_llm['provider']}"
+        )
     timeout = float(default_llm["timeout"])
     if timeout <= 0:
         raise ConfigError(f"{path}: llm.timeout must be positive")
+    for key, value in mcp.items():
+        if key not in default_mcp:
+            raise ConfigError(f"{path}: unsupported mcp key: {key}")
+        if key == "timeout":
+            if (
+                not isinstance(value, (int, float))
+                or isinstance(value, bool)
+                or value <= 0
+            ):
+                raise ConfigError(f"{path}: mcp.timeout must be a positive number")
+        elif value is not None and not isinstance(value, str):
+            raise ConfigError(f"{path}: mcp.{key} must be a string or null")
+        default_mcp[key] = value
+    for key, value in sync.items():
+        if key not in default_sync or not isinstance(value, str):
+            raise ConfigError(f"{path}: sync.{key} must be a string")
+        default_sync[key] = value
     return MathenConfig(
         path=path,
         paths=PathSettings(
             **{key: Path(value) for key, value in default_paths.items()}
         ),
         llm=LLMSettings(**default_llm),
+        mcp=MCPSettings(**default_mcp),
+        sync=SyncSettings(**default_sync),
         loaded=True,
     )
 
@@ -304,6 +406,41 @@ def _section(raw: Mapping[str, Any], name: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ConfigError(f"{name} must be a TOML table")
     return dict(value)
+
+
+def _validate_providers(
+    path: Path, providers: Mapping[str, Any]
+) -> dict[str, dict[str, Any]]:
+    validated: dict[str, dict[str, Any]] = {}
+    for name, value in providers.items():
+        if not isinstance(name, str) or not name or not isinstance(value, dict):
+            raise ConfigError(f"{path}: each llm provider must be a TOML table")
+        for key in value:
+            if key not in {"base_url", "model", "api_key", "api_key_env", "timeout"}:
+                raise ConfigError(f"{path}: unsupported provider key: {name}.{key}")
+        for key, provider_value in value.items():
+            if key in {"base_url", "api_key_env"} and not isinstance(
+                provider_value, str
+            ):
+                raise ConfigError(f"{path}: provider {name}.{key} must be a string")
+            if (
+                key in {"model", "api_key"}
+                and provider_value is not None
+                and not isinstance(provider_value, str)
+            ):
+                raise ConfigError(
+                    f"{path}: provider {name}.{key} must be a string or null"
+                )
+            if key == "timeout" and (
+                not isinstance(provider_value, (int, float))
+                or isinstance(provider_value, bool)
+                or provider_value <= 0
+            ):
+                raise ConfigError(
+                    f"{path}: provider {name}.timeout must be a positive number"
+                )
+        validated[name] = dict(value)
+    return validated
 
 
 def _expand_path(value: str) -> str:
@@ -343,26 +480,55 @@ base_url = "https://api.openai.com/v1"
 # api_key = "your-api-key"
 api_key_env = "OPENAI_API_KEY"
 timeout = 120.0
+provider = "default"
+
+[mcp]
+# url = "https://mathen.example.com/api/mcp"
+token_env = "MATHEN_API_TOKEN"
+timeout = 10.0
+
+[sync]
+source = {sync_source}
+ref = {sync_ref}
 """.format(
+        sync_source=_toml_string(config.sync.source),
+        sync_ref=_toml_string(config.sync.ref),
         **{
             key: _toml_string(str(value))
             for key, value in config_to_dict(config)["paths"].items()
-        }
+        },
     )
 
 
 def _dump_toml(raw: Mapping[str, Any]) -> str:
     lines: list[str] = []
-    for section_name in ("paths", "llm"):
+    for section_name in ("paths", "llm", "mcp", "sync"):
         section = raw.get(section_name, {})
         if not isinstance(section, Mapping):
             continue
         lines.append(f"[{section_name}]")
         for key, value in section.items():
+            if (
+                section_name == "llm"
+                and key == "providers"
+                and isinstance(value, Mapping)
+            ):
+                continue
             if value is None:
                 continue
             lines.append(f"{key} = {_toml_value(value)}")
         lines.append("")
+        if section_name == "llm":
+            providers = section.get("providers")
+            if isinstance(providers, Mapping):
+                for provider_name, provider in sorted(providers.items()):
+                    if not isinstance(provider, Mapping):
+                        continue
+                    lines.append(f"[llm.providers.{provider_name}]")
+                    for key, value in provider.items():
+                        if value is not None:
+                            lines.append(f"{key} = {_toml_value(value)}")
+                    lines.append("")
     return "\n".join(lines)
 
 
@@ -373,6 +539,8 @@ def _toml_value(value: Any) -> str:
         return "true" if value else "false"
     if isinstance(value, (int, float)):
         return str(value)
+    if value is None:
+        return '""'
     raise ConfigError(f"unsupported TOML value: {value!r}")
 
 

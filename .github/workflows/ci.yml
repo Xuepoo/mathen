@@ -10,7 +10,15 @@ permissions:
 
 jobs:
   python:
-    runs-on: ubuntu-latest
+    name: Python (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -18,9 +26,27 @@ jobs:
           version: "latest"
       - run: uv sync --locked
       - run: uv run mathen validate
-      - run: uv run python -m unittest discover -s tests -v
+      - name: Run Python tests
+        run: uv run python -m unittest discover -s tests -v 2>&1 | tee python-test-report.txt
       - run: uv run ruff format --check .
       - run: uv run ruff check .
+      - name: Upload Python test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-test-report-${{ matrix.os }}
+          path: python-test-report.txt
+          if-no-files-found: warn
+
+  # Keep the historical required check name while the matrix provides the
+  # actual cross-platform coverage.
+  python-required:
+    name: python
+    needs: python
+    if: ${{ needs.python.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All cross-platform Python jobs passed."
 
   web-and-worker:
     runs-on: ubuntu-latest
