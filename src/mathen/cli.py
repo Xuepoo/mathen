@@ -29,6 +29,11 @@ from .config import (
 from .data_sync import SyncError, sync_reviewed_cards
 from .data_sync import status as sync_status
 from .llm import LLMModelError, client_from_environment, model_bundles
+from .microstructures import (
+    MicrostructureValidationError,
+    discover_microstructures,
+    load_microstructure,
+)
 from .modeling import (
     ModelingBundleError,
     build_modeling_bundles,
@@ -54,6 +59,13 @@ def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
 
     validate = subparsers.add_parser("validate", help="validate architecture cards")
     validate.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
+
+    microstructure = subparsers.add_parser(
+        "validate-microstructures", help="validate architecture microstructures"
+    )
+    microstructure.add_argument(
+        "path", nargs="?", type=Path, default=Path("data/microstructures")
+    )
 
     listing = subparsers.add_parser("list", help="list architecture cards")
     listing.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
@@ -196,6 +208,8 @@ def main() -> int:
             return mcp_command(args, config)
         if args.command == "validate":
             return validate_command(args.path, config)
+        if args.command == "validate-microstructures":
+            return validate_microstructures_command(args.path)
         if args.command == "list":
             return list_command(args.path)
         if args.command == "show":
@@ -242,6 +256,7 @@ def main() -> int:
         ModelingBundleError,
         RepositoryAnalysisError,
         RelationCandidateError,
+        MicrostructureValidationError,
     ) as error:
         print(f"ERROR: {error}")
         return 1
@@ -264,6 +279,19 @@ def validate_command(path: Path, config: MathenConfig | None = None) -> int:
         validate_card_collection(
             loaded_cards, require_feature_relation_targets=not is_drafts
         )
+    return 0
+
+
+def validate_microstructures_command(path: Path) -> int:
+    """Validate all standalone microstructures at ``path``."""
+
+    paths = discover_microstructures(path)
+    if not paths:
+        print(f"No microstructures found in {path}")
+        return 1
+    for microstructure_path in paths:
+        load_microstructure(microstructure_path)
+        print(f"valid  {microstructure_path}")
     return 0
 
 
