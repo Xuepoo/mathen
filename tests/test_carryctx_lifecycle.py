@@ -14,6 +14,120 @@ SPEC.loader.exec_module(LIFECYCLE)
 
 
 class LifecyclePolicyTests(unittest.TestCase):
+    def test_pull_request_states_are_deterministic(self):
+        cases = (
+            ({"state": "OPEN"}, False, "open"),
+            ({"state": "OPEN", "isDraft": True}, False, "draft"),
+            ({"state": "MERGED"}, False, "merged"),
+            ({"state": "CLOSED"}, False, "closed"),
+            ({"state": "CLOSED", "isDraft": True}, False, "closed"),
+            (None, True, "local-only"),
+            (None, False, "absent"),
+        )
+        for payload, local_branch, expected in cases:
+            with self.subTest(expected=expected):
+                self.assertEqual(
+                    LIFECYCLE.classify_pr_state(payload, local_branch=local_branch),
+                    expected,
+                )
+
+    def test_branch_policy_never_authorizes_deletion(self):
+        for state in LIFECYCLE.PR_STATES:
+            with self.subTest(state=state):
+                policy = LIFECYCLE.branch_policy(state)
+                self.assertTrue(policy["preserve_branch"])
+                self.assertEqual(policy["delete_branch"], "never")
+                self.assertEqual(policy["decision"], "preserve")
+
+    def test_cleanup_audit_exposes_retryable_requests_without_mutation(self):
+        requests = [
+            {"id": "done", "state": "completed"},
+            {"id": "blocked", "state": "blocked", "attempt_count": 4},
+            {"id": "pending", "state": "pending"},
+            {"id": "cancelled", "state": "cancelled"},
+        ]
+
+        report = LIFECYCLE.cleanup_audit(requests)
+
+        self.assertEqual(
+            report["counts"],
+            {"blocked": 1, "cancelled": 1, "completed": 1, "pending": 1},
+        )
+        self.assertEqual(
+            [item["id"] for item in report["pending"]], ["blocked", "pending"]
+        )
+        self.assertEqual(
+            [item["id"] for item in report["retryable"]], ["blocked", "pending"]
+        )
+        self.assertFalse(report["mutation_performed"])
+
+    def test_failed_github_lookup_is_preservation_signal(self):
+        completed = type(
+            "Completed", (), {"returncode": 1, "stdout": "", "stderr": "not logged in"}
+        )()
+        with patch.object(LIFECYCLE.subprocess, "run", return_value=completed) as run:
+            lookup = LIFECYCLE.lookup_pull_request(Path("/repo"), "carryctx/mth-1")
+
+        self.assertEqual(lookup.source, "github-cli")
+        self.assertEqual(lookup.error, "not logged in")
+        self.assertEqual(lookup.candidates, [])
+        run.assert_called_once()
+        self.assertEqual(
+            LIFECYCLE.branch_policy("absent", lookup_error=lookup.error)["decision"],
+            "preserve",
+        )
+
+    def test_successful_github_lookup_is_read_only_and_selects_latest_candidate(self):
+        payload = (
+            '[{"number": 7, "state": "CLOSED", "isDraft": false}, '
+            '{"number": 9, "state": "MERGED", "isDraft": false}]'
+        )
+        completed = type(
+            "Completed", (), {"returncode": 0, "stdout": payload, "stderr": ""}
+        )()
+        with patch.object(LIFECYCLE.subprocess, "run", return_value=completed) as run:
+            lookup = LIFECYCLE.lookup_pull_request(Path("/repo"), "carryctx/mth-1")
+
+        self.assertEqual(lookup.payload["number"], 9)
+        self.assertEqual(
+            LIFECYCLE.classify_pr_state(lookup.payload, local_branch=True), "merged"
+        )
+        command = run.call_args.args[0]
+        self.assertEqual(command[:3], ["gh", "pr", "list"])
+        self.assertIn("--state", command)
+        self.assertIn("all", command)
+
+    def test_observe_is_read_only_and_reports_cleanup(self):
+        state = {
+            "managed_worktree": {"path": "/repo"},
+            "active_sessions": [],
+            "cleanup_requests": [{"id": "r1", "state": "blocked"}],
+            "pending_cleanup": [{"id": "r1", "state": "blocked"}],
+        }
+        with (
+            patch.object(
+                LIFECYCLE,
+                "git_branch",
+                return_value={"name": "feature", "local": True, "detached": False},
+            ),
+            patch.object(
+                LIFECYCLE,
+                "lookup_pull_request",
+                return_value=LIFECYCLE.PullRequestLookup(
+                    None, [], "github-cli", "offline"
+                ),
+            ),
+            patch.object(LIFECYCLE, "carryctx_state", return_value=state),
+            patch.object(LIFECYCLE, "_envelope") as envelope,
+        ):
+            report = LIFECYCLE.observe(Path("/repo"), dry_run=True)
+
+        self.assertEqual(report["mode"], "dry-run")
+        self.assertEqual(report["pull_request"]["state"], "local-only")
+        self.assertEqual(report["cleanup"]["retryable"][0]["id"], "r1")
+        self.assertFalse(report["branch_policy"]["merge_confirmed"])
+        envelope.assert_not_called()
+
     def test_profiles_are_explicit_and_ordered(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

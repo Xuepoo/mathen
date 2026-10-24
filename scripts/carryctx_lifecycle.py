@@ -24,6 +24,8 @@ EXIT_USAGE = 2
 EXIT_VERIFICATION = 10
 EXIT_UNSAFE = 11
 EXIT_CARRYCTX = 12
+PR_STATES = frozenset({"open", "merged", "closed", "draft", "absent", "local-only"})
+RETRYABLE_CLEANUP_STATES = frozenset({"pending", "failed", "blocked", "retryable"})
 
 
 @dataclass(frozen=True)
@@ -31,6 +33,16 @@ class CommandResult:
     command: str
     returncode: int
     output: str
+
+
+@dataclass(frozen=True)
+class PullRequestLookup:
+    """Read-only result from the optional GitHub CLI lookup."""
+
+    payload: dict[str, Any] | None
+    candidates: list[dict[str, Any]]
+    source: str
+    error: str | None = None
 
 
 def repository_root(start: Path) -> Path:
@@ -140,12 +152,189 @@ def carryctx_state(root: Path) -> dict[str, Any]:
     return {
         "managed_worktree": managed,
         "active_sessions": active_sessions,
-        "cleanup_requests": [
+        "cleanup_requests": cleanup,
+        "pending_cleanup": [
             item
             for item in cleanup
             if item.get("state") not in {"completed", "cancelled"}
         ],
     }
+
+
+def cleanup_audit(requests: list[dict[str, Any]]) -> dict[str, Any]:
+    """Return an audit-friendly, non-mutating cleanup outbox projection."""
+
+    counts: dict[str, int] = {}
+    pending: list[dict[str, Any]] = []
+    retryable: list[dict[str, Any]] = []
+    for request in requests:
+        state = str(request.get("state", request.get("status", "unknown")))
+        counts[state] = counts.get(state, 0) + 1
+        if state not in {"completed", "cancelled"}:
+            pending.append(request)
+        if state in RETRYABLE_CLEANUP_STATES:
+            retryable.append(request)
+    return {
+        "total": len(requests),
+        "counts": dict(sorted(counts.items())),
+        "pending": pending,
+        "retryable": retryable,
+        "retry_command": "carryctx worktree cleanup run --dry-run",
+        "mutation_performed": False,
+    }
+
+
+def git_branch(root: Path, requested: str | None = None) -> dict[str, Any]:
+    """Read the current or requested branch without changing Git metadata."""
+
+    if requested:
+        branch = requested
+    else:
+        result = subprocess.run(
+            ["git", "symbolic-ref", "--quiet", "--short", "HEAD"],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        branch = result.stdout.strip() if result.returncode == 0 else None
+
+    if not branch:
+        return {"name": None, "local": False, "detached": True}
+
+    result = subprocess.run(
+        ["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
+        cwd=root,
+        check=False,
+    )
+    return {"name": branch, "local": result.returncode == 0, "detached": False}
+
+
+def classify_pr_state(
+    payload: dict[str, Any] | None,
+    *,
+    local_branch: bool,
+) -> str:
+    """Classify a PR payload, distinguishing a local-only branch from absence."""
+
+    if payload is not None:
+        state = str(payload.get("state", "")).upper()
+        if payload.get("isDraft") is True and state == "OPEN":
+            return "draft"
+        if state == "OPEN":
+            return "open"
+        if state == "MERGED" or payload.get("mergedAt"):
+            return "merged"
+        if state == "CLOSED":
+            return "closed"
+    return "local-only" if local_branch else "absent"
+
+
+def lookup_pull_request(root: Path, branch: str) -> PullRequestLookup:
+    """Look up PRs with ``gh`` using a read-only command and no credentials in code."""
+
+    command = [
+        "gh",
+        "pr",
+        "list",
+        "--head",
+        branch,
+        "--state",
+        "all",
+        "--limit",
+        "20",
+        "--json",
+        "number,state,isDraft,mergedAt,url,headRefName,baseRefName",
+    ]
+    try:
+        result = subprocess.run(
+            command,
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as exc:
+        return PullRequestLookup(None, [], "github-cli", str(exc))
+    if result.returncode:
+        detail = (result.stderr or result.stdout).strip()
+        return PullRequestLookup(
+            None,
+            [],
+            "github-cli",
+            detail or f"gh exited with status {result.returncode}",
+        )
+    try:
+        raw = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        return PullRequestLookup(None, [], "github-cli", f"invalid gh JSON: {exc}")
+    if not isinstance(raw, list):
+        return PullRequestLookup(
+            None, [], "github-cli", "gh returned a non-list PR result"
+        )
+    candidates = [item for item in raw if isinstance(item, dict)]
+    candidates.sort(key=lambda item: int(item.get("number", 0)), reverse=True)
+    return PullRequestLookup(
+        candidates[0] if candidates else None,
+        candidates,
+        "github-cli",
+    )
+
+
+def branch_policy(pr_state: str, *, lookup_error: str | None = None) -> dict[str, Any]:
+    """Describe preservation policy; this function never authorizes deletion."""
+
+    if pr_state == "merged" and lookup_error is None:
+        reason = (
+            "merged PR state is confirmed; repository policy still retains branches"
+        )
+    elif lookup_error:
+        reason = (
+            "PR state could not be confirmed; preserve branch and retry observation"
+        )
+    else:
+        reason = "no merged PR is confirmed; preserve branch and local work"
+    return {
+        "preserve_branch": True,
+        "delete_branch": "never",
+        "merge_confirmed": pr_state == "merged" and lookup_error is None,
+        "decision": "preserve",
+        "reason": reason,
+    }
+
+
+def observe(
+    root: Path, branch: str | None = None, *, dry_run: bool = False
+) -> dict[str, Any]:
+    """Build a deterministic PR, branch, and cleanup observability report."""
+
+    branch_info = git_branch(root, branch)
+    name = branch_info["name"]
+    lookup = (
+        lookup_pull_request(root, name)
+        if name and name != "main"
+        else PullRequestLookup(None, [], "not-applicable")
+    )
+    pr_state = classify_pr_state(lookup.payload, local_branch=branch_info["local"])
+    state = carryctx_state(root)
+    cleanup = cleanup_audit(state["cleanup_requests"])
+    report: dict[str, Any] = {
+        "schema_version": 1,
+        "mode": "dry-run" if dry_run else "read-only",
+        "path": str(root),
+        "branch": {**branch_info, "pr_state": pr_state},
+        "pull_request": {
+            "state": pr_state,
+            "source": lookup.source,
+            "error": lookup.error,
+            "selected": lookup.payload,
+            "candidates": lookup.candidates,
+        },
+        "branch_policy": branch_policy(pr_state, lookup_error=lookup.error),
+        "cleanup": cleanup,
+        "action": "preserve; observation is read-only and no cleanup was requested",
+    }
+    return report
 
 
 def verify_profile(
@@ -203,7 +392,7 @@ def audit(root: Path, task_ref: str | None = None) -> dict[str, Any]:
         "managed_worktree": state["managed_worktree"],
         "dirty": git_status(root),
         "active_sessions": state["active_sessions"],
-        "pending_cleanup": state["cleanup_requests"],
+        "pending_cleanup": state["pending_cleanup"],
         "action": "preserve; audit is read-only",
     }
     if task_ref:
@@ -309,8 +498,11 @@ def complete(root: Path, task_ref: str, profile: str, *, dry_run: bool = False) 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("verify", "complete", "audit"))
+    parser.add_argument("command", choices=("verify", "complete", "audit", "observe"))
     parser.add_argument("task_ref", nargs="?")
+    parser.add_argument(
+        "--branch", help="branch to observe instead of the current branch"
+    )
     parser.add_argument("--profile", default="full")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--json", action="store_true", dest="as_json")
@@ -327,6 +519,10 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(result, indent=2, sort_keys=True))
             else:
                 print(json.dumps(result, indent=2, sort_keys=True))
+            return 0
+        if args.command == "observe":
+            result = observe(root, args.branch, dry_run=args.dry_run)
+            print(json.dumps(result, indent=2, sort_keys=True))
             return 0
         if args.command == "verify":
             results = verify_profile(root, args.profile, dry_run=args.dry_run)

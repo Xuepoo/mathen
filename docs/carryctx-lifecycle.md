@@ -8,6 +8,7 @@ registered Mathen worktree:
 uv run python scripts/carryctx_lifecycle.py verify --profile full
 uv run python scripts/carryctx_lifecycle.py complete MTH-0000 --profile full
 uv run python scripts/carryctx_lifecycle.py audit MTH-0000 --json
+uv run python scripts/carryctx_lifecycle.py observe --dry-run
 ```
 
 ## Verification profiles
@@ -46,6 +47,41 @@ reports the terminal state and does not dispatch completion or retry cleanup.
 `--dry-run` lists/verifies the selected profile and never changes project or
 CarryCtx state. `audit --json` is read-only and explicitly reports preservation
 reasons for unmanaged, dirty, and active-session cases.
+
+## Pull request and cleanup observability
+
+`observe` is the repository-owned, read-only first slice for issue #53. It
+reports the current branch, an optional GitHub pull-request lookup, the
+preservation policy, and the cleanup outbox in one stable JSON document:
+
+```bash
+uv run python scripts/carryctx_lifecycle.py observe --json
+uv run python scripts/carryctx_lifecycle.py observe --branch carryctx/mth-0000 --dry-run
+```
+
+The PR classifier has exactly these states:
+
+- `open`: a non-draft open PR was found;
+- `draft`: an open draft PR was found;
+- `merged`: GitHub explicitly reports the selected PR as merged;
+- `closed`: a closed, unmerged PR was found;
+- `local-only`: no PR was found, but the branch exists locally;
+- `absent`: no PR was found and the branch is not local (including a missing
+  or detached checkout).
+
+The lookup uses only `gh pr list --state all --json`; the adapter does not
+create, edit, merge, close, or delete a PR and never embeds credentials.
+Unavailable `gh` authentication or network access is reported as an error,
+not treated as evidence of absence. A confirmed merge changes only the
+observation; the branch policy remains `preserve` with `delete_branch =
+"never"`, so branch protection and owner decisions remain authoritative.
+
+The cleanup section exposes counts, pending requests, retryable/blocked
+requests, attempt metadata returned by CarryCtx, and the safe retry hint
+`carryctx worktree cleanup run --dry-run`. Observation never calls cleanup,
+edits CarryCtx SQLite, prunes Git metadata, or removes a worktree or branch.
+Use CarryCtx's own cleanup command only as an explicit, separately reviewed
+operation. Re-running `observe` is idempotent and has no side effects.
 
 The existing CarryCtx Git hooks remain managed by CarryCtx itself:
 `carryctx hooks status` is read-only, and repeated `carryctx hooks install`
