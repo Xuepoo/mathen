@@ -162,10 +162,10 @@ def solve_compositions(
     is raised otherwise.
 
     If ``n`` records are available and ``S`` is the number of non-empty
-    subsets up to ``max_components``, enumeration takes
-    ``O(S * max_components * max_depth)`` capability-closure steps and stores
-    ``O(S)`` candidates before truncating the returned list.  The bounds are
-    therefore part of the safety and reproducibility contract.
+    subsets up to ``max_components``, enumeration stores ``O(S)`` candidates
+    before truncating the returned list. Each closure search explores only
+    finite provider branches bounded by ``max_components`` and ``max_depth``;
+    those bounds are part of the safety and reproducibility contract.
     """
 
     _validate_bounds(max_components, max_depth, max_results)
