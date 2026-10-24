@@ -3,13 +3,17 @@ import { test } from "node:test";
 import {
   artifactBucket,
   listArtifacts,
+  normalizeArtifactPrefix,
   normalizeArtifactKey,
   normalizeRelease,
   pruneArtifacts,
   uploadArtifact,
 } from "./artifact.js";
 
-const fixture = new URL("../../../data/experiments/g5-minimal.json", import.meta.url);
+const fixture = new URL(
+  "../../../data/experiments/g5-minimal.json",
+  import.meta.url,
+);
 
 test("normalizes release-keyed artifact paths and rejects traversal", () => {
   assert.equal(
@@ -19,11 +23,20 @@ test("normalizes release-keyed artifact paths and rejects traversal", () => {
   assert.throws(() => normalizeRelease("release/unsafe"));
   assert.throws(() => normalizeArtifactKey("v1", "../secret.json"));
   assert.throws(() => normalizeArtifactKey("v1", "reports/%2e%2e/secret.json"));
+  assert.equal(normalizeArtifactPrefix("releases/v1/"), "releases/v1/");
+  assert.throws(() => normalizeArtifactPrefix("other/"));
+  assert.throws(() => normalizeArtifactPrefix("releases/v1/../"));
 });
 
 test("selects explicit, preview, and production artifact buckets", () => {
-  assert.equal(artifactBucket({ APP_ENV: "preview" }), "mathen-artifacts-preview");
-  assert.equal(artifactBucket({ APP_ENV: "production" }), "mathen-artifacts-production");
+  assert.equal(
+    artifactBucket({ APP_ENV: "preview" }),
+    "mathen-artifacts-preview",
+  );
+  assert.equal(
+    artifactBucket({ APP_ENV: "production" }),
+    "mathen-artifacts-production",
+  );
   assert.equal(
     artifactBucket({ APP_ENV: "preview", R2_ARTIFACT_BUCKET: "mock-bucket" }),
     "mock-bucket",
@@ -124,5 +137,35 @@ test("prune refuses destructive mode without explicit confirmation", async () =>
       async () => new Response("{}"),
     ),
     /--dry-run or --yes/,
+  );
+});
+
+test("prune refuses a list response outside the selected release namespace", async () => {
+  await assert.rejects(
+    pruneArtifacts(
+      {
+        accountId: "mock-account",
+        token: "mock-token",
+        bucket: "mock-bucket",
+        release: "v1",
+        retentionDays: 1,
+        yes: true,
+      },
+      async () =>
+        new Response(
+          JSON.stringify({
+            success: true,
+            result: [
+              {
+                key: "releases/v2/old.json",
+                last_modified: "2020-01-01T00:00:00Z",
+              },
+            ],
+            result_info: {},
+          }),
+          { status: 200 },
+        ),
+    ),
+    /outside releases\/v1\//,
   );
 });

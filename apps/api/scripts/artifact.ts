@@ -14,7 +14,10 @@ export type ArtifactObject = {
 };
 
 export type ArtifactRunner = (args: string[]) => Promise<void>;
-export type ArtifactFetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+export type ArtifactFetcher = (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+) => Promise<Response>;
 
 export function normalizeRelease(value: string | undefined): string {
   const release = value?.trim() ?? "";
@@ -33,14 +36,18 @@ export function normalizeArtifactKey(release: string, key: string): string {
     normalizedKey.endsWith("/") ||
     normalizedKey.includes("\\") ||
     /%(?:2e|2f|5c)/i.test(normalizedKey) ||
-    normalizedKey.split("/").some((part) => !part || part === "." || part === "..")
+    normalizedKey
+      .split("/")
+      .some((part) => !part || part === "." || part === "..")
   ) {
     throw new Error("artifact key must be a relative path without traversal");
   }
   return `releases/${normalizedRelease}/${normalizedKey}`;
 }
 
-export function artifactBucket(env: Record<string, string | undefined> = process.env): string {
+export function artifactBucket(
+  env: Record<string, string | undefined> = process.env,
+): string {
   if (env.R2_ARTIFACT_BUCKET?.trim()) return env.R2_ARTIFACT_BUCKET.trim();
   if (env.APP_ENV === "preview" || env.WRANGLER_ENV === "preview") {
     return env.R2_BUCKET_PREVIEW?.trim() || PREVIEW_BUCKET;
@@ -50,6 +57,21 @@ export function artifactBucket(env: Record<string, string | undefined> = process
 
 export function artifactPrefix(release: string): string {
   return `releases/${normalizeRelease(release)}/`;
+}
+
+export function normalizeArtifactPrefix(value: string): string {
+  const prefix = value.trim();
+  const releaseParts = prefix.split("/").slice(1, -1);
+  if (
+    !prefix.startsWith("releases/") ||
+    !prefix.endsWith("/") ||
+    prefix.includes("\\") ||
+    /%(?:2e|2f|5c)/i.test(prefix) ||
+    releaseParts.some((part) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(part))
+  ) {
+    throw new Error("artifact prefix must stay within the releases/ namespace");
+  }
+  return prefix;
 }
 
 export function sha256(bytes: Uint8Array): string {
@@ -76,14 +98,17 @@ export async function uploadArtifact(options: {
     "--file",
     options.file,
     "--content-type",
-    options.file.toLowerCase().endsWith(".json") ? "application/json" : "application/octet-stream",
+    options.file.toLowerCase().endsWith(".json")
+      ? "application/json"
+      : "application/octet-stream",
     "--cache-control",
     "public, max-age=31536000, immutable",
     "--force",
     "--remote",
   ]);
   if (options.verify) {
-    if (!options.readback) throw new Error("--verify requires a readback function");
+    if (!options.readback)
+      throw new Error("--verify requires a readback function");
     const actual = await options.readback(options.bucket, objectKey);
     if (sha256(content) !== sha256(actual)) {
       throw new Error(`readback verification failed for ${objectKey}`);
@@ -122,7 +147,9 @@ export async function listArtifacts(
       throw new Error(`R2 list failed: ${response.status}`);
     }
     objects.push(...body.result);
-    cursor = body.result_info?.is_truncated ? body.result_info.cursor : undefined;
+    cursor = body.result_info?.is_truncated
+      ? body.result_info.cursor
+      : undefined;
   } while (cursor);
   return objects;
 }
@@ -151,16 +178,24 @@ export async function pruneArtifacts(
   );
   const cutoff = Date.now() - options.retentionDays * 86_400_000;
   const stale = objects.filter(
-    (object) => object.last_modified && Date.parse(object.last_modified) < cutoff,
+    (object) =>
+      object.last_modified && Date.parse(object.last_modified) < cutoff,
   );
   if (options.dryRun) return stale;
   for (const object of stale) {
+    const prefix = artifactPrefix(options.release);
+    if (!object.key.startsWith(prefix)) {
+      throw new Error(
+        `refusing to delete artifact outside ${prefix}: ${object.key}`,
+      );
+    }
     const url = `${CLOUDFLARE_API}/accounts/${encodeURIComponent(options.accountId)}/r2/buckets/${encodeURIComponent(options.bucket)}/objects/${object.key.split("/").map(encodeURIComponent).join("/")}`;
     const response = await fetcher(url, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${options.token}` },
     });
-    if (!response.ok) throw new Error(`R2 delete failed for ${object.key}: ${response.status}`);
+    if (!response.ok)
+      throw new Error(`R2 delete failed for ${object.key}: ${response.status}`);
   }
   return stale;
 }
@@ -170,7 +205,8 @@ async function runWrangler(args: string[]): Promise<void> {
     stdout: "inherit",
     stderr: "inherit",
   });
-  if (result.exitCode !== 0) throw new Error(`wrangler exited with ${result.exitCode}`);
+  if (result.exitCode !== 0)
+    throw new Error(`wrangler exited with ${result.exitCode}`);
 }
 
 function option(args: string[], name: string): string | undefined {
@@ -190,7 +226,9 @@ async function main(args: string[]) {
     const key = option(args, "--key");
     const file = option(args, "--file");
     if (!release || !key || !file) {
-      throw new Error("usage: artifact.ts put --release RELEASE --key KEY --file FILE [--verify]");
+      throw new Error(
+        "usage: artifact.ts put --release RELEASE --key KEY --file FILE [--verify]",
+      );
     }
     await uploadArtifact({
       bucket,
@@ -217,20 +255,33 @@ async function main(args: string[]) {
         }
       },
     });
-    console.log(`Uploaded ${file} to ${bucket}/${normalizeArtifactKey(release, key)}`);
+    console.log(
+      `Uploaded ${file} to ${bucket}/${normalizeArtifactKey(release, key)}`,
+    );
     return;
   }
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
-  const token = (process.env.CLOUDFLARE_API_TOKEN ?? process.env.CLOUDFLARE_API_KEY)?.trim();
-  if (!accountId || !token) throw new Error("list/prune require Cloudflare account credentials");
+  const token = (
+    process.env.CLOUDFLARE_API_TOKEN ?? process.env.CLOUDFLARE_API_KEY
+  )?.trim();
+  if (!accountId || !token)
+    throw new Error("list/prune require Cloudflare account credentials");
   if (command === "list") {
+    const release = option(args, "--release");
+    const explicitPrefix = option(args, "--prefix");
+    if (release && explicitPrefix)
+      throw new Error("list accepts --release or --prefix, not both");
     console.log(
       JSON.stringify(
         await listArtifacts({
           accountId,
           token,
           bucket,
-          prefix: option(args, "--prefix"),
+          prefix: release
+            ? artifactPrefix(release)
+            : explicitPrefix
+              ? normalizeArtifactPrefix(explicitPrefix)
+              : "releases/",
         }),
         null,
         2,
