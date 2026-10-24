@@ -41,3 +41,31 @@ and device class materially change graph startup.
 The optimization changes loading boundaries only. It does not claim that the
 force simulation, WebGL renderer, or network request has a fixed latency across
 devices and deployments.
+
+## Reproducible report harness
+
+The repository includes `scripts/web_performance_report.ts`, which records the
+production asset sizes (raw and gzip) and can optionally include a Lighthouse
+JSON export. It deliberately labels these as local smoke evidence and marks
+representative mobile hardware evidence unavailable unless a separately
+recorded device run is supplied.
+
+```sh
+bun run build
+bun scripts/web_performance_report.ts \
+  --dist apps/web/dist \
+  --output docs/web-performance-report.md
+
+# Optional local preview smoke run:
+lighthouse http://127.0.0.1:4174/ \
+  --output=json \
+  --output-path=/tmp/opencode/mathen-lighthouse.json
+bun scripts/web_performance_report.ts \
+  --dist apps/web/dist \
+  --lighthouse-json=/tmp/opencode/mathen-lighthouse.json \
+  --output docs/web-performance-report.md
+```
+
+Do not substitute local desktop or headless-Chromium values for mobile
+evidence. A representative mobile trace must identify the device, browser,
+network profile, build, URL, and workload.
