@@ -224,6 +224,8 @@ The repository currently provides:
 - read-only API queries for source-card-owned feature relations and composition
   proposals;
 - a read-only stdio MCP server with filesystem and API backends;
+- optional Cloudflare Turnstile protection, signed browser access sessions,
+  service-token API access, per-IP limits, and short-lived GET caching;
 - explicit separation between reviewed cards, drafts, and modeling evidence.
 
 The canonical tree currently contains 219 reviewed cards. The representative

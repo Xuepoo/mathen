@@ -4,11 +4,29 @@ import {
   modelViewKey,
   type ModelViewRow,
 } from "./model-graph.js";
+import {
+  accessCookieName,
+  accessProtectionEnabled,
+  accessSetCookie,
+  accessSiteKey,
+  createAccessCookie,
+  InMemoryRateLimiter,
+  hasServiceToken,
+  parseCookie,
+  verifyAccessCookie,
+  verifyTurnstileToken,
+  turnstileHostname,
+} from "./access.js";
 
 type Bindings = {
   DB: D1Database;
   APP_ENV: string;
   ASSETS: Fetcher;
+  TURNSTILE_SECRET_KEY?: string;
+  TURNSTILE_SITE_KEY?: string;
+  TURNSTILE_HOSTNAME?: string;
+  TURNSTILE_SESSION_TTL_SECONDS?: string;
+  API_ACCESS_TOKEN?: string;
 };
 
 type SystemRow = {
@@ -86,9 +104,146 @@ export type Graph = {
 
 export const app = new Hono<{ Bindings: Bindings }>().basePath("/api");
 
+const accessRateLimiter = new InMemoryRateLimiter();
+
+app.use("*", async (c, next) => {
+  const pathname = new URL(c.req.url).pathname;
+  if (
+    pathname === "/api/health" ||
+    pathname === "/api/access/config" ||
+    pathname === "/api/access/turnstile"
+  ) {
+    return next();
+  }
+  const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
+  const limit = accessRateLimiter.consume(`api:${ip}`, 120, 60_000);
+  if (!limit.allowed) {
+    return c.json({ error: "Too many requests", code: "rate_limited" }, 429, {
+      "Retry-After": String(limit.retryAfterSeconds),
+    });
+  }
+  if (accessProtectionEnabled(c.env)) {
+    const cookie = parseCookie(
+      c.req.header("Cookie") ?? null,
+      accessCookieName(),
+    );
+    if (
+      !hasServiceToken(c.req.raw, c.env) &&
+      !(await verifyAccessCookie(cookie, c.env))
+    ) {
+      return c.json(
+        {
+          error: "Turnstile access verification required",
+          code: "access_required",
+        },
+        403,
+      );
+    }
+  }
+  const cacheKey =
+    c.req.method === "GET" && typeof caches !== "undefined"
+      ? new Request(c.req.url)
+      : undefined;
+  const workerCache =
+    typeof caches !== "undefined"
+      ? (caches as unknown as { default?: Cache }).default
+      : undefined;
+  if (cacheKey && workerCache) {
+    const cached = await workerCache.match(cacheKey);
+    if (cached) return cached;
+  }
+  await next();
+  const response = c.res;
+  if (cacheKey && workerCache && response.status === 200) {
+    const cachedResponse = new Response(response.body, response);
+    cachedResponse.headers.set("Cache-Control", "public, max-age=30");
+    c.executionCtx.waitUntil(workerCache.put(cacheKey, cachedResponse.clone()));
+    return cachedResponse;
+  }
+  return;
+});
+
 app.get("/health", (c) =>
   c.json({ status: "ok", service: "mathen-api", environment: c.env.APP_ENV }),
 );
+
+app.get("/access/config", async (c) =>
+  c.json(
+    {
+      data: {
+        enabled: accessProtectionEnabled(c.env),
+        authenticated:
+          hasServiceToken(c.req.raw, c.env) ||
+          (await verifyAccessCookie(
+            parseCookie(c.req.header("Cookie") ?? null, accessCookieName()),
+            c.env,
+          )),
+        site_key: accessSiteKey(c.env),
+      },
+    },
+    200,
+    { "Cache-Control": "no-store" },
+  ),
+);
+
+app.post("/access/turnstile", async (c) => {
+  if (!accessProtectionEnabled(c.env))
+    return c.json({ data: { enabled: false } });
+  const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
+  const limit = accessRateLimiter.consume(`turnstile:${ip}`, 10, 10 * 60_000);
+  if (!limit.allowed) {
+    return c.json(
+      { error: "Too many verification attempts", code: "rate_limited" },
+      429,
+      { "Retry-After": String(limit.retryAfterSeconds) },
+    );
+  }
+  let token: string | undefined;
+  try {
+    const body = await c.req.json<{ token?: unknown }>();
+    if (typeof body.token === "string") token = body.token;
+  } catch {
+    token = undefined;
+  }
+  if (!token || token.length > 2_048) {
+    return c.json(
+      { error: "A Turnstile token is required", code: "invalid_token" },
+      400,
+    );
+  }
+  let verified = false;
+  try {
+    verified = await verifyTurnstileToken(
+      token,
+      c.env.TURNSTILE_SECRET_KEY!,
+      fetch,
+      turnstileHostname(c.env),
+    );
+  } catch {
+    return c.json(
+      {
+        error: "Turnstile verification unavailable",
+        code: "verification_unavailable",
+      },
+      503,
+    );
+  }
+  if (!verified) {
+    return c.json(
+      { error: "Turnstile verification failed", code: "verification_failed" },
+      403,
+    );
+  }
+  const cookie = await createAccessCookie(c.env);
+  return c.json({ data: { enabled: true, expires_in: cookie.maxAge } }, 200, {
+    "Cache-Control": "no-store",
+    "Set-Cookie": accessSetCookie(
+      cookie.value,
+      cookie.maxAge,
+      c.env.APP_ENV === "production",
+    ),
+  });
+});
 
 app.get("/systems", async (c) => {
   const query = c.req.query("query")?.trim() ?? "";
