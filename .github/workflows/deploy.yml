@@ -35,7 +35,7 @@ jobs:
           TURNSTILE_HOSTNAME: ${{ secrets.TURNSTILE_HOSTNAME }}
           TURNSTILE_SESSION_TTL_SECONDS: ${{ secrets.TURNSTILE_SESSION_TTL_SECONDS }}
         run: |
-          wrangler deploy \
+          bun run wrangler deploy \
             --var "TURNSTILE_SITE_KEY:${TURNSTILE_SITE_KEY:-}" \
             --var "TURNSTILE_HOSTNAME:${TURNSTILE_HOSTNAME:-}" \
             --var "TURNSTILE_SESSION_TTL_SECONDS:${TURNSTILE_SESSION_TTL_SECONDS:-}"
@@ -49,8 +49,8 @@ jobs:
           API_ACCESS_TOKEN: ${{ secrets.API_ACCESS_TOKEN }}
         run: |
           if [ -n "${TURNSTILE_SECRET_KEY:-}" ]; then
-            printf '%s' "$TURNSTILE_SECRET_KEY" | wrangler secret put TURNSTILE_SECRET_KEY
+            printf '%s' "$TURNSTILE_SECRET_KEY" | bun run wrangler secret put TURNSTILE_SECRET_KEY
           fi
           if [ -n "${API_ACCESS_TOKEN:-}" ]; then
-            printf '%s' "$API_ACCESS_TOKEN" | wrangler secret put API_ACCESS_TOKEN
+            printf '%s' "$API_ACCESS_TOKEN" | bun run wrangler secret put API_ACCESS_TOKEN
           fi
