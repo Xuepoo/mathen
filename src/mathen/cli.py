@@ -287,8 +287,8 @@ def validate_microstructures_command(path: Path) -> int:
 
     paths = discover_microstructures(path)
     if not paths:
-        print(f"No microstructures found in {path}")
-        return 1
+        print(f"No microstructures found in {path}; nothing to validate")
+        return 0
     for microstructure_path in paths:
         load_microstructure(microstructure_path)
         print(f"valid  {microstructure_path}")

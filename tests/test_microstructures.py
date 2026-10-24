@@ -1,9 +1,12 @@
 import copy
+import io
 import json
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 
+from mathen.cli import validate_microstructures_command
 from mathen.microstructures import (
     MICROSTRUCTURE_SCHEMA_VERSION,
     Microstructure,
@@ -99,6 +102,20 @@ class MicrostructureTests(unittest.TestCase):
             path.write_text("{", encoding="utf-8")
             with self.assertRaisesRegex(MicrostructureValidationError, "invalid JSON"):
                 load_microstructure(path)
+
+    def test_empty_or_absent_directory_is_a_successful_noop(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            empty_path = Path(directory) / "microstructures"
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(validate_microstructures_command(empty_path), 0)
+            self.assertIn("nothing to validate", output.getvalue())
+
+            empty_path.mkdir()
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(validate_microstructures_command(empty_path), 0)
+            self.assertIn("nothing to validate", output.getvalue())
 
     @staticmethod
     def _fixture() -> dict:
