@@ -43,6 +43,6 @@
   "classification": {
     "result": "invalid",
     "reason": "The declared directed relation contains a cycle.",
-    "checks": []
+    "checks": [{ "id": "acyclic", "result": "fail" }]
   }
 }

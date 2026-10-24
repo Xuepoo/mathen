@@ -278,6 +278,10 @@ def validate_math_view_contract(
             f"{contract['classification']['result']!r}; deterministic checks "
             f"require {expected['result']!r}"
         )
+    if contract["classification"]["checks"] != expected["checks"]:
+        raise MathematicalViewValidationError(
+            f"{label}: classification checks are inconsistent with deterministic checks"
+        )
     _validate_family_references(label, contract, ids)
 
 
@@ -416,11 +420,17 @@ def _validate_classification(
         raise MathematicalViewValidationError(
             f"{label}: classification.checks must be a list"
         )
+    seen_ids: set[str] = set()
     for index, item in enumerate(checks):
         if not isinstance(item, dict) or item.get("id") not in law_ids:
             raise MathematicalViewValidationError(
                 f"{label}: classification.checks[{index}] has unknown id"
             )
+        if item["id"] in seen_ids:
+            raise MathematicalViewValidationError(
+                f"{label}: classification.checks[{index}] has duplicate id"
+            )
+        seen_ids.add(item["id"])
         if item.get("result") not in CHECK_RESULTS:
             raise MathematicalViewValidationError(
                 f"{label}: invalid classification check result"
@@ -560,6 +570,18 @@ def _result(
     return {"result": result, "reason": reason, "checks": checks or []}
 
 
+def _checks_for_laws(
+    laws: list[dict[str, Any]], results: dict[str, str]
+) -> list[dict[str, str]]:
+    return [
+        {"id": law["id"], "result": results.get(law["id"], "not-run")} for law in laws
+    ]
+
+
+def _has_unsupported_laws(laws: list[dict[str, Any]], supported: set[str]) -> bool:
+    return any(law["check"] not in supported for law in laws)
+
+
 def _relation(contract: dict[str, Any], kind: str) -> dict[str, Any] | None:
     return next(
         (item for item in contract["relations"] if item.get("kind") == kind), None
@@ -567,31 +589,100 @@ def _relation(contract: dict[str, Any], kind: str) -> dict[str, Any] | None:
 
 
 def _classify_order_family(contract: dict[str, Any]) -> dict[str, Any]:
-    relation = contract["relations"][0] if contract["relations"] else None
-    if relation is None:
+    relations = contract["relations"]
+    laws = contract["laws_or_checks"]
+    if not relations:
         return _result(
-            "invalid", "A graph-family contract needs at least one relation."
+            "invalid",
+            "A graph-family contract needs at least one relation.",
+            _checks_for_laws(laws, {}),
         )
-    pairs = {tuple(pair) for pair in relation["pairs"]}
+    pairs = {tuple(pair) for relation in relations for pair in relation["pairs"]}
     carrier = set(contract["carrier"]["elements"])
     if contract["family"] == "graph":
+        supported = {"closure"}
+        if _has_unsupported_laws(laws, supported):
+            return _result(
+                "undetermined",
+                "The graph declares a law without a deterministic classifier.",
+                _checks_for_laws(laws, {}),
+            )
+        results = {law["id"]: "pass" for law in laws if law["check"] == "closure"}
         return _result(
-            "valid", "The declared relation is a closed graph over the carrier."
+            "valid",
+            "The declared relation is a closed graph over the carrier.",
+            _checks_for_laws(laws, results),
         )
     if contract["family"] == "dag":
-        if _has_cycle(carrier, pairs):
+        supported = {"acyclic"}
+        has_cycle = _has_cycle(carrier, pairs)
+        results = {
+            law["id"]: "fail" if has_cycle else "pass"
+            for law in laws
+            if law["check"] == "acyclic"
+        }
+        if has_cycle:
             return _result(
-                "invalid", "The declared directed relation contains a cycle."
+                "invalid",
+                "The declared directed relation contains a cycle.",
+                _checks_for_laws(laws, results),
             )
-        return _result("valid", "The declared directed relation is acyclic.")
-    if not all((item, item) in pairs for item in carrier):
-        return _result("invalid", "A partial order must be reflexive over the carrier.")
-    if any(a != b and (b, a) in pairs for a, b in pairs):
-        return _result("invalid", "A partial order must be antisymmetric.")
-    if any((a, c) not in pairs for a, b in pairs for b2, c in pairs if b == b2):
-        return _result("invalid", "A partial order must be transitive.")
+        if _has_unsupported_laws(laws, supported):
+            return _result(
+                "undetermined",
+                "The DAG declares a law without a deterministic classifier.",
+                _checks_for_laws(laws, results),
+            )
+        return _result(
+            "valid",
+            "The declared directed relation is acyclic.",
+            _checks_for_laws(laws, results),
+        )
+    reflexive = all((item, item) in pairs for item in carrier)
+    antisymmetric = not any(a != b and (b, a) in pairs for a, b in pairs)
+    transitive = not any(
+        (a, c) not in pairs for a, b in pairs for b2, c in pairs if b == b2
+    )
+    law_values = {
+        "reflexive": reflexive,
+        "antisymmetric": antisymmetric,
+        "transitive": transitive,
+        "partial-order": reflexive and antisymmetric and transitive,
+    }
+    results = {
+        law["id"]: "pass" if law_values[law["check"]] else "fail"
+        for law in laws
+        if law["check"] in law_values
+    }
+    if not reflexive:
+        return _result(
+            "invalid",
+            "A partial order must be reflexive over the carrier.",
+            _checks_for_laws(laws, results),
+        )
+    if not antisymmetric:
+        return _result(
+            "invalid",
+            "A partial order must be antisymmetric.",
+            _checks_for_laws(laws, results),
+        )
+    if not transitive:
+        return _result(
+            "invalid",
+            "A partial order must be transitive.",
+            _checks_for_laws(laws, results),
+        )
+    supported = {"reflexive", "antisymmetric", "transitive", "partial-order"}
+    if _has_unsupported_laws(laws, supported):
+        return _result(
+            "undetermined",
+            "The partial order declares a law without a deterministic classifier.",
+            _checks_for_laws(laws, results),
+        )
     return _result(
-        "valid", "The declared relation is reflexive, antisymmetric, and transitive."
+        "valid",
+        "The declared relation is reflexive, antisymmetric, and transitive.",
+        _checks_for_laws(laws, results),
     )
 
 
@@ -616,9 +707,38 @@ def _has_cycle(nodes: set[str], edges: set[tuple[str, str]]) -> bool:
 
 def _classify_state_machine(contract: dict[str, Any]) -> dict[str, Any]:
     state_space = contract["state_space"]
+    laws = contract["laws_or_checks"]
+    supported = {"initial", "closed", "closure"}
+    has_initial = bool(state_space["initial"])
+    checks = _checks_for_laws(
+        laws,
+        {
+            law["id"]: "pass" if has_initial else "fail"
+            for law in laws
+            if law["check"] == "initial"
+        },
+    )
     if not state_space["initial"]:
-        return _result("invalid", "A state machine needs at least one initial state.")
-    return _result("valid", "All transitions are closed over the declared state space.")
+        return _result(
+            "invalid", "A state machine needs at least one initial state.", checks
+        )
+    if _has_unsupported_laws(laws, supported):
+        return _result(
+            "undetermined",
+            "The state machine declares a law without a deterministic classifier.",
+            checks,
+        )
+    checks = _checks_for_laws(
+        laws,
+        {
+            law["id"]: "pass"
+            for law in laws
+            if law["check"] in {"closed", "closure", "initial"}
+        },
+    )
+    return _result(
+        "valid", "All transitions are closed over the declared state space.", checks
+    )
 
 
 def _table(operation: dict[str, Any]) -> dict[tuple[str, ...], str] | None:
@@ -629,6 +749,7 @@ def _table(operation: dict[str, Any]) -> dict[tuple[str, ...], str] | None:
 
 
 def _classify_algebraic_family(contract: dict[str, Any]) -> dict[str, Any]:
+    laws = contract["laws_or_checks"]
     if contract["family"] == "monotone_system":
         order = next(
             (
@@ -645,81 +766,136 @@ def _classify_algebraic_family(contract: dict[str, Any]) -> dict[str, Any]:
             return _result(
                 "undetermined",
                 "A monotone system needs an order relation and a finite unary table.",
+                _checks_for_laws(laws, {}),
             )
         table = _table(operation)
         ordered_pairs = [tuple(pair) for pair in order["pairs"]]
-        if any(
+        monotone = not any(
             (x,) not in table
             or (y,) not in table
             or (table[(x,)], table[(y,)]) not in ordered_pairs
             for x, y in ordered_pairs
-        ):
+        )
+        supported = {"monotone", "order-preserving"}
+        results = {
+            law["id"]: "pass" if monotone else "fail"
+            for law in laws
+            if law["check"] in supported
+        }
+        if not monotone:
             return _result(
                 "invalid",
                 "The declared operation is not monotone over the supplied order.",
+                _checks_for_laws(laws, results),
+            )
+        if _has_unsupported_laws(laws, supported):
+            return _result(
+                "undetermined",
+                "The monotone system declares a law without a deterministic "
+                "classifier.",
+                _checks_for_laws(laws, results),
             )
         return _result(
             "valid",
             "The supplied unary operation preserves the declared order.",
+            _checks_for_laws(laws, results),
         )
     operations = contract["operations"]
     binary = next((item for item in operations if item.get("arity") == 2), None)
     if binary is None or _table(binary) is None:
         return _result(
-            "undetermined", "A finite operation table is required for these laws."
+            "undetermined",
+            "A finite operation table is required for these laws.",
+            _checks_for_laws(laws, {}),
         )
     table = _table(binary)
     carrier = set(contract["carrier"]["elements"])
     if any((a, b) not in table for a in carrier for b in carrier):
-        return _result("invalid", "The binary operation table is incomplete.")
-    checks: list[dict[str, str]] = []
-    requested = {item.get("check") for item in contract["laws_or_checks"]}
+        return _result(
+            "invalid",
+            "The binary operation table is incomplete.",
+            _checks_for_laws(laws, {}),
+        )
+    supported = {"associative", "commutative", "idempotent", "closure"}
+    declared = {item["check"] for item in laws}
+    requested = set(declared)
     if contract["family"] == "semilattice":
         requested |= {"associative", "commutative", "idempotent"}
+    values: dict[str, bool] = {}
     for check in sorted(requested):
         if check == "associative":
-            passed = all(
+            values[check] = all(
                 table[(table[(a, b)], c)] == table[(a, table[(b, c)])]
                 for a in carrier
                 for b in carrier
                 for c in carrier
             )
         elif check == "commutative":
-            passed = all(
+            values[check] = all(
                 table[(a, b)] == table[(b, a)] for a in carrier for b in carrier
             )
         elif check == "idempotent":
-            passed = all(table[(a, a)] == a for a in carrier)
+            values[check] = all(table[(a, a)] == a for a in carrier)
         elif check == "closure":
-            passed = all(table[(a, b)] in carrier for a in carrier for b in carrier)
-        else:
-            continue
-        checks.append({"id": check, "result": "pass" if passed else "fail"})
-        if not passed:
+            values[check] = all(
+                table[(a, b)] in carrier for a in carrier for b in carrier
+            )
+        if check in values and not values[check]:
             return _result(
-                "invalid", f"The declared operation fails the {check} law.", checks
+                "invalid",
+                f"The declared operation fails the {check} law.",
+                _checks_for_laws(
+                    laws,
+                    {
+                        item["id"]: "pass" if values[item["check"]] else "fail"
+                        for item in laws
+                        if item["check"] in values
+                    },
+                ),
             )
     if (
         contract["family"] == "semilattice"
-        and {"associative", "commutative", "idempotent"} - requested
+        and {"associative", "commutative", "idempotent"} - declared
     ):
         return _result(
             "invalid",
             "A semilattice contract must declare its three defining laws.",
-            checks,
+            _checks_for_laws(
+                laws,
+                {
+                    item["id"]: "pass" if values[item["check"]] else "fail"
+                    for item in laws
+                    if item["check"] in values
+                },
+            ),
+        )
+    check_results = {
+        item["id"]: "pass" if values[item["check"]] else "fail"
+        for item in laws
+        if item["check"] in values
+    }
+    if _has_unsupported_laws(laws, supported):
+        return _result(
+            "undetermined",
+            "The algebraic contract declares a law without a deterministic classifier.",
+            _checks_for_laws(laws, check_results),
         )
     return _result(
-        "valid", "The supplied finite operation table passes the declared laws.", checks
+        "valid",
+        "The supplied finite operation table passes the declared laws.",
+        _checks_for_laws(laws, check_results),
     )
 
 
 def _classify_simulation_family(contract: dict[str, Any]) -> dict[str, Any]:
+    laws = contract["laws_or_checks"]
     relation = contract["relations"][0] if contract["relations"] else None
     transitions = contract["transitions"]
     if relation is None or not transitions:
         return _result(
             "undetermined",
             "A relation and transitions are required to check simulation.",
+            _checks_for_laws(laws, {}),
         )
     pairs = {tuple(pair) for pair in relation["pairs"]}
     left = [item for item in transitions if item.get("system") == "left"]
@@ -728,6 +904,7 @@ def _classify_simulation_family(contract: dict[str, Any]) -> dict[str, Any]:
         return _result(
             "undetermined",
             "Both left and right transition systems are required to check simulation.",
+            _checks_for_laws(laws, {}),
         )
 
     def sim(
@@ -764,27 +941,55 @@ def _classify_simulation_family(contract: dict[str, Any]) -> dict[str, Any]:
     forward = sim(left, right, 0)
     backward = sim(right, left, 1)
     passed = backward and forward if contract["family"] == "bisimulation" else forward
+    supported = {"simulation", "bisimulation"}
+    checks = _checks_for_laws(
+        laws,
+        {
+            law["id"]: "pass" if passed else "fail"
+            for law in laws
+            if law["check"] in supported
+        },
+    )
     if not passed:
         return _result(
             "invalid",
             "The declared state relation fails the requested simulation obligations.",
+            checks,
+        )
+    if _has_unsupported_laws(laws, supported):
+        return _result(
+            "undetermined",
+            "The simulation declares a law without a deterministic classifier.",
+            checks,
         )
     return _result(
         "valid",
         "The declared state relation satisfies the supplied transition obligations.",
+        checks,
     )
 
 
 def _classify_numeric_family(contract: dict[str, Any]) -> dict[str, Any]:
     parameters = contract.get("parameters")
+    laws = contract["laws_or_checks"]
     if not parameters:
         return _result(
-            "undetermined", "Numeric parameters are required for this model family."
+            "undetermined",
+            "Numeric parameters are required for this model family.",
+            _checks_for_laws(laws, {}),
         )
     if contract["family"] in {"cost", "complexity"}:
         if any(value < 0 for value in parameters.values()):
             return _result(
-                "invalid", "Cost and complexity parameters must be non-negative."
+                "invalid",
+                "Cost and complexity parameters must be non-negative.",
+                _checks_for_laws(laws, {}),
+            )
+        if laws:
+            return _result(
+                "undetermined",
+                "The numeric model declares a law without a deterministic classifier.",
+                _checks_for_laws(laws, {}),
             )
         return _result(
             "valid",
@@ -797,23 +1002,42 @@ def _classify_numeric_family(contract: dict[str, Any]) -> dict[str, Any]:
             return _result(
                 "undetermined",
                 "A queueing model needs arrival_rate and service_rate parameters.",
+                _checks_for_laws(laws, {}),
             )
         if arrival < 0 or service <= 0:
             return _result(
                 "invalid",
                 "Queueing arrival rate must be non-negative and service rate positive.",
+                _checks_for_laws(laws, {}),
             )
         if arrival / service >= 1:
             return _result(
                 "invalid",
                 "The declared single-server queue is not stable at utilization >= 1.",
+                _checks_for_laws(laws, {}),
+            )
+        if laws:
+            return _result(
+                "undetermined",
+                "The queueing model declares a law without a deterministic classifier.",
+                _checks_for_laws(laws, {}),
             )
         return _result(
             "valid",
             "The declared queue has finite positive service and utilization < 1.",
         )
     if any(not 0 <= value <= 1 for value in parameters.values()):
-        return _result("invalid", "Reliability probabilities must be within [0, 1].")
+        return _result(
+            "invalid",
+            "Reliability probabilities must be within [0, 1].",
+            _checks_for_laws(laws, {}),
+        )
+    if laws:
+        return _result(
+            "undetermined",
+            "The reliability model declares a law without a deterministic classifier.",
+            _checks_for_laws(laws, {}),
+        )
     return _result("valid", "All supplied reliability probabilities are within [0, 1].")
 
 

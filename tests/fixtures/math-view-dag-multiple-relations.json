@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "id": "multiple-release-dependencies",
+  "family": "dag",
+  "question": "Does the combined release dependency graph remain acyclic?",
+  "carrier": {
+    "kind": "release",
+    "description": "Release stages split across two declared dependency relations.",
+    "elements": ["build", "test", "deploy"]
+  },
+  "operations": [],
+  "relations": [
+    {
+      "id": "build-dependencies",
+      "name": "Build dependencies",
+      "kind": "dependency",
+      "pairs": [["build", "test"]]
+    },
+    {
+      "id": "deployment-dependencies",
+      "name": "Deployment dependencies",
+      "kind": "dependency",
+      "pairs": [
+        ["test", "deploy"],
+        ["deploy", "build"]
+      ]
+    }
+  ],
+  "transitions": [],
+  "laws_or_checks": [
+    {
+      "id": "combined-acyclic",
+      "name": "Combined relation is acyclic",
+      "description": "No directed cycle may occur across the declared relations.",
+      "check": "acyclic"
+    }
+  ],
+  "assumptions": [
+    "The declared relations jointly contain every dependency edge."
+  ],
+  "validity_scope": {
+    "systems": ["fixture-system"],
+    "versions": ["2.x"],
+    "deployment_origins": ["configured-origin"],
+    "conditions": ["static dependency extraction"],
+    "exclusions": []
+  },
+  "claim_type": "hypothesis",
+  "claim_status": "proposed",
+  "evidence_ids": ["design-doc"],
+  "classification": {
+    "result": "invalid",
+    "reason": "The declared directed relation contains a cycle.",
+    "checks": [{ "id": "combined-acyclic", "result": "fail" }]
+  }
+}

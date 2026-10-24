@@ -50,6 +50,6 @@
   "classification": {
     "result": "valid",
     "reason": "The declared relation is reflexive, antisymmetric, and transitive.",
-    "checks": []
+    "checks": [{ "id": "order-laws", "result": "pass" }]
   }
 }

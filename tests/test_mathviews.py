@@ -133,7 +133,11 @@ class MathematicalViewContractTests(unittest.TestCase):
         value["classification"] = {
             "result": "valid",
             "reason": "The supplied finite operation table passes the declared laws.",
-            "checks": [],
+            "checks": [
+                {"id": "associative", "result": "pass"},
+                {"id": "commutative", "result": "pass"},
+                {"id": "idempotent", "result": "pass"},
+            ],
         }
         validate_math_view_contract(value, evidence_ids={"design-doc"})
 
@@ -146,6 +150,7 @@ class MathematicalViewContractTests(unittest.TestCase):
                 "parameters": {"availability": 1.2},
                 "operations": [],
                 "relations": [],
+                "laws_or_checks": [],
             }
         )
         value["classification"] = {
@@ -165,6 +170,7 @@ class MathematicalViewContractTests(unittest.TestCase):
                 "parameters": {"arrival_rate": 2},
                 "operations": [],
                 "relations": [],
+                "laws_or_checks": [],
             }
         )
         value["classification"] = {
@@ -246,9 +252,41 @@ class MathematicalViewContractTests(unittest.TestCase):
                 "The declared state relation satisfies the supplied transition "
                 "obligations."
             ),
-            "checks": [],
+            "checks": [{"id": "bisimulation-obligation", "result": "pass"}],
         }
         validate_math_view_contract(value, evidence_ids={"design-doc"})
+
+    def test_dag_classifies_all_declared_relations(self) -> None:
+        value = self._fixture("math-view-dag-multiple-relations.json")
+        expected = classify_math_view_contract(value)
+        self.assertEqual(expected["result"], "invalid")
+        self.assertEqual(
+            expected["checks"], [{"id": "combined-acyclic", "result": "fail"}]
+        )
+        validate_math_view_contract(value, evidence_ids={"design-doc"})
+
+    def test_declared_unknown_law_is_undetermined(self) -> None:
+        value = self._fixture("math-view-valid.json")
+        value["laws_or_checks"] = [
+            {
+                "id": "unknown-law",
+                "name": "Unknown law",
+                "description": "The classifier does not implement this law.",
+                "check": "well-founded",
+            }
+        ]
+        expected = classify_math_view_contract(value)
+        self.assertEqual(expected["result"], "undetermined")
+        value["classification"] = expected
+        validate_math_view_contract(value, evidence_ids={"design-doc"})
+
+    def test_classification_checks_must_match_deterministic_checks(self) -> None:
+        value = self._fixture("math-view-valid.json")
+        value["classification"]["checks"] = []
+        with self.assertRaisesRegex(
+            MathematicalViewValidationError, "classification checks"
+        ):
+            validate_math_view_contract(value, evidence_ids={"design-doc"})
 
     def test_invalid_dag_fixture_is_deterministically_invalid(self) -> None:
         value = self._fixture("math-view-invalid.json")
