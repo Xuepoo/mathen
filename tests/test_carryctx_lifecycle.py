@@ -14,6 +14,17 @@ SPEC.loader.exec_module(LIFECYCLE)
 
 
 class LifecyclePolicyTests(unittest.TestCase):
+    def test_lifecycle_state_machine_is_explicit_and_fail_closed(self):
+        self.assertEqual(
+            LIFECYCLE.lifecycle_transition("ready", "start"), "in_progress"
+        )
+        self.assertEqual(
+            LIFECYCLE.lifecycle_transition("completed", "observe_cleanup"),
+            "cleanup_deferred",
+        )
+        with self.assertRaisesRegex(RuntimeError, "invalid lifecycle transition"):
+            LIFECYCLE.lifecycle_transition("completed", "complete")
+
     def test_pull_request_states_are_deterministic(self):
         cases = (
             ({"state": "OPEN"}, False, "open"),
@@ -202,6 +213,96 @@ class LifecyclePolicyTests(unittest.TestCase):
 
             self.assertEqual(results[0].output, "dry-run: not executed")
             run.assert_not_called()
+
+    def test_verification_dry_run_reports_profile_argv_and_projection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = root / ".carryctx"
+            config.mkdir()
+            (config / "verification.toml").write_text(
+                '[profiles.python]\ncommands = ["uv run check", "bun test"]\n',
+                encoding="utf-8",
+            )
+
+            report = LIFECYCLE.verification_report(root, "python", dry_run=True)
+
+        self.assertEqual(report["mode"], "dry-run")
+        self.assertEqual(report["profile"], "python")
+        self.assertEqual(report["commands"][0]["argv"], ["uv", "run", "check"])
+        self.assertEqual(report["commands"][1]["projected_result"], "not-executed")
+        self.assertEqual(report["projected_result"]["status"], "pass")
+        self.assertFalse(report["projected_result"]["completion_dispatched"])
+
+    def test_worktree_inventory_preserves_all_git_states(self):
+        porcelain = """worktree /repo
+HEAD aaa
+branch refs/heads/main
+
+worktree /external
+HEAD bbb
+detached
+
+worktree /missing
+HEAD ccc
+branch refs/heads/old
+prunable gitdir file points to non-existent location
+"""
+        with (
+            patch.object(
+                LIFECYCLE.subprocess,
+                "run",
+                return_value=type(
+                    "Completed",
+                    (),
+                    {"returncode": 0, "stdout": porcelain, "stderr": ""},
+                )(),
+            ),
+            patch.object(LIFECYCLE.Path, "exists", side_effect=[True, True, False]),
+            patch.object(LIFECYCLE, "git_status", return_value=[]),
+        ):
+            inventory = LIFECYCLE.git_worktree_inventory(
+                Path("/repo"), [{"path": "/repo", "branch": "main"}]
+            )
+
+        by_path = {item["path"]: item for item in inventory}
+        self.assertTrue(by_path["/repo"]["managed"])
+        self.assertTrue(by_path["/external"]["external"])
+        self.assertTrue(by_path["/external"]["detached"])
+        self.assertTrue(by_path["/missing"]["missing"])
+        self.assertTrue(by_path["/missing"]["prunable"])
+
+    def test_all_worktree_audit_is_read_only_and_observes_prune(self):
+        state = {
+            "managed_worktree": {"path": "/repo"},
+            "worktrees": [{"path": "/repo", "branch": "main"}],
+            "sessions": [{"id": "s1", "state": "active"}],
+            "active_sessions": [{"id": "s1", "state": "active"}],
+            "cleanup_requests": [{"id": "r1", "state": "pending"}],
+            "pending_cleanup": [{"id": "r1", "state": "pending"}],
+        }
+        with (
+            patch.object(LIFECYCLE, "carryctx_state", return_value=state),
+            patch.object(LIFECYCLE, "git_status", return_value=[" M file"]),
+            patch.object(
+                LIFECYCLE,
+                "git_worktree_inventory",
+                return_value=[{"path": "/repo", "dirty": True}],
+            ) as inventory,
+            patch.object(
+                LIFECYCLE,
+                "git_prune_observation",
+                return_value={"candidates": [], "mutation_performed": False},
+            ) as prune,
+            patch.object(LIFECYCLE, "_envelope") as envelope,
+        ):
+            report = LIFECYCLE.audit(Path("/repo"), all_worktrees=True)
+
+        self.assertEqual(report["worktrees"], [{"path": "/repo", "dirty": True}])
+        self.assertEqual(report["cleanup"]["pending"][0]["id"], "r1")
+        self.assertFalse(report["mutation_performed"])
+        inventory.assert_called_once()
+        prune.assert_called_once_with(Path("/repo"))
+        envelope.assert_not_called()
 
     def test_verification_rejects_shell_operators(self):
         with tempfile.TemporaryDirectory() as directory:

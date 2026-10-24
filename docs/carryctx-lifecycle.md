@@ -8,6 +8,8 @@ registered Mathen worktree:
 uv run python scripts/carryctx_lifecycle.py verify --profile full
 uv run python scripts/carryctx_lifecycle.py complete MTH-0000 --profile full
 uv run python scripts/carryctx_lifecycle.py audit MTH-0000 --json
+uv run python scripts/carryctx_lifecycle.py audit --all --json
+uv run python scripts/carryctx_lifecycle.py verify --profile full --dry-run
 uv run python scripts/carryctx_lifecycle.py observe --dry-run
 ```
 
@@ -44,9 +46,21 @@ detached paths are never adopted or silently handled.
 
 Repeated completion is idempotent for an already completed task: the adapter
 reports the terminal state and does not dispatch completion or retry cleanup.
-`--dry-run` lists/verifies the selected profile and never changes project or
+`--dry-run` produces a stable JSON report containing the selected profile, each
+direct `argv` vector, and the projected result. It validates shell-operator
+policy but executes no verification command and never changes project or
 CarryCtx state. `audit --json` is read-only and explicitly reports preservation
 reasons for unmanaged, dirty, and active-session cases.
+
+`audit --all --json` inventories every Git worktree known to the repository's
+Git metadata, including the current managed worktree, unmanaged and external
+paths, detached checkouts, missing/prunable paths, and dirty status where the
+path still exists. It joins the inventory with CarryCtx-managed worktree
+records, all sessions, normalized cleanup requests, and a
+`git worktree prune --dry-run -v` observation. The prune command is strictly
+observational: it is never run without `--dry-run`, and the JSON report marks
+that no mutation was performed. Rerunning the audit is therefore repeatable
+apart from changes made by external operators.
 
 ## Pull request and cleanup observability
 
@@ -105,6 +119,30 @@ The adapter is advisory for orchestration: it may refuse unsafe work, but it
 does not remove worktrees, delete branches, reset files, prune Git metadata, or
 override CarryCtx's cleanup gates.
 
+## Lifecycle state machine
+
+The repository adapter models completion as an explicit, fail-closed state
+machine. The allowed transitions are:
+
+| Current state | Event               | Next state         | Meaning                                                   |
+| ------------- | ------------------- | ------------------ | --------------------------------------------------------- |
+| `ready`       | `start`             | `in_progress`      | Work has an active owner.                                 |
+| `in_progress` | `submit_for_review` | `review`           | Verification output is ready for review.                  |
+| `in_progress` | `complete`          | `completed`        | Completion gates passed and completion may be dispatched. |
+| `review`      | `complete`          | `completed`        | Review accepted the verified result.                      |
+| `review`      | `reopen`            | `in_progress`      | Review found work that must continue.                     |
+| `completed`   | `observe_cleanup`   | `cleanup_deferred` | Completion is terminal; cleanup remains separately gated. |
+| `cancelled`   | `reopen`            | `ready`            | An owner explicitly reopens cancelled work.               |
+| `blocked`     | `unblock`           | `ready`            | The blocking condition was explicitly resolved.           |
+
+Unknown states and events are rejected rather than inferred. No transition
+deletes a branch, removes a worktree, resets files, or changes CarryCtx state.
+The `complete` command enforces the same boundary operationally: unmanaged,
+external, detached, dirty, failed-verification, and post-verification-dirty
+conditions preserve the worktree and leave the task incomplete. Cleanup is
+represented as `cleanup_deferred` and must be performed only by CarryCtx's own
+separately reviewed cleanup gate.
+
 ## MTH-0120 implementation boundary
 
 The current adapter slice implements and tests the following safeguards:
@@ -121,12 +159,9 @@ The current adapter slice implements and tests the following safeguards:
 - cleanup outbox records expose normalized `retryable`, `safe_to_retry`,
   `preservation_reason`, and `operator_action` fields.
 
-These safeguards do **not** mean the parent lifecycle issue is complete. The
-remaining acceptance gaps are an `audit --all --json` inventory of every Git
-worktree (including external, unmanaged, detached, and prunable paths),
-inventory of cleanup requests/sessions plus dry-run prune observation, stable
-structured `verify --dry-run` profile/argv/projected-result output, and a
-fully documented/implemented lifecycle state-machine integration. Native
-CarryCtx `task complete` remains able to bypass this repository adapter; this
-repository documents that upstream gap but does not claim to intercept or
+The remaining upstream boundary is native CarryCtx invocation: direct
+`carryctx task complete` can still bypass this repository adapter because
+CarryCtx v0.12 has no native completion hook for repository verification.
+Operators must use this adapter (or the configured verification command) when
+they require these fail-closed gates; this repository does not intercept or
 change CarryCtx globally.

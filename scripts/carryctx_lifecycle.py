@@ -29,6 +29,15 @@ PR_STATES = frozenset(
 )
 RETRYABLE_CLEANUP_STATES = frozenset({"pending", "failed", "blocked", "retryable"})
 SAFE_RETRY_CLEANUP_STATES = frozenset({"pending", "failed", "retryable"})
+LIFECYCLE_TRANSITIONS = {
+    "ready": {"start": "in_progress"},
+    "in_progress": {"submit_for_review": "review", "complete": "completed"},
+    "review": {"complete": "completed", "reopen": "in_progress"},
+    "completed": {"observe_cleanup": "cleanup_deferred"},
+    "cleanup_deferred": {},
+    "cancelled": {"reopen": "ready"},
+    "blocked": {"unblock": "ready"},
+}
 
 
 @dataclass(frozen=True)
@@ -46,6 +55,17 @@ class PullRequestLookup:
     candidates: list[dict[str, Any]]
     source: str
     error: str | None = None
+
+
+def lifecycle_transition(state: str, event: str) -> str:
+    """Apply one explicit, fail-closed task lifecycle transition."""
+
+    try:
+        return LIFECYCLE_TRANSITIONS[state][event]
+    except KeyError as exc:
+        raise RuntimeError(
+            f"invalid lifecycle transition: state={state!r}, event={event!r}"
+        ) from exc
 
 
 def repository_root(start: Path) -> Path:
@@ -134,6 +154,116 @@ def git_status(root: Path) -> list[str]:
     return [line for line in result.stdout.splitlines() if line]
 
 
+def git_worktree_inventory(
+    root: Path, managed: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Inventory Git worktrees without adopting or changing any of them."""
+
+    result = subprocess.run(
+        ["git", "worktree", "list", "--porcelain"],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        raise RuntimeError(f"git worktree list failed with exit {result.returncode}")
+
+    records: list[dict[str, Any]] = []
+    current: dict[str, Any] = {}
+    for line in result.stdout.splitlines() + [""]:
+        if not line:
+            if current:
+                records.append(current)
+                current = {}
+            continue
+        key, _, value = line.partition(" ")
+        if key == "worktree":
+            current["path"] = value
+        elif key == "HEAD":
+            current["head"] = value
+        elif key == "branch":
+            current["branch"] = value.removeprefix("refs/heads/")
+        elif key == "detached":
+            current["detached"] = True
+        elif key == "prunable":
+            current["prunable"] = value or True
+
+    managed_by_path = {
+        str(Path(item["path"]).resolve()): item for item in managed if item.get("path")
+    }
+    inventory: list[dict[str, Any]] = []
+    root = root.resolve()
+    for record in records:
+        path = Path(str(record["path"])).expanduser()
+        resolved = path.resolve(strict=False)
+        exists = path.exists()
+        managed_item = managed_by_path.get(str(resolved))
+        external = root not in resolved.parents and resolved != root
+        detached = bool(record.get("detached")) or not record.get("branch")
+        dirty: bool | None = None
+        status: list[str] = []
+        if exists:
+            status = git_status(path)
+            dirty = bool(status)
+        elif not external:
+            dirty = None
+        labels = []
+        if managed_item is not None:
+            labels.append("managed")
+        else:
+            labels.append("unmanaged")
+        if external:
+            labels.append("external")
+        if detached:
+            labels.append("detached")
+        if not exists:
+            labels.append("missing")
+        if dirty:
+            labels.append("dirty")
+        inventory.append(
+            {
+                "path": str(path),
+                "resolved_path": str(resolved),
+                "head": record.get("head"),
+                "branch": record.get("branch"),
+                "managed": managed_item is not None,
+                "managed_record": managed_item,
+                "external": external,
+                "detached": detached,
+                "missing": not exists,
+                "dirty": dirty,
+                "status": status,
+                "prunable": "prunable" in record,
+                "labels": labels,
+            }
+        )
+    return sorted(inventory, key=lambda item: item["resolved_path"])
+
+
+def git_prune_observation(root: Path) -> dict[str, Any]:
+    """Observe Git's prune candidates without pruning worktree metadata."""
+
+    command = ["git", "worktree", "prune", "--dry-run", "-v"]
+    result = subprocess.run(
+        command,
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        raise RuntimeError(
+            f"git worktree prune observation failed with exit {result.returncode}"
+        )
+    output = (result.stdout + result.stderr).splitlines()
+    return {
+        "command": command,
+        "candidates": [line for line in output if line],
+        "mutation_performed": False,
+    }
+
+
 def validate_branch_name(root: Path, branch: str) -> str:
     """Validate a branch name with Git before using it in any command."""
 
@@ -172,12 +302,14 @@ def carryctx_state(root: Path) -> dict[str, Any]:
     return {
         "managed_worktree": managed,
         "worktrees": worktrees,
-        "sessions": sessions,
-        "active_sessions": active_sessions,
-        "cleanup_requests": cleanup,
+        "sessions": sorted(sessions, key=lambda item: str(item.get("id", ""))),
+        "active_sessions": sorted(
+            active_sessions, key=lambda item: str(item.get("id", ""))
+        ),
+        "cleanup_requests": sorted(cleanup, key=lambda item: str(item.get("id", ""))),
         "pending_cleanup": [
             item
-            for item in cleanup
+            for item in sorted(cleanup, key=lambda item: str(item.get("id", "")))
             if item.get("state") not in {"completed", "cancelled"}
         ],
     }
@@ -526,21 +658,19 @@ def verify_profile(
     environment = os.environ.copy()
     environment.update({"CI": "1", "PYTHONUNBUFFERED": "1"})
     for command in profiles[profile]:
+        try:
+            argv = shlex.split(command)
+        except ValueError as exc:
+            raise RuntimeError(
+                f"invalid command in verification profile {profile!r}: {exc}"
+            ) from exc
+        if not argv or any(token in {";", "&&", "||", "|", ">", "<"} for token in argv):
+            raise RuntimeError(
+                f"verification command must be a direct argv command: {command!r}"
+            )
         if dry_run:
             result = CommandResult(command, 0, "dry-run: not executed")
         else:
-            try:
-                argv = shlex.split(command)
-            except ValueError as exc:
-                raise RuntimeError(
-                    f"invalid command in verification profile {profile!r}: {exc}"
-                ) from exc
-            if not argv or any(
-                token in {";", "&&", "||", "|", ">", "<"} for token in argv
-            ):
-                raise RuntimeError(
-                    f"verification command must be a direct argv command: {command!r}"
-                )
             completed = subprocess.run(
                 argv,
                 cwd=root,
@@ -560,16 +690,75 @@ def verify_profile(
     return results
 
 
-def audit(root: Path, task_ref: str | None = None) -> dict[str, Any]:
+def verification_report(
+    root: Path, profile: str, *, dry_run: bool = False
+) -> dict[str, Any]:
+    """Return stable profile, argv, and projected-result verification data."""
+
+    commands = load_profiles(root).get(profile)
+    if commands is None:
+        available = ", ".join(sorted(load_profiles(root)))
+        raise RuntimeError(
+            f"unknown verification profile {profile!r}; choose: {available}"
+        )
+    entries = []
+    for command in commands:
+        try:
+            argv = shlex.split(command)
+        except ValueError as exc:
+            raise RuntimeError(
+                f"invalid command in verification profile {profile!r}: {exc}"
+            ) from exc
+        if not argv or any(token in {";", "&&", "||", "|", ">", "<"} for token in argv):
+            raise RuntimeError(
+                f"verification command must be a direct argv command: {command!r}"
+            )
+        entries.append(
+            {
+                "command": command,
+                "argv": argv,
+                "projected_result": "not-executed" if dry_run else "pending",
+            }
+        )
+    return {
+        "schema_version": 1,
+        "mode": "dry-run" if dry_run else "execution",
+        "profile": profile,
+        "commands": entries,
+        "projected_result": {
+            "status": "pass" if dry_run else "pending",
+            "exit_code": 0 if dry_run else None,
+            "completion_dispatched": False,
+            "worktree_mutated": False,
+        },
+    }
+
+
+def audit(
+    root: Path,
+    task_ref: str | None = None,
+    *,
+    all_worktrees: bool = False,
+    observe_prune: bool = True,
+) -> dict[str, Any]:
     state = carryctx_state(root)
     result: dict[str, Any] = {
+        "schema_version": 1,
         "path": str(root),
         "managed_worktree": state["managed_worktree"],
         "dirty": git_status(root),
         "active_sessions": state["active_sessions"],
         "pending_cleanup": state["pending_cleanup"],
+        "sessions": state["sessions"],
+        "cleanup": cleanup_audit(state["cleanup_requests"]),
+        "mutation_performed": False,
         "action": "preserve; audit is read-only",
     }
+    if all_worktrees:
+        result["worktrees"] = git_worktree_inventory(root, state["worktrees"])
+        result["prune_observation"] = (
+            git_prune_observation(root) if observe_prune else None
+        )
     if task_ref:
         result["task"] = _envelope(
             ["carryctx", "task", "show", task_ref, "--json"], root
@@ -688,6 +877,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--profile", default="full")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        dest="all_worktrees",
+        help="audit every Git worktree instead of only the current path",
+    )
     parser.add_argument("--json", action="store_true", dest="as_json")
     return parser
 
@@ -697,18 +892,41 @@ def main(argv: list[str] | None = None) -> int:
     try:
         root = repository_root(Path.cwd())
         if args.command == "audit":
-            result: Any = audit(root, args.task_ref)
-            if args.as_json:
-                print(json.dumps(result, indent=2, sort_keys=True))
-            else:
-                print(json.dumps(result, indent=2, sort_keys=True))
+            result: Any = audit(root, args.task_ref, all_worktrees=args.all_worktrees)
+            print(json.dumps(result, indent=2, sort_keys=True))
             return 0
         if args.command == "observe":
             result = observe(root, args.branch, dry_run=args.dry_run)
             print(json.dumps(result, indent=2, sort_keys=True))
             return 0
         if args.command == "verify":
+            if args.dry_run:
+                print(
+                    json.dumps(
+                        verification_report(root, args.profile, dry_run=args.dry_run),
+                        indent=2,
+                        sort_keys=True,
+                    )
+                )
+                return 0
             results = verify_profile(root, args.profile, dry_run=args.dry_run)
+            if args.as_json:
+                report = verification_report(root, args.profile)
+                for entry, result in zip(report["commands"], results, strict=False):
+                    entry["returncode"] = result.returncode
+                    entry["output"] = result.output
+                    entry["projected_result"] = (
+                        "pass" if result.returncode == 0 else "fail"
+                    )
+                failed = next((item for item in results if item.returncode), None)
+                report["projected_result"] = {
+                    "status": "fail" if failed else "pass",
+                    "exit_code": failed.returncode if failed else 0,
+                    "completion_dispatched": False,
+                    "worktree_mutated": False,
+                }
+                print(json.dumps(report, indent=2, sort_keys=True))
+                return EXIT_VERIFICATION if failed else 0
             failed = next((item for item in results if item.returncode), None)
             return EXIT_VERIFICATION if failed else 0
         if not args.task_ref:
