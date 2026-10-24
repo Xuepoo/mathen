@@ -449,6 +449,233 @@ prunable gitdir file points to non-existent location
         self.assertEqual(result, LIFECYCLE.EXIT_UNSAFE)
         verify.assert_not_called()
 
+    def _completion_state(self, **overrides):
+        state = {
+            "managed_worktree": {"path": "/repo", "branch": "carryctx/mth-1"},
+            "active_sessions": [],
+            "cleanup_requests": [],
+        }
+        state.update(overrides)
+        return state
+
+    def _patch_completion_observations(self, state):
+        return (
+            patch.object(LIFECYCLE, "carryctx_state", side_effect=[state, state]),
+            patch.object(
+                LIFECYCLE,
+                "git_branch",
+                return_value={
+                    "name": "carryctx/mth-1",
+                    "local": True,
+                    "detached": False,
+                },
+            ),
+            patch.object(LIFECYCLE, "git_status", return_value=[]),
+        )
+
+    def test_complete_verified_success_emits_evidence_and_dispatches_once(self):
+        state = self._completion_state()
+        task = {"status": "in_progress"}
+        passed = [LIFECYCLE.CommandResult("check", 0, "ok")]
+        dispatch = type("Completed", (), {"returncode": 0})()
+        with (
+            self._patch_completion_observations(state)[0],
+            self._patch_completion_observations(state)[1],
+            self._patch_completion_observations(state)[2],
+            patch.object(
+                LIFECYCLE,
+                "_envelope",
+                side_effect=[
+                    {"data": task},
+                    {"data": task},
+                    {"data": {"status": "completed"}},
+                ],
+            ),
+            patch.object(LIFECYCLE, "verify_profile", return_value=passed),
+            patch.object(
+                LIFECYCLE,
+                "verification_report",
+                return_value={
+                    "commands": [{"command": "check", "argv": ["check"]}],
+                },
+            ),
+            patch.object(LIFECYCLE.subprocess, "run", return_value=dispatch) as run,
+        ):
+            result, evidence = LIFECYCLE.completion_evidence(
+                Path("/repo"), "MTH-1", "full"
+            )
+
+        self.assertEqual(result, 0)
+        self.assertEqual(evidence["status"], "completed")
+        self.assertTrue(all(gate["passed"] for gate in evidence["gates_after"]))
+        self.assertEqual(evidence["dispatch"]["returncode"], 0)
+        self.assertEqual(
+            evidence["dispatch"]["readback"]["task"]["status"], "completed"
+        )
+        self.assertTrue(evidence["mutation_performed"])
+        run.assert_called_once_with(
+            ["carryctx", "task", "complete", "MTH-1", "--json"],
+            cwd=Path("/repo"),
+            check=False,
+            text=True,
+        )
+
+    def test_complete_verified_failed_verification_does_not_dispatch(self):
+        state = self._completion_state()
+        task = {"status": "in_progress"}
+        failed = [LIFECYCLE.CommandResult("check", 1, "failure")]
+        with (
+            self._patch_completion_observations(state)[0],
+            self._patch_completion_observations(state)[1],
+            self._patch_completion_observations(state)[2],
+            patch.object(LIFECYCLE, "_envelope", return_value={"data": task}),
+            patch.object(LIFECYCLE, "verify_profile", return_value=failed),
+            patch.object(
+                LIFECYCLE,
+                "verification_report",
+                return_value={"commands": [{"command": "check", "argv": ["check"]}]},
+            ),
+            patch.object(LIFECYCLE.subprocess, "run") as run,
+        ):
+            result, evidence = LIFECYCLE.completion_evidence(
+                Path("/repo"), "MTH-1", "full"
+            )
+
+        self.assertEqual(result, LIFECYCLE.EXIT_VERIFICATION)
+        self.assertEqual(evidence["status"], "verification-failed")
+        self.assertFalse(evidence["dispatch"]["attempted"])
+        run.assert_not_called()
+
+    def test_complete_verified_requires_successful_completion_readback(self):
+        state = self._completion_state()
+        task = {"status": "in_progress"}
+        passed = [LIFECYCLE.CommandResult("check", 0, "ok")]
+        dispatch = type("Completed", (), {"returncode": 0})()
+        for readback in ({"status": "in_progress"}, None):
+            with self.subTest(readback=readback):
+                envelope_results = [{"data": task}, {"data": task}]
+                if readback is not None:
+                    envelope_results.append({"data": readback})
+                else:
+                    envelope_results.append(
+                        {"success": False, "error": "readback unavailable"}
+                    )
+                with (
+                    self._patch_completion_observations(state)[0],
+                    self._patch_completion_observations(state)[1],
+                    self._patch_completion_observations(state)[2],
+                    patch.object(LIFECYCLE, "_envelope", side_effect=envelope_results),
+                    patch.object(LIFECYCLE, "verify_profile", return_value=passed),
+                    patch.object(
+                        LIFECYCLE,
+                        "verification_report",
+                        return_value={
+                            "commands": [{"command": "check", "argv": ["check"]}]
+                        },
+                    ),
+                    patch.object(
+                        LIFECYCLE.subprocess, "run", return_value=dispatch
+                    ) as run,
+                ):
+                    result, evidence = LIFECYCLE.completion_evidence(
+                        Path("/repo"), "MTH-1", "full"
+                    )
+
+                self.assertEqual(result, LIFECYCLE.EXIT_READBACK)
+                self.assertEqual(evidence["status"], "completion-readback-failed")
+                self.assertFalse(evidence["mutation_performed"])
+                self.assertTrue(evidence["dispatch"]["readback"]["attempted"])
+                run.assert_called_once()
+
+    def test_complete_verified_refuses_dirty_active_detached_and_unmanaged(self):
+        cases = (
+            ("dirty", self._completion_state(), [" M file"], False, "clean"),
+            (
+                "active",
+                self._completion_state(
+                    active_sessions=[{"id": "s1", "state": "active"}]
+                ),
+                [],
+                False,
+                "no-active-session",
+            ),
+            (
+                "detached",
+                self._completion_state(
+                    managed_worktree={"path": "/repo", "branch": None}
+                ),
+                [],
+                True,
+                "detached",
+            ),
+            (
+                "unmanaged",
+                self._completion_state(managed_worktree=None),
+                [],
+                False,
+                "managed",
+            ),
+        )
+        for name, state, dirty, detached, gate_name in cases:
+            with self.subTest(name=name):
+                branch = {
+                    "name": None if detached else "carryctx/mth-1",
+                    "local": not detached,
+                    "detached": detached,
+                }
+                with (
+                    patch.object(LIFECYCLE, "carryctx_state", return_value=state),
+                    patch.object(LIFECYCLE, "git_branch", return_value=branch),
+                    patch.object(LIFECYCLE, "git_status", return_value=dirty),
+                    patch.object(
+                        LIFECYCLE,
+                        "_envelope",
+                        return_value={"data": {"status": "in_progress"}},
+                    ),
+                    patch.object(LIFECYCLE, "verify_profile") as verify,
+                ):
+                    result, evidence = LIFECYCLE.completion_evidence(
+                        Path("/repo"), "MTH-1", "full"
+                    )
+
+                self.assertEqual(result, LIFECYCLE.EXIT_UNSAFE)
+                self.assertEqual(evidence["status"], "refused")
+                self.assertIn(gate_name, evidence["failure_reasons"])
+                verify.assert_not_called()
+
+    def test_complete_verified_dry_run_is_structured_and_does_not_dispatch(self):
+        state = self._completion_state()
+        task = {"status": "in_progress"}
+        with (
+            self._patch_completion_observations(state)[0],
+            self._patch_completion_observations(state)[1],
+            self._patch_completion_observations(state)[2],
+            patch.object(LIFECYCLE, "_envelope", return_value={"data": task}),
+            patch.object(LIFECYCLE, "verify_profile") as verify,
+            patch.object(
+                LIFECYCLE,
+                "verification_report",
+                return_value={"commands": []},
+            ),
+        ):
+            result, evidence = LIFECYCLE.completion_evidence(
+                Path("/repo"), "MTH-1", "full", dry_run=True
+            )
+
+        self.assertEqual(result, 0)
+        self.assertEqual(evidence["status"], "would-complete")
+        self.assertEqual(evidence["mode"], "dry-run")
+        self.assertFalse(evidence["dispatch"]["attempted"])
+        self.assertFalse(evidence["mutation_performed"])
+        verify.assert_called_once_with(
+            Path("/repo"), "full", dry_run=True, emit_output=False
+        )
+
+    def test_parser_exposes_complete_verified_command(self):
+        args = LIFECYCLE.build_parser().parse_args(["complete-verified", "MTH-1"])
+        self.assertEqual(args.command, "complete-verified")
+        self.assertEqual(args.task_ref, "MTH-1")
+
 
 if __name__ == "__main__":
     unittest.main()

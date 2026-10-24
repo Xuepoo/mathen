@@ -6,11 +6,33 @@ registered Mathen worktree:
 
 ```bash
 uv run python scripts/carryctx_lifecycle.py verify --profile full
+uv run python scripts/carryctx_lifecycle.py complete-verified MTH-0000 --profile full
 uv run python scripts/carryctx_lifecycle.py complete MTH-0000 --profile full
 uv run python scripts/carryctx_lifecycle.py audit MTH-0000 --json
 uv run python scripts/carryctx_lifecycle.py audit --all --json
 uv run python scripts/carryctx_lifecycle.py verify --profile full --dry-run
 uv run python scripts/carryctx_lifecycle.py observe --dry-run
+```
+
+`complete-verified` is the recommended repository-owned completion command. It
+emits one JSON evidence document containing the selected profile, each command
+and result, the task state, the managed/clean/no-active-session/detached gates,
+the exact `carryctx task complete` dispatch, and a post-dispatch task read-back.
+It runs verification first, re-checks all gates afterward, and dispatches
+completion only if every gate passes. It reports `completed` and
+`mutation_performed: true` only when the read-back task status is actually
+`completed`. A failed profile, dirty worktree, active session, detached checkout,
+unmanaged path, or post-verification change returns a non-zero status and does
+not dispatch completion. A dispatch failure or read-back mismatch returns a
+distinct non-zero result and does not claim confirmed completion. The command
+never removes files, worktrees, or branches.
+
+Use `--dry-run` to validate the policy and produce the same evidence shape
+without executing verification or changing Git/CarryCtx state:
+
+```bash
+uv run python scripts/carryctx_lifecycle.py complete-verified MTH-0000 \
+  --profile full --dry-run
 ```
 
 ## Verification profiles
@@ -29,13 +51,18 @@ are rejected as invalid policy.
 
 ## Completion and cleanup gates
 
-`complete` is intentionally narrower than a generic `carryctx task complete`:
+`complete-verified` is intentionally narrower than a generic `carryctx task complete`:
 
 1. the current path must be a registered CarryCtx worktree;
-2. the task must be active and the worktree must be clean;
+2. the task must be active, attached to a branch, clean, and have no active
+   CarryCtx session;
 3. the selected profile must pass;
 4. the worktree must still be clean after verification;
 5. only then is `carryctx task complete` dispatched once.
+
+The older `complete` subcommand remains for compatibility and retains its
+historical active-session notice behavior. New automation must call
+`complete-verified` and consume its JSON evidence.
 
 An active session is reported as a notice, not treated as permission to remove
 anything. CarryCtx's committed policy keeps cleanup `when_idle`, requires a
@@ -47,10 +74,10 @@ detached paths are never adopted or silently handled.
 Repeated completion is idempotent for an already completed task: the adapter
 reports the terminal state and does not dispatch completion or retry cleanup.
 `--dry-run` produces a stable JSON report containing the selected profile, each
-direct `argv` vector, and the projected result. It validates shell-operator
-policy but executes no verification command and never changes project or
-CarryCtx state. `audit --json` is read-only and explicitly reports preservation
-reasons for unmanaged, dirty, and active-session cases.
+direct `argv` vector, all completion gates, and the projected result. It
+validates shell-operator policy but executes no verification command and never
+changes project or CarryCtx state. `audit --json` is read-only and explicitly
+reports preservation reasons for unmanaged, dirty, and active-session cases.
 
 `audit --all --json` inventories every Git worktree known to the repository's
 Git metadata, including the current managed worktree, unmanaged and external
@@ -137,7 +164,7 @@ machine. The allowed transitions are:
 
 Unknown states and events are rejected rather than inferred. No transition
 deletes a branch, removes a worktree, resets files, or changes CarryCtx state.
-The `complete` command enforces the same boundary operationally: unmanaged,
+The `complete-verified` command enforces the same boundary operationally: unmanaged,
 external, detached, dirty, failed-verification, and post-verification-dirty
 conditions preserve the worktree and leave the task incomplete. Cleanup is
 represented as `cleanup_deferred` and must be performed only by CarryCtx's own
@@ -160,8 +187,11 @@ The current adapter slice implements and tests the following safeguards:
   `preservation_reason`, and `operator_action` fields.
 
 The remaining upstream boundary is native CarryCtx invocation: direct
-`carryctx task complete` can still bypass this repository adapter because
-CarryCtx v0.12 has no native completion hook for repository verification.
-Operators must use this adapter (or the configured verification command) when
-they require these fail-closed gates; this repository does not intercept or
-change CarryCtx globally.
+`carryctx task complete MTH-0000` can still bypass this repository adapter
+because CarryCtx v0.12 has no native completion hook or named completion
+profile that invokes repository verification and gates before completion.
+Operators must explicitly use
+`uv run python scripts/carryctx_lifecycle.py complete-verified MTH-0000`
+when they require these fail-closed gates. This repository does not intercept
+native CarryCtx commands, replace the CarryCtx binary, install a completion
+hook, or change CarryCtx globally.

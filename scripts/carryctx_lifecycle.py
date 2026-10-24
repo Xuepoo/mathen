@@ -24,6 +24,7 @@ EXIT_USAGE = 2
 EXIT_VERIFICATION = 10
 EXIT_UNSAFE = 11
 EXIT_CARRYCTX = 12
+EXIT_READBACK = 13
 PR_STATES = frozenset(
     {"open", "merged", "closed", "draft", "absent", "local-only", "lookup-error"}
 )
@@ -645,7 +646,7 @@ def observe(
 
 
 def verify_profile(
-    root: Path, profile: str, *, dry_run: bool = False
+    root: Path, profile: str, *, dry_run: bool = False, emit_output: bool = True
 ) -> list[CommandResult]:
     profiles = load_profiles(root)
     if profile not in profiles:
@@ -681,7 +682,7 @@ def verify_profile(
             )
             output = (completed.stdout + completed.stderr).strip()
             result = CommandResult(command, completed.returncode, output)
-            if output:
+            if output and emit_output:
                 print(output)
             if completed.returncode:
                 results.append(result)
@@ -732,6 +733,194 @@ def verification_report(
             "worktree_mutated": False,
         },
     }
+
+
+def _gate(name: str, passed: bool, reason: str | None = None) -> dict[str, Any]:
+    """Return the stable shape used for completion gate evidence."""
+
+    return {
+        "name": name,
+        "passed": passed,
+        "reason": reason,
+    }
+
+
+def _completion_gate_report(
+    root: Path,
+    state: dict[str, Any],
+    task: dict[str, Any] | None,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Observe completion gates without changing Git or CarryCtx state."""
+
+    managed = state.get("managed_worktree")
+    dirty = git_status(root)
+    active_sessions = state.get("active_sessions", [])
+    branch = git_branch(root)
+    detached = branch["detached"] or bool(
+        isinstance(managed, dict) and "branch" in managed and not managed.get("branch")
+    )
+    gates = [
+        _gate(
+            "managed",
+            managed is not None,
+            None
+            if managed is not None
+            else "current path is not a CarryCtx-managed worktree",
+        ),
+        _gate(
+            "detached",
+            not detached,
+            None
+            if not detached
+            else "current worktree is detached and has no branch owner",
+        ),
+        _gate(
+            "clean",
+            not dirty,
+            None if not dirty else "worktree contains uncommitted changes",
+        ),
+        _gate(
+            "no-active-session",
+            not active_sessions,
+            None
+            if not active_sessions
+            else "an active CarryCtx session owns this worktree",
+        ),
+    ]
+    if task is not None:
+        status = task.get("status")
+        gates.append(
+            _gate(
+                "task-active",
+                status in {"in_progress", "review"},
+                None
+                if status in {"in_progress", "review"}
+                else f"task status is {status!r}; expected in_progress or review",
+            )
+        )
+    failures = [gate["name"] for gate in gates if not gate["passed"]]
+    return gates, failures
+
+
+def completion_evidence(
+    root: Path,
+    task_ref: str,
+    profile: str,
+    *,
+    dry_run: bool = False,
+    dispatch: bool = True,
+    emit_output: bool = False,
+) -> tuple[int, dict[str, Any]]:
+    """Run verified completion and return stable, machine-readable evidence.
+
+    The function is deliberately repository-owned: it observes all gates again
+    after verification and dispatches CarryCtx only when every gate passes. It
+    never performs cleanup, edits Git metadata, or resets files.
+    """
+
+    state_before = carryctx_state(root)
+    task: dict[str, Any] | None = None
+    if state_before.get("managed_worktree") is not None:
+        task = _envelope(["carryctx", "task", "show", task_ref, "--json"], root)["data"]
+
+    before_gates, before_failures = _completion_gate_report(root, state_before, task)
+    evidence: dict[str, Any] = {
+        "schema_version": 2,
+        "command": "complete-verified",
+        "mode": "dry-run" if dry_run else "execution",
+        "path": str(root),
+        "task_ref": task_ref,
+        "profile": profile,
+        "task_before": task,
+        "gates_before": before_gates,
+        "verification": None,
+        "gates_after": [],
+        "dispatch": {
+            "attempted": False,
+            "command": ["carryctx", "task", "complete", task_ref, "--json"],
+            "returncode": None,
+            "readback": {
+                "attempted": False,
+                "command": ["carryctx", "task", "show", task_ref, "--json"],
+                "task": None,
+            },
+        },
+        "mutation_performed": False,
+        "status": "refused" if before_failures else "pending",
+        "failure_reasons": before_failures,
+    }
+
+    if task is not None and task.get("status") == "completed":
+        evidence["status"] = "already-completed"
+        evidence["failure_reasons"] = []
+        return 0, evidence
+    if before_failures:
+        return EXIT_UNSAFE, evidence
+
+    results = verify_profile(root, profile, dry_run=dry_run, emit_output=emit_output)
+    verification = verification_report(root, profile, dry_run=dry_run)
+    for entry, result in zip(verification["commands"], results, strict=False):
+        entry["returncode"] = result.returncode
+        entry["output"] = result.output
+        entry["projected_result"] = "pass" if result.returncode == 0 else "fail"
+    failed = next((result for result in results if result.returncode), None)
+    verification["projected_result"] = {
+        "status": "fail" if failed else "pass",
+        "exit_code": failed.returncode if failed else 0,
+        "completion_dispatched": False,
+        "worktree_mutated": False,
+    }
+    evidence["verification"] = verification
+    if failed:
+        evidence["status"] = "verification-failed"
+        evidence["failure_reasons"] = ["verification"]
+        return EXIT_VERIFICATION, evidence
+
+    state_after = carryctx_state(root)
+    task_after = task
+    if state_after.get("managed_worktree") is not None:
+        task_after = _envelope(["carryctx", "task", "show", task_ref, "--json"], root)[
+            "data"
+        ]
+    after_gates, after_failures = _completion_gate_report(root, state_after, task_after)
+    evidence["task_after"] = task_after
+    evidence["gates_after"] = after_gates
+    evidence["failure_reasons"] = after_failures
+    if after_failures:
+        evidence["status"] = "refused"
+        return EXIT_UNSAFE, evidence
+    if dry_run or not dispatch:
+        evidence["status"] = "would-complete"
+        return 0, evidence
+
+    evidence["dispatch"]["attempted"] = True
+    completed = subprocess.run(
+        evidence["dispatch"]["command"], cwd=root, check=False, text=True
+    )
+    evidence["dispatch"]["returncode"] = completed.returncode
+    if completed.returncode:
+        evidence["status"] = "carryctx-failed"
+        evidence["failure_reasons"] = ["carryctx-completion"]
+        return EXIT_CARRYCTX, evidence
+
+    readback = evidence["dispatch"]["readback"]
+    readback["attempted"] = True
+    try:
+        readback["task"] = _envelope(readback["command"], root)["data"]
+    except (KeyError, OSError, RuntimeError, TypeError) as exc:
+        readback["error"] = str(exc)
+        evidence["status"] = "completion-readback-failed"
+        evidence["failure_reasons"] = ["completion-readback"]
+        return EXIT_READBACK, evidence
+    if readback["task"].get("status") != "completed":
+        evidence["status"] = "completion-readback-failed"
+        evidence["failure_reasons"] = ["completion-readback"]
+        return EXIT_READBACK, evidence
+
+    evidence["dispatch"]["completed"] = True
+    evidence["status"] = "completed"
+    evidence["mutation_performed"] = True
+    return 0, evidence
 
 
 def audit(
@@ -870,7 +1059,14 @@ def complete(root: Path, task_ref: str, profile: str, *, dry_run: bool = False) 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("verify", "complete", "audit", "observe"))
+    parser.add_argument(
+        "command",
+        choices=("verify", "complete", "complete-verified", "audit", "observe"),
+        help=(
+            "complete-verified is the recommended repository-owned wrapper; "
+            "complete is retained for compatibility"
+        ),
+    )
     parser.add_argument("task_ref", nargs="?")
     parser.add_argument(
         "--branch", help="branch to observe instead of the current branch"
@@ -932,6 +1128,12 @@ def main(argv: list[str] | None = None) -> int:
         if not args.task_ref:
             print("complete requires a CarryCtx task reference", file=sys.stderr)
             return EXIT_USAGE
+        if args.command == "complete-verified":
+            exit_code, evidence = completion_evidence(
+                root, args.task_ref, args.profile, dry_run=args.dry_run
+            )
+            print(json.dumps(evidence, indent=2, sort_keys=True))
+            return exit_code
         return complete(root, args.task_ref, args.profile, dry_run=args.dry_run)
     except (OSError, RuntimeError) as exc:
         print(f"carryctx lifecycle refused: {exc}", file=sys.stderr)
