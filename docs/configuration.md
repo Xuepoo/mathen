@@ -71,13 +71,37 @@ Hosted MCP and reviewed-card synchronization can also be configured:
 
 ```toml
 [mcp]
-url = "https://mathen.xuepoo.xyz/api/mcp"
+url = "https://mathen.example.com/api/mcp"
 token_env = "MATHEN_API_TOKEN"
 
 [sync]
-source = "https://github.com/Xuepoo/mathen/archive/refs/heads/main.tar.gz"
+source = "https://github.com/example/mathen/archive/refs/heads/main.tar.gz"
 ref = "main"
 ```
+
+Replace the example host and archive repository with your deployment and trusted
+reviewed-card source. The default sync archive remains the upstream Mathen
+repository's `main` archive; it is defined once by `SyncSettings` and reused by
+the generated starter configuration. The MCP endpoint is unset by default, so
+offline commands do not depend on a hosted deployment.
+
+Non-empty `MATHEN_MCP_URL`, `MATHEN_SYNC_SOURCE`, and `MATHEN_SYNC_REF`
+environment variables override the corresponding TOML values and built-in
+defaults, including with `--no-config`. Blank values are ignored. Overrides are
+runtime-only: `config init`, `config set`, and `config unset` do not persist
+environment endpoint values. `sync.ref` is provenance metadata, not an archive
+URL rewrite; when changing revisions, set both the source URL and ref.
+
+```bash
+export MATHEN_MCP_URL=https://mathen.example.com/api/mcp
+export MATHEN_SYNC_SOURCE=https://cards.example.com/reviewed-v1.tar.gz
+export MATHEN_SYNC_REF=v1
+```
+
+These URLs are public configuration, not credentials. Keep bearer tokens in
+`MATHEN_API_TOKEN` (or the configured token environment variable), not in URLs.
+The stdio MCP server separately uses `MATHEN_API_URL` for an API origin or `/api`
+base URL and keeps filesystem mode when that variable is unset.
 
 `mathen data sync` downloads only reviewed cards from the configured archive,
 validates every card and cross-card reference, and replaces the configured card

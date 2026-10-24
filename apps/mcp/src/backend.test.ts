@@ -2,6 +2,22 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ApiBackend } from "./backend.js";
 
+test("API backend accepts a deployment origin or its /api base URL", async () => {
+  for (const baseUrl of [
+    "https://preview.example.test",
+    "https://preview.example.test/api",
+    "http://localhost:8787/api/",
+  ]) {
+    const backend = new ApiBackend(baseUrl, async (input) => {
+      const url = new URL(String(input));
+      assert.equal(url.origin, new URL(baseUrl).origin);
+      assert.equal(url.pathname, "/api/systems");
+      return jsonResponse({ data: [] });
+    });
+    assert.deepEqual(await backend.listSystems(false), []);
+  }
+});
+
 test("API backend calls the Hono endpoints and preserves MCP result records", async () => {
   const requests: Array<{ url: string; init?: RequestInit }> = [];
   const backend = new ApiBackend(

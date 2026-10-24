@@ -3,7 +3,8 @@
 ## Current deployment target
 
 The first production target is a single Cloudflare Worker. It serves the Vite
-client and Hono API from the future `mathen.xuepoo.xyz` custom domain:
+client and Hono API from one deployment origin (for example,
+`https://mathen.example.com`):
 
 ```text
 Vite client
@@ -53,8 +54,10 @@ may use the optional `API_ACCESS_TOKEN` service token instead of a browser
 cookie; keep that token outside the repository.
 
 Configure the site key as a non-secret Worker variable and the secret as a
-Worker secret. `TURNSTILE_HOSTNAME` defaults to `mathen.xuepoo.xyz` and should
-only be changed for an explicitly configured preview deployment. The widget
+Worker secret. `TURNSTILE_HOSTNAME` can pin verification to one deployment
+hostname (for example, `mathen.example.com`). When unset or blank, verification
+requires the hostname of the incoming request URL, including for local or
+preview deployments; forwarded-host headers are not used. The widget
 must be restricted to the matching hostname, use the `mathen-access` action,
 and use the managed mode. The application also applies a per-IP in-memory request limit
 and bounded per-IP request counts. These are defense-in-depth measures;
@@ -65,15 +68,23 @@ authoritative protection against distributed floods.
 The repository deployment workflow reads these values from the `production`
 GitHub Actions environment:
 
-| GitHub Secret                   | Worker destination      | Required      | Value                                                                    |
-| ------------------------------- | ----------------------- | ------------- | ------------------------------------------------------------------------ |
-| `CLOUDFLARE_ACCOUNT_ID`         | Wrangler authentication | Yes           | Cloudflare account ID containing the D1 database and Turnstile widget    |
-| `CLOUDFLARE_API_KEY`            | Wrangler authentication | Yes           | Cloudflare API token with Workers edit and D1 migration permissions      |
-| `TURNSTILE_SITE_KEY`            | Worker variable         | For Turnstile | Public site key of the Mathen widget                                     |
-| `TURNSTILE_SECRET_KEY`          | Worker secret           | For Turnstile | Private secret of the same Mathen widget                                 |
-| `TURNSTILE_HOSTNAME`            | Worker variable         | Optional      | `mathen.xuepoo.xyz`; defaults to this value                              |
-| `TURNSTILE_SESSION_TTL_SECONDS` | Worker variable         | Optional      | Signed browser-session lifetime, from 300 to 86400 seconds; default 3600 |
-| `API_ACCESS_TOKEN`              | Worker secret           | Optional      | Private Bearer token for the read-only MCP/API client                    |
+| GitHub Environment setting               | Worker destination      | Required      | Value                                                                    |
+| ---------------------------------------- | ----------------------- | ------------- | ------------------------------------------------------------------------ |
+| Secret `CLOUDFLARE_ACCOUNT_ID`           | Wrangler authentication | Yes           | Cloudflare account ID containing the D1 database and Turnstile widget    |
+| Secret `CLOUDFLARE_API_KEY`              | Wrangler authentication | Yes           | Cloudflare API token with Workers edit and D1 migration permissions      |
+| Variable `TURNSTILE_SITE_KEY`            | Worker variable         | For Turnstile | Public site key of the Mathen widget                                     |
+| Secret `TURNSTILE_SECRET_KEY`            | Worker secret           | For Turnstile | Private secret of the same Mathen widget                                 |
+| Variable `TURNSTILE_HOSTNAME`            | Worker variable         | Optional      | Pinned hostname; blank uses the request URL hostname                     |
+| Variable `TURNSTILE_SESSION_TTL_SECONDS` | Worker variable         | Optional      | Signed browser-session lifetime, from 300 to 86400 seconds; default 3600 |
+| Secret `API_ACCESS_TOKEN`                | Worker secret           | Optional      | Private Bearer token for the read-only MCP/API client                    |
+
+Public defaults live in `apps/api/wrangler.jsonc` under `vars`. Non-empty
+GitHub Environment variables override those defaults at deployment; unset
+variables do not erase Wrangler configuration. Existing installations should
+move the public Turnstile settings from GitHub Secrets to Environment variables.
+Keep the account credentials, Turnstile secret, and service token in Secrets.
+For a manual deployment, edit the public Wrangler vars or pass explicit
+`wrangler deploy --var "TURNSTILE_HOSTNAME:mathen.example.com"` overrides.
 
 The workflow writes `TURNSTILE_SECRET_KEY` and `API_ACCESS_TOKEN` with
 `wrangler secret put`; they are never committed or passed as public Worker
@@ -93,9 +104,17 @@ replaces the structured contents of the target database:
 just db-seed-remote
 ```
 
-After deployment, attach the Worker custom domain `mathen.xuepoo.xyz` in
+After deployment, attach your Worker custom domain (for example,
+`mathen.example.com`) in
 Cloudflare. The repository does not configure the custom domain until the DNS
 binding is confirmed.
+
+The browser always uses same-origin `/api/*` requests, so changing the custom
+domain or using a `workers.dev` preview requires no browser build-time URL.
+The API prefix `/api` and hosted MCP path `/api/mcp` are stable route contracts,
+not deployment-specific configuration. The Vite development proxy still targets
+`http://127.0.0.1:8787` by default. Configure remote clients with their deployment
+origin rather than changing these paths in source.
 
 ## Future graph stores
 
@@ -132,7 +151,7 @@ until an authenticated draft-review API exists.
 The hosted MCP endpoint is a remote HTTPS endpoint:
 
 ```text
-https://mathen.xuepoo.xyz/api/mcp
+https://mathen.example.com/api/mcp
 ```
 
 The Worker exposes a stateless, reviewed-only `POST /api/mcp` endpoint. It requires

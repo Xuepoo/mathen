@@ -24,6 +24,11 @@
 		"run_worker_first": ["/api/*"]
 	},
 	"vars": {
-		"APP_ENV": "production"
+		"APP_ENV": "production",
+		// Public deployment settings; keep credentials in Wrangler secrets.
+		"TURNSTILE_SITE_KEY": "",
+		// Empty pins verification to the incoming request URL's hostname.
+		"TURNSTILE_HOSTNAME": "",
+		"TURNSTILE_SESSION_TTL_SECONDS": "3600"
 	}
 }

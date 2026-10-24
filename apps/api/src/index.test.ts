@@ -11,6 +11,29 @@ import {
   serializeMathematicalView,
 } from "./index.js";
 
+test("hosted MCP uses the /api prefix on any deployment origin", async () => {
+  for (const origin of [
+    "https://preview.example.test",
+    "http://localhost:8787",
+  ]) {
+    const response = await app.request(
+      `${origin}/api/mcp`,
+      { method: "POST" },
+      {
+        DB: {} as D1Database,
+        APP_ENV: "test",
+        ASSETS: {} as Fetcher,
+        API_ACCESS_TOKEN: "test-token",
+      },
+    );
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), {
+      error: "MCP bearer authentication required",
+      code: "unauthorized",
+    });
+  }
+});
+
 test("D1-backed routes require Turnstile access when protection is configured", async () => {
   const response = await app.request(
     "/api/systems",

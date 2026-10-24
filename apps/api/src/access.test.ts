@@ -5,6 +5,7 @@ import {
   createAccessCookie,
   InMemoryRateLimiter,
   parseCookie,
+  turnstileHostname,
   verifyAccessCookie,
   verifyTurnstileToken,
 } from "./access.js";
@@ -13,7 +14,7 @@ const env = {
   APP_ENV: "test",
   TURNSTILE_SECRET_KEY: "test-secret",
   TURNSTILE_SITE_KEY: "test-site-key",
-  TURNSTILE_HOSTNAME: "mathen.xuepoo.xyz",
+  TURNSTILE_HOSTNAME: "mathen.example.test",
   TURNSTILE_SESSION_TTL_SECONDS: "600",
 };
 
@@ -24,12 +25,17 @@ test("Turnstile verification requires the Mathen action", async () => {
     return Response.json({
       success: true,
       action: "mathen-access",
-      hostname: "mathen.xuepoo.xyz",
+      hostname: "mathen.example.test",
     });
   };
 
   assert.equal(
-    await verifyTurnstileToken("token", "secret", fetcher, "mathen.xuepoo.xyz"),
+    await verifyTurnstileToken(
+      "token",
+      "secret",
+      fetcher,
+      "mathen.example.test",
+    ),
     true,
   );
   assert.equal(requests[0]?.method, "POST");
@@ -47,10 +53,37 @@ test("Turnstile verification requires the Mathen action", async () => {
           action: "mathen-access",
           hostname: "other.example",
         }),
-      "mathen.xuepoo.xyz",
+      "mathen.example.test",
     ),
     false,
   );
+});
+
+test("Turnstile hostname follows the request unless explicitly pinned", () => {
+  for (const url of [
+    "https://preview.example.test/api/access/turnstile",
+    "https://preview.example.workers.dev/api/access/turnstile",
+    "http://localhost:8787/api/access/turnstile",
+  ]) {
+    const request = new Request(url, {
+      headers: { "X-Forwarded-Host": "other.test" },
+    });
+    assert.equal(
+      turnstileHostname({ APP_ENV: "test" }, request),
+      new URL(url).hostname,
+    );
+    assert.equal(
+      turnstileHostname({ APP_ENV: "test", TURNSTILE_HOSTNAME: " " }, request),
+      new URL(url).hostname,
+    );
+    assert.equal(
+      turnstileHostname(
+        { APP_ENV: "test", TURNSTILE_HOSTNAME: " pinned.example.test " },
+        request,
+      ),
+      "pinned.example.test",
+    );
+  }
 });
 
 test("access cookies are signed, expiring, and tamper-resistant", async () => {

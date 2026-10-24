@@ -8,7 +8,7 @@ import platform
 import stat
 import sys
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -75,7 +75,7 @@ class SyncSettings:
 
 @dataclass(frozen=True)
 class MathenConfig:
-    """Resolved configuration after applying defaults and a TOML file."""
+    """Resolved configuration after defaults, TOML, and environment overrides."""
 
     path: Path
     paths: PathSettings
@@ -172,13 +172,14 @@ def load_config(
     path: Path | None = None,
     *,
     use_file: bool = True,
+    apply_environment: bool = True,
 ) -> MathenConfig:
-    """Load TOML configuration, returning defaults when no file exists."""
+    """Load defaults and TOML, then apply non-empty endpoint environment values."""
 
     defaults = default_config()
     config_path = discover_config_path(path)
     if not use_file or not config_path.exists():
-        return MathenConfig(
+        config = MathenConfig(
             path=config_path,
             paths=defaults.paths,
             llm=defaults.llm,
@@ -186,6 +187,7 @@ def load_config(
             sync=defaults.sync,
             loaded=False,
         )
+        return _endpoint_environment(config) if apply_environment else config
     try:
         with config_path.open("rb") as file:
             raw = tomllib.load(file)
@@ -195,7 +197,25 @@ def load_config(
         raise ConfigError(f"{config_path}: invalid TOML: {error}") from error
     if not isinstance(raw, dict):
         raise ConfigError(f"{config_path}: top-level TOML value must be a table")
-    return _merge_config(defaults, config_path, raw)
+    config = _merge_config(defaults, config_path, raw)
+    return _endpoint_environment(config) if apply_environment else config
+
+
+def _endpoint_environment(config: MathenConfig) -> MathenConfig:
+    """Keep machine-local endpoint overrides out of persisted configuration."""
+
+    mcp_url = os.environ.get("MATHEN_MCP_URL", "").strip()
+    sync_source = os.environ.get("MATHEN_SYNC_SOURCE", "").strip()
+    sync_ref = os.environ.get("MATHEN_SYNC_REF", "").strip()
+    return replace(
+        config,
+        mcp=replace(config.mcp, url=mcp_url or config.mcp.url),
+        sync=replace(
+            config.sync,
+            source=sync_source or config.sync.source,
+            ref=sync_ref or config.sync.ref,
+        ),
+    )
 
 
 def initialize_config(path: Path | None = None, *, force: bool = False) -> Path:
@@ -218,7 +238,7 @@ def set_config_value(
     """Set one supported dotted configuration key and preserve other values."""
 
     config_path = discover_config_path(path)
-    config = load_config(config_path)
+    config = load_config(config_path, apply_environment=False)
     raw = config_to_dict(config)
     parts = key.split(".")
     if len(parts) != 2 or parts[0] not in {"paths", "llm", "mcp", "sync"}:
@@ -245,7 +265,7 @@ def unset_config_value(key: str, path: Path | None = None) -> Path:
     config_path = discover_config_path(path)
     if not config_path.exists():
         raise ConfigError(f"{config_path} does not exist")
-    config = load_config(config_path)
+    config = load_config(config_path, apply_environment=False)
     raw = config_to_dict(config)
     parts = key.split(".")
     if len(parts) != 2 or parts[0] not in raw or parts[1] not in raw[parts[0]]:
@@ -463,18 +483,20 @@ timeout = 120.0
 provider = "default"
 
 [mcp]
-# url = "https://mathen.xuepoo.xyz/mcp"
+# url = "https://mathen.example.com/api/mcp"
 token_env = "MATHEN_API_TOKEN"
 timeout = 10.0
 
 [sync]
-source = "https://github.com/Xuepoo/mathen/archive/refs/heads/main.tar.gz"
-ref = "main"
+source = {sync_source}
+ref = {sync_ref}
 """.format(
+        sync_source=_toml_string(config.sync.source),
+        sync_ref=_toml_string(config.sync.ref),
         **{
             key: _toml_string(str(value))
             for key, value in config_to_dict(config)["paths"].items()
-        }
+        },
     )
 
 
