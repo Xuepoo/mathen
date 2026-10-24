@@ -57,8 +57,9 @@ Worker secret. `TURNSTILE_HOSTNAME` defaults to `mathen.xuepoo.xyz` and should
 only be changed for an explicitly configured preview deployment. The widget
 must be restricted to the matching hostname, use the `mathen-access` action,
 and use the managed mode. The application also applies a per-IP in-memory request limit
-and a short Worker Cache TTL for successful public GET responses. These are
-defense-in-depth measures; Cloudflare WAF/rate-limiting rules remain the
+and bounded per-IP request counts. These are defense-in-depth measures;
+Cloudflare's edge caching can be configured separately for explicitly public
+responses, while WAF/rate-limiting rules remain the
 authoritative protection against distributed floods.
 
 Until both Turnstile variables are configured, protection stays disabled so

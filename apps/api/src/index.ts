@@ -140,27 +140,7 @@ app.use("*", async (c, next) => {
       );
     }
   }
-  const cacheKey =
-    c.req.method === "GET" && typeof caches !== "undefined"
-      ? new Request(c.req.url)
-      : undefined;
-  const workerCache =
-    typeof caches !== "undefined"
-      ? (caches as unknown as { default?: Cache }).default
-      : undefined;
-  if (cacheKey && workerCache) {
-    const cached = await workerCache.match(cacheKey);
-    if (cached) return cached;
-  }
-  await next();
-  const response = c.res;
-  if (cacheKey && workerCache && response.status === 200) {
-    const cachedResponse = new Response(response.body, response);
-    cachedResponse.headers.set("Cache-Control", "public, max-age=30");
-    c.executionCtx.waitUntil(workerCache.put(cacheKey, cachedResponse.clone()));
-    return cachedResponse;
-  }
-  return;
+  return next();
 });
 
 app.get("/health", (c) =>
