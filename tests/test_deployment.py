@@ -1,6 +1,7 @@
 """Offline checks for deployment variable overrides; never invoke Wrangler."""
 
 import os
+import platform
 import shutil
 import subprocess
 import unittest
@@ -24,7 +25,10 @@ class DeploymentConfigurationTests(unittest.TestCase):
             self.assertIn("${{ secrets." + name + " }}", workflow)
             self.assertNotIn("${{ vars." + name + " }}", workflow)
 
-    @unittest.skipUnless(shutil.which("bash"), "requires Bash for workflow checks")
+    @unittest.skipUnless(
+        platform.system() == "Linux" and shutil.which("bash"),
+        "requires Linux Bash for workflow checks",
+    )
     def test_deploy_overrides_only_nonempty_variables_and_quotes_values(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
         step = workflow.split("      - name: Deploy Worker\n", 1)[1]
