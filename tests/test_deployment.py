@@ -58,7 +58,7 @@ class DeploymentConfigurationTests(unittest.TestCase):
                         "-euo",
                         "pipefail",
                         "-c",
-                        'bun() { printf "%s\\n" "$@"; }\n' + script,
+                        'bun() { printf "%s\\n" "$@"; return 0; }\n' + script,
                     ],
                     env=environment | overrides,
                     text=True,

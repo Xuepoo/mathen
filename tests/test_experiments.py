@@ -77,7 +77,7 @@ class SQLiteExperimentTests(unittest.TestCase):
         self.assertEqual(len(report["artifacts"][0]["results"]), report["repetitions"])
         self.assertEqual(
             report["artifacts"][0]["runner_sha256"],
-            hashlib.sha256(SCRIPT.read_bytes()).hexdigest(),
+            hashlib.sha256(SCRIPT.read_bytes().replace(b"\r\n", b"\n")).hexdigest(),
         )
         for result in report["artifacts"][0]["results"]:
             self.assertEqual(result["seeded"], result["after_rollback"])
