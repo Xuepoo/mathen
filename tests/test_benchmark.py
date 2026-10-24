@@ -23,6 +23,56 @@ FIXTURE = ROOT / "tests" / "fixtures" / "benchmark-run-valid.json"
 
 
 class BenchmarkManifestTests(unittest.TestCase):
+    def test_schema_declares_python_list_contract(self) -> None:
+        schema = json.loads(
+            (ROOT / "schemas" / "benchmark-run-manifest.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(schema["properties"]["source_revisions"]["minItems"], 1)
+        self.assertEqual(schema["$defs"]["stringList"]["minItems"], 0)
+        self.assertEqual(schema["$defs"]["nonEmptyStringList"]["minItems"], 1)
+        self.assertEqual(
+            schema["properties"]["input_ids"]["required"],
+            [
+                "systems",
+                "features",
+                "views",
+                "microstructures",
+                "compositions",
+                "analogies",
+                "negative_knowledge",
+            ],
+        )
+        self.assertEqual(
+            schema["properties"]["deployment"]["required"],
+            ["origin", "version", "conditions", "exclusions"],
+        )
+        self.assertEqual(
+            schema["$defs"]["candidate"]["properties"]["evidence_ids"]["$ref"],
+            "#/$defs/nonEmptyStringList",
+        )
+        self.assertEqual(
+            schema["$defs"]["claim"]["properties"]["evidence_ids"]["$ref"],
+            "#/$defs/nonEmptyStringList",
+        )
+        self.assertTrue(
+            schema["properties"]["evidence_bundle"]["properties"]["evidence_ids"][
+                "uniqueItems"
+            ]
+        )
+        self.assertEqual(
+            schema["$defs"]["candidate"]["required"],
+            ["id", "evidence_ids", "claims", "validation_logs", "proven"],
+        )
+        self.assertEqual(
+            schema["$defs"]["validationLog"]["required"],
+            ["check", "result", "reason"],
+        )
+        self.assertEqual(
+            schema["$defs"]["candidate"]["properties"]["proven"], {"const": False}
+        )
+
     def test_fixture_round_trips_and_cli_validates(self) -> None:
         value = json.loads(FIXTURE.read_text(encoding="utf-8"))
         validate_benchmark_manifest(value)
@@ -41,6 +91,44 @@ class BenchmarkManifestTests(unittest.TestCase):
         value = json.loads(FIXTURE.read_text(encoding="utf-8"))
         value["candidates"][0]["claims"][0]["evidence_ids"] = ["missing"]
         with self.assertRaisesRegex(BenchmarkManifestValidationError, "unknown"):
+            validate_benchmark_manifest(value)
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["candidates"][0]["evidence_ids"] = ["missing"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "unknown"):
+            validate_benchmark_manifest(value)
+
+    def test_candidate_and_claim_evidence_ids_must_be_non_empty(self) -> None:
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["candidates"][0]["evidence_ids"] = []
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "must not be empty"
+        ):
+            validate_benchmark_manifest(value)
+
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["candidates"][0]["claims"][0]["evidence_ids"] = []
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "must not be empty"
+        ):
+            validate_benchmark_manifest(value)
+
+    def test_empty_input_and_deployment_lists_remain_valid(self) -> None:
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["input_ids"]["systems"] = []
+        value["deployment"]["conditions"] = []
+        value["deployment"]["exclusions"] = []
+        value["deployment"]["origin"] = "another-configured-origin"
+        validate_benchmark_manifest(value)
+
+    def test_optional_provenance_strings_are_non_empty_and_paired(self) -> None:
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["provenance"]["provider"] = "provider"
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "together"):
+            validate_benchmark_manifest(value)
+
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["provenance"]["provider"] = ""
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "non-empty"):
             validate_benchmark_manifest(value)
 
     def test_manifest_rejects_undeclared_fields(self) -> None:

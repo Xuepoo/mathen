@@ -154,6 +154,13 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
                 f"duplicate source repository: {revision['repository_id']}"
             )
         revision_ids.add(revision["repository_id"])
+        for field in ("commit", "archive_digest"):
+            if field in revision and (
+                not isinstance(revision[field], str) or not revision[field]
+            ):
+                raise BenchmarkManifestValidationError(
+                    f"{label}.{field} needs a non-empty string"
+                )
         commit = revision.get("commit")
         digest = revision.get("archive_digest")
         if not (isinstance(commit, str) and commit) and not (
@@ -204,9 +211,11 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
         },
     )
     for field in ("provider", "exact_model_id", "prompt_digest"):
-        if provenance.get(field) is not None and not isinstance(provenance[field], str):
+        if provenance.get(field) is not None and (
+            not isinstance(provenance[field], str) or not provenance[field]
+        ):
             raise BenchmarkManifestValidationError(
-                f"provenance.{field} must be a string or null"
+                f"provenance.{field} must be a non-empty string or null"
             )
     for field in ("input_bundle_digest", "deterministic_inspector"):
         _text(provenance, field, "provenance")
@@ -490,6 +499,8 @@ def _evidence_ids(
     label: str,
 ) -> None:
     ids = _string_list(value, field, label)
+    if not ids:
+        raise BenchmarkManifestValidationError(f"{label}.{field} must not be empty")
     unknown = sorted(set(ids) - evidence_set)
     if unknown:
         raise BenchmarkManifestValidationError(

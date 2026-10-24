@@ -6,9 +6,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema_version", "run_id", "protocol_version", "benchmark_version",
-    "source_revisions", "evidence_bundle", "input_ids", "method", "provenance",
-    "deployment", "randomness", "candidates", "review", "outcome"
+    "schema_version",
+    "run_id",
+    "protocol_version",
+    "benchmark_version",
+    "source_revisions",
+    "evidence_bundle",
+    "input_ids",
+    "method",
+    "provenance",
+    "deployment",
+    "randomness",
+    "candidates",
+    "review",
+    "outcome"
   ],
   "properties": {
     "schema_version": { "const": "1.0" },
@@ -16,30 +27,45 @@
     "protocol_version": { "type": "string", "minLength": 1 },
     "benchmark_version": { "type": "string", "minLength": 1 },
     "source_revisions": {
-      "type": "array", "minItems": 1,
+      "type": "array",
+      "minItems": 1,
       "items": {
-        "type": "object", "additionalProperties": false,
+        "type": "object",
+        "additionalProperties": false,
         "required": ["repository_id"],
         "properties": {
           "repository_id": { "type": "string", "minLength": 1 },
           "commit": { "type": "string", "minLength": 1 },
           "archive_digest": { "type": "string", "minLength": 1 }
         },
-        "anyOf": [{ "required": ["commit"] }, { "required": ["archive_digest"] }]
+        "anyOf": [
+          { "required": ["commit"] },
+          { "required": ["archive_digest"] }
+        ]
       }
     },
     "evidence_bundle": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "digest", "evidence_ids"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "digest": { "type": "string", "minLength": 1 },
-        "evidence_ids": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        "evidence_ids": { "$ref": "#/$defs/stringList", "uniqueItems": true }
       }
     },
     "input_ids": {
-      "type": "object", "additionalProperties": false,
-      "required": ["systems", "features", "views", "microstructures", "compositions", "analogies", "negative_knowledge"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "systems",
+        "features",
+        "views",
+        "microstructures",
+        "compositions",
+        "analogies",
+        "negative_knowledge"
+      ],
       "properties": {
         "systems": { "$ref": "#/$defs/stringList" },
         "features": { "$ref": "#/$defs/stringList" },
@@ -51,7 +77,8 @@
       }
     },
     "method": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["name", "baseline"],
       "properties": {
         "name": { "type": "string", "minLength": 1 },
@@ -59,18 +86,35 @@
       }
     },
     "provenance": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["input_bundle_digest", "deterministic_inspector"],
       "properties": {
-        "provider": { "type": ["string", "null"] },
-        "exact_model_id": { "type": ["string", "null"] },
-        "prompt_digest": { "type": ["string", "null"] },
+        "provider": { "type": ["string", "null"], "minLength": 1 },
+        "exact_model_id": { "type": ["string", "null"], "minLength": 1 },
+        "prompt_digest": { "type": ["string", "null"], "minLength": 1 },
         "input_bundle_digest": { "type": "string", "minLength": 1 },
         "deterministic_inspector": { "type": "string", "minLength": 1 }
-      }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "provider": { "type": "null" },
+            "exact_model_id": { "type": "null" }
+          }
+        },
+        {
+          "required": ["provider", "exact_model_id"],
+          "properties": {
+            "provider": { "type": "string", "minLength": 1 },
+            "exact_model_id": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
     },
     "deployment": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["origin", "version", "conditions", "exclusions"],
       "properties": {
         "origin": { "type": "string", "minLength": 1 },
@@ -81,55 +125,119 @@
       }
     },
     "randomness": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["seed", "decoding_parameters"],
       "properties": {
         "seed": { "type": "integer" },
         "decoding_parameters": { "type": "object" }
       }
     },
-    "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+    "candidates": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "$ref": "#/$defs/candidate" }
+    },
     "review": {
-      "type": "object", "additionalProperties": false,
-      "required": ["reviewer_pool", "rubric_version", "blinded_assignment", "adjudication_record"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewer_pool",
+        "rubric_version",
+        "blinded_assignment",
+        "adjudication_record"
+      ],
       "properties": {
         "reviewer_pool": { "$ref": "#/$defs/stringList" },
         "rubric_version": { "type": "string", "minLength": 1 },
         "blinded_assignment": { "type": "boolean" },
-        "adjudication_record": { "type": "array" }
+        "adjudication_record": { "type": "array", "minItems": 0 }
       }
     },
     "outcome": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["status", "reason"],
       "properties": {
-        "status": { "enum": ["accepted", "rejected", "undetermined", "falsified", "not-evaluated"] },
+        "status": {
+          "enum": [
+            "accepted",
+            "rejected",
+            "undetermined",
+            "falsified",
+            "not-evaluated"
+          ]
+        },
         "reason": { "type": "string", "minLength": 1 }
       }
     }
   },
   "$defs": {
-    "stringList": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "stringList": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "nonEmptyStringList": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
     "claim": {
-      "type": "object", "additionalProperties": false,
-      "required": ["id", "description", "claim_type", "claim_status", "evidence_ids"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "description": { "type": "string", "minLength": 1 },
-        "claim_type": { "enum": ["fact", "inference", "hypothesis", "analogy"] },
-        "claim_status": { "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"] },
-        "evidence_ids": { "$ref": "#/$defs/stringList" }
+        "claim_type": {
+          "enum": ["fact", "inference", "hypothesis", "analogy"]
+        },
+        "claim_status": {
+          "enum": [
+            "proposed",
+            "under-review",
+            "accepted",
+            "rejected",
+            "deprecated"
+          ]
+        },
+        "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" }
       }
     },
     "candidate": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "evidence_ids", "claims", "validation_logs", "proven"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
-        "evidence_ids": { "$ref": "#/$defs/stringList" },
-        "claims": { "type": "array", "items": { "$ref": "#/$defs/claim" } },
-        "validation_logs": { "type": "array" },
+        "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" },
+        "claims": {
+          "type": "array",
+          "minItems": 0,
+          "items": { "$ref": "#/$defs/claim" }
+        },
+        "validation_logs": {
+          "type": "array",
+          "minItems": 0,
+          "items": { "$ref": "#/$defs/validationLog" }
+        },
         "proven": { "const": false }
+      }
+    },
+    "validationLog": {
+      "type": "object",
+      "required": ["check", "result", "reason"],
+      "properties": {
+        "check": { "type": "string", "minLength": 1 },
+        "result": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 }
       }
     }
   }
