@@ -3,13 +3,26 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 from pathlib import Path
 
+from . import __version__
 from .cards import (
     CardValidationError,
     discover_cards,
     load_card,
     validate_card_collection,
+)
+from .config import (
+    ConfigError,
+    MathenConfig,
+    config_to_dict,
+    default_config,
+    initialize_config,
+    load_config,
+    set_config_value,
+    unset_config_value,
 )
 from .llm import LLMModelError, client_from_environment, model_bundles
 from .modeling import (
@@ -23,37 +36,36 @@ from .relation_candidates import (
 )
 from .repositories import RepositoryAnalysisError, analyze_manifest
 
-DEFAULT_CARDS = Path(__file__).parents[2] / "data" / "systems"
-DEFAULT_MANIFEST = (
-    Path(__file__).parents[2] / "data" / "repositories" / "representative.json"
-)
-DEFAULT_CACHE = Path(".cache") / "mathen" / "repos"
-DEFAULT_DRAFTS = Path(__file__).parents[2] / "data" / "drafts"
-DEFAULT_ANALYSES = Path(__file__).parents[2] / "data" / "analyses"
-DEFAULT_BUNDLES = Path(__file__).parents[2] / "data" / "modeling"
-DEFAULT_LLM_DRAFTS = DEFAULT_DRAFTS / "llm"
+VERSION = __version__
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
+    """Build the command parser using resolved configuration defaults."""
+
+    config = config or default_config()
     parser = argparse.ArgumentParser(prog="mathen")
+    parser.add_argument("--config", type=Path, default=config.path)
+    parser.add_argument("--no-config", action="store_true")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     validate = subparsers.add_parser("validate", help="validate architecture cards")
-    validate.add_argument("path", nargs="?", type=Path, default=DEFAULT_CARDS)
+    validate.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
 
     listing = subparsers.add_parser("list", help="list architecture cards")
-    listing.add_argument("path", nargs="?", type=Path, default=DEFAULT_CARDS)
+    listing.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
 
     show = subparsers.add_parser("show", help="show one architecture card")
     show.add_argument("card_id")
-    show.add_argument("path", nargs="?", type=Path, default=DEFAULT_CARDS)
+    show.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
 
     analyze = subparsers.add_parser(
         "analyze", help="clone repositories and generate draft architecture cards"
     )
-    analyze.add_argument("manifest", nargs="?", type=Path, default=DEFAULT_MANIFEST)
-    analyze.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE)
-    analyze.add_argument("--output-dir", type=Path, default=DEFAULT_DRAFTS)
+    analyze.add_argument(
+        "manifest", nargs="?", type=Path, default=config.paths.manifest
+    )
+    analyze.add_argument("--cache-dir", type=Path, default=config.paths.cache_dir)
+    analyze.add_argument("--output-dir", type=Path, default=config.paths.drafts_dir)
     analyze.add_argument("--limit", type=int)
     analyze.add_argument(
         "--priority",
@@ -65,10 +77,12 @@ def build_parser() -> argparse.ArgumentParser:
     prepare = subparsers.add_parser(
         "prepare-modeling", help="build evidence bundles for LLM architecture modeling"
     )
-    prepare.add_argument("manifest", nargs="?", type=Path, default=DEFAULT_MANIFEST)
-    prepare.add_argument("--analyses-dir", type=Path, default=DEFAULT_ANALYSES)
-    prepare.add_argument("--drafts-dir", type=Path, default=DEFAULT_DRAFTS)
-    prepare.add_argument("--output-dir", type=Path, default=DEFAULT_BUNDLES)
+    prepare.add_argument(
+        "manifest", nargs="?", type=Path, default=config.paths.manifest
+    )
+    prepare.add_argument("--analyses-dir", type=Path, default=config.paths.analyses_dir)
+    prepare.add_argument("--drafts-dir", type=Path, default=config.paths.drafts_dir)
+    prepare.add_argument("--output-dir", type=Path, default=config.paths.bundles_dir)
     prepare.add_argument("--system", action="append", dest="system_ids")
     prepare.add_argument(
         "--write-prompts",
@@ -78,8 +92,12 @@ def build_parser() -> argparse.ArgumentParser:
     model = subparsers.add_parser(
         "model", help="run an LLM over evidence bundles into draft cards"
     )
-    model.add_argument("bundle_dir", nargs="?", type=Path, default=DEFAULT_BUNDLES)
-    model.add_argument("--output-dir", type=Path, default=DEFAULT_LLM_DRAFTS)
+    model.add_argument(
+        "bundle_dir", nargs="?", type=Path, default=config.paths.bundles_dir
+    )
+    model.add_argument(
+        "--output-dir", type=Path, default=config.paths.drafts_dir / "llm"
+    )
     model.add_argument("--system", action="append", dest="system_ids")
     model.add_argument("--api-key", help="API key; defaults to OPENAI_API_KEY")
     model.add_argument("--model", help="model name; defaults to MATHEN_LLM_MODEL")
@@ -87,7 +105,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--base-url",
         help="OpenAI-compatible API base URL; defaults to MATHEN_LLM_BASE_URL",
     )
-    model.add_argument("--timeout", type=float, default=120.0)
+    model.add_argument("--timeout", type=float)
     model.add_argument(
         "--force", action="store_true", help="overwrite existing draft cards"
     )
@@ -96,12 +114,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="generate a review-only deterministic relation-candidate report",
     )
     relation_candidates.add_argument(
-        "path", nargs="?", type=Path, default=DEFAULT_CARDS
+        "path", nargs="?", type=Path, default=config.paths.cards_dir
     )
     relation_candidates.add_argument(
         "--output",
         type=Path,
-        default=DEFAULT_ANALYSES / "g6-relation-candidates.json",
+        default=config.paths.analyses_dir / "g6-relation-candidates.json",
     )
     analyze.add_argument(
         "--refresh",
@@ -119,14 +137,44 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="record failed repositories and continue the batch",
     )
+    config_parser = subparsers.add_parser("config", help="manage user configuration")
+    config_subparsers = config_parser.add_subparsers(
+        dest="config_command", required=True
+    )
+    config_init = config_subparsers.add_parser(
+        "init", help="create a starter TOML file"
+    )
+    config_init.add_argument("--force", action="store_true")
+    config_show = config_subparsers.add_parser("show", help="show resolved settings")
+    config_show.add_argument("--json", action="store_true", dest="as_json")
+    config_show.add_argument("--show-secrets", action="store_true")
+    config_subparsers.add_parser("path", help="print the active config path")
+    config_set = config_subparsers.add_parser("set", help="set a TOML value")
+    config_set.add_argument("key")
+    config_set.add_argument("value")
+    config_unset = config_subparsers.add_parser("unset", help="remove a TOML value")
+    config_unset.add_argument("key")
+    subparsers.add_parser("version", help="print the Mathen version")
     return parser
 
 
 def main() -> int:
-    args = build_parser().parse_args()
+    bootstrap = argparse.ArgumentParser(add_help=False)
+    bootstrap.add_argument("--config", type=Path)
+    bootstrap.add_argument("--no-config", action="store_true")
+    bootstrap_args, _ = bootstrap.parse_known_args()
     try:
+        config = load_config(
+            bootstrap_args.config, use_file=not bootstrap_args.no_config
+        )
+        args = build_parser(config).parse_args()
+        if args.command == "config":
+            return config_command(args, config)
+        if args.command == "version":
+            print(VERSION)
+            return 0
         if args.command == "validate":
-            return validate_command(args.path)
+            return validate_command(args.path, config)
         if args.command == "list":
             return list_command(args.path)
         if args.command == "show":
@@ -161,11 +209,13 @@ def main() -> int:
                 args.base_url,
                 args.timeout,
                 args.force,
+                config,
             )
         if args.command == "relation-candidates":
             return relation_candidates_command(args.path, args.output)
     except (
         CardValidationError,
+        ConfigError,
         LLMModelError,
         ModelingBundleError,
         RepositoryAnalysisError,
@@ -176,7 +226,7 @@ def main() -> int:
     return 2
 
 
-def validate_command(path: Path) -> int:
+def validate_command(path: Path, config: MathenConfig | None = None) -> int:
     cards = discover_cards(path) if path.is_dir() else [path]
     if not cards:
         print(f"No cards found in {path}")
@@ -187,7 +237,7 @@ def validate_command(path: Path) -> int:
         print(f"valid  {card_path}")
     if path.is_dir():
         resolved_path = path.resolve()
-        drafts_root = DEFAULT_DRAFTS.resolve()
+        drafts_root = (config or default_config()).paths.drafts_dir.resolve()
         is_drafts = resolved_path == drafts_root or drafts_root in resolved_path.parents
         validate_card_collection(
             loaded_cards, require_feature_relation_targets=not is_drafts
@@ -267,27 +317,36 @@ def model_command(
     api_key: str | None,
     model: str | None,
     base_url: str | None,
-    timeout: float,
+    timeout: float | None,
     force: bool,
+    config: MathenConfig | None = None,
 ) -> int:
     """Run the provider-neutral model adapter and print created draft paths."""
 
-    if timeout <= 0:
+    resolved_config = config or default_config()
+    effective_timeout = timeout if timeout is not None else resolved_config.llm.timeout
+    if effective_timeout <= 0:
         print("ERROR: --timeout must be positive")
         return 1
     resolved_output = output_dir.resolve()
-    required_root = DEFAULT_LLM_DRAFTS.resolve()
+    required_root = (resolved_config.paths.drafts_dir / "llm").resolve()
     if (
         resolved_output != required_root
         and required_root not in resolved_output.parents
     ):
         print(f"ERROR: model output must stay under {required_root}")
         return 1
+    llm = resolved_config.llm
     client = client_from_environment(
-        base_url=base_url,
-        api_key=api_key,
-        model=model,
-        timeout=timeout,
+        base_url=base_url or os.environ.get("MATHEN_LLM_BASE_URL") or llm.base_url,
+        api_key=(
+            api_key
+            or os.environ.get(llm.api_key_env)
+            or os.environ.get("OPENAI_API_KEY")
+            or llm.api_key
+        ),
+        model=model or os.environ.get("MATHEN_LLM_MODEL") or llm.model,
+        timeout=effective_timeout,
     )
     for path in model_bundles(
         bundle_dir, output_dir, client, system_ids or None, overwrite=force
@@ -302,6 +361,39 @@ def relation_candidates_command(cards_path: Path, output_path: Path) -> int:
     path = write_relation_candidate_report(cards_path, output_path)
     print(f"report  {path}")
     return 0
+
+
+def config_command(args: argparse.Namespace, config: MathenConfig) -> int:
+    """Handle configuration lifecycle and inspection commands."""
+
+    if args.config_command == "init":
+        path = initialize_config(args.config, force=args.force)
+        print(f"created  {path}")
+        return 0
+    if args.config_command == "path":
+        print(config.path)
+        return 0
+    if args.config_command == "show":
+        values = config_to_dict(config, redact_secrets=not args.show_secrets)
+        if args.as_json:
+            print(json.dumps(values, indent=2, ensure_ascii=False))
+        else:
+            print(f"config  {config.path}")
+            print(f"status  {'loaded' if config.loaded else 'defaults'}")
+            for section, entries in values.items():
+                print(f"[{section}]")
+                for key, value in entries.items():
+                    print(f"{key} = {value}")
+        return 0
+    if args.config_command == "set":
+        path = set_config_value(args.key, args.value, args.config)
+        print(f"updated  {path}")
+        return 0
+    if args.config_command == "unset":
+        path = unset_config_value(args.key, args.config)
+        print(f"updated  {path}")
+        return 0
+    return 2
 
 
 if __name__ == "__main__":
