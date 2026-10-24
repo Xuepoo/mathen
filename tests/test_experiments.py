@@ -61,13 +61,17 @@ class SQLiteExperimentTests(unittest.TestCase):
 
     @staticmethod
     def validate_evidence(report: dict) -> None:
-        card = json.loads((ROOT / "data/systems/sqlite.json").read_text())
+        card = json.loads(
+            (ROOT / "data/systems/sqlite.json").read_text(encoding="utf-8")
+        )
         card["evidence"].append(report)
         validate_card(card)
 
     def test_recorded_evidence_is_valid_and_has_all_observations(self) -> None:
         report = json.loads(
-            (ROOT / "data/experiments/g5-sqlite-transaction-results.json").read_text()
+            (ROOT / "data/experiments/g5-sqlite-transaction-results.json").read_text(
+                encoding="utf-8"
+            )
         )
         self.validate_evidence(report)
         self.assertEqual(len(report["artifacts"][0]["results"]), report["repetitions"])

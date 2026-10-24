@@ -63,16 +63,26 @@ class ConfigurationTests(unittest.TestCase):
                 set_config_value("unknown.value", "x", path)
 
     def test_platform_defaults_use_standard_directories(self) -> None:
-        with patch.dict(
-            os.environ,
+        environment = os.environ.copy()
+        for key in (
+            "MATHEN_CONFIG_DIR",
+            "MATHEN_DATA_DIR",
+            "MATHEN_CACHE_DIR",
+        ):
+            environment.pop(key, None)
+        environment.update(
             {
                 "APPDATA": "/windows/roaming",
                 "LOCALAPPDATA": "/windows/local",
                 "XDG_CONFIG_HOME": "/xdg/config",
                 "XDG_DATA_HOME": "/xdg/data",
                 "XDG_CACHE_HOME": "/xdg/cache",
-            },
-            clear=False,
+            }
+        )
+        with patch.dict(
+            os.environ,
+            environment,
+            clear=True,
         ):
             with patch("mathen.config.platform.system", return_value="Windows"):
                 windows = platform_paths()

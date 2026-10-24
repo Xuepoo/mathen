@@ -10,11 +10,15 @@ permissions:
 
 jobs:
   python:
+    name: Python (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -22,9 +26,17 @@ jobs:
           version: "latest"
       - run: uv sync --locked
       - run: uv run mathen validate
-      - run: uv run python -m unittest discover -s tests -v
+      - name: Run Python tests
+        run: uv run python -m unittest discover -s tests -v 2>&1 | tee python-test-report.txt
       - run: uv run ruff format --check .
       - run: uv run ruff check .
+      - name: Upload Python test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-test-report-${{ matrix.os }}
+          path: python-test-report.txt
+          if-no-files-found: warn
 
   web-and-worker:
     runs-on: ubuntu-latest
