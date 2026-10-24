@@ -239,10 +239,20 @@ first-milestone dependency.
 ## Quick start: Python card tooling
 
 ```bash
+uv tool install mathen
+mathen version
+mathen config init
 uv run mathen validate
 uv run mathen list
 uv run mathen show git
 ```
+
+The CLI supports a cross-platform TOML configuration under the user's standard
+configuration directory. Configure paths and an OpenAI-compatible LLM endpoint
+with `mathen config set`; see [`docs/configuration.md`](docs/configuration.md).
+The repository's first package release is `v0.0.1`. Pushing a matching version
+tag builds and publishes the Python distributions to PyPI through the
+`PYPI_API_TOKEN` GitHub Actions secret.
 
 Analyze the representative repository catalog into reviewable draft cards:
 

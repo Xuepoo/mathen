@@ -201,10 +201,11 @@ def client_from_environment(
     api_key: str | None = None,
     model: str | None = None,
     timeout: float = 120.0,
+    api_key_env: str = "OPENAI_API_KEY",
 ) -> OpenAICompatibleClient:
     """Construct a client from explicit values or standard environment variables."""
 
-    resolved_key = api_key or os.environ.get("OPENAI_API_KEY")
+    resolved_key = api_key or os.environ.get(api_key_env)
     if not resolved_key:
         raise LLMModelError("missing API key; pass --api-key or set OPENAI_API_KEY")
     resolved_model = model or os.environ.get("MATHEN_LLM_MODEL")
