@@ -84,8 +84,8 @@ The typed slice makes explicit:
 - property effects: `shared`, `preserves`, `refines`, `weakens`, `strengthens`,
   and `unverified`;
 - composition preconditions and postconditions;
-- resource effects, failure modes, deterministic conflict explanations, and
-  unresolved requirements;
+- resource effects, failure modes, typed conflict claims, deterministic conflict
+  explanations, and unresolved requirements;
 - worked `examples`, `counterexamples`, `uncertainties`, and `disagreements`.
 
 Typed candidates must retain `proven: false`. `validity_scope` includes systems,
@@ -98,9 +98,15 @@ cross-community candidate is valid input to review, not evidence of
 compatibility.
 
 The Python adapter is `adapt_typed_composition`; bounded exploration is
-`solve_typed_compositions`. Both consume only explicitly declared typed fields.
-They return review candidates and never promote a card, execute a component, or
-claim a compatibility proof.
+`solve_typed_compositions`. The adapter retains the complete validated contract
+alongside each solver-compatible component specification, including top-level
+claims, discovery provenance, evidence, and `proven: false`; it does not reduce
+those claims to component capability fields. Both consume only explicitly
+declared typed fields. They return review candidates and never promote a card,
+execute a component, or claim a compatibility proof.
+
+Call `spec.composition_semantics.to_dict()` on an adapted
+`TypedFeatureSpec` to retrieve a detached copy of that complete contract.
 
 ### Migration guidance
 

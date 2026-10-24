@@ -62,8 +62,85 @@ class CompositionSolverTests(unittest.TestCase):
         contract = _typed_contract()
         specs = adapt_typed_composition(contract, evidence_ids={"source"})
         self.assertEqual(tuple(item.id for item in specs), ("source", "target"))
+        self.assertEqual(
+            specs[0].composition_semantics.to_dict(),
+            contract,
+        )
         candidates = solve_typed_compositions(specs, ["output"], max_components=1)
         self.assertEqual(candidates[0].unresolved_requirements, ())
+
+    def test_typed_adapter_preserves_declared_semantics_and_conflicts(self) -> None:
+        contract = _typed_contract()
+        contract["components"][0]["conflicts"] = ["unsafe-target"]
+        claim = {
+            "claim_type": "hypothesis",
+            "claim_status": "proposed",
+            "evidence_ids": ["source"],
+        }
+        contract["adapters"] = [
+            {
+                "id": "source-target-adapter",
+                "source": "source",
+                "target": "target",
+                "description": "Converts the source output for the target.",
+                **claim,
+            }
+        ]
+        contract["boundaries"] = [
+            {
+                "id": "source-target-boundary",
+                "inside": "source",
+                "outside": "target",
+                "description": "Marks the process boundary.",
+                **claim,
+            }
+        ]
+        for field in (
+            "preconditions",
+            "postconditions",
+            "resource_effects",
+            "failure_modes",
+            "examples",
+            "counterexamples",
+            "uncertainties",
+            "disagreements",
+        ):
+            contract[field] = [
+                {"id": field, "description": f"Declared {field}.", **claim}
+            ]
+        contract["property_effects"] = [
+            {"id": "ordering", "property": "ordering", "relation": "preserves", **claim}
+        ]
+        contract["conflicts"] = [
+            {
+                "id": "contract-conflict",
+                "description": "The boundary may reject unsafe targets.",
+                **{
+                    "claim_type": "hypothesis",
+                    "claim_status": "proposed",
+                    "evidence_ids": ["source"],
+                },
+            }
+        ]
+        specs = adapt_typed_composition(contract, evidence_ids={"source"})
+        source = next(item for item in specs if item.id == "source")
+        self.assertEqual(source.conflicts, frozenset({"unsafe-target"}))
+        self.assertEqual(source.composition_semantics.to_dict(), contract)
+
+    def test_typed_validator_rejects_undeclared_fields(self) -> None:
+        contract = _typed_contract()
+        contract["examples"] = [
+            {
+                "id": "example",
+                "description": "A declared example.",
+                "claim_type": "hypothesis",
+                "claim_status": "proposed",
+                "evidence_ids": ["source"],
+                "unexpected": "must be rejected",
+            }
+        ]
+        with self.assertRaisesRegex(TypedCompositionValidationError, "undeclared"):
+            validate_typed_composition(contract, evidence_ids={"source"})
 
     def test_typed_contract_requires_proven_false_and_local_evidence(self) -> None:
         contract = _typed_contract()
@@ -355,6 +432,7 @@ def _typed_contract() -> dict:
         ],
         "adapters": [],
         "boundaries": [],
+        "conflicts": [],
         "property_effects": [],
         "preconditions": [],
         "postconditions": [],

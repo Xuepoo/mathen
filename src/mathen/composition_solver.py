@@ -12,6 +12,7 @@ from itertools import combinations
 from typing import Any, Iterable, Mapping
 
 from .typed_composition import (
+    TypedCompositionSemantics,
     TypedFeatureSpec,
     typed_spec_from_mapping,
     validate_typed_composition,
@@ -247,6 +248,7 @@ def adapt_typed_composition(
     """
 
     validate_typed_composition(value, evidence_ids=evidence_ids)
+    semantics = TypedCompositionSemantics.from_dict(value, evidence_ids=evidence_ids)
     return tuple(
         typed_spec_from_mapping(
             {
@@ -256,7 +258,9 @@ def adapt_typed_composition(
                 "consumes": component.get("consumes", []),
                 "adapters": component.get("adapters", []),
                 "boundaries": component.get("boundaries", []),
+                "conflicts": component.get("conflicts", []),
                 "evidence_ids": component["evidence_ids"],
+                "composition_semantics": semantics,
             }
         )
         for component in value["components"]

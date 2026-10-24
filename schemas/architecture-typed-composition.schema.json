@@ -10,6 +10,7 @@
     "components",
     "adapters",
     "boundaries",
+    "conflicts",
     "property_effects",
     "preconditions",
     "postconditions",
@@ -35,6 +36,7 @@
     },
     "adapters": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
     "boundaries": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+    "conflicts": { "type": "array", "items": { "$ref": "#/$defs/claim" } },
     "property_effects": {
       "type": "array",
       "items": { "$ref": "#/$defs/propertyEffect" }
@@ -119,6 +121,10 @@
           "items": { "type": "string", "minLength": 1 }
         },
         "boundaries": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "conflicts": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         },

@@ -49,6 +49,7 @@ class TypedFeatureSpec:
     failure_modes: tuple[str, ...] = ()
     conflicts: frozenset[str] = frozenset()
     evidence_ids: tuple[str, ...] = ()
+    composition_semantics: TypedCompositionSemantics | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +104,7 @@ def validate_typed_composition(
         "components",
         "adapters",
         "boundaries",
+        "conflicts",
         "property_effects",
         "preconditions",
         "postconditions",
@@ -115,9 +117,11 @@ def validate_typed_composition(
         "discovery",
         "validity_scope",
         "claim_status",
+        "claim_type",
         "evidence_ids",
         "proven",
     }
+    _check_fields("typed_semantics", value, required)
     missing = required - value.keys()
     if missing:
         raise TypedCompositionValidationError(f"missing fields: {sorted(missing)}")
@@ -135,50 +139,112 @@ def validate_typed_composition(
 
     discovery = value["discovery"]
     _object("discovery", discovery)
+    _check_fields(
+        "discovery",
+        discovery,
+        {
+            "method",
+            "provenance",
+            "source_community",
+            "target_community",
+            "path",
+            "candidate_status",
+        },
+    )
     for field in ("method", "source_community", "target_community", "candidate_status"):
         _text("discovery", discovery.get(field))
     if discovery["candidate_status"] != "candidate":
         raise TypedCompositionValidationError(
             "discovery.candidate_status must be candidate"
         )
-    _string_list("discovery", discovery.get("provenance", []), "provenance")
-    _string_list("discovery", discovery.get("path", []), "path")
+    _string_list("discovery", discovery.get("provenance"), "provenance")
+    _string_list("discovery", discovery.get("path"), "path")
 
     components = _list(value, "components")
+    if not components:
+        raise TypedCompositionValidationError("components must not be empty")
     component_ids: set[str] = set()
     for index, component in enumerate(components):
         label = f"components[{index}]"
         _object(label, component)
-        _text(label, component.get("id"))
-        if component["id"] in component_ids:
+        component_id = component.get("id")
+        _text(label, component_id)
+        if component_id in component_ids:
             raise TypedCompositionValidationError(
-                f"duplicate component id: {component['id']}"
+                f"duplicate component id: {component_id}"
             )
-        component_ids.add(component["id"])
+        component_ids.add(component_id)
         _text(label, component.get("role"))
-        for field in ("requires", "provides", "consumes", "adapters", "boundaries"):
+        _check_fields(
+            label,
+            component,
+            {
+                "id",
+                "role",
+                "requires",
+                "provides",
+                "consumes",
+                "adapters",
+                "boundaries",
+                "conflicts",
+                "claim_type",
+                "claim_status",
+                "evidence_ids",
+            },
+        )
+        for field in (
+            "requires",
+            "provides",
+            "consumes",
+            "adapters",
+            "boundaries",
+            "conflicts",
+        ):
             _string_list(label, component.get(field, []), field)
         _claim_fields(label, component, evidence_ids)
 
     for index, item in enumerate(_list(value, "adapters")):
         _reference_object(
-            f"adapters[{index}]", item, component_ids, ("source", "target")
+            f"adapters[{index}]",
+            item,
+            component_ids,
+            ("source", "target"),
+            evidence_ids,
         )
     for index, item in enumerate(_list(value, "boundaries")):
         _reference_object(
-            f"boundaries[{index}]", item, component_ids, ("inside", "outside")
+            f"boundaries[{index}]",
+            item,
+            component_ids,
+            ("inside", "outside"),
+            evidence_ids,
         )
+
+    _validate_claim_list(value, "conflicts", evidence_ids)
 
     property_ids: set[str] = set()
     for index, item in enumerate(_list(value, "property_effects")):
         label = f"property_effects[{index}]"
         _object(label, item)
-        _text(label, item.get("id"))
-        if item["id"] in property_ids:
+        _check_fields(
+            label,
+            item,
+            {
+                "id",
+                "property",
+                "relation",
+                "claim_type",
+                "claim_status",
+                "evidence_ids",
+            },
+        )
+        property_id = item.get("id")
+        _text(label, property_id)
+        if property_id in property_ids:
             raise TypedCompositionValidationError(
-                f"duplicate property effect id: {item['id']}"
+                f"duplicate property effect id: {property_id}"
             )
-        property_ids.add(item["id"])
+        property_ids.add(property_id)
         _text(label, item.get("property"))
         if item.get("relation") not in PROPERTY_RELATIONS:
             raise TypedCompositionValidationError(f"{label}: invalid relation")
@@ -193,6 +259,11 @@ def validate_typed_composition(
         for index, item in enumerate(_list(value, field)):
             label = f"{field}[{index}]"
             _object(label, item)
+            _check_fields(
+                label,
+                item,
+                {"id", "description", "claim_type", "claim_status", "evidence_ids"},
+            )
             _text(label, item.get("id"))
             _text(label, item.get("description"))
             _claim_fields(label, item, evidence_ids)
@@ -201,6 +272,11 @@ def validate_typed_composition(
         for index, item in enumerate(_list(value, field)):
             label = f"{field}[{index}]"
             _object(label, item)
+            _check_fields(
+                label,
+                item,
+                {"id", "description", "claim_type", "claim_status", "evidence_ids"},
+            )
             _text(label, item.get("id"))
             _text(label, item.get("description"))
             _claim_fields(label, item, evidence_ids)
@@ -208,11 +284,32 @@ def validate_typed_composition(
         for index, item in enumerate(_list(value, field)):
             label = f"{field}[{index}]"
             _object(label, item)
+            _check_fields(
+                label,
+                item,
+                {"id", "description", "claim_type", "claim_status", "evidence_ids"},
+            )
             _text(label, item.get("id"))
             _text(label, item.get("description"))
             _claim_fields(label, item, evidence_ids)
     scope = value["validity_scope"]
     _object("validity_scope", scope)
+    _check_fields(
+        "validity_scope",
+        scope,
+        {"systems", "versions", "deployment_origins", "conditions", "exclusions"},
+    )
+    missing_scope = {
+        "systems",
+        "versions",
+        "deployment_origins",
+        "conditions",
+        "exclusions",
+    } - scope.keys()
+    if missing_scope:
+        raise TypedCompositionValidationError(
+            f"validity_scope missing fields: {sorted(missing_scope)}"
+        )
     for field in (
         "systems",
         "versions",
@@ -220,7 +317,7 @@ def validate_typed_composition(
         "conditions",
         "exclusions",
     ):
-        _string_list("validity_scope", scope.get(field, []), field)
+        _string_list("validity_scope", scope.get(field), field)
 
 
 def _list(value: Mapping[str, Any], field: str) -> list[Any]:
@@ -228,6 +325,12 @@ def _list(value: Mapping[str, Any], field: str) -> list[Any]:
     if not isinstance(result, list):
         raise TypedCompositionValidationError(f"{field} must be a list")
     return result
+
+
+def _check_fields(label: str, value: Mapping[str, Any], allowed: set[str]) -> None:
+    unknown = sorted(set(value) - allowed)
+    if unknown:
+        raise TypedCompositionValidationError(f"{label}: undeclared fields: {unknown}")
 
 
 def _object(label: str, value: Any) -> None:
@@ -247,6 +350,26 @@ def _string_list(label: str, value: Any, field: str) -> None:
         raise TypedCompositionValidationError(
             f"{label}.{field} must be a list of strings"
         )
+
+
+def _validate_claim_list(
+    value: Mapping[str, Any], field: str, evidence_ids: set[str] | None
+) -> None:
+    ids: set[str] = set()
+    for index, item in enumerate(_list(value, field)):
+        label = f"{field}[{index}]"
+        _object(label, item)
+        _check_fields(
+            label,
+            item,
+            {"id", "description", "claim_type", "claim_status", "evidence_ids"},
+        )
+        _text(label, item.get("id"))
+        if item["id"] in ids:
+            raise TypedCompositionValidationError(f"duplicate {field} id: {item['id']}")
+        ids.add(item["id"])
+        _text(label, item.get("description"))
+        _claim_fields(label, item, evidence_ids)
 
 
 def _claim_fields(
@@ -275,8 +398,21 @@ def _reference_object(
     value: Any,
     component_ids: set[str],
     references: tuple[str, str],
+    evidence_ids: set[str] | None,
 ) -> None:
     _object(label, value)
+    _check_fields(
+        label,
+        value,
+        {
+            "id",
+            *references,
+            "description",
+            "claim_type",
+            "claim_status",
+            "evidence_ids",
+        },
+    )
     _text(label, value.get("id"))
     for field in references:
         ref = value.get(field)
@@ -286,7 +422,7 @@ def _reference_object(
                 f"{label}: unknown component {field}: {ref}"
             )
     _text(label, value.get("description"))
-    _claim_fields(label, value, None)
+    _claim_fields(label, value, evidence_ids)
 
 
 def typed_spec_from_mapping(value: Mapping[str, Any]) -> TypedFeatureSpec:
@@ -326,4 +462,5 @@ def typed_spec_from_mapping(value: Mapping[str, Any]) -> TypedFeatureSpec:
         failure_modes=strings("failure_modes"),
         conflicts=frozenset(strings("conflicts")),
         evidence_ids=strings("evidence_ids"),
+        composition_semantics=value.get("composition_semantics"),
     )
