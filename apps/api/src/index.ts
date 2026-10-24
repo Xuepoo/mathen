@@ -1,9 +1,5 @@
 import { Hono } from "hono";
-import {
-  buildModelGraph,
-  modelViewKey,
-  type ModelViewRow,
-} from "./model-graph.js";
+import { buildModelGraph, modelViewKey, type ModelViewRow } from "./model-graph.js";
 import {
   accessCookieName,
   accessProtectionEnabled,
@@ -77,15 +73,9 @@ type FeatureRelationRow = {
   evidence_ids_json: string;
 };
 
-type GraphSystem = Pick<
-  SystemRow,
-  "id" | "name" | "related_systems_json" | "relations_json"
->;
+type GraphSystem = Pick<SystemRow, "id" | "name" | "related_systems_json" | "relations_json">;
 
-type CompositionSystem = Pick<
-  SystemRow,
-  "id" | "name" | "version_context" | "composition_json"
-> & {
+type CompositionSystem = Pick<SystemRow, "id" | "name" | "version_context" | "composition_json"> & {
   evidence_json?: string | null;
 };
 
@@ -125,14 +115,8 @@ app.use("*", async (c, next) => {
     });
   }
   if (accessProtectionEnabled(c.env)) {
-    const cookie = parseCookie(
-      c.req.header("Cookie") ?? null,
-      accessCookieName(),
-    );
-    if (
-      !hasServiceToken(c.req.raw, c.env) &&
-      !(await verifyAccessCookie(cookie, c.env))
-    ) {
+    const cookie = parseCookie(c.req.header("Cookie") ?? null, accessCookieName());
+    if (!hasServiceToken(c.req.raw, c.env) && !(await verifyAccessCookie(cookie, c.env))) {
       return c.json(
         {
           error: "Turnstile access verification required",
@@ -151,15 +135,15 @@ app.get("/health", (c) =>
 
 app.all("/mcp", async (c) => {
   if (!mcpAuthorized(c.req.raw, c.env.API_ACCESS_TOKEN)) {
-    return c.json(
-      { error: "MCP bearer authentication required", code: "unauthorized" },
-      401,
-    );
+    return c.json({ error: "MCP bearer authentication required", code: "unauthorized" }, 401, {
+      "WWW-Authenticate": "Bearer",
+    });
   }
+  const apiToken = c.env.API_ACCESS_TOKEN?.trim();
   const backend = createMcpApiBackend(async (path) => {
     const request = new Request(new URL(`/api${path}`, c.req.url), {
       method: "GET",
-      headers: { Authorization: `Bearer ${c.env.API_ACCESS_TOKEN}` },
+      headers: { Authorization: `Bearer ${apiToken}` },
     });
     const response = await app.fetch(request, c.env, c.executionCtx);
     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
@@ -174,11 +158,9 @@ app.all("/mcp", async (c) => {
 });
 
 app.get("/artifacts/*", async (c) => {
-  const key = c.req.path.replace(/^\/api\/artifacts\//, "");
-  if (!key || key.includes(".."))
-    return c.json({ error: "Invalid artifact key" }, 400);
-  if (!c.env.ARTIFACTS)
-    return c.json({ error: "Artifact storage is not configured" }, 503);
+  const key = artifactKey(c.req.path);
+  if (!key) return c.json({ error: "Invalid artifact key" }, 400);
+  if (!c.env.ARTIFACTS) return c.json({ error: "Artifact storage is not configured" }, 503);
   const object = await c.env.ARTIFACTS.get(key);
   if (!object) return c.json({ error: "Artifact not found" }, 404);
   const headers = new Headers();
@@ -187,6 +169,27 @@ app.get("/artifacts/*", async (c) => {
   headers.set("cache-control", "public, max-age=31536000, immutable");
   return new Response(object.body, { headers });
 });
+
+export function artifactKey(path: string): string | undefined {
+  const encoded = path.replace(/^\/api\/artifacts\//, "");
+  if (!encoded || encoded.includes("\\")) return undefined;
+  let key: string;
+  try {
+    key = decodeURIComponent(encoded);
+  } catch {
+    return undefined;
+  }
+  if (
+    !key ||
+    key.includes("\\") ||
+    key.startsWith("/") ||
+    key.endsWith("/") ||
+    key.split("/").some((part) => part === "" || part === "." || part === "..")
+  ) {
+    return undefined;
+  }
+  return key;
+}
 
 app.get("/access/config", async (c) =>
   c.json(
@@ -208,16 +211,13 @@ app.get("/access/config", async (c) =>
 );
 
 app.post("/access/turnstile", async (c) => {
-  if (!accessProtectionEnabled(c.env))
-    return c.json({ data: { enabled: false } });
+  if (!accessProtectionEnabled(c.env)) return c.json({ data: { enabled: false } });
   const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
   const limit = accessRateLimiter.consume(`turnstile:${ip}`, 10, 10 * 60_000);
   if (!limit.allowed) {
-    return c.json(
-      { error: "Too many verification attempts", code: "rate_limited" },
-      429,
-      { "Retry-After": String(limit.retryAfterSeconds) },
-    );
+    return c.json({ error: "Too many verification attempts", code: "rate_limited" }, 429, {
+      "Retry-After": String(limit.retryAfterSeconds),
+    });
   }
   let token: string | undefined;
   try {
@@ -227,10 +227,7 @@ app.post("/access/turnstile", async (c) => {
     token = undefined;
   }
   if (!token || token.length > 2_048) {
-    return c.json(
-      { error: "A Turnstile token is required", code: "invalid_token" },
-      400,
-    );
+    return c.json({ error: "A Turnstile token is required", code: "invalid_token" }, 400);
   }
   let verified = false;
   try {
@@ -250,31 +247,19 @@ app.post("/access/turnstile", async (c) => {
     );
   }
   if (!verified) {
-    return c.json(
-      { error: "Turnstile verification failed", code: "verification_failed" },
-      403,
-    );
+    return c.json({ error: "Turnstile verification failed", code: "verification_failed" }, 403);
   }
   const cookie = await createAccessCookie(c.env);
   return c.json({ data: { enabled: true, expires_in: cookie.maxAge } }, 200, {
     "Cache-Control": "no-store",
-    "Set-Cookie": accessSetCookie(
-      cookie.value,
-      cookie.maxAge,
-      c.env.APP_ENV === "production",
-    ),
+    "Set-Cookie": accessSetCookie(cookie.value, cookie.maxAge, c.env.APP_ENV === "production"),
   });
 });
 
 app.get("/systems", async (c) => {
   const query = c.req.query("query")?.trim() ?? "";
   const limit = boundedInteger(c.req.query("limit"), 50, 1, 100);
-  const offset = boundedInteger(
-    c.req.query("offset"),
-    0,
-    0,
-    Number.MAX_SAFE_INTEGER,
-  );
+  const offset = boundedInteger(c.req.query("offset"), 0, 0, Number.MAX_SAFE_INTEGER);
   const pattern = `%${query}%`;
   const result = await c.env.DB.prepare(
     `SELECT id, name, version_context, summary, scope_json, related_systems_json,
@@ -303,10 +288,9 @@ app.get("/systems/:id", async (c) => {
     return c.json({ error: "System not found" }, 404);
   }
 
-  const [features, views, tradeOffs, evidence, featureRelations] =
-    await Promise.all([
-      c.env.DB.prepare(
-        `SELECT id, name, category, claim_type, description, benefits_json, costs_json
+  const [features, views, tradeOffs, evidence, featureRelations] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT id, name, category, claim_type, description, benefits_json, costs_json
               , COALESCE((
                 SELECT json_group_array(substr(fe.evidence_id, length(fe.system_id) + 2))
                 FROM feature_evidence fe
@@ -314,11 +298,11 @@ app.get("/systems/:id", async (c) => {
                 ORDER BY fe.evidence_id
               ), '[]') AS evidence_ids_json
        FROM features WHERE system_id = ?1 ORDER BY category, name`,
-      )
-        .bind(system.id)
-        .all<FeatureRow>(),
-      c.env.DB.prepare(
-        `SELECT id, model, question, assumptions_json, claim_type,
+    )
+      .bind(system.id)
+      .all<FeatureRow>(),
+    c.env.DB.prepare(
+      `SELECT id, model, question, assumptions_json, claim_type,
               COALESCE((
                 SELECT json_group_array(substr(mve.evidence_id, length(mathematical_views.system_id) + 2))
                 FROM mathematical_view_evidence mve
@@ -326,37 +310,37 @@ app.get("/systems/:id", async (c) => {
                 ORDER BY mve.evidence_id
               ), '[]') AS evidence_ids_json
        FROM mathematical_views WHERE system_id = ?1 ORDER BY id`,
-      )
-        .bind(system.id)
-        .all<{
-          id: number;
-          model: string;
-          question: string;
-          assumptions_json: string;
-          claim_type: string;
-          evidence_ids_json: string;
-        }>(),
-      c.env.DB.prepare(
-        `SELECT id, feature_id, benefits_json, costs_json
+    )
+      .bind(system.id)
+      .all<{
+        id: number;
+        model: string;
+        question: string;
+        assumptions_json: string;
+        claim_type: string;
+        evidence_ids_json: string;
+      }>(),
+    c.env.DB.prepare(
+      `SELECT id, feature_id, benefits_json, costs_json
        FROM trade_offs WHERE system_id = ?1 ORDER BY id`,
-      )
-        .bind(system.id)
-        .all<{
-          id: number;
-          feature_id: string;
-          benefits_json: string;
-          costs_json: string;
-        }>(),
-      c.env.DB.prepare(
-        `SELECT substr(id, length(system_id) + 2) AS id, kind, title, uri, accessed, notes
+    )
+      .bind(system.id)
+      .all<{
+        id: number;
+        feature_id: string;
+        benefits_json: string;
+        costs_json: string;
+      }>(),
+    c.env.DB.prepare(
+      `SELECT substr(id, length(system_id) + 2) AS id, kind, title, uri, accessed, notes
        FROM evidence WHERE system_id = ?1 ORDER BY id`,
-      )
-        .bind(system.id)
-        .all<EvidenceRow>(),
-      c.env.DB.prepare(featureRelationQuery("source_system_id = ?1"))
-        .bind(system.id)
-        .all<FeatureRelationRow>(),
-    ]);
+    )
+      .bind(system.id)
+      .all<EvidenceRow>(),
+    c.env.DB.prepare(featureRelationQuery("source_system_id = ?1"))
+      .bind(system.id)
+      .all<FeatureRelationRow>(),
+  ]);
 
   return c.json({
     data: {
@@ -401,9 +385,7 @@ app.get("/feature-relations", async (c) => {
   const limit = boundedInteger(c.req.query("limit"), 100, 1, 200);
   bindings.push(limit);
   const where = filters.length ? filters.join(" AND ") : "1 = 1";
-  const result = await c.env.DB.prepare(
-    featureRelationQuery(where, `LIMIT ?${bindings.length}`),
-  )
+  const result = await c.env.DB.prepare(featureRelationQuery(where, `LIMIT ?${bindings.length}`))
     .bind(...bindings)
     .all<FeatureRelationRow>();
 
@@ -492,12 +474,8 @@ app.get("/modeling/:id", async (c) => {
     }>();
 
   if (!row) return c.json({ error: "Modeling bundle not found" }, 404);
-  const bundle = parseJson<Record<string, unknown> | null>(
-    row.bundle_json,
-    null,
-  );
-  if (!bundle)
-    return c.json({ error: "Stored modeling bundle is invalid" }, 500);
+  const bundle = parseJson<Record<string, unknown> | null>(row.bundle_json, null);
+  if (!bundle) return c.json({ error: "Stored modeling bundle is invalid" }, 500);
   return c.json({ data: bundle });
 });
 
@@ -562,15 +540,9 @@ export function buildCompositions(
 ): CompositionResult[] {
   return systems
     .flatMap((system) => {
-      const composition = parseJson<Record<string, unknown> | null>(
-        system.composition_json,
-        null,
-      );
+      const composition = parseJson<Record<string, unknown> | null>(system.composition_json, null);
       if (!isCompositionRecord(composition)) return [];
-      if (
-        inputSystem &&
-        !composition.inputs.some((input) => input.system_id === inputSystem)
-      ) {
+      if (inputSystem && !composition.inputs.some((input) => input.system_id === inputSystem)) {
         return [];
       }
       if (claimStatus && composition.claim_status !== claimStatus) return [];
@@ -593,9 +565,10 @@ function compositionEvidence(
   composition: { evidence_ids: string[] },
 ): EvidenceRow[] {
   const byId = new Map(
-    parseJsonArray<EvidenceRow>(system.evidence_json ?? null).map(
-      (evidence) => [evidence.id, evidence],
-    ),
+    parseJsonArray<EvidenceRow>(system.evidence_json ?? null).map((evidence) => [
+      evidence.id,
+      evidence,
+    ]),
   );
   return composition.evidence_ids.flatMap((id) => {
     const evidence = byId.get(id);
@@ -603,13 +576,8 @@ function compositionEvidence(
   });
 }
 
-function typedRelationEdges(
-  system: GraphSystem,
-  knownSystemIds: Set<string>,
-): GraphEdge[] {
-  const relations = parseJsonArray<Record<string, unknown>>(
-    system.relations_json,
-  ).filter(isRecord);
+function typedRelationEdges(system: GraphSystem, knownSystemIds: Set<string>): GraphEdge[] {
+  const relations = parseJsonArray<Record<string, unknown>>(system.relations_json).filter(isRecord);
   return relations.flatMap((relation) => {
     const target = stringValue(relation.target);
     const type = stringValue(relation.type);
@@ -628,18 +596,13 @@ function typedRelationEdges(
   });
 }
 
-function legacyRelationEdges(
-  system: GraphSystem,
-  knownSystemIds: Set<string>,
-): GraphEdge[] {
-  return parseJsonArray<string>(system.related_systems_json).flatMap(
-    (target) => {
-      const normalizedTarget = stringValue(target);
-      return normalizedTarget && knownSystemIds.has(normalizedTarget)
-        ? [{ source: system.id, target: normalizedTarget, type: "related" }]
-        : [];
-    },
-  );
+function legacyRelationEdges(system: GraphSystem, knownSystemIds: Set<string>): GraphEdge[] {
+  return parseJsonArray<string>(system.related_systems_json).flatMap((target) => {
+    const normalizedTarget = stringValue(target);
+    return normalizedTarget && knownSystemIds.has(normalizedTarget)
+      ? [{ source: system.id, target: normalizedTarget, type: "related" }]
+      : [];
+  });
 }
 
 function serializeSystem(system: SystemRow) {
@@ -650,18 +613,9 @@ function serializeSystem(system: SystemRow) {
     summary: system.summary,
     scope: parseJson<string[]>(system.scope_json, []),
     related_systems: parseJson<string[]>(system.related_systems_json, []),
-    temporal_context: parseJson<Record<string, unknown> | null>(
-      system.temporal_context_json,
-      null,
-    ),
-    relations: parseJson<Array<Record<string, unknown>>>(
-      system.relations_json,
-      [],
-    ),
-    composition: parseJson<Record<string, unknown> | null>(
-      system.composition_json,
-      null,
-    ),
+    temporal_context: parseJson<Record<string, unknown> | null>(system.temporal_context_json, null),
+    relations: parseJson<Array<Record<string, unknown>>>(system.relations_json, []),
+    composition: parseJson<Record<string, unknown> | null>(system.composition_json, null),
     source_path: system.source_path,
   };
 }
@@ -755,9 +709,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isCompositionRecord(
-  value: Record<string, unknown> | null,
-): value is Record<string, unknown> & {
+function isCompositionRecord(value: Record<string, unknown> | null): value is Record<
+  string,
+  unknown
+> & {
   inputs: Array<Record<string, unknown> & { system_id: string }>;
   claim_status: string;
   constraints: unknown[];
@@ -773,15 +728,11 @@ function isCompositionRecord(
   if (
     !Array.isArray(value.evidence_ids) ||
     value.evidence_ids.length === 0 ||
-    !value.evidence_ids.every(
-      (item) => typeof item === "string" && item.length > 0,
-    )
+    !value.evidence_ids.every((item) => typeof item === "string" && item.length > 0)
   ) {
     return false;
   }
-  return value.inputs.every(
-    (input) => isRecord(input) && Boolean(stringValue(input.system_id)),
-  );
+  return value.inputs.every((input) => isRecord(input) && Boolean(stringValue(input.system_id)));
 }
 
 function stringValue(value: unknown): string | undefined {
@@ -796,12 +747,7 @@ function stringArrayValue(value: unknown): string[] | undefined {
   return values.length ? values : undefined;
 }
 
-function boundedInteger(
-  value: string | undefined,
-  fallback: number,
-  min: number,
-  max: number,
-) {
+function boundedInteger(value: string | undefined, fallback: number, min: number, max: number) {
   const parsed = Number.parseInt(value ?? "", 10);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(Math.max(parsed, min), max);

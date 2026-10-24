@@ -16,11 +16,7 @@ type McpBackend = {
     type?: string,
     limit?: number,
   ): Promise<unknown>;
-  listCompositions(
-    inputSystem?: string,
-    claimStatus?: string,
-    limit?: number,
-  ): Promise<unknown>;
+  listCompositions(inputSystem?: string, claimStatus?: string, limit?: number): Promise<unknown>;
   getModelingBundle(systemId: string): Promise<unknown>;
 };
 
@@ -33,32 +29,42 @@ type JsonRpcRequest = {
 
 export function mcpAuthorized(request: Request, token?: string): boolean {
   const expected = token?.trim();
-  return Boolean(
-    expected && request.headers.get("Authorization") === `Bearer ${expected}`,
-  );
+  return Boolean(expected && request.headers.get("Authorization")?.trim() === `Bearer ${expected}`);
 }
 
-export async function handleMcpRequest(
-  request: Request,
-  backend: McpBackend,
-): Promise<Response> {
+export async function handleMcpRequest(request: Request, backend: McpBackend): Promise<Response> {
   if (request.method !== "POST") {
     return new Response(null, { status: 405, headers: { Allow: "POST" } });
   }
-  let message: JsonRpcRequest;
+  const contentType = request.headers.get("Content-Type")?.split(";", 1)[0]?.trim().toLowerCase();
+  if (contentType !== "application/json") {
+    return jsonRpcError(null, -32700, "Content-Type must be application/json");
+  }
+  let body: unknown;
   try {
-    const body = await request.json();
-    if (!isRecord(body)) throw new Error("invalid body");
-    message = body as JsonRpcRequest;
+    body = await request.json();
   } catch {
     return jsonRpcError(null, -32700, "Invalid JSON");
   }
-  const id = message.id ?? null;
-  if (message.jsonrpc !== "2.0" || typeof message.method !== "string") {
+  if (!isRecord(body)) return jsonRpcError(null, -32600, "Invalid Request");
+  const message = body as JsonRpcRequest;
+  const id = isValidId(message.id) ? message.id : null;
+  if (
+    message.jsonrpc !== "2.0" ||
+    typeof message.method !== "string" ||
+    (hasId(message) && !isValidId(message.id))
+  ) {
     return jsonRpcError(id, -32600, "Invalid Request");
   }
-  if (message.method === "notifications/initialized")
+  if (message.method === "notifications/initialized" && !hasId(message))
     return new Response(null, { status: 202 });
+  if (message.method.startsWith("notifications/")) {
+    if (hasId(message)) {
+      return jsonRpcError(id, -32600, "Notifications must not include an id");
+    }
+    return new Response(null, { status: 202 });
+  }
+  if (!hasId(message)) return new Response(null, { status: 202 });
   try {
     switch (message.method) {
       case "initialize":
@@ -89,26 +95,17 @@ export async function handleMcpRequest(
   }
 }
 
-export function createMcpApiBackend(
-  request: (path: string) => Promise<unknown>,
-): McpBackend {
+export function createMcpApiBackend(request: (path: string) => Promise<unknown>): McpBackend {
   return {
     listSystems: () => request("/systems"),
-    getSystem: (systemId) =>
-      request(`/systems/${encodeURIComponent(systemId)}`),
+    getSystem: (systemId) => request(`/systems/${encodeURIComponent(systemId)}`),
     searchFeatures: (query, category, claimType, limit) => {
       const params = new URLSearchParams({ query, limit: String(limit ?? 20) });
       if (category) params.set("category", category);
       if (claimType) params.set("claim_type", claimType);
       return request(`/features?${params}`);
     },
-    listFeatureRelations: (
-      systemId,
-      featureId,
-      targetSystemId,
-      type,
-      limit,
-    ) => {
+    listFeatureRelations: (systemId, featureId, targetSystemId, type, limit) => {
       const params = new URLSearchParams({ limit: String(limit ?? 20) });
       if (systemId) params.set("system_id", systemId);
       if (featureId) params.set("feature_id", featureId);
@@ -122,8 +119,7 @@ export function createMcpApiBackend(
       if (claimStatus) params.set("claim_status", claimStatus);
       return request(`/compositions?${params}`);
     },
-    getModelingBundle: (systemId) =>
-      request(`/modeling/${encodeURIComponent(systemId)}`),
+    getModelingBundle: (systemId) => request(`/modeling/${encodeURIComponent(systemId)}`),
   };
 }
 
@@ -131,17 +127,14 @@ async function callTool(params: unknown, backend: McpBackend) {
   const record = isRecord(params) ? params : {};
   const name = record.name;
   const args = isRecord(record.arguments) ? record.arguments : {};
-  if (typeof name !== "string")
-    throw new Error("tools/call requires a tool name");
+  if (typeof name !== "string") throw new Error("tools/call requires a tool name");
   let value: unknown;
   switch (name) {
     case "list_systems":
       value = await backend.listSystems();
       break;
     case "get_system":
-      value = await backend.getSystem(
-        requiredString(args.system_id, "system_id"),
-      );
+      value = await backend.getSystem(requiredString(args.system_id, "system_id"));
       break;
     case "search_features":
       value = await backend.searchFeatures(
@@ -168,9 +161,7 @@ async function callTool(params: unknown, backend: McpBackend) {
       );
       break;
     case "get_modeling_bundle":
-      value = await backend.getModelingBundle(
-        requiredString(args.system_id, "system_id"),
-      );
+      value = await backend.getModelingBundle(requiredString(args.system_id, "system_id"));
       break;
     default:
       throw new Error(`Unknown tool: ${name}`);
@@ -179,33 +170,69 @@ async function callTool(params: unknown, backend: McpBackend) {
 }
 
 function toolDefinitions() {
-  return [
+  type ToolDefinitionInput = [
+    name: string,
+    description: string,
+    properties: Record<string, unknown>,
+    required?: string[],
+  ];
+  const definitions: ToolDefinitionInput[] = [
     ["list_systems", "List reviewed Mathen architecture cards.", {}],
     [
       "get_system",
       "Get one reviewed architecture card.",
       { system_id: { type: "string" } },
+      ["system_id"],
     ],
     [
       "search_features",
       "Search reviewed reusable architecture features.",
-      { query: { type: "string" } },
+      {
+        query: { type: "string" },
+        category: { type: "string" },
+        claim_type: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 50 },
+      },
+      ["query"],
     ],
     [
       "list_feature_relations",
       "List reviewed evidence-backed feature relations.",
-      {},
+      {
+        system_id: { type: "string" },
+        feature_id: { type: "string" },
+        target_system_id: { type: "string" },
+        type: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 50 },
+      },
+      [],
     ],
-    ["list_compositions", "List reviewed composition proposals.", {}],
+    [
+      "list_compositions",
+      "List reviewed composition proposals.",
+      {
+        input_system: { type: "string" },
+        claim_status: { type: "string" },
+        limit: { type: "integer", minimum: 1, maximum: 50 },
+      },
+      [],
+    ],
     [
       "get_modeling_bundle",
       "Get one fixed-commit modeling bundle.",
       { system_id: { type: "string" } },
+      ["system_id"],
     ],
-  ].map(([name, description, properties]) => ({
+  ];
+  return definitions.map(([name, description, properties, required]) => ({
     name,
     description,
-    inputSchema: { type: "object", properties, additionalProperties: false },
+    inputSchema: {
+      type: "object",
+      properties,
+      additionalProperties: false,
+      ...(required?.length ? { required } : {}),
+    },
   }));
 }
 
@@ -219,7 +246,19 @@ function jsonRpcResult(id: unknown, result: unknown) {
 function jsonRpcError(id: unknown, code: number, message: string) {
   return Response.json(
     { jsonrpc: "2.0", id, error: { code, message } },
-    { status: 400 },
+    { status: 400, headers: { "Mcp-Protocol-Version": "2025-06-18" } },
+  );
+}
+
+function hasId(message: JsonRpcRequest): boolean {
+  return Object.hasOwn(message, "id");
+}
+
+function isValidId(value: unknown): value is string | number | null {
+  return (
+    value === null ||
+    typeof value === "string" ||
+    (typeof value === "number" && Number.isFinite(value))
   );
 }
 
@@ -228,8 +267,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function requiredString(value: unknown, name: string): string {
-  if (typeof value !== "string" || !value.trim())
-    throw new Error(`${name} is required`);
+  if (typeof value !== "string" || !value.trim()) throw new Error(`${name} is required`);
   return value;
 }
 

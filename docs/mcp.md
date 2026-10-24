@@ -10,7 +10,7 @@ canonical system cards.
 The hosted MCP endpoint is a remote HTTPS service:
 
 ```text
-https://mathen.xuepoo.xyz/mcp
+https://mathen.xuepoo.xyz/api/mcp
 ```
 
 The endpoint is stateless and reviewed-only. It requires the `API_ACCESS_TOKEN`

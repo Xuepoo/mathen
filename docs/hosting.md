@@ -132,10 +132,10 @@ until an authenticated draft-review API exists.
 The hosted MCP endpoint is a remote HTTPS endpoint:
 
 ```text
-https://mathen.xuepoo.xyz/mcp
+https://mathen.xuepoo.xyz/api/mcp
 ```
 
-The Worker exposes a stateless, reviewed-only `POST /mcp` endpoint. It requires
+The Worker exposes a stateless, reviewed-only `POST /api/mcp` endpoint. It requires
 the `API_ACCESS_TOKEN` Bearer credential and supports JSON MCP requests for
 `initialize`, `tools/list`, and `tools/call`. It has no session state and never
 exposes filesystem-only drafts. The local stdio server remains available for

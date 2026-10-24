@@ -71,7 +71,7 @@ Hosted MCP and reviewed-card synchronization can also be configured:
 
 ```toml
 [mcp]
-url = "https://mathen.xuepoo.xyz/mcp"
+url = "https://mathen.xuepoo.xyz/api/mcp"
 token_env = "MATHEN_API_TOKEN"
 
 [sync]
