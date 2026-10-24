@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   buildLayeredGraphProjection,
   type LayeredGraphProjection,
@@ -170,7 +171,7 @@ export class FilesystemBackend implements Backend {
         "uv",
         ["run", "mathen", command, resolve(this.repositoryRoot, path)],
         {
-          cwd: resolve(import.meta.dir, "../../.."),
+          cwd: resolve(fileURLToPath(new URL("../../..", import.meta.url))),
           stdio: ["ignore", "ignore", "pipe"],
         },
       );
