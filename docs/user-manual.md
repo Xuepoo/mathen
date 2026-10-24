@@ -37,11 +37,12 @@ data/modeling/      fixed-commit LLM evidence bundles
 Only `data/systems/` is canonical. LLM output must remain under a draft
 directory and cannot overwrite reviewed cards.
 
-The current canonical tree contains 219 reviewed cards. The representative
+The checked-in canonical tree contains 219 reviewed cards. The representative
 repository manifest contains 62 entries, all of which currently have matching
 canonical cards; it is a subset of the canonical tree. MTH-0092 added the
 canonical `bun`, `haskell`, `quickjs`, and `tokio` cards, but did not add those
-IDs to the representative manifest.
+IDs to the representative manifest. These are repository counts, not a
+guarantee that a deployed D1 database has been seeded with the same rows.
 
 ## 2. Schema inventory
 
@@ -458,17 +459,18 @@ consumers.
 The Hono Worker uses the `/api` base path. Successful responses use a
 `{"data": ...}` envelope.
 
-| Endpoint                                                                           | Purpose                                                                 |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `GET /api/health`                                                                  | Worker health and environment                                           |
-| `GET /api/systems?query=&limit=&offset=`                                           | Search reviewed system summaries in stable name/id order                |
-| `GET /api/systems/:id`                                                             | Retrieve one reviewed card projection                                   |
-| `GET /api/features?query=&category=&claim_type=&limit=`                            | Search reviewed features                                                |
-| `GET /api/feature-relations?system_id=&feature_id=&target_system_id=&type=&limit=` | Search reviewed feature relations                                       |
-| `GET /api/compositions?input_system=&claim_status=&limit=`                         | Search reviewed composition proposals, including cited evidence records |
-| `GET /api/modeling/:id`                                                            | Retrieve one fixed-commit modeling bundle                               |
-| `GET /api/graph`                                                                   | Return current system nodes and valid typed or legacy edges             |
-| `GET /api/graph/models`                                                            | Return a navigational system-to-mathematical-model projection           |
+| Endpoint                                                                           | Purpose                                                                   |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `GET /api/health`                                                                  | Worker health and environment                                             |
+| `GET /api/systems?query=&limit=&offset=`                                           | Search reviewed system summaries in stable name/id order                  |
+| `GET /api/systems/:id`                                                             | Retrieve one reviewed card projection                                     |
+| `GET /api/features?query=&category=&claim_type=&limit=`                            | Search reviewed features                                                  |
+| `GET /api/feature-relations?system_id=&feature_id=&target_system_id=&type=&limit=` | Search reviewed feature relations                                         |
+| `GET /api/compositions?input_system=&claim_status=&limit=`                         | Search reviewed composition proposals, including cited evidence records   |
+| `GET /api/modeling/:id`                                                            | Retrieve one fixed-commit modeling bundle                                 |
+| `GET /api/graph`                                                                   | Return current system nodes and valid typed or legacy edges               |
+| `GET /api/graph/layers?origin=`                                                    | Return the reviewed layered graph, optionally scoped by deployment origin |
+| `GET /api/graph/models`                                                            | Return a navigational system-to-mathematical-model projection             |
 
 The current API is read-only. It does not expose draft cards or provide review,
 promotion, or synthesis writes.
@@ -504,19 +506,22 @@ normalized model title, and question; changing those fields changes the key.
 
 The stdio MCP server provides the same read boundary to agents:
 
-| Tool                     | Inputs                                                                                    | Result                                                              |
-| ------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `list_systems`           | optional `include_drafts`                                                                 | System summaries                                                    |
-| `get_system`             | `system_id`, optional `include_drafts`                                                    | One Architecture Card                                               |
-| `search_features`        | `query`, optional `category`, `claim_type`, `include_drafts`, `limit`                     | Matching reusable features                                          |
-| `list_feature_relations` | optional `system_id`, `feature_id`, `target_system_id`, `type`, `include_drafts`, `limit` | Matching evidence-backed feature relations                          |
-| `list_compositions`      | optional `input_system`, `claim_status`, `include_drafts`, `limit`                        | Matching reviewed composition proposals with cited evidence records |
-| `get_modeling_bundle`    | `system_id`                                                                               | Fixed-commit modeling bundle                                        |
+| Tool                     | Inputs                                                                  | Result                                                              |
+| ------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `get_layered_graph`      | optional `origin`                                                       | Reviewed layered graph projection                                   |
+| `list_systems`           | none                                                                    | Reviewed system summaries                                           |
+| `get_system`             | `system_id`                                                             | One reviewed Architecture Card                                      |
+| `search_features`        | `query`, optional `category`, `claim_type`, `limit`                     | Matching reusable features                                          |
+| `list_feature_relations` | optional `system_id`, `feature_id`, `target_system_id`, `type`, `limit` | Matching evidence-backed feature relations                          |
+| `list_compositions`      | optional `input_system`, `claim_status`, `limit`                        | Matching reviewed composition proposals with cited evidence records |
+| `get_modeling_bundle`    | `system_id`                                                             | Fixed-commit modeling bundle                                        |
 
-Without `MATHEN_API_URL`, the server uses the local filesystem. With
-`MATHEN_API_URL`, reviewed system, feature, and bundle reads use the Hono/D1
-API. Draft visibility is filesystem-only and API mode rejects
-`include_drafts=true`.
+Without `MATHEN_API_URL`, the server uses the local filesystem. Filesystem mode
+can include drafts for internal backend queries when explicitly requested, but
+the registered stdio tools expose reviewed records only. With `MATHEN_API_URL`,
+reviewed system, feature, relation, composition, graph, and bundle reads use
+the Hono/D1 API; API mode rejects draft inclusion because the hosted API is
+reviewed-only.
 
 `list_feature_relations` reads source-card-owned, evidence-backed directed
 relations. Its filters select the source system or feature, target system, and
@@ -590,8 +595,9 @@ bun run db:reset:local
 ```
 
 The seed script reads reviewed cards from `data/systems/` and fixed bundles from
-`data/modeling/`, generates deterministic SQL, applies both D1 migrations, and
-loads the relational projection.
+`data/modeling/`, generates deterministic SQL, applies the D1 migrations, and
+loads the relational projection. It does not load drafts, benchmark manifests,
+or other research fixtures.
 
 ### Step 7: Browse through the API or MCP
 

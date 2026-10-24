@@ -386,14 +386,19 @@ populated deployment or a public data surface. Schemas, validators, fixtures,
 and sample benchmark manifests can be present and runnable without loading
 their contents into D1. The API and hosted MCP expose only reviewed rows
 seeded into the configured D1 database; the local filesystem MCP can inspect
-repository artifacts only in its explicit local mode. The research-only
+repository artifacts for internal filesystem-mode calls; registered MCP tools
+expose reviewed records only.
+The research-only
 MTH-0118 harness is documented in
 [`docs/mth-0118-benchmark-harness.md`](docs/mth-0118-benchmark-harness.md); it
 validates supplied manifests and metrics but does not run the benchmark or
 publish results.
 
-The canonical tree currently contains 219 reviewed cards. The representative
-repository manifest contains 62 entries, all with matching canonical cards.
+The checked-in canonical tree currently contains 219 reviewed cards. The
+representative repository manifest contains 62 entries, all with matching
+canonical cards; the four additional canonical cards `bun`, `haskell`, `quickjs`,
+and `tokio` are not manifest entries. These counts are repository snapshots, not
+claims about a deployed database.
 
 The current knowledge graph is intentionally relational and small. D1 is the
 canonical structured store. Vectorize is documented as a planned, optional
@@ -502,9 +507,11 @@ browsing. A local MCP server exposes read-only system, feature, and modeling-
 bundle tools;
 see [`docs/mcp.md`](docs/mcp.md). Set `MATHEN_API_URL=http://localhost:8787/api`
 to make it read reviewed data and modeling bundles through the Hono/D1 API;
-without that variable it uses the local filesystem. A future hosted MCP server
-can call the same API and submit reviewed Architecture Cards generated from a
-local repository.
+without that variable it uses the local filesystem. The hosted MCP transport is
+already available as a reviewed-only, authenticated read surface at the
+configured deployment's `/api/mcp` route; it does not accept card submissions.
+Draft review and promotion remain a filesystem/manual workflow until an
+authenticated write API exists.
 
 Run the standard checks:
 

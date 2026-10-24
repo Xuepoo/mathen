@@ -36,7 +36,8 @@ benchmark manifests remain repository artifacts and do not populate D1 or make
 their contents available through the API or MCP. The hosted card and MCP data
 boundary is reviewed-only; the separate artifact route serves operator-uploaded
 deployment artifacts. The local stdio MCP server can read the repository
-filesystem, including explicitly requested drafts.
+filesystem for internal filesystem-mode calls; its registered tools still
+return reviewed records only.
 
 D1 is intentionally sufficient for the first knowledge graph. Systems,
 features, evidence, mathematical views, trade-offs, and explicit relations are

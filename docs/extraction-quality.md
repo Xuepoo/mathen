@@ -8,19 +8,20 @@ claim.
 
 ## Current collection baseline
 
-The reviewed collection currently contains **154 cards**. A reproducible count
-of `data/systems/*.json` on 2026-10-23 found this feature distribution:
+The reviewed collection snapshot contains **219 cards**. A reproducible count
+of `data/systems/*.json` on 2026-10-25 found this feature distribution:
 
 | Features per card | Cards |
 | ---: | ---: |
 | 2 | 4 |
-| 3 | 74 |
-| 4 | 66 |
-| 5 | 5 |
-| 6 | 3 |
-| 8 | 2 |
+| 3 | 93 |
+| 4 | 91 |
+| 5 | 18 |
+| 6 | 6 |
+| 7 | 3 |
+| 8 | 4 |
 
-Thus **140 of 154 cards (90.9%) have three or four features**. This is a
+Thus **184 of 219 cards (84.0%) have three or four features**. This is a
 review signal, not a target quota: a small card can be correct when its scope
 is narrow, and a larger card can still be shallow. The Temporal correction
 adds independently meaningful boundaries because the evidence supports them;
@@ -30,9 +31,10 @@ it does not treat the frontend's displayed domain count as card metadata.
 
 The current cards and extraction workflow have several known limitations:
 
-- **Shallow structural relations.** Only 3 of 154 cards currently contain a
-  `relations` array, with four total relations (`composes`: 1,
-  `resembles`: 3). Shared feature vocabulary and `related_systems` entries do
+- **Shallow structural relations.** 34 of 219 cards currently contain a
+  `relations` array, with 46 total proposed relations (`uses`: 30,
+  `resembles`: 12, `composes`: 4). Shared feature vocabulary and
+  `related_systems` entries do
   not establish an architectural relation, and source evidence for a relation
   must support the relationship itself.
 - **Inconsistent taxonomy.** Feature categories are descriptive strings rather

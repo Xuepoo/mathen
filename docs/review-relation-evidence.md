@@ -2,7 +2,10 @@
 
 ## Scope and decision rule
 
-This review audits the typed relations currently present in the 154 reviewed
+This review audits a historical relation-review snapshot, not the current
+219-card collection. The current canonical tree contains 46 proposed typed
+relations; this report's counts remain scoped to its recorded snapshot. It
+audits the typed relations currently present in the 154 reviewed
 cards and the bridge candidates recorded by the relation reports. It was run
 against the integrated tree at `fb40053` (`feat(data): expand reviewed
 architecture graph to 154 systems`). The audit is evidence-local: a relation's
