@@ -123,6 +123,201 @@ class LifecyclePolicyTests(unittest.TestCase):
         self.assertFalse(lookup_error["eligible"])
         self.assertIn("not proven", lookup_error["preservation_reason"])
 
+    def test_cleanup_orchestration_preserves_every_pr_and_worktree_safety_state(self):
+        cases = (
+            ("open", {"state": "OPEN"}, {}, False, "open"),
+            ("draft", {"state": "OPEN", "isDraft": True}, {}, False, "draft"),
+            ("merged", {"state": "MERGED"}, {}, True, "merged"),
+            ("closed", {"state": "CLOSED"}, {}, False, "closed"),
+            ("lookup-error", None, {"error": "offline"}, False, "lookup-error"),
+            ("absent", None, {"local": False}, False, "absent"),
+            ("local-only", None, {"local": True}, False, "local-only"),
+            ("unmanaged", {"state": "MERGED"}, {"managed": False}, False, "merged"),
+            ("external", {"state": "MERGED"}, {"external": True}, False, "merged"),
+            ("detached", {"state": "MERGED"}, {"detached": True}, False, "absent"),
+            ("dirty", {"state": "MERGED"}, {"dirty": True}, False, "merged"),
+            ("active", {"state": "MERGED"}, {"active": True}, False, "merged"),
+        )
+        for name, payload, options, expected_eligible, expected_state in cases:
+            with self.subTest(name=name):
+                path = f"/repo/{name}"
+                request = {
+                    "id": name,
+                    "state": "pending",
+                    "branch": f"carryctx/{name}",
+                    "task_status": "completed",
+                    "worktree_path": path,
+                }
+                worktree = {
+                    "resolved_path": path,
+                    "path": path,
+                    "branch": request["branch"],
+                    "managed": options.get("managed", True),
+                    "external": options.get("external", False),
+                    "detached": options.get("detached", False),
+                    "missing": not options.get("local", True),
+                    "dirty": options.get("dirty", False),
+                }
+                state = {
+                    "cleanup_requests": [request],
+                    "worktrees": [{"path": path}],
+                    "sessions": (
+                        [{"id": "s1", "state": "active", "cwd": path}]
+                        if options.get("active")
+                        else []
+                    ),
+                }
+                lookup = LIFECYCLE.PullRequestLookup(
+                    payload,
+                    [payload] if payload else [],
+                    "github-cli",
+                    options.get("error"),
+                )
+                with (
+                    patch.object(LIFECYCLE, "carryctx_state", return_value=state),
+                    patch.object(
+                        LIFECYCLE, "git_worktree_inventory", return_value=[worktree]
+                    ),
+                    patch.object(
+                        LIFECYCLE, "lookup_pull_request", return_value=lookup
+                    ) as lookup_pr,
+                    patch.object(LIFECYCLE.subprocess, "run") as run,
+                ):
+                    report = LIFECYCLE.cleanup_orchestration(
+                        Path("/repo"), worktree_path=path
+                    )
+
+                item = report["requests"][0]
+                self.assertEqual(item["pull_request"]["state"], expected_state)
+                self.assertEqual(item["eligibility"]["eligible"], expected_eligible)
+                self.assertEqual(item["branch_policy"]["delete_branch"], "never")
+                self.assertFalse(report["native_cleanup_dispatched"])
+                self.assertFalse(report["mutation_performed"])
+                run.assert_not_called()
+                if options.get("detached"):
+                    lookup_pr.assert_not_called()
+
+    def test_cleanup_orchestration_confirmation_is_preview_only(self):
+        path = "/repo/merged"
+        request = {
+            "id": "merged-request",
+            "state": "pending",
+            "branch": "carryctx/merged",
+            "task_status": "completed",
+            "worktree_path": path,
+        }
+        state = {
+            "cleanup_requests": [request],
+            "worktrees": [{"path": path}],
+            "sessions": [],
+        }
+        worktree = {
+            "resolved_path": path,
+            "path": path,
+            "branch": request["branch"],
+            "managed": True,
+            "external": False,
+            "detached": False,
+            "missing": False,
+            "dirty": False,
+        }
+        lookup = LIFECYCLE.PullRequestLookup(
+            {"state": "MERGED"}, [{"state": "MERGED"}], "github-cli"
+        )
+        with (
+            patch.object(LIFECYCLE, "carryctx_state", return_value=state),
+            patch.object(LIFECYCLE, "git_worktree_inventory", return_value=[worktree]),
+            patch.object(LIFECYCLE, "lookup_pull_request", return_value=lookup),
+            patch.object(LIFECYCLE.subprocess, "run") as run,
+        ):
+            preview = LIFECYCLE.cleanup_orchestration(Path("/repo"))
+            confirmed = LIFECYCLE.cleanup_orchestration(
+                Path("/repo"), confirm=True, dry_run=False
+            )
+
+        self.assertTrue(preview["confirmation"]["required"])
+        self.assertEqual(preview["mode"], "dry-run")
+        self.assertFalse(confirmed["confirmation"]["required"])
+        self.assertTrue(confirmed["confirmation"]["requested"])
+        self.assertEqual(confirmed["mode"], "policy-preview")
+        self.assertFalse(confirmed["native_cleanup_dispatched"])
+        self.assertFalse(confirmed["mutation_performed"])
+        run.assert_not_called()
+
+    def test_blocked_outbox_request_remains_preserved(self):
+        state = {
+            "cleanup_requests": [
+                {
+                    "id": "blocked",
+                    "state": "blocked",
+                    "blocked_reason": "dirty",
+                    "worktree_path": "/repo/task",
+                }
+            ],
+            "worktrees": [],
+            "sessions": [],
+        }
+        with (
+            patch.object(LIFECYCLE, "carryctx_state", return_value=state),
+            patch.object(LIFECYCLE, "git_worktree_inventory", return_value=[]),
+            patch.object(LIFECYCLE, "lookup_pull_request") as lookup_pr,
+        ):
+            report = LIFECYCLE.cleanup_orchestration(Path("/repo"))
+
+        item = report["requests"][0]
+        self.assertFalse(item["eligibility"]["eligible"])
+        self.assertIn("dirty", item["eligibility"]["preservation_reason"])
+        lookup_pr.assert_not_called()
+
+    def test_local_only_requires_explicit_operator_policy_switch(self):
+        path = "/repo/local"
+        request = {
+            "id": "local-request",
+            "state": "pending",
+            "branch": "carryctx/local",
+            "task_status": "completed",
+            "worktree_path": path,
+        }
+        state = {
+            "cleanup_requests": [request],
+            "worktrees": [{"path": path}],
+            "sessions": [],
+        }
+        worktree = {
+            "resolved_path": path,
+            "path": path,
+            "branch": request["branch"],
+            "managed": True,
+            "external": False,
+            "detached": False,
+            "missing": False,
+            "dirty": False,
+        }
+        lookup = LIFECYCLE.PullRequestLookup(None, [], "github-cli")
+        with (
+            patch.object(LIFECYCLE, "carryctx_state", return_value=state),
+            patch.object(LIFECYCLE, "git_worktree_inventory", return_value=[worktree]),
+            patch.object(LIFECYCLE, "lookup_pull_request", return_value=lookup),
+        ):
+            without_switch = LIFECYCLE.cleanup_orchestration(Path("/repo"))
+            with_switch = LIFECYCLE.cleanup_orchestration(
+                Path("/repo"), local_deliverable=True, confirm=True
+            )
+
+        self.assertFalse(without_switch["eligible"])
+        self.assertEqual(len(with_switch["eligible"]), 1)
+
+    def test_cleanup_parser_exposes_safe_operator_controls(self):
+        args = LIFECYCLE.build_parser().parse_args(
+            ["cleanup", "MTH-0126", "--worktree", "/repo/task", "--confirm"]
+        )
+
+        self.assertEqual(args.command, "cleanup")
+        self.assertEqual(args.task_ref, "MTH-0126")
+        self.assertEqual(args.worktree, "/repo/task")
+        self.assertTrue(args.confirm)
+        self.assertFalse(args.dry_run)
+
     def test_cleanup_observability_normalizes_operator_fields(self):
         report = LIFECYCLE.cleanup_audit(
             [{"id": "blocked", "state": "blocked", "blocked_reason": "dirty"}]

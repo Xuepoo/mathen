@@ -4,7 +4,9 @@
 CarryCtx currently exposes verification commands and Git hooks, but does not
 invoke project verification as part of ``task complete``.  This module is the
 repository-owned, fail-closed adapter for that gap.  It never removes a
-worktree, branch, or file; cleanup remains CarryCtx's gated operation.
+worktree, branch, or file; cleanup remains CarryCtx's gated operation.  The
+cleanup command is a policy/preview gate because native CarryCtx cleanup has no
+PR-state input.
 """
 
 from __future__ import annotations
@@ -378,6 +380,228 @@ def cleanup_audit(requests: list[dict[str, Any]]) -> dict[str, Any]:
         "retryable": retryable,
         "retry_command": "carryctx worktree cleanup run --dry-run",
         "mutation_performed": False,
+    }
+
+
+def _cleanup_task_completed(root: Path, request: dict[str, Any]) -> bool:
+    """Confirm task completion without treating a lookup failure as success."""
+
+    explicit = request.get("task_completed")
+    if isinstance(explicit, bool):
+        return explicit
+    status = request.get("task_status")
+    if isinstance(status, str):
+        return status == "completed"
+    task_ref = request.get("task_id") or request.get("task_ref")
+    if not task_ref:
+        return False
+    try:
+        task = _envelope(["carryctx", "task", "show", str(task_ref), "--json"], root)[
+            "data"
+        ]
+    except (OSError, RuntimeError):
+        return False
+    return isinstance(task, dict) and task.get("status") == "completed"
+
+
+def cleanup_orchestration(
+    root: Path,
+    *,
+    task_ref: str | None = None,
+    worktree_path: str | None = None,
+    local_deliverable: bool = False,
+    dry_run: bool = True,
+    confirm: bool = False,
+) -> dict[str, Any]:
+    """Build a PR-aware cleanup plan without dispatching native cleanup.
+
+    The outbox is authoritative for which cleanup requests exist, while the
+    repository-owned branch policy is authoritative for whether a request is
+    eligible.  Native ``carryctx worktree cleanup run`` cannot consume the
+    selected PR state, so even an explicit confirmation remains a preview
+    acknowledgement.  This function never mutates Git, CarryCtx, or files.
+    """
+
+    state = carryctx_state(root)
+    requests = state["cleanup_requests"]
+    selected_path = (
+        str(Path(worktree_path).expanduser().resolve(strict=False))
+        if worktree_path
+        else None
+    )
+    selected_task_id: str | None = None
+    if task_ref:
+        task = _envelope(["carryctx", "task", "show", task_ref, "--json"], root)["data"]
+        if not isinstance(task, dict) or not task.get("id"):
+            raise RuntimeError(f"task lookup returned no usable task for {task_ref!r}")
+        selected_task_id = str(task["id"])
+    if task_ref or selected_path:
+        requests = [
+            request
+            for request in requests
+            if (
+                not task_ref
+                or selected_task_id
+                in {
+                    str(request.get("task_id", "")),
+                    str(request.get("task_ref", "")),
+                    str(request.get("task_display_id", "")),
+                }
+            )
+            and (
+                not selected_path
+                or str(
+                    Path(str(request.get("worktree_path", "")))
+                    .expanduser()
+                    .resolve(strict=False)
+                )
+                == selected_path
+            )
+        ]
+    outbox = cleanup_audit(requests)
+    inventory = git_worktree_inventory(root, state.get("worktrees", []))
+    inventory_by_path = {
+        str(Path(item["resolved_path"])): item
+        for item in inventory
+        if item.get("resolved_path")
+    }
+    sessions = state.get("sessions", state.get("active_sessions", []))
+    planned: list[dict[str, Any]] = []
+
+    for request in outbox["requests"]:
+        item = dict(request)
+        if request["state"] in {"completed", "cancelled"}:
+            item.update(
+                {
+                    "branch_policy": None,
+                    "eligibility": {
+                        "eligible": False,
+                        "decision": "preserve",
+                        "preservation_reason": request["preservation_reason"],
+                    },
+                    "action": "preserve; historical outbox record",
+                }
+            )
+            planned.append(item)
+            continue
+        if request["state"] not in SAFE_RETRY_CLEANUP_STATES:
+            item.update(
+                {
+                    "branch_policy": None,
+                    "eligibility": {
+                        "eligible": False,
+                        "decision": "preserve",
+                        "preservation_reason": request["preservation_reason"],
+                    },
+                    "action": f"preserve; {request['preservation_reason']}",
+                }
+            )
+            planned.append(item)
+            continue
+
+        raw_path = request.get("worktree_path")
+        path = Path(str(raw_path)).expanduser() if raw_path else None
+        resolved_path = str(path.resolve(strict=False)) if path else None
+        worktree = inventory_by_path.get(resolved_path) if resolved_path else None
+        branch = request.get("branch") or (worktree or {}).get("branch")
+        detached = bool((worktree or {}).get("detached"))
+        managed = bool((worktree or {}).get("managed"))
+        external = bool((worktree or {}).get("external"))
+        dirty = (worktree or {}).get("dirty") if worktree else None
+        active = any(
+            session.get("state") in {"active", "paused"}
+            and session.get("cwd")
+            and resolved_path == str(Path(session["cwd"]).resolve(strict=False))
+            for session in sessions
+        )
+        lookup = PullRequestLookup(None, [], "not-applicable")
+        if branch and worktree and not worktree.get("missing") and not detached:
+            try:
+                lookup = lookup_pull_request(path or root, str(branch))
+            except (OSError, RuntimeError) as exc:
+                lookup = PullRequestLookup(None, [], "github-cli", str(exc))
+        pr_state = classify_pr_state(
+            lookup.payload,
+            local_branch=bool(
+                worktree and not worktree.get("missing") and not detached and branch
+            ),
+            lookup_error=lookup.error,
+        )
+        policy = branch_policy(
+            pr_state,
+            lookup_error=lookup.error,
+            detached=detached,
+            managed=managed,
+            external=external,
+            clean=dirty is False if worktree else None,
+            no_active_session=not active,
+            task_completed=_cleanup_task_completed(root, request),
+            local_deliverable=bool(
+                request.get("local_deliverable", False) or local_deliverable
+            ),
+        )
+        eligible = bool(policy["eligible"])
+        if eligible and confirm:
+            action = (
+                "confirmed policy preview; native CarryCtx cleanup was not "
+                "dispatched because it cannot consume PR state"
+            )
+        elif eligible:
+            action = "confirmation required; no cleanup dispatched"
+        else:
+            action = f"preserve; {policy['preservation_reason']}"
+        item.update(
+            {
+                "branch": branch,
+                "worktree_path": raw_path,
+                "pull_request": {
+                    "state": pr_state,
+                    "source": lookup.source,
+                    "error": lookup.error,
+                    "selected": lookup.payload,
+                    "candidates": lookup.candidates,
+                },
+                "branch_policy": policy,
+                "eligibility": policy,
+                "action": action,
+            }
+        )
+        planned.append(item)
+
+    eligible = [item for item in planned if item["eligibility"]["eligible"]]
+    return {
+        "schema_version": 1,
+        "mode": "dry-run" if dry_run else "policy-preview",
+        "confirmation": {
+            "requested": confirm,
+            "required": bool(eligible) and not confirm,
+            "eligible_request_ids": [item["id"] for item in eligible],
+        },
+        "selection": {
+            "task_ref": task_ref,
+            "task_id": selected_task_id,
+            "worktree_path": worktree_path,
+            "local_deliverable": local_deliverable,
+        },
+        "requests": planned,
+        "cleanup": outbox,
+        "eligible": eligible,
+        "native_cleanup_dispatched": False,
+        "mutation_performed": False,
+        "action": (
+            "preserve; no cleanup request passed all repository policy gates"
+            if not eligible
+            else (
+                "confirmation required; preview only"
+                if not confirm
+                else "confirmed preview; operator must invoke native cleanup separately"
+            )
+        ),
+        "upstream_boundary": (
+            "CarryCtx 0.12 cleanup run accepts its own outbox gates but no "
+            "repository PR-state decision; this command therefore never "
+            "dispatches native cleanup or bypasses the policy gate"
+        ),
     }
 
 
@@ -1061,15 +1285,35 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "command",
-        choices=("verify", "complete", "complete-verified", "audit", "observe"),
+        choices=(
+            "verify",
+            "complete",
+            "complete-verified",
+            "audit",
+            "observe",
+            "cleanup",
+        ),
         help=(
             "complete-verified is the recommended repository-owned wrapper; "
-            "complete is retained for compatibility"
+            "cleanup is a PR-aware preview; complete is retained for compatibility"
         ),
     )
     parser.add_argument("task_ref", nargs="?")
     parser.add_argument(
         "--branch", help="branch to observe instead of the current branch"
+    )
+    parser.add_argument(
+        "--worktree", help="limit cleanup preview to this worktree path"
+    )
+    parser.add_argument(
+        "--confirm",
+        action="store_true",
+        help="explicitly acknowledge eligible cleanup requests (still preview-only)",
+    )
+    parser.add_argument(
+        "--local-deliverable",
+        action="store_true",
+        help="enable the existing local-only deliverable policy gate",
     )
     parser.add_argument("--profile", default="full")
     parser.add_argument("--dry-run", action="store_true")
@@ -1095,6 +1339,17 @@ def main(argv: list[str] | None = None) -> int:
             result = observe(root, args.branch, dry_run=args.dry_run)
             print(json.dumps(result, indent=2, sort_keys=True))
             return 0
+        if args.command == "cleanup":
+            result = cleanup_orchestration(
+                root,
+                task_ref=args.task_ref,
+                worktree_path=args.worktree,
+                local_deliverable=args.local_deliverable,
+                dry_run=True,
+                confirm=args.confirm,
+            )
+            print(json.dumps(result, indent=2, sort_keys=True))
+            return EXIT_UNSAFE if result["confirmation"]["required"] else 0
         if args.command == "verify":
             if args.dry_run:
                 print(

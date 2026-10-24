@@ -124,6 +124,44 @@ edits CarryCtx SQLite, prunes Git metadata, or removes a worktree or branch.
 Use CarryCtx's own cleanup command only as an explicit, separately reviewed
 operation. Re-running `observe` is idempotent and has no side effects.
 
+## PR-aware cleanup preview and confirmation
+
+MTH-0126 adds a repository-owned operator gate that joins each selected
+CarryCtx cleanup outbox request with the existing PR-aware `branch_policy` and
+`cleanup_eligibility` decisions:
+
+```bash
+# Dry-run is the default; select one task or worktree when needed.
+uv run python scripts/carryctx_lifecycle.py cleanup MTH-0126 --json
+uv run python scripts/carryctx_lifecycle.py cleanup \
+  --worktree /path/to/worktree --json
+
+# A local-only deliverable requires the explicit existing policy switch.
+uv run python scripts/carryctx_lifecycle.py cleanup MTH-0126 \
+  --local-deliverable --confirm --json
+
+# Explicitly acknowledge eligible requests. This remains a policy preview.
+uv run python scripts/carryctx_lifecycle.py cleanup MTH-0126 --confirm --json
+```
+
+Without `--confirm`, an otherwise eligible request reports
+`confirmation.required = true` and exits with the unsafe status. `--confirm`
+only records the operator's explicit acknowledgement in the output; it does
+not dispatch `carryctx worktree cleanup run`, remove a worktree, delete a
+branch, prune Git metadata, reset files, edit CarryCtx state, or alter the
+outbox. All unsafe requests—including open, draft, closed, lookup-error,
+absent, local-only without an explicit policy switch, unmanaged, external,
+detached, dirty, and active paths—remain preserved. Historical completed and
+cancelled outbox records are retained.
+
+The exact mutation contract is therefore `native_cleanup_dispatched: false`
+and `mutation_performed: false` for every invocation. CarryCtx 0.12's native
+cleanup operation cannot consume the repository's selected PR state, so this
+command intentionally stops at a deterministic policy/preview boundary rather
+than bypassing the safety gates. A future native integration must accept the
+same PR-state, worktree, session, cleanliness, and task-completion evidence
+before dispatch is safe.
+
 The existing CarryCtx Git hooks remain managed by CarryCtx itself:
 `carryctx hooks status` is read-only, and repeated `carryctx hooks install`
 invocations are the only supported way to reconcile the native hook shims.
