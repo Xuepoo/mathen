@@ -250,8 +250,8 @@ uv run mathen show git
 The CLI supports a cross-platform TOML configuration under the user's standard
 configuration directory. Configure paths and an OpenAI-compatible LLM endpoint
 with `mathen config set`; see [`docs/configuration.md`](docs/configuration.md).
-The repository's first package release is `v0.0.1`. Pushing a matching version
-tag builds and publishes the Python distributions to PyPI through the
+The current package release is `v0.0.2`. Pushing a matching version tag builds
+and publishes the Python distributions to PyPI through the
 `PYPI_API_TOKEN` GitHub Actions secret.
 
 For an installed CLI, download the reviewed cards before browsing them:

@@ -16,7 +16,11 @@ type McpBackend = {
     type?: string,
     limit?: number,
   ): Promise<unknown>;
-  listCompositions(inputSystem?: string, claimStatus?: string, limit?: number): Promise<unknown>;
+  listCompositions(
+    inputSystem?: string,
+    claimStatus?: string,
+    limit?: number,
+  ): Promise<unknown>;
   getModelingBundle(systemId: string): Promise<unknown>;
 };
 
@@ -29,14 +33,24 @@ type JsonRpcRequest = {
 
 export function mcpAuthorized(request: Request, token?: string): boolean {
   const expected = token?.trim();
-  return Boolean(expected && request.headers.get("Authorization")?.trim() === `Bearer ${expected}`);
+  return Boolean(
+    expected &&
+    request.headers.get("Authorization")?.trim() === `Bearer ${expected}`,
+  );
 }
 
-export async function handleMcpRequest(request: Request, backend: McpBackend): Promise<Response> {
+export async function handleMcpRequest(
+  request: Request,
+  backend: McpBackend,
+): Promise<Response> {
   if (request.method !== "POST") {
     return new Response(null, { status: 405, headers: { Allow: "POST" } });
   }
-  const contentType = request.headers.get("Content-Type")?.split(";", 1)[0]?.trim().toLowerCase();
+  const contentType = request.headers
+    .get("Content-Type")
+    ?.split(";", 1)[0]
+    ?.trim()
+    .toLowerCase();
   if (contentType !== "application/json") {
     return jsonRpcError(null, -32700, "Content-Type must be application/json");
   }
@@ -71,7 +85,7 @@ export async function handleMcpRequest(request: Request, backend: McpBackend): P
         return jsonRpcResult(id, {
           protocolVersion: "2025-06-18",
           capabilities: { tools: {} },
-          serverInfo: { name: "mathen-hosted", version: "0.0.1" },
+          serverInfo: { name: "mathen-hosted", version: "0.0.2" },
         });
       case "tools/list":
         return jsonRpcResult(id, { tools: toolDefinitions() });
@@ -95,17 +109,26 @@ export async function handleMcpRequest(request: Request, backend: McpBackend): P
   }
 }
 
-export function createMcpApiBackend(request: (path: string) => Promise<unknown>): McpBackend {
+export function createMcpApiBackend(
+  request: (path: string) => Promise<unknown>,
+): McpBackend {
   return {
     listSystems: () => request("/systems"),
-    getSystem: (systemId) => request(`/systems/${encodeURIComponent(systemId)}`),
+    getSystem: (systemId) =>
+      request(`/systems/${encodeURIComponent(systemId)}`),
     searchFeatures: (query, category, claimType, limit) => {
       const params = new URLSearchParams({ query, limit: String(limit ?? 20) });
       if (category) params.set("category", category);
       if (claimType) params.set("claim_type", claimType);
       return request(`/features?${params}`);
     },
-    listFeatureRelations: (systemId, featureId, targetSystemId, type, limit) => {
+    listFeatureRelations: (
+      systemId,
+      featureId,
+      targetSystemId,
+      type,
+      limit,
+    ) => {
       const params = new URLSearchParams({ limit: String(limit ?? 20) });
       if (systemId) params.set("system_id", systemId);
       if (featureId) params.set("feature_id", featureId);
@@ -119,7 +142,8 @@ export function createMcpApiBackend(request: (path: string) => Promise<unknown>)
       if (claimStatus) params.set("claim_status", claimStatus);
       return request(`/compositions?${params}`);
     },
-    getModelingBundle: (systemId) => request(`/modeling/${encodeURIComponent(systemId)}`),
+    getModelingBundle: (systemId) =>
+      request(`/modeling/${encodeURIComponent(systemId)}`),
   };
 }
 
@@ -127,14 +151,17 @@ async function callTool(params: unknown, backend: McpBackend) {
   const record = isRecord(params) ? params : {};
   const name = record.name;
   const args = isRecord(record.arguments) ? record.arguments : {};
-  if (typeof name !== "string") throw new Error("tools/call requires a tool name");
+  if (typeof name !== "string")
+    throw new Error("tools/call requires a tool name");
   let value: unknown;
   switch (name) {
     case "list_systems":
       value = await backend.listSystems();
       break;
     case "get_system":
-      value = await backend.getSystem(requiredString(args.system_id, "system_id"));
+      value = await backend.getSystem(
+        requiredString(args.system_id, "system_id"),
+      );
       break;
     case "search_features":
       value = await backend.searchFeatures(
@@ -161,7 +188,9 @@ async function callTool(params: unknown, backend: McpBackend) {
       );
       break;
     case "get_modeling_bundle":
-      value = await backend.getModelingBundle(requiredString(args.system_id, "system_id"));
+      value = await backend.getModelingBundle(
+        requiredString(args.system_id, "system_id"),
+      );
       break;
     default:
       throw new Error(`Unknown tool: ${name}`);
@@ -267,7 +296,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function requiredString(value: unknown, name: string): string {
-  if (typeof value !== "string" || !value.trim()) throw new Error(`${name} is required`);
+  if (typeof value !== "string" || !value.trim())
+    throw new Error(`${name} is required`);
   return value;
 }
 
