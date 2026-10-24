@@ -28,6 +28,8 @@ export type Feature = {
   benefits?: string[];
   costs?: string[];
   evidence_ids: string[];
+  claim_status?: string;
+  validity_scope?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
 };
 
@@ -581,7 +583,14 @@ function toProjectionSystem(card: ArchitectureCard): ProjectionSystem {
     id: card.id,
     name: card.name,
     scope: card.scope,
-    features: card.features,
+    features: card.features.map((feature) => ({
+      ...feature,
+      metadata: {
+        ...feature.metadata,
+        ...(feature.claim_status ? { claim_status: feature.claim_status } : {}),
+        ...(feature.validity_scope ? { validity_scope: feature.validity_scope } : {}),
+      },
+    })),
     mathematical_views: card.mathematical_views.flatMap((view, index) => [
       {
         id:
@@ -596,7 +605,12 @@ function toProjectionSystem(card: ArchitectureCard): ProjectionSystem {
           typeof view.claim_type === "string" ? view.claim_type : "inference",
         claim_status: optionalString(view.claim_status),
         evidence_ids: stringArray(view.evidence_ids),
-        metadata: optionalRecord(view.metadata),
+        metadata: {
+          ...optionalRecord(view.metadata),
+          ...(typeof view.claim_status === "string" ? { claim_status: view.claim_status } : {}),
+          ...(isRecord(view.validity_scope) ? { validity_scope: view.validity_scope } : {}),
+          ...(isRecord(view.contract) ? { contract: view.contract } : {}),
+        },
       },
     ]),
     composition: card.composition ?? null,
