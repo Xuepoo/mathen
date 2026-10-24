@@ -140,34 +140,10 @@ These entries are already present in the repository at different review levels:
 | `mcp` | Model Context Protocol | AI integration protocol | `reviewed` | Compare host/client/server roles, JSON-RPC sessions, capability negotiation, context primitives, and trust boundaries using the pinned specification repository |
 | `openclaw` | OpenClaw | self-hosted AI assistant | `reviewed` | Compare Gateway control-plane ownership, WebSocket client/node protocol, plugin channel routing, and session-scoped tool execution using fixed-commit evidence |
 
-The operational manifest now contains 52 repositories. The following entries
-were added during the foundational catalog expansion and are ready for bounded
-deterministic analysis, but they do not yet have reviewed Architecture Cards:
-
-| ID | Name | Domain | Priority |
-| --- | --- | --- | --- |
-| `cpython` | CPython | language runtime | `P1` |
-| `rust` | Rust | language toolchain | `P1` |
-| `go` | Go | language toolchain | `reviewed` | Compare goroutine/channel ordering, package interfaces, and toolchain integration using fixed-commit evidence |
-| `ruby` | Ruby | language runtime | `reviewed` | Compare dynamic object dispatch, VM frames, GC, and the C extension boundary using fixed-commit evidence |
-| `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
-| `xv6-public` | xv6 | educational operating system | `reviewed` | Compare process scheduling, paging, descriptor I/O, and logged filesystems using fixed-commit evidence |
-| `libuv` | libuv | asynchronous I/O library | `reviewed` | Compare event-loop, handle/request, cross-platform, and thread-pool boundaries using fixed-commit evidence |
-| `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
-| `aria2` | aria2 | download utility | `reviewed` | Compare request-group scheduling, segmented transfers, protocol-specific piece storage, and RPC control using fixed-commit evidence |
-| `rsync` | rsync | file synchronization tool | `reviewed` | Compare file-list planning, block-signature delta transfer, remote-shell/daemon transports, and metadata update policies using fixed-commit evidence |
-| `scp` | OpenSSH scp | file-copy utility | `reviewed` | Compare SSH-backed copy orchestration, SFTP-default and legacy SCP paths, and recursive source/sink state using fixed-commit evidence |
-| `ssh` | OpenSSH ssh | secure remote access tool | `reviewed` | Compare layered transport/authentication, multiplexed flow-controlled channels, and session/forwarding services using fixed-commit evidence |
-| `mosh` | Mosh | remote terminal | `reviewed` | Compare SSH bootstrap, authenticated UDP terminal synchronization, roaming, and predictive local echo using fixed-commit evidence |
-| `openssl` | OpenSSL | cryptography library | `reviewed` |
-| `protobuf` | Protocol Buffers | serialization protocol | `P1` |
-| `grpc` | gRPC | RPC framework | `P1` |
-| `mosquitto` | Eclipse Mosquitto | messaging protocol | `reviewed` |
-| `mysql-server` | MySQL Server | database | `reviewed` |
-| `rocksdb` | RocksDB | embedded database | `reviewed` |
-| `threejs` | Three.js | 3D graphics library | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
-| `blender` | Blender | 3D graphics application | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
-| `sdl` | SDL | multimedia library | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
+The operational manifest currently contains 62 repositories, and every manifest
+ID has a matching reviewed Architecture Card under `data/systems/`. The four
+cards added by MTH-0092—`bun`, `haskell`, `quickjs`, and `tokio`—are canonical
+reviewed cards but are not entries in `data/repositories/representative.json`.
 
 ## Catalog
 

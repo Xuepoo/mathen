@@ -1,8 +1,12 @@
-# Final reviewed relation graph report
+# Reviewed relation graph report (172-card historical snapshot)
 
 ## Scope and interpretation
 
-This report covers the current `172` reviewed Architecture Cards under `data/systems/`. It distinguishes typed evidence-backed relations from legacy navigation metadata and from the separate mathematical-model projection. It does not add edges merely to remove isolated nodes.
+This report records a historical snapshot of `172` reviewed Architecture Cards
+under `data/systems/`; the current canonical tree contains 219 cards. The
+snapshot distinguishes typed evidence-backed relations from legacy navigation
+metadata and from the separate mathematical-model projection. It does not add
+edges merely to remove isolated nodes.
 
 A typed relation is directional and remains `proposed` until deliberate review accepts it. Its evidence IDs must be local to the source card. A legacy `related` edge is navigation context and carries no typed claim. A model-neighborhood edge groups explicitly named mathematical views; it is not a dependency or equivalence claim.
 
@@ -38,7 +42,13 @@ The remaining isolates have no recorded connection in this projection; some stil
 
 ## Mathematical model neighborhood
 
-The `/api/graph/models` projection currently exposes **172 system nodes**, **242 model nodes**, and **468 `modeled-by` links** from reviewed mathematical views. It is a bipartite navigational graph. The model hubs preserve each view’s model name, question, assumptions, claim type, and source-local evidence IDs. Shared placement in a hub indicates matching model-title wording; it does not establish common implementation, a shared law, formal proof, historical influence, or composition compatibility.
+In this snapshot, the `/api/graph/models` projection exposes **172 system
+nodes**, **242 model nodes**, and **468 `modeled-by` links** from reviewed
+mathematical views. It is a bipartite navigational graph. The model hubs
+preserve each view’s model name, question, assumptions, claim type, and
+source-local evidence IDs. Shared placement in a hub indicates matching
+model-title wording; it does not establish common implementation, a shared
+law, formal proof, historical influence, or composition compatibility.
 
 A view may belong to multiple navigation families. All **481** distinct view keys are retained. Keys derive from the source system, normalized model title, and question, so reseeding database row IDs does not change them; changing those identity fields does. Aggregate edges retain a shared claim type or report `mixed` when their views differ. Each view's own claim type remains available.
 
@@ -66,4 +76,7 @@ uv run mathen validate
 just check
 ```
 
-The graph counts above can be recomputed from canonical JSON by resolving typed relation targets and valid `related_systems` targets, then finding undirected connected components. Draft cards are not included.
+The graph counts above can be recomputed from the 172-card snapshot by resolving
+typed relation targets and valid `related_systems` targets, then finding
+undirected connected components. They are historical report metrics, not a
+current inventory. Draft cards are not included.

@@ -37,6 +37,12 @@ data/modeling/      fixed-commit LLM evidence bundles
 Only `data/systems/` is canonical. LLM output must remain under a draft
 directory and cannot overwrite reviewed cards.
 
+The current canonical tree contains 219 reviewed cards. The representative
+repository manifest contains 62 entries, all of which currently have matching
+canonical cards; it is a subset of the canonical tree. MTH-0092 added the
+canonical `bun`, `haskell`, `quickjs`, and `tokio` cards, but did not add those
+IDs to the representative manifest.
+
 ## 2. Schema inventory
 
 | Contract            | File or source                          | Role                                       |
@@ -456,6 +462,7 @@ The stdio MCP server provides the same read boundary to agents:
 | `list_systems`        | optional `include_drafts`                                             | System summaries                                                    |
 | `get_system`          | `system_id`, optional `include_drafts`                                | One Architecture Card                                               |
 | `search_features`     | `query`, optional `category`, `claim_type`, `include_drafts`, `limit` | Matching reusable features                                          |
+| `list_feature_relations` | optional `system_id`, `feature_id`, `target_system_id`, `type`, `include_drafts`, `limit` | Matching evidence-backed feature relations |
 | `list_compositions`   | optional `input_system`, `claim_status`, `include_drafts`, `limit`    | Matching reviewed composition proposals with cited evidence records |
 | `get_modeling_bundle` | `system_id`                                                           | Fixed-commit modeling bundle                                        |
 
