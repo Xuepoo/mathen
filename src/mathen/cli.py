@@ -49,6 +49,7 @@ from .negative_knowledge import (
     NegativeKnowledgeValidationError,
     discover_negative_knowledge,
     load_negative_knowledge,
+    validate_negative_knowledge_collection,
 )
 from .relation_candidates import (
     RelationCandidateError,
@@ -350,8 +351,11 @@ def validate_negative_knowledge_command(path: Path) -> int:
     if not paths:
         print(f"No negative-knowledge records found in {path}; nothing to validate")
         return 0
+    records = []
     for record_path in paths:
-        load_negative_knowledge(record_path)
+        records.append(load_negative_knowledge(record_path))
+    validate_negative_knowledge_collection(records)
+    for record_path in paths:
         print(f"valid  {record_path}")
     return 0
 

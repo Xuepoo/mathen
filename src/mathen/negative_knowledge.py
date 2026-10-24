@@ -14,7 +14,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 NEGATIVE_KNOWLEDGE_SCHEMA_VERSION = "1.0"
 NEGATIVE_KNOWLEDGE_KINDS = frozenset(
@@ -229,6 +229,42 @@ def validate_negative_knowledge(
         _string(label, "notes", value["notes"])
 
 
+def validate_negative_knowledge_collection(
+    records: Iterable[NegativeKnowledgeRecord | dict[str, Any]],
+) -> None:
+    """Validate local records and resolve lifecycle links within a collection."""
+
+    values: list[dict[str, Any]] = []
+    record_by_id: dict[str, dict[str, Any]] = {}
+    for record in records:
+        value = (
+            record.to_dict() if isinstance(record, NegativeKnowledgeRecord) else record
+        )
+        validate_negative_knowledge(value)
+        record_id = value["id"]
+        if record_id in record_by_id:
+            raise NegativeKnowledgeValidationError(
+                f"duplicate negative-knowledge id: {record_id}"
+            )
+        record_by_id[record_id] = value
+        values.append(value)
+
+    for value in values:
+        record_id = value["id"]
+        for related_id in value.get("related_claim_ids", []):
+            if related_id not in record_by_id:
+                raise NegativeKnowledgeValidationError(
+                    f"{record_id}: related_claim_ids references unknown "
+                    f"negative-knowledge record: {related_id}"
+                )
+        replacement_id = value.get("replacement_id")
+        if replacement_id is not None and replacement_id not in record_by_id:
+            raise NegativeKnowledgeValidationError(
+                f"{record_id}: replacement_id references unknown "
+                f"negative-knowledge record: {replacement_id}"
+            )
+
+
 def _scope(label: str, value: Any) -> None:
     required = {
         "systems",
@@ -402,5 +438,6 @@ __all__ = [
     "NegativeKnowledgeValidationError",
     "discover_negative_knowledge",
     "load_negative_knowledge",
+    "validate_negative_knowledge_collection",
     "validate_negative_knowledge",
 ]
