@@ -421,6 +421,8 @@ def _check_evidence_ids(
 
 
 def discover_cards(root: Path) -> list[Path]:
-    """Return cards in deterministic order."""
+    """Return Architecture Cards, excluding protocol audit sidecars."""
 
-    return sorted(root.glob("*.json"))
+    return sorted(
+        path for path in root.glob("*.json") if not path.name.endswith(".protocol.json")
+    )

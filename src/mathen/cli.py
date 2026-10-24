@@ -384,7 +384,12 @@ def model_command(
         api_key_env=str(provider.get("api_key_env", llm.api_key_env)),
     )
     for path in model_bundles(
-        bundle_dir, output_dir, client, system_ids or None, overwrite=force
+        bundle_dir,
+        output_dir,
+        client,
+        system_ids or None,
+        overwrite=force,
+        provider=llm.provider,
     ):
         print(f"draft  {path}")
     return 0

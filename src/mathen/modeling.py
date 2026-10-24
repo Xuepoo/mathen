@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
 from mathen.repositories import load_manifest
 
-MODELING_CONTRACT_VERSION = 1
+MODELING_CONTRACT_VERSION = 2
+LLM_RESEARCH_PROTOCOL_VERSION = "mth-0112-v1"
 
 
 class ModelingBundleError(RuntimeError):
@@ -178,6 +180,29 @@ def build_modeling_bundle(
                 ],
             },
             "required_claim_types": ["fact", "inference", "hypothesis", "analogy"],
+            "claim_protocol": {
+                "required_fields": [
+                    "claim_type",
+                    "claim_status",
+                    "evidence_ids",
+                ],
+                "uncertainty_rule": (
+                    "When evidence is incomplete, state the uncertainty and its "
+                    "scope; use hypothesis or analogy rather than upgrading the "
+                    "claim to fact."
+                ),
+                "disagreement_rule": (
+                    "Record conflicting evidence or reviewer disagreement as an "
+                    "unresolved note in the protocol record; do not silently "
+                    "select a consensus claim."
+                ),
+                "analogy_rule": (
+                    "A cross-domain resemblance is a candidate abstraction only. "
+                    "Label it analogy, name the shared structure and boundary, "
+                    "and do not imply equivalence, dependency, composition, or "
+                    "historical influence without direct evidence."
+                ),
+            },
             "evidence_rules": [
                 "Do not promote a path name or file count into a semantic fact.",
                 "Every feature and mathematical view must cite evidence IDs.",
@@ -200,6 +225,52 @@ def build_modeling_bundle(
                 "schema": "schemas/architecture-card.schema.json",
                 "destination": "data/drafts/<system-id>.json",
                 "status": "draft; requires human review before data/systems promotion",
+                "canonical_boundary": (
+                    "Automated output is never canonical and never proof. A human "
+                    "reviewer must check evidence, claim type, uncertainty, and "
+                    "disagreement before deliberate promotion."
+                ),
+            },
+            "evaluation": {
+                "dimensions": [
+                    "breadth",
+                    "citation_quality",
+                    "error_rate",
+                    "reviewer_usefulness",
+                ],
+                "recording_rule": (
+                    "Evaluate a batch against a reviewed reference or reviewer "
+                    "audit; report each dimension separately rather than reducing "
+                    "quality to one confidence score."
+                ),
+            },
+        },
+        "research_protocol": {
+            "version": LLM_RESEARCH_PROTOCOL_VERSION,
+            "provenance": {
+                "provider": "record the provider name, not a secret",
+                "model": "record the exact model identifier",
+                "prompt_sha256": "record the rendered prompt digest",
+                "evidence_bundle_sha256": "record the input bundle digest",
+                "source_revision": "record system.commit and provenance",
+            },
+            "reproducibility": {
+                "secret_safe": True,
+                "rule": (
+                    "Never store API keys, authorization headers, or raw secret-"
+                    "bearing configuration in bundles, prompts, drafts, or run "
+                    "records."
+                ),
+            },
+            "review": {
+                "required_before_canonical": True,
+                "review_record": [
+                    "reviewer",
+                    "reviewed_at",
+                    "decision",
+                    "uncertainties",
+                    "disagreements",
+                ],
             },
         },
     }
@@ -216,6 +287,54 @@ def render_modeling_prompt(bundle: dict[str, Any]) -> str:
         "evidence, guarantees, or historical influence.\n\n"
         f"MODEL PREPARATION BUNDLE:\n{payload}\n"
     )
+
+
+def protocol_run_record(
+    bundle: dict[str, Any],
+    prompt: str,
+    *,
+    provider: str,
+    model: str,
+) -> dict[str, Any]:
+    """Build a secret-free provenance record for one modeling attempt.
+
+    The record intentionally contains hashes rather than prompt or evidence
+    contents. It can be stored beside an unreviewed draft without becoming a
+    second source of claims.
+    """
+
+    system = bundle.get("system")
+    if not isinstance(system, dict):
+        raise ModelingBundleError("modeling bundle has no system metadata")
+    return {
+        "protocol_version": LLM_RESEARCH_PROTOCOL_VERSION,
+        "system_id": system.get("id"),
+        "source_revision": {
+            "commit": system.get("commit"),
+            "provenance": system.get("provenance"),
+        },
+        "provider": provider,
+        "model": model,
+        "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        "evidence_bundle_sha256": hashlib.sha256(
+            json.dumps(
+                bundle, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            ).encode("utf-8")
+        ).hexdigest(),
+        "secret_safe": True,
+        "review": {
+            "status": "pending",
+            "canonical_promotion": "human review required",
+            "uncertainties": [],
+            "disagreements": [],
+        },
+        "evaluation": {
+            "breadth": None,
+            "citation_quality": None,
+            "error_rate": None,
+            "reviewer_usefulness": None,
+        },
+    }
 
 
 def write_modeling_prompts(bundle_paths: list[Path], prompt_dir: Path) -> list[Path]:

@@ -1,7 +1,11 @@
 import unittest
 from types import SimpleNamespace
 
-from mathen.modeling import build_modeling_bundle, render_modeling_prompt
+from mathen.modeling import (
+    build_modeling_bundle,
+    protocol_run_record,
+    render_modeling_prompt,
+)
 
 
 class ModelingContractTests(unittest.TestCase):
@@ -46,9 +50,62 @@ class ModelingContractTests(unittest.TestCase):
             ],
         )
         self.assertTrue(any("quota" in rule for rule in task["evidence_rules"]))
+        self.assertEqual(
+            task["claim_protocol"]["required_fields"],
+            ["claim_type", "claim_status", "evidence_ids"],
+        )
+        self.assertIn(
+            "cross-domain resemblance", task["claim_protocol"]["analogy_rule"]
+        )
+        self.assertEqual(
+            task["evaluation"]["dimensions"],
+            ["breadth", "citation_quality", "error_rate", "reviewer_usefulness"],
+        )
+        self.assertTrue(
+            task["output"]["canonical_boundary"].startswith("Automated output")
+        )
         self.assertIn(
             "unknown or out of scope",
             render_modeling_prompt(build_modeling_bundle(spec, analysis, draft)),
+        )
+
+    def test_protocol_run_record_is_secret_safe_and_reproducible(self) -> None:
+        spec = SimpleNamespace(
+            id="fixture",
+            name="Fixture",
+            category="test",
+            repository="https://example.com/fixture.git",
+            documentation="https://example.com/docs",
+            ref="main",
+        )
+        bundle = build_modeling_bundle(
+            spec,
+            {
+                "system_id": "fixture",
+                "commit": "a" * 40,
+                "commit_url": "https://example.com/commit/" + "a" * 40,
+                "provenance": "fixture",
+            },
+            {"id": "fixture", "features": [], "evidence": []},
+        )
+        prompt = render_modeling_prompt(bundle)
+        record = protocol_run_record(
+            bundle,
+            prompt,
+            provider="local-test",
+            model="fixture-model",
+        )
+        self.assertEqual(record["protocol_version"], "mth-0112-v1")
+        self.assertEqual(record["provider"], "local-test")
+        self.assertEqual(record["model"], "fixture-model")
+        self.assertTrue(record["secret_safe"])
+        self.assertNotIn("api_key", repr(record))
+        self.assertNotIn(prompt, repr(record))
+        self.assertEqual(
+            record,
+            protocol_run_record(
+                bundle, prompt, provider="local-test", model="fixture-model"
+            ),
         )
 
     def test_contract_does_not_require_a_fixed_feature_count(self) -> None:

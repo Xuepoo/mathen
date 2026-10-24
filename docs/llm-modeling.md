@@ -25,15 +25,51 @@ supplied record, and the card passes Mathen's semantic card validation. These
 checks establish an evidence boundary, but they do not make generated claims
 true. Human review remains required before promotion to `data/systems/`.
 
+Each generated draft is accompanied by a `<system-id>.protocol.json` record.
+This is an audit envelope, not a card and not evidence: it records the selected
+provider, exact model identifier, pinned source revision, and SHA-256 digests of
+the rendered prompt and input bundle. It never records API keys, authorization
+headers, or raw secret-bearing configuration. The envelope starts with review
+status `pending` and must be completed by a human reviewer before any deliberate
+canonical promotion.
+
+## Evidence-bounded research protocol
+
+The modeling bundle's protocol version is `mth-0112-v1`. A run must preserve:
+
+- **Provenance:** provider, exact model, prompt digest, evidence-bundle digest,
+  source commit, and deterministic-inspector provenance. Deployment URLs are
+  configuration, not research identity.
+- **Candidate boundary:** features and mathematical views are candidate
+  abstractions. Every claim keeps `claim_type` (`fact`, `inference`,
+  `hypothesis`, or `analogy`), review status, and local `evidence_ids`.
+- **Cross-domain analogies:** a resemblance must be labeled `analogy` and state
+  the shared structure and its boundary. It must not imply equivalence,
+  dependency, composition, substitutability, or historical influence without
+  direct evidence.
+- **Uncertainty and disagreement:** missing evidence is recorded as unknown or
+  out of scope; conflicting evidence or reviewer disagreement is recorded in
+  the protocol envelope rather than silently resolved by the model.
+- **Human boundary:** automated output remains under `data/drafts/` and is never
+  proof or canonical knowledge. Promotion to `data/systems/` is a deliberate
+  human review operation.
+
+The protocol evaluates batches along four separate dimensions: **breadth** of
+the requested coverage, **citation quality** and locality, **error rate** (such
+as unsupported or misclassified claims), and **reviewer usefulness** (whether
+the draft reduces review effort without hiding uncertainty). These dimensions
+should be reported separately against a reviewed reference or reviewer audit;
+they are not collapsed into an ungrounded confidence score.
+
 ## Configuration
 
 The command accepts explicit flags or environment variables. Explicit flags
 take precedence:
 
-| Setting | Flag | Environment variable |
-| --- | --- | --- |
-| API key | `--api-key` | `OPENAI_API_KEY` |
-| Model name | `--model` | `MATHEN_LLM_MODEL` |
+| Setting      | Flag         | Environment variable  |
+| ------------ | ------------ | --------------------- |
+| API key      | `--api-key`  | `OPENAI_API_KEY`      |
+| Model name   | `--model`    | `MATHEN_LLM_MODEL`    |
 | API base URL | `--base-url` | `MATHEN_LLM_BASE_URL` |
 
 The default base URL is `https://api.openai.com/v1`. The request timeout can be
