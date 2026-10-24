@@ -62,6 +62,26 @@ Cloudflare's edge caching can be configured separately for explicitly public
 responses, while WAF/rate-limiting rules remain the
 authoritative protection against distributed floods.
 
+The repository deployment workflow reads these values from the `production`
+GitHub Actions environment:
+
+| GitHub Secret                   | Worker destination      | Required      | Value                                                                    |
+| ------------------------------- | ----------------------- | ------------- | ------------------------------------------------------------------------ |
+| `CLOUDFLARE_ACCOUNT_ID`         | Wrangler authentication | Yes           | Cloudflare account ID containing the D1 database and Turnstile widget    |
+| `CLOUDFLARE_API_KEY`            | Wrangler authentication | Yes           | Cloudflare API token with Workers edit and D1 migration permissions      |
+| `TURNSTILE_SITE_KEY`            | Worker variable         | For Turnstile | Public site key of the Mathen widget                                     |
+| `TURNSTILE_SECRET_KEY`          | Worker secret           | For Turnstile | Private secret of the same Mathen widget                                 |
+| `TURNSTILE_HOSTNAME`            | Worker variable         | Optional      | `mathen.xuepoo.xyz`; defaults to this value                              |
+| `TURNSTILE_SESSION_TTL_SECONDS` | Worker variable         | Optional      | Signed browser-session lifetime, from 300 to 86400 seconds; default 3600 |
+| `API_ACCESS_TOKEN`              | Worker secret           | Optional      | Private Bearer token for the read-only MCP/API client                    |
+
+The workflow writes `TURNSTILE_SECRET_KEY` and `API_ACCESS_TOKEN` with
+`wrangler secret put`; they are never committed or passed as public Worker
+variables. Rotating a secret means updating the GitHub Secret and running the
+deployment workflow again. Removing a GitHub Secret does not automatically
+delete an already stored Worker secret; delete that secret explicitly with
+`wrangler secret delete` if it must be revoked.
+
 Until both Turnstile variables are configured, protection stays disabled so
 local development and deployments do not fail closed accidentally. Do not use
 a site key or secret belonging to another application or hostname.

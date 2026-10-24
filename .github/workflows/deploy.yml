@@ -31,4 +31,26 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_KEY }}
-        run: bun run deploy
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+          TURNSTILE_HOSTNAME: ${{ secrets.TURNSTILE_HOSTNAME }}
+          TURNSTILE_SESSION_TTL_SECONDS: ${{ secrets.TURNSTILE_SESSION_TTL_SECONDS }}
+        run: |
+          wrangler deploy \
+            --var "TURNSTILE_SITE_KEY:${TURNSTILE_SITE_KEY:-}" \
+            --var "TURNSTILE_HOSTNAME:${TURNSTILE_HOSTNAME:-}" \
+            --var "TURNSTILE_SESSION_TTL_SECONDS:${TURNSTILE_SESSION_TTL_SECONDS:-}"
+
+      - name: Configure Worker secrets
+        working-directory: apps/api
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_KEY }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          API_ACCESS_TOKEN: ${{ secrets.API_ACCESS_TOKEN }}
+        run: |
+          if [ -n "${TURNSTILE_SECRET_KEY:-}" ]; then
+            printf '%s' "$TURNSTILE_SECRET_KEY" | wrangler secret put TURNSTILE_SECRET_KEY
+          fi
+          if [ -n "${API_ACCESS_TOKEN:-}" ]; then
+            printf '%s' "$API_ACCESS_TOKEN" | wrangler secret put API_ACCESS_TOKEN
+          fi
