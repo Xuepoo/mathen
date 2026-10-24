@@ -85,6 +85,47 @@ server.registerTool(
 );
 
 server.registerTool(
+  "list_feature_relations",
+  {
+    description: "List evidence-backed feature relations from reviewed cards and optional drafts.",
+    inputSchema: {
+      system_id: z.string().regex(/^[a-z0-9-]+$/).optional(),
+      feature_id: z.string().regex(/^[a-z0-9-]+$/).optional(),
+      target_system_id: z.string().regex(/^[a-z0-9-]+$/).optional(),
+      type: z
+        .enum([
+          "implements",
+          "refines",
+          "requires",
+          "supports",
+          "conflicts-with",
+          "composes",
+          "resembles",
+        ])
+        .optional(),
+      include_drafts: z.boolean().optional(),
+      limit: z.number().int().min(1).max(50).optional(),
+    },
+  },
+  async ({ system_id, feature_id, target_system_id, type, include_drafts, limit }) => {
+    try {
+      return jsonResult({
+        data: await backend.listFeatureRelations(
+          system_id,
+          feature_id,
+          target_system_id,
+          type,
+          include_drafts ?? false,
+          limit ?? 20,
+        ),
+      });
+    } catch (error) {
+      return errorResult(error);
+    }
+  },
+);
+
+server.registerTool(
   "list_compositions",
   {
     description:

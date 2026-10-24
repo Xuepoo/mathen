@@ -6,6 +6,7 @@ import {
   buildCompositions,
   buildGraph,
   serializeFeature,
+  serializeFeatureRelation,
   serializeMathematicalView,
 } from "./index.js";
 
@@ -106,6 +107,91 @@ test("serializes feature and mathematical-view evidence references", () => {
       evidence_ids: ["architecture"],
     },
   );
+});
+
+test("serializes feature relation evidence and optional notes", () => {
+  assert.deepEqual(
+    serializeFeatureRelation({
+      id: 1,
+      source_system_id: "alpha",
+      source_feature_id: "embedded",
+      target_system_id: "beta",
+      target_feature_id: "embedded",
+      type: "resembles",
+      claim_type: "analogy",
+      claim_status: "proposed",
+      notes: "Bounded comparison.",
+      evidence_ids_json: '["architecture"]',
+    }),
+    {
+      source_feature_id: "embedded",
+      target_system_id: "beta",
+      target_feature_id: "embedded",
+      type: "resembles",
+      claim_type: "analogy",
+      claim_status: "proposed",
+      evidence_ids: ["architecture"],
+      notes: "Bounded comparison.",
+    },
+  );
+});
+
+test("GET /api/feature-relations returns bounded, filtered relation rows", async () => {
+  const calls: { sql: string; bindings: unknown[] }[] = [];
+  const db = {
+    prepare(sql: string) {
+      return {
+        bind(...bindings: unknown[]) {
+          calls.push({ sql, bindings });
+          return {
+            all<T>() {
+              return Promise.resolve({
+                results: [
+                  {
+                    id: 1,
+                    source_system_id: "alpha",
+                    source_feature_id: "embedded",
+                    target_system_id: "beta",
+                    target_feature_id: "embedded",
+                    type: "resembles",
+                    claim_type: "analogy",
+                    claim_status: "proposed",
+                    notes: null,
+                    evidence_ids_json: '["architecture"]',
+                  },
+                ] as T[],
+              });
+            },
+          };
+        },
+      };
+    },
+  } as unknown as D1Database;
+
+  const response = await app.request(
+    "/api/feature-relations?system_id=alpha&type=resembles&limit=999",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    data: [
+      {
+        source_system_id: "alpha",
+        source_feature_id: "embedded",
+        target_system_id: "beta",
+        target_feature_id: "embedded",
+        type: "resembles",
+        claim_type: "analogy",
+        claim_status: "proposed",
+        evidence_ids: ["architecture"],
+      },
+    ],
+  });
+  assert.deepEqual(calls[0]?.bindings, ["alpha", "resembles", 200]);
+  assert.match(calls[0]?.sql ?? "", /ORDER BY fr\.source_system_id/);
+  assert.match(calls[0]?.sql ?? "", /LIMIT \?3/);
 });
 
 test("buildCompositions filters valid proposals by input and status", () => {
@@ -325,18 +411,29 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
   );
   assert.match(queries[0]!, /WHERE mve\.view_id = mathematical_views\.id/);
   assert.equal(
-    body.data.nodes.some((node) => node.id === "model:state-transition-systems"),
+    body.data.nodes.some(
+      (node) => node.id === "model:state-transition-systems",
+    ),
     true,
   );
   assert.equal(body.data.edges.length, 2);
-  const temporalEdge = body.data.edges.find((edge) => edge.metadata.some((view) => view.id === 7));
+  const temporalEdge = body.data.edges.find((edge) =>
+    edge.metadata.some((view) => view.id === 7),
+  );
   assert.equal(temporalEdge?.claim_type, "mixed");
-  assert.equal(body.data.edges.find((edge) => edge.source === "other")?.claim_type, "hypothesis");
+  assert.equal(
+    body.data.edges.find((edge) => edge.source === "other")?.claim_type,
+    "hypothesis",
+  );
   assert.deepEqual(
     temporalEdge?.metadata.find((view) => view.id === 7),
     {
       id: 7,
-      key: modelViewKey("temporal", "Queue-mediated workflow state machine", "How does work move?"),
+      key: modelViewKey(
+        "temporal",
+        "Queue-mediated workflow state machine",
+        "How does work move?",
+      ),
       model: "Queue-mediated workflow state machine",
       question: "How does work move?",
       assumptions: ["workers poll"],
@@ -366,7 +463,9 @@ test("system detail view keys match graph identity across database ids", async (
             },
             all() {
               return Promise.resolve({
-                results: sql.includes("FROM mathematical_views WHERE") ? [view] : [],
+                results: sql.includes("FROM mathematical_views WHERE")
+                  ? [view]
+                  : [],
               });
             },
           };
@@ -388,6 +487,7 @@ test("system detail view keys match graph identity across database ids", async (
         claim_type: string;
         evidence_ids: string[];
       }>;
+      feature_relations: unknown[];
     };
   };
   assert.equal(body.data.mathematical_views[0]?.id, 42);
@@ -396,7 +496,10 @@ test("system detail view keys match graph identity across database ids", async (
     modelViewKey(system.id, view.model, view.question),
   );
   assert.equal(body.data.mathematical_views[0]?.claim_type, "hypothesis");
-  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, ["architecture"]);
+  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, [
+    "architecture",
+  ]);
+  assert.deepEqual(body.data.feature_relations, []);
 });
 
 function systemRow(index: number) {

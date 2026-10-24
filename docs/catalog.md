@@ -34,6 +34,7 @@ These entries are already present in the repository at different review levels:
 | ID | Name | Domain | Status | Next action |
 | --- | --- | --- | --- | --- |
 | `git` | Git | version control | `reviewed` | Add temporal commits, refs, and composition relations |
+| `carryctx` | CarryCtx | project lifecycle tooling | `reviewed` | Validate Git/SQLite integration and compare lifecycle state with other coordination systems |
 | `duckdb` | DuckDB | analytical database | `reviewed` | Compare with SQLite and columnar engines |
 | `firecracker` | Firecracker | microvirtualization | `reviewed` | Compare with QEMU and container isolation |
 | `supabase` | Supabase | backend platform | `reviewed` | Model platform composition and lineage |
@@ -90,6 +91,10 @@ These entries are already present in the repository at different review levels:
 | `lua` | Lua | language runtime | `reviewed` | Compare embeddable VM state, coroutines, and extension boundaries |
 | `node` | Node.js | JavaScript runtime | `reviewed` | Compare event-loop scheduling, module loading, and native extension boundaries |
 | `deno` | Deno | JavaScript runtime | `reviewed` | Compare permission-scoped execution and module graph boundaries |
+| `tokio` | Tokio | asynchronous Rust runtime | `reviewed` | Compare runtime drivers, task schedulers, readiness wakeups, and lifecycle boundaries using fixed-commit evidence |
+| `quickjs` | QuickJS | JavaScript engine | `reviewed` | Compare runtime/context isolation, stack bytecode, reference-counted memory, and C embedding using fixed-commit evidence |
+| `bun` | Bun | JavaScript runtime and toolkit | `reviewed` | Compare JavaScriptCore execution, event-loop integration, module compatibility, and integrated tooling using fixed-commit evidence |
+| `haskell` | GHC/Haskell | language and compiler | `reviewed` | Compare non-strict semantics, module builds, Core/STG lowering, and capability scheduling using fixed-commit evidence |
 | `v8` | V8 | JavaScript engine | `reviewed` | Compare isolate/context state, handles, and managed heap boundaries |
 | `chromium` | Chromium | browser engine | `reviewed` | Compare browser/renderer process isolation, Blink parsing and rendering, Mojo IPC, partitioned storage/networking, and sandbox failure boundaries using fixed-commit evidence |
 | `firefox` | Firefox | browser engine | `reviewed` | Compare Gecko process isolation, DOM/style/layout/WebRender stages, IPDL IPC, storage/networking, and sandbox/crash boundaries using fixed-commit evidence |
@@ -97,11 +102,19 @@ These entries are already present in the repository at different review levels:
 | `haproxy` | HAProxy | network proxy | `reviewed` | Compare polling, task scheduling, layered connection state, and reload topology using fixed-commit evidence |
 | `caddy` | Caddy | web server | `reviewed` | Compare module lifecycle, atomic configuration swaps, and automatic HTTPS using fixed-commit evidence |
 | `wireguard` | WireGuard | secure tunnel | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
+| `tailscale` | Tailscale | secure mesh VPN | `reviewed` | Compare control-plane coordination, WireGuard peer data paths, and DERP relay selection using fixed-commit evidence |
+| `v2ray` | V2Ray Core | proxy core | `reviewed` | Compare feature-oriented composition, inbound/outbound protocol boundaries, and rule-based routing using fixed-commit evidence |
+| `mihomo` | Mihomo | proxy client | `reviewed` | Compare TCP/UDP tunnel dispatch, outbound adapters, provider-backed groups, and local configuration boundaries using fixed-commit evidence |
+| `xray` | Xray-core | proxy core | `reviewed` | Compare inbound/outbound protocol boundaries, reloadable routing, balancers, and transport composition using fixed-commit evidence |
 | `busybox` | BusyBox | Unix system tools | `reviewed` | Compare multi-call dispatch, configurable applet sets, and shared userland support using fixed-commit evidence |
 | `musl` | musl libc | C runtime | `reviewed` | Compare portable interfaces, static/dynamic linking, and thread-local runtime boundaries using fixed-commit evidence |
 | `glibc` | GNU C Library | C runtime | `reviewed` | Compare ABI versioning, dynamic loading, and process/thread runtime boundaries using fixed-commit evidence |
 | `threejs` | Three.js | 3D graphics library | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
 | `blender` | Blender | 3D graphics application | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
+| `unity` | Unity | game engine | `reviewed` | Compare public scene/component lifecycle, PlayerLoop scheduling, Scriptable Render Pipeline packages, and editor/build/runtime boundaries using fixed-source evidence; native engine internals remain out of scope |
+| `chafa` | Chafa | terminal image viewer | `reviewed` | Compare media loading, pixel-to-symbol canvases, terminal capability backends, and CLI stream boundaries using fixed-tag evidence |
+| `comfyui` | ComfyUI | generative AI application | `reviewed` | Compare workflow graphs, queued node execution, custom-node extensions, and API/UI boundaries using fixed-commit evidence |
+| `ollama` | Ollama | local model-serving product | `reviewed` | Compare daemon/API service, model manifest/import lifecycle, backend runner dispatch, and CLI control boundaries using fixed-commit evidence |
 | `sdl` | SDL | multimedia library | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
 | `wayland` | Wayland | display protocol | `reviewed` | Compare client/compositor protocol globals, surface commit state, typed message ordering, input capabilities, and per-client security boundaries using fixed-commit evidence |
 | `godot` | Godot | game engine | `planned` | Add a fixed-commit source bundle and draft before review; no evidence-backed card is present yet |
@@ -113,35 +126,24 @@ These entries are already present in the repository at different review levels:
 | `wezterm` | WezTerm | terminal emulator | `reviewed` | Compare PTY domains, terminal parsing, mux pane/tab/workspace state, GPU rendering, input, and control APIs using fixed-commit evidence |
 | `alacritty` | Alacritty | terminal emulator | `reviewed` | Compare PTY event loops, terminal grid/parser state, GPU window rendering, input/clipboard, and IPC boundaries using fixed-commit evidence |
 | `ghostty` | Ghostty | terminal emulator | `reviewed` | Compare PTY processes, VT parser/screen state, native renderer backends, input routing, and surface/runtime boundaries using fixed-commit evidence |
+| `powershell` | PowerShell | shell language and runtime | `reviewed` | Compare parser/runtime state, object pipelines, provider-backed sessions, and remoting runspaces using fixed-commit evidence |
+| `nushell` | Nushell | shell language and runtime | `reviewed` | Compare typed pipeline values, parser/engine state, command overlays, and external-process boundaries using fixed-commit evidence |
+| `tmux` | tmux | terminal multiplexer | `reviewed` | Compare server/client lifecycle, session/window/pane topology, PTY I/O, and command control using fixed-commit evidence |
+| `zellij` | Zellij | terminal multiplexer | `reviewed` | Compare client/server sessions, PTY-backed panes, tab/layout topology, and mode-aware input routing using fixed-commit evidence |
 | `rails` | Ruby on Rails | web framework | `reviewed` | Compare engine composition, ordered initialization, autoloading, and Rack middleware using fixed-commit evidence |
 | `laravel` | Laravel | web framework | `reviewed` | Compare service-container resolution, provider bootstrap, deferred services, and middleware pipelines using fixed-commit evidence |
 | `spring-boot` | Spring Boot | web framework | `reviewed` | Compare application-context startup, conditional auto-configuration, environment binding, and embedded web deployment using fixed-commit evidence |
 | `nestjs` | NestJS | web framework | `reviewed` | Compare module graph scanning, provider resolution, initialization phases, and transport adapters using fixed-commit evidence |
 | `stalwart` | Stalwart Mail Server | mail server | `reviewed` | Compare SMTP envelope/queue delivery, IMAP mailbox sessions, JMAP stateful synchronization, and shared store adapters using fixed-commit evidence |
+| `n8n` | n8n | AI workflow automation | `reviewed` | Compare node-graph workflow composition, execution records, integration/code extensions, and agent/tool approval steps using fixed-commit evidence |
+| `langchain` | LangChain | agent and LLM framework | `reviewed` | Compare provider-independent model interfaces, Runnable composition, typed tools, and agent-harness/orchestration boundaries using fixed-commit evidence |
+| `mcp` | Model Context Protocol | AI integration protocol | `reviewed` | Compare host/client/server roles, JSON-RPC sessions, capability negotiation, context primitives, and trust boundaries using the pinned specification repository |
+| `openclaw` | OpenClaw | self-hosted AI assistant | `reviewed` | Compare Gateway control-plane ownership, WebSocket client/node protocol, plugin channel routing, and session-scoped tool execution using fixed-commit evidence |
 
-The operational manifest now contains 52 repositories. The following entries
-were added during the foundational catalog expansion and are ready for bounded
-deterministic analysis, but they do not yet have reviewed Architecture Cards:
-
-| ID | Name | Domain | Priority |
-| --- | --- | --- | --- |
-| `cpython` | CPython | language runtime | `P1` |
-| `rust` | Rust | language toolchain | `P1` |
-| `go` | Go | language toolchain | `reviewed` | Compare goroutine/channel ordering, package interfaces, and toolchain integration using fixed-commit evidence |
-| `ruby` | Ruby | language runtime | `reviewed` | Compare dynamic object dispatch, VM frames, GC, and the C extension boundary using fixed-commit evidence |
-| `wasmtime` | Wasmtime | WebAssembly runtime | `P1` |
-| `xv6-public` | xv6 | educational operating system | `reviewed` | Compare process scheduling, paging, descriptor I/O, and logged filesystems using fixed-commit evidence |
-| `libuv` | libuv | asynchronous I/O library | `reviewed` | Compare event-loop, handle/request, cross-platform, and thread-pool boundaries using fixed-commit evidence |
-| `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
-| `openssl` | OpenSSL | cryptography library | `reviewed` |
-| `protobuf` | Protocol Buffers | serialization protocol | `P1` |
-| `grpc` | gRPC | RPC framework | `P1` |
-| `mosquitto` | Eclipse Mosquitto | messaging protocol | `reviewed` |
-| `mysql-server` | MySQL Server | database | `reviewed` |
-| `rocksdb` | RocksDB | embedded database | `reviewed` |
-| `threejs` | Three.js | 3D graphics library | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
-| `blender` | Blender | 3D graphics application | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
-| `sdl` | SDL | multimedia library | `reviewed` | Compare window/display, event queue, audio stream, and renderer/GPU boundaries using fixed-commit evidence |
+The operational manifest currently contains 62 repositories, and every manifest
+ID has a matching reviewed Architecture Card under `data/systems/`. The four
+cards added by MTH-0092—`bun`, `haskell`, `quickjs`, and `tokio`—are canonical
+reviewed cards but are not entries in `data/repositories/representative.json`.
 
 ## Catalog
 
@@ -181,7 +183,7 @@ identifiers, not claims that the projects share the same architecture.
 | `ruby` | Ruby | language runtime | `reviewed` | Compare dynamic object dispatch, VM frames, GC, and the C extension boundary using fixed-commit evidence |
 | `erlang` | Erlang/OTP | `P0` | Actor processes, supervision trees, and fault tolerance |
 | `elixir` | Elixir | `P1` | BEAM abstractions, message passing, and supervision |
-| `haskell` | GHC/Haskell | `P1` | Laziness, type classes, purity, and compiler pipeline |
+| `haskell` | GHC/Haskell | `reviewed` | Compare non-strict semantics, module builds, Core/STG lowering, and capability scheduling using fixed-commit evidence |
 | `ocaml` | OCaml | `P2` | Algebraic types, modules, and native compilation |
 | `zig` | Zig | language toolchain | `reviewed` | Compare explicit allocation, comptime specialization, typed errors, and cross-target tooling using fixed-revision evidence |
 | `wasm` | WebAssembly | portable instruction format | `reviewed` | Compare validation, store/module instances, structured execution, and bounded linear memory using fixed-revision evidence |
@@ -273,8 +275,17 @@ identifiers, not claims that the projects share the same architecture.
 | `haproxy` | HAProxy | `reviewed` | Compare polling, task scheduling, layered connection state, and reload topology using fixed-commit evidence |
 | `caddy` | Caddy | `reviewed` | Compare module lifecycle, atomic configuration swaps, and automatic HTTPS using fixed-commit evidence |
 | `curl` | curl | network library | `reviewed` | Compare easy/multi handles, transfer state machines, and connection reuse using fixed-commit evidence |
+| `aria2` | aria2 | download utility | `reviewed` | Compare request-group scheduling, segmented transfers, protocol-specific piece storage, and RPC control using fixed-commit evidence |
+| `rsync` | rsync | file synchronization tool | `reviewed` | Compare file-list planning, block-signature delta transfer, remote-shell/daemon transports, and metadata update policies using fixed-commit evidence |
+| `scp` | OpenSSH scp | file-copy utility | `reviewed` | Compare SSH-backed copy orchestration, SFTP-default and legacy SCP paths, and recursive source/sink state using fixed-commit evidence |
+| `ssh` | OpenSSH ssh | secure remote access tool | `reviewed` | Compare layered transport/authentication, multiplexed flow-controlled channels, and session/forwarding services using fixed-commit evidence |
+| `mosh` | Mosh | remote terminal | `reviewed` | Compare SSH bootstrap, authenticated UDP terminal synchronization, roaming, and predictive local echo using fixed-commit evidence |
 | `openssl` | OpenSSL | `P0` | Cryptographic primitives, protocol state, and provider boundary |
 | `wireguard` | WireGuard | `reviewed` | Compare Noise handshake state, bounded crypto queues, and replay-window key state using fixed-commit evidence |
+| `tailscale` | Tailscale | `reviewed` | Control-plane coordination, WireGuard peer data plane, and direct/DERP path selection |
+| `v2ray` | V2Ray Core | `reviewed` | Feature-oriented proxy core, inbound/outbound handlers, and DNS-aware rule routing |
+| `mihomo` | Mihomo | `reviewed` | TCP/UDP tunnel dispatch, protocol adapters, provider-backed groups, and local configuration |
+| `xray` | Xray-core | `reviewed` | Inbound/outbound handlers, reloadable rules and balancers, and transport/multiplexing composition |
 | `quiche` | quiche | `reviewed` | Compare QUIC connection state, application-driven packet I/O, HTTP/3 streams, QPACK, and loss recovery using fixed-commit evidence |
 | `http` | HTTP | `planned` | Protocol semantics, message ordering, intermediaries, and version evolution; blocker: no single authoritative HTTP implementation or fixed repository revision selected |
 | `dns` | DNS | `planned` | Name resolution, delegation, caching, and transport/security evolution; blocker: no authoritative DNS implementation or fixed repository revision selected |
@@ -295,6 +306,8 @@ identifiers, not claims that the projects share the same architecture.
 | --- | --- | --- | --- |
 | `threejs` | Three.js | `reviewed` | Compare scene graph, geometry/material composition, and WebGL renderer boundaries using fixed-commit evidence |
 | `blender` | Blender | `reviewed` | Compare data-block scenes, dependency graph evaluation, editor boundaries, and render engines using fixed-commit evidence |
+| `unity` | Unity | `reviewed` | Public scene/component lifecycle, PlayerLoop scheduling, Scriptable Render Pipeline packages, and editor/build/runtime boundaries; native engine internals remain out of scope |
+| `chafa` | Chafa | `reviewed` | Media loading, pixel-to-symbol canvases, terminal capability backends, and CLI stream boundaries |
 | `webgl` | WebGL | `reviewed` | Compare browser context state, typed GPU resources, shader submission, and security boundaries using fixed-commit evidence |
 | `vulkan` | Vulkan | `reviewed` | Compare explicit resources, command recording/submission, queue ownership, and synchronization using fixed-commit evidence |
 | `opengl` | OpenGL | `reviewed` | Compare context state, object bindings, programmable pipeline, and platform integration using fixed-commit evidence |
@@ -365,6 +378,11 @@ identifiers, not claims that the projects share the same architecture.
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- | --- |
 | `neovim` | Neovim | `P1` | Event-driven editor state, MessagePack-RPC channels, embedded Lua, and plugin boundaries |
+| `vim` | Vim | `reviewed` | Compare modal buffer/window state, Ex and Vim9 execution, and job/channel integration using fixed-tag evidence |
+| `emacs` | GNU Emacs | `reviewed` | Compare recursive command loops, Lisp buffer extension, and redisplay/frame boundaries using fixed-tag evidence |
+| `fish` | fish | `reviewed` | Compare structured parsing, interactive reader events, and environment/process execution using fixed-tag evidence |
+| `bash` | GNU Bash | `reviewed` | Compare reader/parser/executor stages, pipeline job control, and shell-state builtins using fixed-tag evidence |
+| `zsh` | Zsh | `reviewed` | Compare wordcode execution, job/signal coordination, and dynamic module/autoload boundaries using fixed-tag evidence |
 | `vscode` | Visual Studio Code | `P1` | Layered workbench services, extension-host IPC, target environments, and contributions |
 | `ripgrep` | ripgrep | `P1` | Ignore-aware parallel traversal, regex/search stages, adaptive I/O, and result streams |
 | `fd` | fd | `P2` | Ignore-aware walking, path/metadata predicates, parallel jobs, and output coordination |
@@ -388,7 +406,7 @@ identifiers, not claims that the projects share the same architecture.
 ### Identity, API, workflow, and application services
 
 | ID | Target | Priority | Modeling focus |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | `keycloak` | Keycloak | `reviewed` | Compare realm/tenant boundaries, identity flows, token issuance, and adapters using fixed-commit evidence |
 | `kong` | Kong Gateway | `reviewed` | Compare plugin pipeline, route/service abstraction, control/data plane, and credentials using fixed-commit evidence |
 | `apisix` | Apache APISIX | `reviewed` | Compare dynamic routing, phase-aware plugins, etcd-backed configuration, and upstream proxy boundaries using fixed-commit evidence |
@@ -398,11 +416,20 @@ identifiers, not claims that the projects share the same architecture.
 | `oauth2-proxy` | OAuth2 Proxy | `reviewed` | Compare middleware-chain authentication, provider adapters, encrypted cookie/Redis sessions, and upstream forwarding using fixed-commit evidence |
 | `authentik` | authentik | `reviewed` | Compare staged flow planning, policy aggregation, provider/application boundaries, and managed outpost reconciliation using fixed-commit evidence |
 
+### AI workflow and agent infrastructure
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- | --- |
+| `n8n` | n8n | `reviewed` | Node-graph workflow composition, execution lifecycle controls, integration/code extension, and AI agent/tool steps using fixed-commit evidence |
+| `langchain` | LangChain | `reviewed` | Provider-independent model interfaces, Runnable composition, typed tools, and the agent-harness boundary over LangGraph using fixed-commit evidence |
+| `mcp` | Model Context Protocol | `reviewed` | Host/client/server protocol roles, JSON-RPC sessions, capability negotiation, resources/prompts/tools, and trust boundaries using the pinned specification repository |
+| `openclaw` | OpenClaw | `reviewed` | Gateway control plane, WebSocket clients and nodes, plugin channel routing, and session-scoped agent/tool execution using fixed-commit evidence |
+
 
 ### Machine learning and computer vision
 
 | ID | Target | Priority | Modeling focus |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | `pytorch` | PyTorch | `P1` | Tensor/autograd graphs, eager execution, dispatch, and accelerator backends |
 | `tensorflow` | TensorFlow | `P1` | Tensor graphs, runtime devices, saved models, and distributed execution |
 | `jax` | JAX | `reviewed` | Compare functional transformations, tracing, XLA compilation, and sharding using fixed-commit evidence |
@@ -412,10 +439,17 @@ identifiers, not claims that the projects share the same architecture.
 | `mlflow` | MLflow | `P2` | Run/artifact provenance, flavor-aware model packaging, registry versions, aliases, and lifecycle |
 | `ray` | Ray | `P2` | Distributed task and actor execution |
 
-### Storage, data platforms, and infrastructure services
+### Generative AI applications and local model services
 
 | ID | Target | Priority | Modeling focus |
 | --- | --- | --- |
+| `comfyui` | ComfyUI | `reviewed` | Workflow dependency graphs, queued node execution, custom-node extensions, and API/UI boundaries using fixed-commit evidence |
+| `ollama` | Ollama | `reviewed` | Local daemon/API service, model manifest/import lifecycle, backend runner dispatch, and CLI control boundaries using fixed-commit evidence |
+
+### Storage, data platforms, and infrastructure services
+
+| ID | Target | Priority | Modeling focus |
+| --- | --- | --- | --- |
 | `dbt` | dbt Core | `P1` | Declarative resource DAGs, ref ordering, adapter execution, materialization strategies, and tests |
 | `dagster` | Dagster | `P1` | Software-defined asset dependencies, schedules, sensors, daemon coordination, and run state |
 | `minio` | MinIO | `P1` | S3 object namespace, erasure-coded fragment layout, quorum, and background healing |
@@ -439,6 +473,19 @@ identifiers, not claims that the projects share the same architecture.
 | `esbuild` | esbuild | `reviewed` | Compare parallel parsing, incremental module graphs, linking, bundling, and transform boundaries using fixed-commit evidence |
 | `playwright` | Playwright | `reviewed` | Compare browser/context isolation, page protocol control, fixture scopes, and tracing using fixed-commit evidence |
 | `storybook` | Storybook | `reviewed` | Compare story indexing, manager/preview isolation, addon channels, and component test workflows using fixed-commit evidence |
+
+### File management and document conversion
+
+The generic `file-manager` request is resolved to **ranger** (`ranger/ranger`),
+the open-source Python terminal file manager, using the concrete card ID
+`ranger`. This provides a distinct implementation to compare with Yazi.
+
+| ID | Target | Status | Modeling focus |
+| --- | --- | --- | --- |
+| `yazi` | Yazi | `reviewed` | Compare asynchronous priority queues, cancellable previews, and Lua synchronization at v0.3.3 (`7c445cef1fd9ff9d41314d3d2b02cbc74250c6bf`) |
+| `ranger` | ranger | `reviewed` | Compare directory/tab state, cooperative loading, and external preview/opening at v1.9.4 (`55fc2839f693aed9486d211694d7317d78161341`) |
+| `calibre` | calibre | `reviewed` | Compare SQLite metadata/filesystem coordination, OEB conversion, and format plugins at v7.20.0 (`59fa8a62d3d637d960cc5e1a48b728c7efb4d6ef`) |
+| `pandoc` | Pandoc | `reviewed` | Compare shared AST, format adapters, and ordered filters at 3.5 (`31e4fabbb29d302eb972d25ce4aa10dd26bfbadc`) |
 
 ## Modeling order
 
@@ -481,3 +528,14 @@ catalog entry
 The catalog is deliberately broader than the current implementation. It is a
 research backlog and an organizing map; entries become knowledge only after
 evidence-backed modeling and review.
+
+## Model serving and vector systems
+
+| `llama-cpp` | llama.cpp | model runtime and serving | `reviewed` | Compare GGUF model artifacts, backend graphs, constrained decoding, and HTTP serving boundaries using fixed-commit evidence |
+| `vllm` | vLLM | model serving runtime | `reviewed` | Compare paged KV-cache scheduling, continuous batching, distributed execution, and API serving boundaries using fixed-commit evidence |
+| `milvus` | Milvus | vector database | `reviewed` | Compare distributed vector collections, ANN indexes, query/data separation, consistency, and client APIs using fixed-commit evidence |
+| `pinecone` | Pinecone | managed vector database | `reviewed` | Compare documented managed vector indexes, namespaces, dense/sparse/full-text retrieval, metadata filters, and control/data APIs with an explicit docs-only boundary |
+| `llama-cpp` | llama.cpp | `reviewed` | Compare GGUF model artifacts, backend graphs, constrained decoding, and HTTP serving boundaries using fixed-commit evidence |
+| `vllm` | vLLM | `reviewed` | Compare paged KV-cache scheduling, continuous batching, distributed execution, and API serving boundaries using fixed-commit evidence |
+| `milvus` | Milvus | `reviewed` | Compare distributed vector collections, ANN indexes, query/data separation, consistency, and client APIs using fixed-commit evidence |
+| `pinecone` | Pinecone | `reviewed` | Compare documented managed vector indexes, namespaces, dense/sparse/full-text retrieval, metadata filters, and control/data APIs |

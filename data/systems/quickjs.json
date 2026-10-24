@@ -1,0 +1,89 @@
+{
+  "id": "quickjs",
+  "name": "QuickJS",
+  "version_context": "commit 7d1c13c5d8f8c6b32893786ed35cdcebd88194d2",
+  "summary": "A small embeddable JavaScript engine with per-runtime heaps, per-context globals, direct stack bytecode compilation, reference-counted values, and cycle removal.",
+  "scope": [
+    "JavaScript execution",
+    "runtime and context embedding API",
+    "bytecode compilation",
+    "memory management and interruption"
+  ],
+  "features": [
+    {
+      "id": "runtime-context-boundary",
+      "name": "Runtime and context embedding boundary",
+      "category": "embedding-model",
+      "claim_type": "fact",
+      "description": "QuickJS models a JSRuntime as an object heap and a JSContext as a Realm with its own global and system objects. Contexts may share objects within a runtime, while separate runtimes cannot exchange objects and do not support multithreading inside one runtime.",
+      "benefits": ["Gives embedders explicit heap and global-environment boundaries", "Allows multiple contexts to share a runtime-level object space"],
+      "costs": ["Embedder lifecycle and cross-context sharing require explicit coordination", "A runtime is not a multi-threaded object-sharing boundary"] ,
+      "evidence_ids": ["quickjs-manual", "quickjs-fixed-source"]
+    },
+    {
+      "id": "direct-stack-bytecode",
+      "name": "Direct stack bytecode compilation",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "QuickJS compiles JavaScript directly to compact stack-based bytecode without an exposed parse-tree intermediate representation, computes function maximum stack size at compile time, and can serialize compiled code into generated C sources.",
+      "benefits": ["Keeps the interpreter and generated artifacts small", "Provides a compact executable representation for embedded deployments"],
+      "costs": ["The bytecode format is tied to a QuickJS version", "A direct compiler path exposes fewer reusable intermediate boundaries"] ,
+      "evidence_ids": ["quickjs-manual", "quickjs-fixed-source"]
+    },
+    {
+      "id": "reference-counted-cycle-removal",
+      "name": "Reference counting with cycle removal",
+      "category": "memory-model",
+      "claim_type": "fact",
+      "description": "QuickJS uses reference counting for automatic and deterministic object reclamation and runs a separate cycle-removal pass when memory pressure requires it. JSValue ownership is managed through explicit duplication and freeing in the C API.",
+      "benefits": ["Makes ordinary object reclamation deterministic", "Provides a mechanism for reclaiming cyclic object structures"],
+      "costs": ["Reference-count ownership must be respected at C API boundaries", "Cycle detection adds a separate memory-management phase"] ,
+      "evidence_ids": ["quickjs-manual", "quickjs-fixed-source"]
+    },
+    {
+      "id": "interruptible-c-api",
+      "name": "Interruptible C embedding API",
+      "category": "host-integration",
+      "claim_type": "fact",
+      "description": "The C API exposes native functions, explicit exception values, memory limits, maximum stack size, and an interrupt handler called during execution so hosts can implement resource and timeout boundaries.",
+      "benefits": ["Lets hosts connect native operations to JavaScript values", "Provides explicit controls for memory, stack, and execution interruption"],
+      "costs": ["Native code must check and propagate JavaScript exceptions", "Host callbacks remain responsible for the safety of native resources"] ,
+      "evidence_ids": ["quickjs-manual", "quickjs-api-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Runtime-context object graph",
+      "question": "How do runtimes, contexts, objects, and C-owned values constrain sharing and lifetime at the embedding boundary?",
+      "assumptions": ["Runtimes are heap domains and contexts are global-environment domains", "Object-sharing edges exist only where the API permits them", "The view abstracts native allocator details and JavaScript semantic evaluation"],
+      "claim_type": "inference",
+      "evidence_ids": ["quickjs-manual", "quickjs-fixed-source"]
+    },
+    {
+      "model": "Stack-bytecode transition system",
+      "question": "How do compiled stack instructions and bounded function stack sizes represent JavaScript execution?",
+      "assumptions": ["A bytecode frame contains an instruction position and operand stack", "Compilation produces a version-specific instruction sequence", "The view abstracts parser implementation, host callbacks, and processor code generation"],
+      "claim_type": "inference",
+      "evidence_ids": ["quickjs-manual", "quickjs-fixed-source"]
+    },
+    {
+      "model": "Reference-count and cycle transition system",
+      "question": "How do reference updates and cycle-removal transitions determine object reclamation?",
+      "assumptions": ["Managed objects form a graph with reference counts", "Reference decrements can make acyclic objects reclaimable", "A separate cycle-removal pass handles residual cyclic reachability and the view does not prove collector correctness"],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["quickjs-manual", "quickjs-fixed-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "runtime-context-boundary", "benefits": ["Explicit embeddable heap and Realm boundaries"], "costs": ["Sharing and threading restrictions require host coordination"]},
+    {"feature_id": "direct-stack-bytecode", "benefits": ["Compact interpreter representation"], "costs": ["Version-coupled bytecode limits artifact portability"]},
+    {"feature_id": "reference-counted-cycle-removal", "benefits": ["Deterministic ordinary reclamation"], "costs": ["C ownership and cycle processing add complexity"]},
+    {"feature_id": "interruptible-c-api", "benefits": ["Native integration with resource controls"], "costs": ["Native exception and lifetime handling remains an embedder duty"]}
+  ],
+  "evidence": [
+    {"id": "quickjs-fixed-source", "kind": "source-code", "title": "QuickJS source tree at fixed commit 7d1c13c5d8f8", "uri": "https://github.com/bellard/quickjs/commit/7d1c13c5d8f8c6b32893786ed35cdcebd88194d2", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Fixed official repository revision for the QuickJS engine implementation."},
+    {"id": "quickjs-manual", "kind": "official-doc", "title": "QuickJS JavaScript Engine documentation", "uri": "https://bellard.org/quickjs/quickjs.html", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Official documentation for runtime/context APIs, bytecode, modules, reference counting, cycle removal, and embedding controls."},
+    {"id": "quickjs-api-source", "kind": "source-code", "title": "QuickJS C API header at fixed commit", "uri": "https://github.com/bellard/quickjs/blob/7d1c13c5d8f8c6b32893786ed35cdcebd88194d2/quickjs.h", "accessed": "2026-10-24T00:00:00+00:00", "notes": "Fixed-commit source boundary for the public C embedding API."}
+  ],
+  "related_systems": ["lua", "v8", "node"]
+}

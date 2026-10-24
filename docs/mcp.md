@@ -5,6 +5,19 @@ base from an agent host. It is intentionally read-only: generated drafts must
 pass the Python validation and human review workflow before they become
 canonical system cards.
 
+## Hosted endpoint direction
+
+The planned hosted MCP endpoint is a remote HTTPS service, for example:
+
+```text
+https://mathen.xuepoo.xyz/mcp
+```
+
+This endpoint is not implemented yet. Until the remote transport, authentication,
+session handling, and deployment boundary are specified and tested, use the
+stdio server described below. The future endpoint must expose the same
+reviewed-only read contract and must not expose filesystem-only drafts.
+
 ## Start
 
 From the repository root:
@@ -27,17 +40,23 @@ MATHEN_API_URL=https://api.example.com bun run mcp
 ```
 
 API mode uses `GET /api/systems`, `GET /api/systems/:id`, `GET /api/features`,
-`GET /api/compositions`, and `GET /api/modeling/:id`. Requests have a
+`GET /api/feature-relations`, `GET /api/compositions`, and `GET /api/modeling/:id`. Requests have a
 10-second timeout and API
 failures are returned as concise JSON tool errors. Draft cards are
 filesystem-only, so `include_drafts: true` returns an explicit
 unsupported-backend error when `MATHEN_API_URL` is set.
+
+The Hono API also exposes `GET /api/feature-relations` for focused relation
+queries; system detail responses include the source card's relation array.
 
 ## Tools
 
 - `list_systems`: list reviewed cards, or include drafts explicitly;
 - `get_system`: retrieve one reviewed card or explicitly requested draft;
 - `search_features`: find reusable features by text and optional category;
+- `list_feature_relations`: list source-card-owned feature relations with optional
+  system, feature, target-system, and relation-type filters. Results preserve
+  source-card claim metadata and source-local evidence IDs;
 - `list_compositions`: find reviewed composition proposals by input system or claim status;
   each result includes the cited `evidence` records resolved from the owning card;
 - `get_modeling_bundle`: retrieve a fixed-commit evidence bundle for semantic
@@ -46,6 +65,10 @@ unsupported-backend error when `MATHEN_API_URL` is set.
 Tool errors are returned as JSON text so an agent can inspect missing IDs or
 files without receiving an unstructured process failure. Drafts are never
 included unless the caller sets `include_drafts: true`.
+
+`list_feature_relations` is a read-only query. It does not infer a relation,
+select its type, change claim status, or write to a card. The same
+source-card-owned relation array is included by `get_system` when present.
 
 ## Boundary
 

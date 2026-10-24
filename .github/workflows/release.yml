@@ -1,4 +1,4 @@
-name: Publish Python package
+name: Build Python package
 
 on:
   workflow_dispatch:
@@ -9,16 +9,15 @@ permissions:
   contents: read
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    environment: pypi
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           version: "latest"
       - run: uv build
-      - name: Publish to PyPI
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-        run: uv publish
+      - name: PyPI publishing disabled
+        run: >-
+          echo "PyPI publishing is intentionally disabled until the package
+          passes release validation."

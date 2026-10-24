@@ -1,0 +1,154 @@
+{
+  "id": "opentofu",
+  "name": "OpenTofu",
+  "version_context": "commit 8830c516e05478f1cb69407d9b60118dbfad3af2",
+  "summary": "An open-source infrastructure-as-code engine that evaluates configuration, installs providers, builds a resource graph, plans changes against state, and applies the selected operations.",
+  "scope": [
+    "configuration evaluation",
+    "provider installation boundary",
+    "resource dependency graph",
+    "plan, apply, and state lifecycle"
+  ],
+  "features": [
+    {
+      "id": "declarative-resource-graph",
+      "name": "Declarative resource graph",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "OpenTofu builds a graph of configured resources and dependencies and can parallelize operations that do not depend on one another.",
+      "benefits": [
+        "Makes ordering and independent work explicit",
+        "Allows declarative infrastructure to be evaluated as a dependency structure"
+      ],
+      "costs": [
+        "Cycles and incomplete dependencies prevent a valid execution order",
+        "Graph behavior can be difficult to infer from large configurations"
+      ],
+      "evidence_ids": ["opentofu-readme", "opentofu-graph-source"]
+    },
+    {
+      "id": "provider-extension-boundary",
+      "name": "Provider extension boundary",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "OpenTofu obtains provider implementations through configurable installation sources, keeping provider-specific resource behavior outside the core CLI and graph engine.",
+      "benefits": [
+        "Extends infrastructure management to external and custom services",
+        "Separates core orchestration from provider implementation"
+      ],
+      "costs": [
+        "Provider versions, installation, schemas, and credentials affect reproducibility",
+        "Provider behavior remains an external execution boundary"
+      ],
+      "evidence_ids": ["opentofu-readme", "opentofu-provider-source"]
+    },
+    {
+      "id": "plan-apply-state-lifecycle",
+      "name": "Plan, apply, and state lifecycle",
+      "category": "change-management",
+      "claim_type": "fact",
+      "description": "OpenTofu produces an execution plan for proposed infrastructure changes, applies selected changes, and persists resource state used by later operations.",
+      "benefits": [
+        "Provides a reviewable intermediate change set",
+        "Retains resource identity and observed values across runs"
+      ],
+      "costs": [
+        "State requires protection, locking, and compatible evolution",
+        "Unknown values and remote drift complicate reconciliation"
+      ],
+      "evidence_ids": ["opentofu-plan-doc", "opentofu-state-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Provider-typed dependency graph",
+      "question": "When does a configuration and its provider-backed resources admit a valid parallel execution order?",
+      "assumptions": [
+        "Resources and data operations are graph nodes",
+        "References and explicit dependencies are ordering edges",
+        "Provider side effects are abstracted behind node operations"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["opentofu-readme", "opentofu-graph-source"]
+    },
+    {
+      "model": "Desired-versus-state transition",
+      "question": "How do configuration, prior state, provider observations, and an execution plan determine a proposed infrastructure transition?",
+      "assumptions": [
+        "State and provider observations are sufficiently comparable",
+        "Unknown and sensitive values follow engine evaluation rules",
+        "Remote API transaction semantics are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["opentofu-plan-doc", "opentofu-state-source"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "declarative-resource-graph",
+      "benefits": ["Ordering and parallelism are explicit"],
+      "costs": ["Graph construction and cycle diagnosis add complexity"]
+    },
+    {
+      "feature_id": "provider-extension-boundary",
+      "benefits": ["Broad infrastructure API coverage"],
+      "costs": ["Provider compatibility affects reproducibility"]
+    },
+    {
+      "feature_id": "plan-apply-state-lifecycle",
+      "benefits": ["Reviewable changes and persistent identity"],
+      "costs": ["State security, drift, and locking are operational obligations"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "opentofu-repository-commit",
+      "kind": "source-code",
+      "title": "OpenTofu source at 8830c516e054",
+      "uri": "https://github.com/opentofu/opentofu/commit/8830c516e05478f1cb69407d9b60118dbfad3af2",
+      "accessed": "2026-10-24",
+      "notes": "Fixed upstream revision used for this reviewed card."
+    },
+    {
+      "id": "opentofu-readme",
+      "kind": "official-doc",
+      "title": "OpenTofu project overview and key features",
+      "uri": "https://github.com/opentofu/opentofu/blob/8830c516e05478f1cb69407d9b60118dbfad3af2/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Pinned project documentation describing infrastructure as code, plans, graphs, and providers."
+    },
+    {
+      "id": "opentofu-graph-source",
+      "kind": "source-code",
+      "title": "OpenTofu dependency graph and walker at pinned commit",
+      "uri": "https://github.com/opentofu/opentofu/blob/8830c516e05478f1cb69407d9b60118dbfad3af2/internal/tofu/graph.go",
+      "accessed": "2026-10-24",
+      "notes": "Locally inspected Graph embeds dag.AcyclicGraph; Walk dispatches executable nodes concurrently while respecting graph dependencies."
+    },
+    {
+      "id": "opentofu-provider-source",
+      "kind": "source-code",
+      "title": "OpenTofu provider source selection at pinned commit",
+      "uri": "https://github.com/opentofu/opentofu/blob/8830c516e05478f1cb69407d9b60118dbfad3af2/cmd/tofu/provider_source.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for registry, filesystem, HTTP, and OCI provider installation sources."
+    },
+    {
+      "id": "opentofu-plan-doc",
+      "kind": "official-doc",
+      "title": "OpenTofu plan command",
+      "uri": "https://opentofu.org/docs/cli/commands/plan/",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for execution plans and proposed changes."
+    },
+    {
+      "id": "opentofu-state-source",
+      "kind": "source-code",
+      "title": "OpenTofu state and plan persistence source at pinned commit",
+      "uri": "https://github.com/opentofu/opentofu/tree/8830c516e05478f1cb69407d9b60118dbfad3af2/internal/states",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for state representations and state managers."
+    }
+  ],
+  "related_systems": ["terraform", "crossplane", "kubernetes"]
+}

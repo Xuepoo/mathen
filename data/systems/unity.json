@@ -1,0 +1,312 @@
+{
+  "id": "unity",
+  "name": "Unity",
+  "version_context": "UnityCsReference commit bf6028387a4fc2ea6d41aa7d8998e774655aedf6 (Unity 7000.0.0a12 C# reference source); Graphics tag v10.10.2, commit 0a547f7d17d69f0ea94f0f3143f8e5ea3b9f531f",
+  "summary": "A proprietary game and real-time application engine. This card models the publicly released C# reference surface, Scriptable Render Pipeline sources, and official Unity 6 documentation; closed native engine internals are outside the evidence scope.",
+  "scope": [
+    "scene and component lifecycle",
+    "Player loop and script execution",
+    "Scriptable Render Pipeline boundary",
+    "editor/build product boundary",
+    "public source observability limits"
+  ],
+  "features": [
+    {
+      "id": "scene-component-lifecycle",
+      "name": "Scene and component lifecycle",
+      "category": "content-model",
+      "claim_type": "fact",
+      "description": "The public C# reference exposes scene management and component-oriented runtime APIs, while the official manual describes MonoBehaviour event functions and scene execution. Unity therefore presents gameplay state through scenes, objects, and attached script components.",
+      "benefits": [
+        "Provides an editor-visible composition model for runtime content",
+        "Allows reusable behavior to attach to scene objects through components"
+      ],
+      "costs": [
+        "Object and component lifecycle ordering must be understood across scene and play-mode transitions",
+        "The public API does not expose every native ownership and scheduling detail"
+      ],
+      "evidence_ids": [
+        "unity-scene-source",
+        "unity-execution-doc",
+        "unity-monobehaviour-doc"
+      ]
+    },
+    {
+      "id": "player-loop-script-execution",
+      "name": "Player loop and script execution stages",
+      "category": "scheduling-model",
+      "claim_type": "fact",
+      "description": "Unity exposes the PlayerLoop API and documents a staged execution order containing initialization, update, physics, animation, and rendering-related callbacks. The public API also permits replacing or customizing loop systems.",
+      "benefits": [
+        "Makes major frame and simulation stages explicit to application code",
+        "Permits specialized systems to be inserted or removed from the loop"
+      ],
+      "costs": [
+        "Custom loop composition can invalidate assumptions made by packages and scripts",
+        "The exact order of callbacks and systems remains conditional on configuration and subsystem choices"
+      ],
+      "evidence_ids": [
+        "unity-playerloop-source",
+        "unity-playerloop-doc",
+        "unity-execution-doc"
+      ]
+    },
+    {
+      "id": "scriptable-render-pipeline-boundary",
+      "name": "Scriptable Render Pipeline boundary",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "The official Graphics repository contains the Scriptable Render Pipeline core and pipeline manager sources, while Unity documentation distinguishes built-in and Scriptable Render Pipeline execution. Rendering is therefore a replaceable package/pipeline boundary above engine scheduling and scene data.",
+      "benefits": [
+        "Allows different rendering strategies to consume shared engine content",
+        "Provides package-level customization points for render passes and pipeline state"
+      ],
+      "costs": [
+        "Pipeline-specific behavior and package versions constrain portability",
+        "Rendering integration crosses public engine APIs and package implementation details"
+      ],
+      "evidence_ids": [
+        "unity-graphics-repository",
+        "unity-renderpipeline-source",
+        "unity-rendering-doc"
+      ]
+    },
+    {
+      "id": "editor-build-runtime-product-boundary",
+      "name": "Editor, build, and runtime product boundary",
+      "category": "application-model",
+      "claim_type": "inference",
+      "description": "The public reference separates Editor APIs and BuildPipeline bindings from Runtime and scene/player APIs. Together with the official build documentation, this supports a product boundary in which authoring/build tooling produces a runtime player artifact.",
+      "benefits": [
+        "Separates authoring concerns from deployed player execution",
+        "Makes build configuration an explicit product-stage input"
+      ],
+      "costs": [
+        "Editor-only APIs and build-time transformations are not available in the player",
+        "A build can preserve or transform content in ways not visible from runtime APIs alone"
+      ],
+      "evidence_ids": [
+        "unity-buildpipeline-source",
+        "unity-editor-source",
+        "unity-build-doc",
+        "unity-csharp-repository"
+      ]
+    },
+    {
+      "id": "public-reference-source-boundary",
+      "name": "Public reference-source boundary",
+      "category": "architecture-evidence",
+      "claim_type": "fact",
+      "description": "Unity Technologies publishes UnityCsReference and the Graphics package sources, but the complete proprietary native engine is not represented by those repositories. This card consequently treats public bindings and packages as evidence for exposed contracts, not as a complete implementation claim.",
+      "benefits": [
+        "Keeps product-level claims anchored to inspectable primary artifacts",
+        "Makes the boundary between documented contract and unobserved native implementation explicit"
+      ],
+      "costs": [
+        "Native scheduling, serialization, and renderer internals remain outside direct source evidence",
+        "Architecture conclusions must be narrower than claims about the whole commercial engine"
+      ],
+      "evidence_ids": [
+        "unity-csharp-repository",
+        "unity-graphics-repository",
+        "unity-docs"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Player loop transition system",
+      "question": "How does a frame transition through Unity's documented loop stages and configurable system groups?",
+      "assumptions": [
+        "Loop systems are ordered stages with callbacks and subsystem work",
+        "Configuration can alter the set and position of systems",
+        "The model abstracts native scheduler implementation and platform-specific timing"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "unity-playerloop-source",
+        "unity-playerloop-doc",
+        "unity-execution-doc"
+      ]
+    },
+    {
+      "model": "Scene-component ownership graph",
+      "question": "How do scenes, objects, components, and script lifecycle callbacks compose into runtime content state?",
+      "assumptions": [
+        "Scene objects own or reference attached components",
+        "Component callbacks observe transitions in the player loop",
+        "The model abstracts serialization and native object ownership"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "unity-scene-source",
+        "unity-execution-doc",
+        "unity-monobehaviour-doc"
+      ]
+    },
+    {
+      "model": "Render pipeline substitution relation",
+      "question": "Which scene and frame state can be consumed by a selected render pipeline under its package contract?",
+      "assumptions": [
+        "A pipeline is selected/configured above shared engine state",
+        "Pipeline packages expose distinct implementation and injection boundaries",
+        "Compatibility is a candidate relation and does not claim equal output across pipelines"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "unity-graphics-repository",
+        "unity-renderpipeline-source",
+        "unity-rendering-doc"
+      ]
+    },
+    {
+      "model": "Product observability boundary",
+      "question": "Which Unity product-stage claims are directly supported by public source and documentation, and which remain unobserved native implementation details?",
+      "assumptions": [
+        "UnityCsReference and Graphics are authoritative for their published source scopes",
+        "Official manuals describe public behavior and contracts rather than all internals",
+        "Absence from the public repositories is not evidence that a native subsystem does not exist"
+      ],
+      "claim_type": "fact",
+      "evidence_ids": [
+        "unity-csharp-repository",
+        "unity-graphics-repository",
+        "unity-docs"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "scene-component-lifecycle",
+      "benefits": ["Editor-authored content and reusable behavior share a compositional runtime model"],
+      "costs": ["Lifecycle and ownership rules span scene, component, and native engine boundaries"]
+    },
+    {
+      "feature_id": "player-loop-script-execution",
+      "benefits": ["Frame stages are inspectable and partially configurable"],
+      "costs": ["Customization increases ordering and package-integration obligations"]
+    },
+    {
+      "feature_id": "scriptable-render-pipeline-boundary",
+      "benefits": ["Rendering strategies can evolve as packages over shared content contracts"],
+      "costs": ["Pipeline-specific semantics and versions limit complete interchangeability"]
+    },
+    {
+      "feature_id": "editor-build-runtime-product-boundary",
+      "benefits": ["Authoring and deployment concerns can be optimized independently"],
+      "costs": ["Build transformations create a boundary between editor state and player state"]
+    },
+    {
+      "feature_id": "public-reference-source-boundary",
+      "benefits": ["Claims remain bounded by inspectable primary evidence"],
+      "costs": ["The card cannot directly verify proprietary native implementation details"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "unity-csharp-repository",
+      "kind": "source-code",
+      "title": "Unity C# reference source at fixed commit",
+      "uri": "https://github.com/Unity-Technologies/UnityCsReference/tree/bf6028387a4fc2ea6d41aa7d8998e774655aedf6",
+      "accessed": "2026-10-24",
+      "notes": "Official Unity Technologies repository commit titled Unity 7000.0.0a12 C# reference source. It is a public reference surface, not the complete native engine."
+    },
+    {
+      "id": "unity-playerloop-source",
+      "kind": "source-code",
+      "title": "Unity PlayerLoop bindings at fixed commit",
+      "uri": "https://github.com/Unity-Technologies/UnityCsReference/blob/bf6028387a4fc2ea6d41aa7d8998e774655aedf6/Runtime/Export/PlayerLoop/PlayerLoop.bindings.cs",
+      "accessed": "2026-10-24",
+      "notes": "Fixed public source for PlayerLoop types and native binding surface."
+    },
+    {
+      "id": "unity-scene-source",
+      "kind": "source-code",
+      "title": "Unity SceneManager bindings at fixed commit",
+      "uri": "https://github.com/Unity-Technologies/UnityCsReference/blob/bf6028387a4fc2ea6d41aa7d8998e774655aedf6/Runtime/Export/SceneManager/SceneManager.bindings.cs",
+      "accessed": "2026-10-24",
+      "notes": "Fixed public source for scene loading and scene-management bindings."
+    },
+    {
+      "id": "unity-buildpipeline-source",
+      "kind": "source-code",
+      "title": "Unity BuildPipeline bindings at fixed commit",
+      "uri": "https://github.com/Unity-Technologies/UnityCsReference/blob/bf6028387a4fc2ea6d41aa7d8998e774655aedf6/Editor/Mono/BuildPipeline/BuildPipeline.bindings.cs",
+      "accessed": "2026-10-24",
+      "notes": "Fixed public source for editor build pipeline bindings."
+    },
+    {
+      "id": "unity-editor-source",
+      "kind": "source-code",
+      "title": "Unity editor reference source at fixed commit",
+      "uri": "https://github.com/Unity-Technologies/UnityCsReference/tree/bf6028387a4fc2ea6d41aa7d8998e774655aedf6/Editor",
+      "accessed": "2026-10-24",
+      "notes": "Fixed public source boundary for editor-only APIs."
+    },
+    {
+      "id": "unity-graphics-repository",
+      "kind": "source-code",
+      "title": "Unity Graphics package sources at tag v10.10.2",
+      "uri": "https://github.com/Unity-Technologies/Graphics/tree/0a547f7d17d69f0ea94f0f3143f8e5ea3b9f531f",
+      "accessed": "2026-10-24",
+      "notes": "Official Graphics repository tag v10.10.2 resolved to a fixed commit."
+    },
+    {
+      "id": "unity-renderpipeline-source",
+      "kind": "source-code",
+      "title": "Unity Scriptable Render Pipeline core at fixed tag",
+      "uri": "https://github.com/Unity-Technologies/Graphics/tree/0a547f7d17d69f0ea94f0f3143f8e5ea3b9f531f/com.unity.render-pipelines.core/Runtime",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for public SRP core runtime and pipeline management code."
+    },
+    {
+      "id": "unity-docs",
+      "kind": "official-doc",
+      "title": "Unity 6.6 official manual",
+      "uri": "https://docs.unity3d.com/6000.6/Documentation/Manual/index.html",
+      "accessed": "2026-10-24",
+      "notes": "Official product documentation used for public behavior and scope statements."
+    },
+    {
+      "id": "unity-execution-doc",
+      "kind": "official-doc",
+      "title": "Unity event function execution order",
+      "uri": "https://docs.unity3d.com/6000.6/Documentation/Manual/execution-order.html",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for PlayerLoop context, script callbacks, physics, animation, and rendering stages."
+    },
+    {
+      "id": "unity-playerloop-doc",
+      "kind": "official-doc",
+      "title": "Unity PlayerLoop API",
+      "uri": "https://docs.unity3d.com/6000.6/Documentation/ScriptReference/LowLevel.PlayerLoop.html",
+      "accessed": "2026-10-24",
+      "notes": "Official API reference for inspecting and customizing the PlayerLoop."
+    },
+    {
+      "id": "unity-monobehaviour-doc",
+      "kind": "official-doc",
+      "title": "Unity MonoBehaviour API",
+      "uri": "https://docs.unity3d.com/6000.6/Documentation/ScriptReference/MonoBehaviour.html",
+      "accessed": "2026-10-24",
+      "notes": "Official API reference for component script lifecycle callbacks."
+    },
+    {
+      "id": "unity-rendering-doc",
+      "kind": "official-doc",
+      "title": "Unity Scriptable Render Pipeline introduction",
+      "uri": "https://docs.unity3d.com/6000.6/Documentation/Manual/scriptable-render-pipeline-introduction.html",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for the Scriptable Render Pipeline boundary."
+    },
+    {
+      "id": "unity-build-doc",
+      "kind": "official-doc",
+      "title": "Unity build profiles and player builds",
+      "uri": "https://docs.unity3d.com/6000.6/Documentation/Manual/build-profiles.html",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for build-stage product configuration."
+    }
+  ],
+  "related_systems": ["blender", "godot", "threejs"]
+}

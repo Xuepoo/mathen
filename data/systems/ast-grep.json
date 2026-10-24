@@ -257,5 +257,15 @@
       "notes": "run_worker creates mpsc::channel, spawns traversal, clones worker handles, counts skipped production failures, quits on send failure, and consumes results through the printer. MaxItemCounter supports scan result reservation."
     }
   ],
-  "related_systems": ["tree-sitter"]
+  "related_systems": ["tree-sitter"],
+  "relations": [
+    {
+      "type": "uses",
+      "target": "tree-sitter",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["ast-grep-workspace", "ast-grep-parser", "ast-grep-readme"],
+      "notes": "The pinned ast-grep workspace declares a Tree-sitter dependency, and the reviewed parser adapter imports and invokes Tree-sitter APIs; this records the parser integration boundary rather than ownership of Tree-sitter grammars or semantic analysis."
+    }
+  ]
 }

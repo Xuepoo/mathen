@@ -44,6 +44,9 @@ This repository is a research prototype. Architecture Cards are structured,
 evidence-backed models, not automatic formal proofs of the corresponding
 implementations.
 
+Source code and the browser client are available in the
+[Mathen GitHub repository](https://github.com/Xuepoo/mathen).
+
 ## The core model
 
 Mathen represents a system through several complementary views:
@@ -66,16 +69,16 @@ No single mathematical structure is expected to explain an entire system. A
 mathematical view is useful only when it answers a concrete question and states
 its assumptions. Depending on the question, a view may use:
 
-| Architecture question | Candidate mathematical view |
-| --- | --- |
-| What are the data and objects? | Sets, types, algebraic data types |
-| How are objects related? | Graphs, DAGs, partial orders |
-| How does the system evolve? | State machines, transition systems |
-| Which operations compose? | Monoids, algebras, compositional semantics |
-| Does state converge? | Semilattices, monotone systems |
-| Is an optimization transparent? | Refinement, simulation, bisimulation |
-| How do failures affect service? | Probability, queueing, reliability models |
-| How are resources bounded? | Complexity and cost models |
+| Architecture question           | Candidate mathematical view                |
+| ------------------------------- | ------------------------------------------ |
+| What are the data and objects?  | Sets, types, algebraic data types          |
+| How are objects related?        | Graphs, DAGs, partial orders               |
+| How does the system evolve?     | State machines, transition systems         |
+| Which operations compose?       | Monoids, algebras, compositional semantics |
+| Does state converge?            | Semilattices, monotone systems             |
+| Is an optimization transparent? | Refinement, simulation, bisimulation       |
+| How do failures affect service? | Probability, queueing, reliability models  |
+| How are resources bounded?      | Complexity and cost models                 |
 
 These are candidate abstractions, not automatic proofs. Each claim is labeled
 as a `fact`, `inference`, `hypothesis`, or `analogy`, and remains connected to
@@ -160,16 +163,16 @@ boundary, recovery protocol, update pattern, and storage costs.
 The current cards and repository analyses use systems that expose different
 architectural patterns:
 
-| System | Reusable structure being studied |
-| --- | --- |
-| Git | Immutable content-addressed objects, mutable references, causal history |
-| SQLite | Embedded execution, layered storage, atomic commit, WAL snapshots |
-| DuckDB | Embedded analytical execution, columnar data, vectorized operators |
-| PostgreSQL | Extensible relational engine, MVCC, process isolation, extensions |
-| Kafka | Durable append-only logs, ordered offsets, replay-oriented consumption |
-| Kubernetes | Declarative state, reconciliation loops, control-plane convergence |
-| Firecracker | Minimal virtual machine model, KVM isolation, event-driven VMM |
-| Supabase | Database-centered platform composition, API, auth, and data policy |
+| System      | Reusable structure being studied                                        |
+| ----------- | ----------------------------------------------------------------------- |
+| Git         | Immutable content-addressed objects, mutable references, causal history |
+| SQLite      | Embedded execution, layered storage, atomic commit, WAL snapshots       |
+| DuckDB      | Embedded analytical execution, columnar data, vectorized operators      |
+| PostgreSQL  | Extensible relational engine, MVCC, process isolation, extensions       |
+| Kafka       | Durable append-only logs, ordered offsets, replay-oriented consumption  |
+| Kubernetes  | Declarative state, reconciliation loops, control-plane convergence      |
+| Firecracker | Minimal virtual machine model, KVM isolation, event-driven VMM          |
+| Supabase    | Database-centered platform composition, API, auth, and data policy      |
 
 These are starting points for extracting structures that can be compared across
 databases, distributed systems, operating systems, runtimes, network protocols,
@@ -210,14 +213,21 @@ The repository currently provides:
   orchestration, isolation, virtualization, networking, compilers, media, and
   backend platforms;
 - fixed-commit repository analysis with Git and GitHub archive transports;
-- deterministic reports for source structure, build surfaces, and navigation
-  signals;
+- deterministic repository observations for source structure, build surfaces,
+  and navigation signals without assigning semantic facts;
 - portable modeling bundles and a provider-neutral OpenAI-compatible LLM
   adapter;
+- a bounded composition candidate explorer whose results remain
+  `proven: false`;
 - a Cloudflare-first Hono Worker API backed by D1;
 - a Vite browser client for browsing reviewed architecture cards;
+- read-only API queries for source-card-owned feature relations and composition
+  proposals;
 - a read-only stdio MCP server with filesystem and API backends;
 - explicit separation between reviewed cards, drafts, and modeling evidence.
+
+The canonical tree currently contains 219 reviewed cards. The representative
+repository manifest contains 62 entries, all with matching canonical cards.
 
 The current knowledge graph is intentionally relational and small. D1 is the
 canonical structured store. Vectorize is an optional rebuildable semantic
@@ -334,9 +344,10 @@ modeling bundles through the Hono/D1 API instead:
 MATHEN_API_URL=http://localhost:8787/api bun run mcp
 ```
 
-The server exposes `list_systems`, `get_system`, `search_features`, and
-`get_modeling_bundle`. API mode does not expose drafts; filesystem mode exposes
-them only when explicitly requested. See [`docs/mcp.md`](docs/mcp.md).
+The server exposes `list_systems`, `get_system`, `search_features`,
+`list_feature_relations`, and `get_modeling_bundle`. API mode does not expose
+drafts; filesystem mode exposes them only when explicitly requested. See
+[`docs/mcp.md`](docs/mcp.md).
 
 ## Repository layout
 

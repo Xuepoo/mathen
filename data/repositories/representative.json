@@ -1,28 +1,100 @@
 [
   {
-    "id": "git",
-    "name": "Git",
-    "category": "version-control",
-    "repository": "https://github.com/git/git.git",
-    "documentation": "https://git-scm.com/docs",
+    "id": "blender",
+    "name": "Blender",
+    "category": "3d-graphics-application",
+    "repository": "https://github.com/blender/blender.git",
+    "documentation": "https://docs.blender.org/manual/en/latest/",
+    "ref": "main",
+    "priority": "extended"
+  },
+  {
+    "id": "boost",
+    "name": "Boost",
+    "category": "c-plus-plus-library",
+    "repository": "https://github.com/boostorg/boost.git",
+    "documentation": "https://www.boost.org/doc/",
     "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "caddy",
+    "name": "Caddy",
+    "category": "web-server",
+    "repository": "https://github.com/caddyserver/caddy.git",
+    "documentation": "https://caddyserver.com/docs/architecture",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "carryctx",
+    "name": "CarryCtx",
+    "category": "project-lifecycle-tool",
+    "repository": "https://github.com/Xuepoo/carryctx.git",
+    "documentation": "https://github.com/Xuepoo/carryctx-docs",
+    "ref": "4ba349da5e9f20471b87b451900f0d155d84da02",
     "priority": "seed"
   },
   {
-    "id": "sqlite",
-    "name": "SQLite",
-    "category": "database",
-    "repository": "https://github.com/sqlite/sqlite.git",
-    "documentation": "https://www.sqlite.org/docs.html",
+    "id": "cassandra",
+    "name": "Apache Cassandra",
+    "category": "distributed-database",
+    "repository": "https://github.com/apache/cassandra.git",
+    "documentation": "https://cassandra.apache.org/doc/stable/",
+    "ref": "trunk",
+    "priority": "core"
+  },
+  {
+    "id": "coreutils",
+    "name": "GNU Coreutils",
+    "category": "unix-system-tools",
+    "repository": "https://github.com/coreutils/coreutils.git",
+    "documentation": "https://www.gnu.org/software/coreutils/manual/",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "cpython",
+    "name": "CPython",
+    "category": "programming-language-runtime",
+    "repository": "https://github.com/python/cpython.git",
+    "documentation": "https://docs.python.org/3/",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "curl",
+    "name": "curl",
+    "category": "network-library",
+    "repository": "https://github.com/curl/curl.git",
+    "documentation": "https://curl.se/docs/",
     "ref": "master",
     "priority": "core"
   },
   {
-    "id": "postgresql",
-    "name": "PostgreSQL",
-    "category": "database",
-    "repository": "https://github.com/postgres/postgres.git",
-    "documentation": "https://www.postgresql.org/docs/",
+    "id": "deno",
+    "name": "Deno",
+    "category": "javascript-runtime",
+    "repository": "https://github.com/denoland/deno.git",
+    "documentation": "https://docs.deno.com/runtime/",
+    "ref": "main",
+    "priority": "extended"
+  },
+  {
+    "id": "distroless",
+    "name": "Distroless",
+    "category": "container-image",
+    "repository": "https://github.com/GoogleContainerTools/distroless.git",
+    "documentation": "https://github.com/GoogleContainerTools/distroless",
+    "ref": "f5ca51a71b23afc46b93143d60550278b18ed327",
+    "priority": "extended"
+  },
+  {
+    "id": "docker",
+    "name": "Docker Engine",
+    "category": "container-runtime",
+    "repository": "https://github.com/moby/moby.git",
+    "documentation": "https://docs.docker.com/engine/",
     "ref": "master",
     "priority": "core"
   },
@@ -36,15 +108,6 @@
     "priority": "seed"
   },
   {
-    "id": "redis",
-    "name": "Redis",
-    "category": "data-service",
-    "repository": "https://github.com/redis/redis.git",
-    "documentation": "https://redis.io/docs/latest/",
-    "ref": "unstable",
-    "priority": "core"
-  },
-  {
     "id": "elasticsearch",
     "name": "Elasticsearch",
     "category": "search-engine",
@@ -52,78 +115,6 @@
     "documentation": "https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html",
     "ref": "main",
     "priority": "core"
-  },
-  {
-    "id": "kafka",
-    "name": "Apache Kafka",
-    "category": "distributed-log",
-    "repository": "https://github.com/apache/kafka.git",
-    "documentation": "https://kafka.apache.org/documentation/",
-    "ref": "trunk",
-    "priority": "core"
-  },
-  {
-    "id": "hadoop",
-    "name": "Apache Hadoop",
-    "category": "distributed-storage-compute",
-    "repository": "https://github.com/apache/hadoop.git",
-    "documentation": "https://hadoop.apache.org/docs/",
-    "ref": "trunk",
-    "priority": "extended"
-  },
-  {
-    "id": "kubernetes",
-    "name": "Kubernetes",
-    "category": "orchestration",
-    "repository": "https://github.com/kubernetes/kubernetes.git",
-    "documentation": "https://kubernetes.io/docs/concepts/",
-    "ref": "master",
-    "priority": "core"
-  },
-  {
-    "id": "docker",
-    "name": "Docker Engine",
-    "category": "container-runtime",
-    "repository": "https://github.com/moby/moby.git",
-    "documentation": "https://docs.docker.com/engine/",
-    "ref": "master",
-    "priority": "core"
-  },
-  {
-    "id": "linux",
-    "name": "Linux Kernel",
-    "category": "operating-system",
-    "repository": "https://github.com/torvalds/linux.git",
-    "documentation": "https://docs.kernel.org/",
-    "ref": "master",
-    "priority": "core"
-  },
-  {
-    "id": "qemu",
-    "name": "QEMU",
-    "category": "virtualization",
-    "repository": "https://github.com/qemu/qemu.git",
-    "documentation": "https://www.qemu.org/documentation/",
-    "ref": "master",
-    "priority": "core"
-  },
-  {
-    "id": "firecracker",
-    "name": "Firecracker",
-    "category": "microvirtualization",
-    "repository": "https://github.com/firecracker-microvm/firecracker.git",
-    "documentation": "https://github.com/firecracker-microvm/firecracker/tree/main/docs",
-    "ref": "main",
-    "priority": "seed"
-  },
-  {
-    "id": "nginx",
-    "name": "NGINX",
-    "category": "network-server",
-    "repository": "https://github.com/nginx/nginx.git",
-    "documentation": "https://nginx.org/en/docs/",
-    "ref": "master",
-    "priority": "extended"
   },
   {
     "id": "envoy",
@@ -135,42 +126,6 @@
     "priority": "core"
   },
   {
-    "id": "haproxy",
-    "name": "HAProxy",
-    "category": "network-proxy",
-    "repository": "https://github.com/haproxy/haproxy.git",
-    "documentation": "https://docs.haproxy.org/",
-    "ref": "master",
-    "priority": "core"
-  },
-  {
-    "id": "caddy",
-    "name": "Caddy",
-    "category": "web-server",
-    "repository": "https://github.com/caddyserver/caddy.git",
-    "documentation": "https://caddyserver.com/docs/architecture",
-    "ref": "master",
-    "priority": "extended"
-  },
-  {
-    "id": "wireguard",
-    "name": "WireGuard",
-    "category": "secure-tunnel",
-    "repository": "https://git.zx2c4.com/wireguard-go",
-    "documentation": "https://www.wireguard.com/protocol/",
-    "ref": "master",
-    "priority": "core"
-  },
-  {
-    "id": "llvm",
-    "name": "LLVM",
-    "category": "compiler-infrastructure",
-    "repository": "https://github.com/llvm/llvm-project.git",
-    "documentation": "https://llvm.org/docs/",
-    "ref": "main",
-    "priority": "extended"
-  },
-  {
     "id": "ffmpeg",
     "name": "FFmpeg",
     "category": "media-processing",
@@ -180,92 +135,20 @@
     "priority": "extended"
   },
   {
-    "id": "supabase",
-    "name": "Supabase",
-    "category": "backend-platform",
-    "repository": "https://github.com/supabase/supabase.git",
-    "documentation": "https://supabase.com/docs",
-    "ref": "master",
+    "id": "firecracker",
+    "name": "Firecracker",
+    "category": "microvirtualization",
+    "repository": "https://github.com/firecracker-microvm/firecracker.git",
+    "documentation": "https://github.com/firecracker-microvm/firecracker/tree/main/docs",
+    "ref": "main",
     "priority": "seed"
   },
   {
-    "id": "cpython",
-    "name": "CPython",
-    "category": "programming-language-runtime",
-    "repository": "https://github.com/python/cpython.git",
-    "documentation": "https://docs.python.org/3/",
-    "ref": "main",
-    "priority": "core"
-  },
-  {
-    "id": "rust",
-    "name": "Rust",
-    "category": "programming-language-toolchain",
-    "repository": "https://github.com/rust-lang/rust.git",
-    "documentation": "https://doc.rust-lang.org/book/",
-    "ref": "main",
-    "priority": "core"
-  },
-  {
-    "id": "lua",
-    "name": "Lua",
-    "category": "programming-language-runtime",
-    "repository": "https://github.com/lua/lua.git",
-    "documentation": "https://www.lua.org/docs.html",
-    "ref": "master",
-    "priority": "core"
-  },
-  {
-    "id": "go",
-    "name": "Go",
-    "category": "programming-language-toolchain",
-    "repository": "https://github.com/golang/go.git",
-    "documentation": "https://go.dev/doc/",
-    "ref": "master",
-    "priority": "extended"
-  },
-  {
-    "id": "ruby",
-    "name": "Ruby",
-    "category": "programming-language-runtime",
-    "repository": "https://github.com/ruby/ruby.git",
-    "documentation": "https://www.ruby-lang.org/en/documentation/",
-    "ref": "master",
-    "priority": "extended"
-  },
-  {
-    "id": "node",
-    "name": "Node.js",
-    "category": "javascript-runtime",
-    "repository": "https://github.com/nodejs/node.git",
-    "documentation": "https://nodejs.org/docs/latest/api/",
-    "ref": "main",
-    "priority": "core"
-  },
-  {
-    "id": "deno",
-    "name": "Deno",
-    "category": "javascript-runtime",
-    "repository": "https://github.com/denoland/deno.git",
-    "documentation": "https://docs.deno.com/runtime/",
-    "ref": "main",
-    "priority": "extended"
-  },
-  {
-    "id": "v8",
-    "name": "V8",
-    "category": "javascript-engine",
-    "repository": "https://github.com/v8/v8.git",
-    "documentation": "https://v8.dev/docs",
-    "ref": "main",
-    "priority": "extended"
-  },
-  {
-    "id": "wasmtime",
-    "name": "Wasmtime",
-    "category": "wasm-runtime",
-    "repository": "https://github.com/bytecodealliance/wasmtime.git",
-    "documentation": "https://docs.wasmtime.dev/",
+    "id": "foundationdb",
+    "name": "FoundationDB",
+    "category": "distributed-database",
+    "repository": "https://github.com/apple/foundationdb.git",
+    "documentation": "https://apple.github.io/foundationdb/",
     "ref": "main",
     "priority": "core"
   },
@@ -279,33 +162,6 @@
     "priority": "extended"
   },
   {
-    "id": "systemd",
-    "name": "systemd",
-    "category": "init-system",
-    "repository": "https://github.com/systemd/systemd.git",
-    "documentation": "https://www.freedesktop.org/wiki/Software/systemd/",
-    "ref": "558da3129cce0f4ab52cc03d7444d12355300daa",
-    "priority": "core"
-  },
-  {
-    "id": "xv6-public",
-    "name": "xv6",
-    "category": "operating-system-education",
-    "repository": "https://github.com/mit-pdos/xv6-public.git",
-    "documentation": "https://pdos.csail.mit.edu/6.828/2014/xv6.html",
-    "ref": "master",
-    "priority": "seed"
-  },
-  {
-    "id": "coreutils",
-    "name": "GNU Coreutils",
-    "category": "unix-system-tools",
-    "repository": "https://github.com/coreutils/coreutils.git",
-    "documentation": "https://www.gnu.org/software/coreutils/manual/",
-    "ref": "master",
-    "priority": "extended"
-  },
-  {
     "id": "gcc",
     "name": "GCC",
     "category": "compiler",
@@ -315,22 +171,76 @@
     "priority": "core"
   },
   {
-    "id": "tree-sitter",
-    "name": "tree-sitter",
-    "category": "parser-library",
-    "repository": "https://github.com/tree-sitter/tree-sitter.git",
-    "documentation": "https://tree-sitter.github.io/tree-sitter/",
+    "id": "git",
+    "name": "Git",
+    "category": "version-control",
+    "repository": "https://github.com/git/git.git",
+    "documentation": "https://git-scm.com/docs",
+    "ref": "master",
+    "priority": "seed"
+  },
+  {
+    "id": "go",
+    "name": "Go",
+    "category": "programming-language-toolchain",
+    "repository": "https://github.com/golang/go.git",
+    "documentation": "https://go.dev/doc/",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "grpc",
+    "name": "gRPC",
+    "category": "rpc-framework",
+    "repository": "https://github.com/grpc/grpc.git",
+    "documentation": "https://grpc.io/docs/",
     "ref": "master",
     "priority": "core"
   },
   {
-    "id": "boost",
-    "name": "Boost",
-    "category": "c-plus-plus-library",
-    "repository": "https://github.com/boostorg/boost.git",
-    "documentation": "https://www.boost.org/doc/",
-    "ref": "master",
+    "id": "hadoop",
+    "name": "Apache Hadoop",
+    "category": "distributed-storage-compute",
+    "repository": "https://github.com/apache/hadoop.git",
+    "documentation": "https://hadoop.apache.org/docs/",
+    "ref": "trunk",
     "priority": "extended"
+  },
+  {
+    "id": "haproxy",
+    "name": "HAProxy",
+    "category": "network-proxy",
+    "repository": "https://github.com/haproxy/haproxy.git",
+    "documentation": "https://docs.haproxy.org/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "kafka",
+    "name": "Apache Kafka",
+    "category": "distributed-log",
+    "repository": "https://github.com/apache/kafka.git",
+    "documentation": "https://kafka.apache.org/documentation/",
+    "ref": "trunk",
+    "priority": "core"
+  },
+  {
+    "id": "kubernetes",
+    "name": "Kubernetes",
+    "category": "orchestration",
+    "repository": "https://github.com/kubernetes/kubernetes.git",
+    "documentation": "https://kubernetes.io/docs/concepts/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "leveldb",
+    "name": "LevelDB",
+    "category": "embedded-database",
+    "repository": "https://github.com/google/leveldb.git",
+    "documentation": "https://github.com/google/leveldb/tree/main/doc",
+    "ref": "main",
+    "priority": "core"
   },
   {
     "id": "libuv",
@@ -342,38 +252,47 @@
     "priority": "core"
   },
   {
-    "id": "curl",
-    "name": "curl",
-    "category": "network-library",
-    "repository": "https://github.com/curl/curl.git",
-    "documentation": "https://curl.se/docs/",
+    "id": "linux",
+    "name": "Linux Kernel",
+    "category": "operating-system",
+    "repository": "https://github.com/torvalds/linux.git",
+    "documentation": "https://docs.kernel.org/",
     "ref": "master",
     "priority": "core"
   },
   {
-    "id": "openssl",
-    "name": "OpenSSL",
-    "category": "cryptography-library",
-    "repository": "https://github.com/openssl/openssl.git",
-    "documentation": "https://docs.openssl.org/",
-    "ref": "master",
+    "id": "llvm",
+    "name": "LLVM",
+    "category": "compiler-infrastructure",
+    "repository": "https://github.com/llvm/llvm-project.git",
+    "documentation": "https://llvm.org/docs/",
+    "ref": "main",
     "priority": "extended"
   },
   {
-    "id": "protobuf",
-    "name": "Protocol Buffers",
-    "category": "serialization-protocol",
-    "repository": "https://github.com/protocolbuffers/protobuf.git",
-    "documentation": "https://protobuf.dev/",
-    "ref": "main",
+    "id": "lua",
+    "name": "Lua",
+    "category": "programming-language-runtime",
+    "repository": "https://github.com/lua/lua.git",
+    "documentation": "https://www.lua.org/docs.html",
+    "ref": "master",
     "priority": "core"
   },
   {
-    "id": "grpc",
-    "name": "gRPC",
-    "category": "rpc-framework",
-    "repository": "https://github.com/grpc/grpc.git",
-    "documentation": "https://grpc.io/docs/",
+    "id": "mihomo",
+    "name": "Mihomo",
+    "category": "proxy-client",
+    "repository": "https://github.com/MetaCubeX/mihomo.git",
+    "documentation": "https://wiki.metacubex.one/",
+    "ref": "3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8",
+    "priority": "extended"
+  },
+  {
+    "id": "mongodb",
+    "name": "MongoDB",
+    "category": "document-database",
+    "repository": "https://github.com/mongodb/mongo.git",
+    "documentation": "https://www.mongodb.com/docs/",
     "ref": "master",
     "priority": "core"
   },
@@ -396,6 +315,87 @@
     "priority": "extended"
   },
   {
+    "id": "nginx",
+    "name": "NGINX",
+    "category": "network-server",
+    "repository": "https://github.com/nginx/nginx.git",
+    "documentation": "https://nginx.org/en/docs/",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "node",
+    "name": "Node.js",
+    "category": "javascript-runtime",
+    "repository": "https://github.com/nodejs/node.git",
+    "documentation": "https://nodejs.org/docs/latest/api/",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "openssl",
+    "name": "OpenSSL",
+    "category": "cryptography-library",
+    "repository": "https://github.com/openssl/openssl.git",
+    "documentation": "https://docs.openssl.org/",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "opentofu",
+    "name": "OpenTofu",
+    "category": "infrastructure-as-code",
+    "repository": "https://github.com/opentofu/opentofu.git",
+    "documentation": "https://opentofu.org/docs/",
+    "ref": "8830c516e05478f1cb69407d9b60118dbfad3af2",
+    "priority": "extended"
+  },
+  {
+    "id": "podman",
+    "name": "Podman",
+    "category": "container-runtime",
+    "repository": "https://github.com/containers/podman.git",
+    "documentation": "https://docs.podman.io/",
+    "ref": "eeeb322d33186b6fdb8522de61ac442c0ae7de81",
+    "priority": "extended"
+  },
+  {
+    "id": "postgresql",
+    "name": "PostgreSQL",
+    "category": "database",
+    "repository": "https://github.com/postgres/postgres.git",
+    "documentation": "https://www.postgresql.org/docs/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "protobuf",
+    "name": "Protocol Buffers",
+    "category": "serialization-protocol",
+    "repository": "https://github.com/protocolbuffers/protobuf.git",
+    "documentation": "https://protobuf.dev/",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "qemu",
+    "name": "QEMU",
+    "category": "virtualization",
+    "repository": "https://github.com/qemu/qemu.git",
+    "documentation": "https://www.qemu.org/documentation/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "redis",
+    "name": "Redis",
+    "category": "data-service",
+    "repository": "https://github.com/redis/redis.git",
+    "documentation": "https://redis.io/docs/latest/",
+    "ref": "unstable",
+    "priority": "core"
+  },
+  {
     "id": "rocksdb",
     "name": "RocksDB",
     "category": "embedded-database",
@@ -405,40 +405,67 @@
     "priority": "core"
   },
   {
-    "id": "leveldb",
-    "name": "LevelDB",
-    "category": "embedded-database",
-    "repository": "https://github.com/google/leveldb.git",
-    "documentation": "https://github.com/google/leveldb/tree/main/doc",
+    "id": "ruby",
+    "name": "Ruby",
+    "category": "programming-language-runtime",
+    "repository": "https://github.com/ruby/ruby.git",
+    "documentation": "https://www.ruby-lang.org/en/documentation/",
+    "ref": "master",
+    "priority": "extended"
+  },
+  {
+    "id": "rust",
+    "name": "Rust",
+    "category": "programming-language-toolchain",
+    "repository": "https://github.com/rust-lang/rust.git",
+    "documentation": "https://doc.rust-lang.org/book/",
     "ref": "main",
     "priority": "core"
   },
   {
-    "id": "foundationdb",
-    "name": "FoundationDB",
-    "category": "distributed-database",
-    "repository": "https://github.com/apple/foundationdb.git",
-    "documentation": "https://apple.github.io/foundationdb/",
+    "id": "sdl",
+    "name": "SDL",
+    "category": "multimedia-library",
+    "repository": "https://github.com/libsdl-org/SDL.git",
+    "documentation": "https://wiki.libsdl.org/SDL3/",
     "ref": "main",
-    "priority": "core"
+    "priority": "extended"
   },
   {
-    "id": "mongodb",
-    "name": "MongoDB",
-    "category": "document-database",
-    "repository": "https://github.com/mongodb/mongo.git",
-    "documentation": "https://www.mongodb.com/docs/",
+    "id": "sqlite",
+    "name": "SQLite",
+    "category": "database",
+    "repository": "https://github.com/sqlite/sqlite.git",
+    "documentation": "https://www.sqlite.org/docs.html",
     "ref": "master",
     "priority": "core"
   },
   {
-    "id": "cassandra",
-    "name": "Apache Cassandra",
-    "category": "distributed-database",
-    "repository": "https://github.com/apache/cassandra.git",
-    "documentation": "https://cassandra.apache.org/doc/stable/",
-    "ref": "trunk",
+    "id": "supabase",
+    "name": "Supabase",
+    "category": "backend-platform",
+    "repository": "https://github.com/supabase/supabase.git",
+    "documentation": "https://supabase.com/docs",
+    "ref": "master",
+    "priority": "seed"
+  },
+  {
+    "id": "systemd",
+    "name": "systemd",
+    "category": "init-system",
+    "repository": "https://github.com/systemd/systemd.git",
+    "documentation": "https://www.freedesktop.org/wiki/Software/systemd/",
+    "ref": "558da3129cce0f4ab52cc03d7444d12355300daa",
     "priority": "core"
+  },
+  {
+    "id": "tailscale",
+    "name": "Tailscale",
+    "category": "secure-mesh-vpn",
+    "repository": "https://github.com/tailscale/tailscale.git",
+    "documentation": "https://tailscale.com/kb/1151/what-is-tailscale",
+    "ref": "e26db7a5797683ec99ad1516c40b628c7f2dfd71",
+    "priority": "extended"
   },
   {
     "id": "threejs",
@@ -450,21 +477,84 @@
     "priority": "core"
   },
   {
-    "id": "blender",
-    "name": "Blender",
-    "category": "3d-graphics-application",
-    "repository": "https://github.com/blender/blender.git",
-    "documentation": "https://docs.blender.org/manual/en/latest/",
+    "id": "tree-sitter",
+    "name": "tree-sitter",
+    "category": "parser-library",
+    "repository": "https://github.com/tree-sitter/tree-sitter.git",
+    "documentation": "https://tree-sitter.github.io/tree-sitter/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "v2ray",
+    "name": "V2Ray Core",
+    "category": "proxy-core",
+    "repository": "https://github.com/v2fly/v2ray-core.git",
+    "documentation": "https://www.v2fly.org/",
+    "ref": "de610153d59ee0bc9222a17680061d732fa14e7b",
+    "priority": "extended"
+  },
+  {
+    "id": "v8",
+    "name": "V8",
+    "category": "javascript-engine",
+    "repository": "https://github.com/v8/v8.git",
+    "documentation": "https://v8.dev/docs",
     "ref": "main",
     "priority": "extended"
   },
   {
-    "id": "sdl",
-    "name": "SDL",
-    "category": "multimedia-library",
-    "repository": "https://github.com/libsdl-org/SDL.git",
-    "documentation": "https://wiki.libsdl.org/SDL3/",
-    "ref": "main",
+    "id": "virtualbox",
+    "name": "Oracle VM VirtualBox",
+    "category": "virtualization",
+    "repository": "https://github.com/VirtualBox/virtualbox.git",
+    "documentation": "https://www.virtualbox.org/manual/UserManual.html",
+    "ref": "b6bea72111fcff48f31c57c9f66365b1d3301bb9",
     "priority": "extended"
+  },
+  {
+    "id": "wasmtime",
+    "name": "Wasmtime",
+    "category": "wasm-runtime",
+    "repository": "https://github.com/bytecodealliance/wasmtime.git",
+    "documentation": "https://docs.wasmtime.dev/",
+    "ref": "main",
+    "priority": "core"
+  },
+  {
+    "id": "wireguard",
+    "name": "WireGuard",
+    "category": "secure-tunnel",
+    "repository": "https://git.zx2c4.com/wireguard-go",
+    "documentation": "https://www.wireguard.com/protocol/",
+    "ref": "master",
+    "priority": "core"
+  },
+  {
+    "id": "wrangler",
+    "name": "Cloudflare Wrangler",
+    "category": "cloud-platform-cli",
+    "repository": "https://github.com/cloudflare/workers-sdk.git",
+    "documentation": "https://developers.cloudflare.com/workers/wrangler/",
+    "ref": "e651d7c0dd8e171dcc1820679f9f46601971d876",
+    "priority": "extended"
+  },
+  {
+    "id": "xray",
+    "name": "Xray-core",
+    "category": "proxy-core",
+    "repository": "https://github.com/XTLS/Xray-core.git",
+    "documentation": "https://xtls.github.io/",
+    "ref": "1b1647cd9ddf0abc34b981d4611fc03bcac1ca74",
+    "priority": "extended"
+  },
+  {
+    "id": "xv6-public",
+    "name": "xv6",
+    "category": "operating-system-education",
+    "repository": "https://github.com/mit-pdos/xv6-public.git",
+    "documentation": "https://pdos.csail.mit.edu/6.828/2014/xv6.html",
+    "ref": "master",
+    "priority": "seed"
   }
 ]

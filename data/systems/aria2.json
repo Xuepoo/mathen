@@ -1,0 +1,236 @@
+{
+  "id": "aria2",
+  "name": "aria2",
+  "version_context": "release 1.37.0, commit eb7232465119e1a596cb424e2b6c3c9f4e2abb30",
+  "summary": "A multi-protocol download utility whose engine schedules request groups, splits resources into independently transferable segments, and exposes optional JSON-RPC and XML-RPC control.",
+  "scope": [
+    "multi-protocol download engine",
+    "segmented transfers",
+    "request-group scheduling",
+    "BitTorrent and Metalink support",
+    "RPC control interface"
+  ],
+  "features": [
+    {
+      "id": "request-group-download-scheduling",
+      "name": "Request-group download scheduling",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "aria2 groups download requests into RequestGroup objects and drives them through a DownloadEngine loop. Groups can be reserved, activated, halted, and reported independently, allowing multiple downloads to share one engine lifecycle.",
+      "benefits": [
+        "Makes download lifecycle and aggregate statistics explicit per request group",
+        "Allows several downloads to be coordinated by one event-driven engine"
+      ],
+      "costs": [
+        "Group reservation and halt state add scheduling transitions around individual transfers",
+        "Shared engine progress couples unrelated downloads through one event loop"
+      ],
+      "evidence_ids": [
+        "aria2-engine-source",
+        "aria2-request-groups-source",
+        "aria2-manual"
+      ]
+    },
+    {
+      "id": "segmented-resource-transfer",
+      "name": "Segmented resource transfer",
+      "category": "transport-model",
+      "claim_type": "fact",
+      "description": "aria2's SegmentMan allocates byte ranges to concurrent requests, tracks in-flight segments, and recognizes or cancels segments as requests complete. The same segment-management boundary is used by HTTP-style downloads and by piece-oriented protocols through their storage abstractions.",
+      "benefits": [
+        "Uses parallel byte ranges when a resource and servers permit them",
+        "Keeps partial progress addressable for retry and continuation"
+      ],
+      "costs": [
+        "Range ownership and overlap handling complicate correctness and retry behavior",
+        "More simultaneous connections can increase server load and local coordination"
+      ],
+      "evidence_ids": [
+        "aria2-segment-source",
+        "aria2-command-source",
+        "aria2-manual"
+      ]
+    },
+    {
+      "id": "protocol-specific-piece-storage",
+      "name": "Protocol-specific piece and integrity storage",
+      "category": "protocol-abstraction",
+      "claim_type": "fact",
+      "description": "aria2 keeps protocol-specific transfer commands above piece and file storage abstractions. BitTorrent messages update PieceStorage and piece hashes, while HTTP and Metalink commands use the same request-group and file allocation lifecycle without implying that all protocols share one wire protocol.",
+      "benefits": [
+        "Separates protocol message handling from file and piece completion state",
+        "Supports integrity checks and partial files across different download protocols"
+      ],
+      "costs": [
+        "Protocol handlers must preserve shared storage invariants",
+        "Piece, file, and protocol completion states can diverge during failure recovery"
+      ],
+      "evidence_ids": [
+        "aria2-piece-source",
+        "aria2-bittorrent-source",
+        "aria2-request-groups-source"
+      ]
+    },
+    {
+      "id": "rpc-controlled-download-engine",
+      "name": "RPC-controlled download engine",
+      "category": "control-plane",
+      "claim_type": "fact",
+      "description": "The source includes RPC request and method objects that address download groups, add downloads, query status, and mutate options. The manual documents JSON-RPC and XML-RPC servers as control interfaces separate from transfer execution.",
+      "benefits": [
+        "Permits external controllers to inspect and change downloads",
+        "Separates command/control transport from the download engine's transfer work"
+      ],
+      "costs": [
+        "Remote control adds authentication, authorization, and lifecycle configuration concerns",
+        "Control requests observe asynchronous state rather than making transfers synchronous"
+      ],
+      "evidence_ids": [
+        "aria2-rpc-source",
+        "aria2-manual"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Request-group transition system",
+      "question": "How do queued, active, halted, and completed download groups advance under the DownloadEngine loop?",
+      "assumptions": [
+        "A request group is a stateful unit with one or more file and transfer requests",
+        "Engine iterations and command results are transition events",
+        "The view abstracts socket readiness and protocol-specific wire messages"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "aria2-engine-source",
+        "aria2-request-groups-source"
+      ]
+    },
+    {
+      "model": "Segment allocation relation",
+      "question": "Which byte ranges are available, in flight, completed, or cancelled for a resource?",
+      "assumptions": [
+        "A resource is represented by a finite byte interval or piece set",
+        "Segment ownership is an implementation state, not proof of wire-level parallelism",
+        "The view abstracts protocol-specific request and response encoding"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "aria2-segment-source",
+        "aria2-command-source"
+      ]
+    },
+    {
+      "model": "Download control and data-plane graph",
+      "question": "How do RPC methods and protocol commands reach request groups, segments, and piece storage?",
+      "assumptions": [
+        "RPC methods and protocol commands are control vertices",
+        "Request groups, segment managers, and storage objects are state vertices",
+        "Edges describe implementation calls and ownership, not guaranteed completion"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "aria2-rpc-source",
+        "aria2-request-groups-source",
+        "aria2-piece-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "request-group-download-scheduling",
+      "benefits": ["Explicit lifecycle and aggregate scheduling for downloads"],
+      "costs": ["Shared scheduling state couples transfer progress to engine iteration"]
+    },
+    {
+      "feature_id": "segmented-resource-transfer",
+      "benefits": ["Parallel ranges and resumable partial progress"],
+      "costs": ["Range ownership and retry coordination increase state complexity"]
+    },
+    {
+      "feature_id": "protocol-specific-piece-storage",
+      "benefits": ["Common completion and integrity boundaries across protocols"],
+      "costs": ["Protocol handlers must maintain shared storage invariants"]
+    },
+    {
+      "feature_id": "rpc-controlled-download-engine",
+      "benefits": ["External inspection and control of asynchronous transfers"],
+      "costs": ["Control-plane security and asynchronous observation become operational concerns"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "aria2-fixed-source",
+      "kind": "source-code",
+      "title": "aria2 source at release 1.37.0",
+      "uri": "https://github.com/aria2/aria2/commit/eb7232465119e1a596cb424e2b6c3c9f4e2abb30",
+      "accessed": "2026-10-24",
+      "notes": "Fixed upstream source revision used for this card."
+    },
+    {
+      "id": "aria2-manual",
+      "kind": "official-doc",
+      "title": "aria2 1.37.0 manual",
+      "uri": "https://aria2.github.io/manual/en/html/",
+      "accessed": "2026-10-24",
+      "notes": "Official aria2 manual for supported protocols, segmented downloads, and JSON-RPC/XML-RPC control."
+    },
+    {
+      "id": "aria2-engine-source",
+      "kind": "source-code",
+      "title": "aria2 DownloadEngine at fixed commit",
+      "uri": "https://github.com/aria2/aria2/blob/eb7232465119e1a596cb424e2b6c3c9f4e2abb30/src/DownloadEngine.cc",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for engine iteration, command scheduling, socket checks, and halt lifecycle."
+    },
+    {
+      "id": "aria2-request-groups-source",
+      "kind": "source-code",
+      "title": "aria2 RequestGroupMan at fixed commit",
+      "uri": "https://github.com/aria2/aria2/blob/eb7232465119e1a596cb424e2b6c3c9f4e2abb30/src/RequestGroupMan.cc",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for request-group reservation, activation, completion, statistics, and persistence."
+    },
+    {
+      "id": "aria2-segment-source",
+      "kind": "source-code",
+      "title": "aria2 SegmentMan at fixed commit",
+      "uri": "https://github.com/aria2/aria2/blob/eb7232465119e1a596cb424e2b6c3c9f4e2abb30/src/SegmentMan.cc",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for byte-range allocation, in-flight tracking, cancellation, and segment recognition."
+    },
+    {
+      "id": "aria2-command-source",
+      "kind": "source-code",
+      "title": "aria2 transfer command segment scheduling at fixed commit",
+      "uri": "https://github.com/aria2/aria2/blob/eb7232465119e1a596cb424e2b6c3c9f4e2abb30/src/AbstractCommand.cc",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for commands requesting and completing concurrent segments."
+    },
+    {
+      "id": "aria2-piece-source",
+      "kind": "source-code",
+      "title": "aria2 PieceStorage interface at fixed commit",
+      "uri": "https://github.com/aria2/aria2/blob/eb7232465119e1a596cb424e2b6c3c9f4e2abb30/src/PieceStorage.h",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for piece and file storage boundaries used by protocol handlers."
+    },
+    {
+      "id": "aria2-bittorrent-source",
+      "kind": "source-code",
+      "title": "aria2 BitTorrent piece handling at fixed commit",
+      "uri": "https://github.com/aria2/aria2/blob/eb7232465119e1a596cb424e2b6c3c9f4e2abb30/src/BtPieceMessage.cc",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for piece block completion and hash verification in the BitTorrent path."
+    },
+    {
+      "id": "aria2-rpc-source",
+      "kind": "source-code",
+      "title": "aria2 RPC methods at fixed commit",
+      "uri": "https://github.com/aria2/aria2/blob/eb7232465119e1a596cb424e2b6c3c9f4e2abb30/src/RpcMethodImpl.cc",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for RPC method dispatch and download-group control operations."
+    }
+  ],
+  "related_systems": ["curl", "rsync", "libuv"]
+}

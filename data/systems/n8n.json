@@ -1,0 +1,218 @@
+{
+  "id": "n8n",
+  "name": "n8n",
+  "version_context": "commit a5e6c62992ea32b7938dbad11b06afc8aa06b32a (2026-10-23; repository default branch)",
+  "summary": "A self-hostable workflow automation platform that represents business and AI automation as connected nodes, executes workflow runs, and extends the node graph with code, integrations, and human or agent tool steps.",
+  "scope": [
+    "workflow editor and node graph",
+    "workflow execution and run history",
+    "AI agent and tool integrations",
+    "self-hosted runtime and extensibility"
+  ],
+  "features": [
+    {
+      "id": "node-graph-workflow-composition",
+      "name": "Node-graph workflow composition",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "The fixed repository describes n8n as a visual canvas for AI agents and workflows, and its source is organized as a workspace with workflow and node packages. The README also identifies custom code and extensible nodes as part of the platform boundary.",
+      "benefits": [
+        "Makes multi-step automation visible as connected, reusable node operations",
+        "Allows integrations and custom code to participate in one workflow representation"
+      ],
+      "costs": [
+        "Graph structure, node contracts, and expression evaluation couple otherwise separate integrations",
+        "A visual composition does not by itself establish runtime success or transactional behavior"
+      ],
+      "evidence_ids": [
+        "n8n-fixed-source",
+        "n8n-readme",
+        "n8n-workspace"
+      ]
+    },
+    {
+      "id": "execution-record-and-control-boundary",
+      "name": "Persisted execution record and control boundary",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The official CLI documentation exposes executions as addressable records that can be listed, inspected with optional full node data, retried, stopped, and deleted. This is evidence for an explicit execution lifecycle and management boundary, without asserting a particular database or queue implementation.",
+      "benefits": [
+        "Makes run inspection and operator controls explicit",
+        "Supports retry and stop operations as separate lifecycle actions"
+      ],
+      "costs": [
+        "Execution data can be large and sensitive when full node data is included",
+        "Retry and stop semantics must account for partial side effects and already-running nodes"
+      ],
+      "evidence_ids": [
+        "n8n-execution-doc",
+        "n8n-engine"
+      ]
+    },
+    {
+      "id": "integration-and-code-extension-surface",
+      "name": "Integration and code extension surface",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "The fixed README identifies 1500+ integrations, JavaScript and Python code, npm packages, and extensible custom nodes. These are platform extension points around the workflow representation rather than evidence that every integration shares one implementation.",
+      "benefits": [
+        "Connects external services and custom computation without replacing the workflow model",
+        "Allows provider and model choices to vary inside a workflow"
+      ],
+      "costs": [
+        "Third-party credentials and API behavior expand the failure and security surface",
+        "Extension compatibility and package execution require explicit operational controls"
+      ],
+      "evidence_ids": [
+        "n8n-readme"
+      ]
+    },
+    {
+      "id": "agent-tool-and-human-gate-steps",
+      "name": "Agent tool and human-approval steps",
+      "category": "workflow-model",
+      "claim_type": "fact",
+      "description": "The fixed README explicitly describes multi-step AI workflows with logic, tool use, human approvals, and observability. The claim is limited to the documented workflow capability; it does not infer a general agent protocol or guarantee approval enforcement for every node.",
+      "benefits": [
+        "Makes model calls, tools, and approval points composable with ordinary automation",
+        "Supports gradual movement from prototype workflows toward operated workflows"
+      ],
+      "costs": [
+        "Agent output and external tool effects are nondeterministic inputs to later nodes",
+        "Approval, retry, and observability policy must be configured at workflow boundaries"
+      ],
+      "evidence_ids": [
+        "n8n-readme"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Workflow graph execution with externally effectful nodes",
+      "question": "How does a connected node graph transform input data through triggers, node operations, agent/tool calls, and terminal outcomes?",
+      "assumptions": [
+        "Nodes and connections form a directed workflow graph",
+        "Each node maps input items to output items or an error/stop observation",
+        "External calls and model/tool results are environment inputs, not deterministic graph transitions",
+        "The view abstracts scheduling, persistence, and exact node concurrency"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "n8n-readme",
+        "n8n-engine"
+      ]
+    },
+    {
+      "model": "Execution lifecycle transition system",
+      "question": "Which transitions connect an admitted workflow run to running, successful, failed, stopped, retried, or deleted execution observations?",
+      "assumptions": [
+        "Execution records expose the lifecycle operations documented by the CLI",
+        "Retry may repeat side effects and is not an exactly-once guarantee",
+        "The model does not infer queue topology or persistence isolation from CLI operations alone"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "n8n-execution-doc",
+        "n8n-engine"
+      ]
+    },
+    {
+      "model": "Integration adapter composition",
+      "question": "How do provider nodes, code nodes, and custom nodes extend a common workflow boundary?",
+      "assumptions": [
+        "An integration or code node is treated as an adapter with a node contract",
+        "The README feature list is descriptive product evidence, not proof of identical implementation across integrations",
+        "The model abstracts credentials, rate limits, and provider-specific semantics"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "n8n-readme"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "node-graph-workflow-composition",
+      "benefits": [
+        "Visible composition of heterogeneous automation steps"
+      ],
+      "costs": [
+        "Graph and node contracts add integration coupling"
+      ]
+    },
+    {
+      "feature_id": "execution-record-and-control-boundary",
+      "benefits": [
+        "Inspectable and controllable run lifecycle"
+      ],
+      "costs": [
+        "Retries and full execution data increase operational risk"
+      ]
+    },
+    {
+      "feature_id": "integration-and-code-extension-surface",
+      "benefits": [
+        "Broad service and custom-code coverage"
+      ],
+      "costs": [
+        "Extension and credential surface expands maintenance and security work"
+      ]
+    },
+    {
+      "feature_id": "agent-tool-and-human-gate-steps",
+      "benefits": [
+        "AI and approval operations fit ordinary workflows"
+      ],
+      "costs": [
+        "Nondeterministic model/tool behavior complicates replay and assurance"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "n8n-fixed-source",
+      "kind": "source-code",
+      "title": "n8n source at fixed commit",
+      "uri": "https://github.com/n8n-io/n8n/commit/a5e6c62992ea32b7938dbad11b06afc8aa06b32a",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official n8n repository revision used for this card; source tree includes workspace packages and the @n8n/engine package."
+    },
+    {
+      "id": "n8n-readme",
+      "kind": "official-doc",
+      "title": "n8n README at fixed commit",
+      "uri": "https://github.com/n8n-io/n8n/blob/a5e6c62992ea32b7938dbad11b06afc8aa06b32a/README.md",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official README for visual workflows, AI agents, integrations, code, human approvals, self-hosting, and extensibility."
+    },
+    {
+      "id": "n8n-workspace",
+      "kind": "source-code",
+      "title": "n8n workspace package manifest",
+      "uri": "https://github.com/n8n-io/n8n/blob/a5e6c62992ea32b7938dbad11b06afc8aa06b32a/pnpm-workspace.yaml",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed source workspace manifest; used only to establish the monorepo/package boundary."
+    },
+    {
+      "id": "n8n-engine",
+      "kind": "source-code",
+      "title": "n8n workflow execution engine package",
+      "uri": "https://github.com/n8n-io/n8n/blob/a5e6c62992ea32b7938dbad11b06afc8aa06b32a/packages/@n8n/engine/README.md",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed source package README identifies the n8n workflow execution engine v2; it does not establish all runtime behavior."
+    },
+    {
+      "id": "n8n-execution-doc",
+      "kind": "official-doc",
+      "title": "n8n execution CLI commands",
+      "uri": "https://github.com/n8n-io/n8n/blob/a5e6c62992ea32b7938dbad11b06afc8aa06b32a/packages/@n8n/cli/docs/commands/execution.md",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official fixed-revision CLI documentation for listing, inspecting, retrying, stopping, and deleting executions."
+    }
+  ],
+  "related_systems": [
+    "temporal",
+    "airflow",
+    "celery"
+  ]
+}

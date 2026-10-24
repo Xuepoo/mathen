@@ -1,0 +1,207 @@
+{
+  "id": "tailscale",
+  "name": "Tailscale",
+  "version_context": "commit e26db7a5797683ec99ad1516c40b628c7f2dfd71",
+  "summary": "A node agent and encrypted mesh VPN that separates control-plane coordination from the WireGuard peer data plane, with direct and DERP-assisted peer paths selected by the local transport engine.",
+  "scope": [
+    "encrypted mesh VPN",
+    "node agent",
+    "WireGuard peer data plane",
+    "control-plane client",
+    "DERP relay paths"
+  ],
+  "features": [
+    {
+      "id": "tailscale-local-agent-boundary",
+      "name": "Local agent as composition boundary",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "The LocalBackend is the node-agent boundary that coordinates the control client, network-map updates, WireGuard engine, route/DNS integration, and local clients. It is an orchestration boundary rather than the wire protocol itself.",
+      "benefits": [
+        "Presents one lifecycle boundary for local node state and network configuration",
+        "Keeps local control, data-plane, and management concerns connected through explicit interfaces"
+      ],
+      "costs": [
+        "The agent coordinates many asynchronous subsystems and must reconcile control updates with live packet state",
+        "A local API or client operation can observe transitions while network reconfiguration is in progress"
+      ],
+      "evidence_ids": [
+        "tailscale-local-backend-source",
+        "tailscale-control-source",
+        "tailscale-engine-source"
+      ]
+    },
+    {
+      "id": "tailscale-wireguard-peer-data-plane",
+      "name": "WireGuard peer data plane",
+      "category": "security-protocol",
+      "claim_type": "fact",
+      "description": "The wgengine interface owns peer session state and packet-path configuration. Reconfiguring it from a control-provided network map updates WireGuard peers and kernel or userspace routes; application control messages are outside this packet data path.",
+      "benefits": [
+        "Uses WireGuard cryptographic sessions for peer-to-peer encrypted traffic",
+        "Separates packet forwarding and peer route state from coordination messages"
+      ],
+      "costs": [
+        "Peer reachability depends on endpoint discovery and path conditions outside the engine interface",
+        "Network-map changes require synchronization between control state, routes, and live peers"
+      ],
+      "evidence_ids": [
+        "tailscale-engine-source",
+        "tailscale-what-is-doc"
+      ]
+    },
+    {
+      "id": "tailscale-control-and-relay-paths",
+      "name": "Control client and relay-capable path selection",
+      "category": "network-model",
+      "claim_type": "fact",
+      "description": "The control client obtains coordination state over the Tailscale control protocol, while magicsock selects direct peer paths when possible and can use DERP relay connections when direct paths fail. DERP relays carry encrypted peer traffic; they are transport relays rather than the control authority.",
+      "benefits": [
+        "Allows coordination and encrypted peer transport to survive restrictive or changing networks",
+        "Makes direct, NAT-traversed, and relay-assisted paths interchangeable at the peer transport boundary"
+      ],
+      "costs": [
+        "Control reachability and peer reachability have separate failure modes",
+        "Relay use adds latency and relay dependency when direct paths are unavailable"
+      ],
+      "evidence_ids": [
+        "tailscale-control-source",
+        "tailscale-magic-sock-source",
+        "tailscale-derp-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Control/data-plane composition graph",
+      "question": "Which local components coordinate membership and route state, and which components carry encrypted peer packets?",
+      "assumptions": [
+        "LocalBackend is a coordinator vertex; control client, network-map state, WireGuard engine, and path manager are distinct vertices",
+        "An edge from control state to engine configuration represents an update, not packet forwarding",
+        "The view abstracts server-side control implementation and WireGuard primitive internals"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "tailscale-local-backend-source",
+        "tailscale-control-source",
+        "tailscale-engine-source"
+      ]
+    },
+    {
+      "model": "Peer path selection state machine",
+      "question": "How does a peer transport move among direct, NAT-traversed, and DERP-assisted paths while preserving the encrypted peer boundary?",
+      "assumptions": [
+        "Path candidates and peer sessions are implementation state; each selected path carries encrypted peer traffic",
+        "The model does not claim a particular path is always available or optimal",
+        "DERP is modeled as a relay transport and not as a trust authority for plaintext traffic"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "tailscale-magic-sock-source",
+        "tailscale-derp-doc",
+        "tailscale-what-is-doc"
+      ]
+    },
+    {
+      "model": "Network-map-to-peer configuration relation",
+      "question": "How do control-plane network-map observations become WireGuard peer and route configuration?",
+      "assumptions": [
+        "A network-map update is an input to local reconciliation",
+        "Reconciliation may update routes and peers incrementally or wholly depending on engine implementation",
+        "The relation does not prove convergence time or availability"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "tailscale-engine-source",
+        "tailscale-local-backend-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "tailscale-local-agent-boundary",
+      "benefits": [
+        "Presents one lifecycle boundary for local node state and network configuration"
+      ],
+      "costs": [
+        "The agent coordinates many asynchronous subsystems and must reconcile control updates with live packet state"
+      ]
+    },
+    {
+      "feature_id": "tailscale-wireguard-peer-data-plane",
+      "benefits": [
+        "Uses WireGuard cryptographic sessions for peer-to-peer encrypted traffic"
+      ],
+      "costs": [
+        "Peer reachability depends on endpoint discovery and path conditions outside the engine interface"
+      ]
+    },
+    {
+      "feature_id": "tailscale-control-and-relay-paths",
+      "benefits": [
+        "Allows coordination and encrypted peer transport to survive restrictive or changing networks"
+      ],
+      "costs": [
+        "Control reachability and peer reachability have separate failure modes"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "tailscale-repository-commit",
+      "kind": "source-code",
+      "title": "Tailscale source at e26db7a57976",
+      "uri": "https://github.com/tailscale/tailscale/blob/e26db7a5797683ec99ad1516c40b628c7f2dfd71/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Pinned official source revision corresponding to release tag v1.104.2."
+    },
+    {
+      "id": "tailscale-what-is-doc",
+      "kind": "official-doc",
+      "title": "What is Tailscale?",
+      "uri": "https://tailscale.com/kb/1151/what-is-tailscale",
+      "accessed": "2026-10-24",
+      "notes": "Official Tailscale description of the private mesh VPN, WireGuard data path, and coordination service."
+    },
+    {
+      "id": "tailscale-derp-doc",
+      "kind": "official-doc",
+      "title": "DERP relay protocol",
+      "uri": "https://tailscale.com/kb/1232/derp-servers",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for DERP relays used when direct peer connectivity is unavailable."
+    },
+    {
+      "id": "tailscale-engine-source",
+      "kind": "source-code",
+      "title": "WireGuard engine interface at e26db7a57976",
+      "uri": "https://github.com/tailscale/tailscale/blob/e26db7a5797683ec99ad1516c40b628c7f2dfd71/wgengine/wgengine.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for the WireGuard engine boundary, peer state, route lookup, and network-map reconfiguration."
+    },
+    {
+      "id": "tailscale-control-source",
+      "kind": "source-code",
+      "title": "Control HTTP transport at e26db7a57976",
+      "uri": "https://github.com/tailscale/tailscale/blob/e26db7a5797683ec99ad1516c40b628c7f2dfd71/control/controlhttp/client.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for the control client transport and HTTP/HTTPS compatibility fallback."
+    },
+    {
+      "id": "tailscale-local-backend-source",
+      "kind": "source-code",
+      "title": "Local node backend at e26db7a57976",
+      "uri": "https://github.com/tailscale/tailscale/blob/e26db7a5797683ec99ad1516c40b628c7f2dfd71/ipn/ipnlocal/local.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for the node agent that joins control-client, WireGuard engine, routing, DNS, and local API concerns."
+    },
+    {
+      "id": "tailscale-magic-sock-source",
+      "kind": "source-code",
+      "title": "magicsock peer transport at e26db7a57976",
+      "uri": "https://github.com/tailscale/tailscale/blob/e26db7a5797683ec99ad1516c40b628c7f2dfd71/wgengine/magicsock/magicsock.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for peer path selection and encrypted peer transport, including direct and relay-capable paths."
+    }
+  ]
+}

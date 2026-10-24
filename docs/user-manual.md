@@ -8,10 +8,10 @@ Mathen has two related goals:
 1. Translate software systems into evidence-backed architecture models.
 2. Compare and eventually compose those models under explicit constraints.
 
-The first goal is implemented today. Temporal evolution, communities, typed
-composition edges, and architecture synthesis are planned extensions. The
-current contracts already preserve evidence, version context, and draft
-boundaries needed for those extensions.
+The first goal is implemented today. Temporal evolution, communities, and
+architecture synthesis remain planned extensions. Current contracts also provide
+typed feature relations, composition proposals, and bounded candidate
+exploration while preserving evidence, version context, and draft boundaries.
 
 ## 1. Concepts and status boundaries
 
@@ -36,6 +36,12 @@ data/modeling/      fixed-commit LLM evidence bundles
 
 Only `data/systems/` is canonical. LLM output must remain under a draft
 directory and cannot overwrite reviewed cards.
+
+The current canonical tree contains 219 reviewed cards. The representative
+repository manifest contains 62 entries, all of which currently have matching
+canonical cards; it is a subset of the canonical tree. MTH-0092 added the
+canonical `bun`, `haskell`, `quickjs`, and `tokio` cards, but did not add those
+IDs to the representative manifest.
 
 ## 2. Schema inventory
 
@@ -74,6 +80,7 @@ The top-level object has these fields:
 | `related_systems`    | no       | string array           | IDs of related cards                            |
 | `temporal_context`   | no       | object                 | Version lifecycle and temporal claims           |
 | `relations`          | no       | object array           | Typed, directed architecture relations          |
+| `feature_relations`  | no       | object array           | Evidence-backed directed feature relations      |
 | `composition`        | no       | object                 | Proposed or reviewed system composition         |
 
 ### 3.1 Feature fields
@@ -131,6 +138,29 @@ Each evidence item contains:
 
 Every feature and mathematical view must reference existing evidence IDs.
 
+The optional `feature_relations` array is owned by the source card. Each item
+references a source feature in that card, a target system and feature, a
+feature-relation type, claim metadata, and evidence IDs from the source card.
+Target feature existence is checked when validating the reviewed card
+collection. Structural comparisons should use `resembles` with a bounded
+`analogy` claim; relation records do not add nodes to the system graph.
+
+For `kind: "experiment"`, the evidence item additionally requires `protocol`,
+`system_commit`, `environment`, `command`, `dataset`, `repetitions`, `metrics`,
+and `artifacts`. `repetitions` is a positive integer, `metrics` is an object
+whose values are finite numbers, and `artifacts` is an array of strings or
+metadata objects. Environment and dataset can be strings or metadata objects.
+These fields describe reproducibility context; they do not by themselves claim
+that an experiment produced a particular result.
+
+Experiment evidence is a reproducibility contract, not a general benchmark
+contract. The protocol must state what was run, against which system commit,
+environment, command, and dataset; the recorded metrics and artifacts may be
+empty when the protocol records an observation without a checked-in measurement
+or artifact. The contract does not establish causality, production behavior,
+durability, performance, or a general theorem. Those claims require the
+appropriate source review, repeated measurements, benchmarks, or failure tests.
+
 ### 3.5 Claim types
 
 | Claim type   | Use it for                                                     |
@@ -165,6 +195,58 @@ and evidence. Each constraint, preserved property, and conflict is itself an
 evidence-backed claim. This contract records a composition proposal; it does
 not execute or prove the proposed architecture.
 
+## 3.7 Bounded composition exploration
+
+`mathen.composition_solver` provides a deterministic, library-only bounded
+candidate explorer for composition hypotheses. `solve_reviewed_compositions(cards,
+capability_specs, required_capabilities, ...)` accepts validated reviewed-card
+objects and an explicit capability declaration for each feature being made
+available to the solver:
+
+```python
+{
+    "system_id": "app-system",
+    "feature_id": "application-feature",
+    "provides": ["application"],
+    "requires": ["storage"],
+    "conflicts": ["incompatible-capability"],
+}
+```
+
+Capability declarations are intentionally separate from card feature names,
+descriptions, categories, and feature relations. The adapter qualifies feature
+IDs as `system_id:feature_id` and evidence IDs as `system_id:evidence_id`, then
+passes only those explicit records to the solver. A declaration may select a
+subset of the features in the cards; declarations that reference no reviewed
+feature are rejected. Callers should load and validate canonical cards with
+`mathen.cards.load_card` before adapting them.
+
+`conflicts` is a capability-only namespace: each token is matched against the
+capabilities provided by the composed records and is reported as
+`feature_id:capability`. Feature IDs are not implicitly conflict tokens.
+
+The solver enumerates non-empty feature subsets up to `max_components`, adds a
+deterministic provider closure up to `max_depth`, and returns at most
+`max_results` candidates. These positive integer bounds are required. Each
+candidate contains selected feature IDs, dependency IDs, provided and required
+capabilities, unresolved requirements, conflicts, evidence IDs, explanations,
+coverage/evidence/deterministic scores, and `proven: false`. Candidates are
+ranked deterministically; unresolved requirements and conflicts remain visible
+and are not treated as proof of compatibility or runtime behavior.
+
+The numeric `score` is an uncalibrated deterministic review-priority heuristic,
+not a probability, compatibility score, or proof. `coverage_score` measures
+coverage of the top-level required capabilities. `evidence_score` is the mean
+number of evidence IDs per record in the selected dependency closure. The
+formula uses fixed heuristic units: `coverage_score * 100` plus
+`evidence_score`, minus 10 per unresolved requirement and 20 per conflict.
+
+The solver is an exploration aid, not an architecture verifier. It does not
+execute components, test compatibility, validate runtime behavior, or prove
+that a candidate can be implemented. Every returned candidate has
+`proven: false`, including candidates with complete capability coverage and no
+reported conflicts.
+
 ## 4. Repository Manifest schema
 
 The manifest is a JSON array. Each entry describes one repository to inspect:
@@ -196,11 +278,24 @@ Important fields are `analysis_version`, `system_id`, `system_name`, `category`,
 `priority`, `repository`, `documentation`, `requested_ref`, `commit`,
 `commit_url`, `provenance`, `analyzed_at`, `file_count`, `top_level_entries`,
 `language_counts`, `extension_counts`, `build_markers`, `readme_paths`, and
-`path_signals`.
+`path_signals`. Analysis version 3 also includes an `observations` array. Each
+observation records a conservative deterministic signal with `kind`, a tracked
+source `location` (`path` and, for content signals, `line`), `basis`, `detail`,
+the inspector `tool`, and checkout `provenance`. Recognized dependency manifests,
+bounded source locations, and test, benchmark, recovery, and configuration
+path/content signals are included when present.
 
 Path signals and file counts are navigation evidence only. They help select
 source files for deeper review; they are not proof of a concurrency model,
-storage engine, or runtime architecture.
+storage engine, or runtime architecture. Content signals are bounded and use
+simple text matching; they do not parse source or assert runtime behavior.
+
+G4 analysis output is deliberately limited to deterministic observations:
+tracked paths, counts, build markers, bounded source locations, and simple
+content signals. These observations are navigation and evidence-selection
+signals, not semantic facts about concurrency, storage, recovery, or runtime
+architecture. Semantic features and claim types require source or official
+documentation review.
 
 ## 6. Structural Draft Card
 
@@ -283,6 +378,7 @@ The Cloudflare API stores reviewed cards in normalized tables:
 systems
 ├── evidence
 ├── features ── feature_evidence ──> evidence
+├── feature_relations ── feature_relation_evidence ──> evidence
 ├── mathematical_views ── mathematical_view_evidence ──> evidence
 └── trade_offs ──> features
 
@@ -309,6 +405,18 @@ detail projections also return `evidence_ids` resolved from
 ### `feature_evidence`
 
 Resolves the many-to-many relationship between features and evidence.
+
+### `feature_relations` and `feature_relation_evidence`
+
+Store source-card-owned directed relations between features, including the
+target system and feature, claim metadata, and optional notes. The evidence join
+table keeps relation evidence local to the source card and exposes card-local
+IDs in API projections. Migration `0005_feature_relation_evidence_integrity.sql`
+enforces that ownership in SQLite/D1, and the API omits corrupted rows rather
+than serving cross-system evidence. The authoritative importer is
+`apps/api/scripts/seed.ts`; it reads reviewed cards from `data/systems/` and
+stores relation evidence as `${source_system_id}:${evidence_id}`. These tables
+are intentionally separate from the system-only graph tables.
 
 ### `mathematical_views`
 
@@ -339,16 +447,17 @@ consumers.
 The Hono Worker uses the `/api` base path. Successful responses use a
 `{"data": ...}` envelope.
 
-| Endpoint                                                   | Purpose                                                                 |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `GET /api/health`                                          | Worker health and environment                                           |
-| `GET /api/systems?query=&limit=&offset=`                   | Search reviewed system summaries in stable name/id order                |
-| `GET /api/systems/:id`                                     | Retrieve one reviewed card projection                                   |
-| `GET /api/features?query=&category=&claim_type=&limit=`    | Search reviewed features                                                |
-| `GET /api/compositions?input_system=&claim_status=&limit=` | Search reviewed composition proposals, including cited evidence records |
-| `GET /api/modeling/:id`                                    | Retrieve one fixed-commit modeling bundle                               |
-| `GET /api/graph`                                           | Return current system nodes and valid typed or legacy edges             |
-| `GET /api/graph/models`                                    | Return a navigational system-to-mathematical-model projection           |
+| Endpoint                                                                           | Purpose                                                                 |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `GET /api/health`                                                                  | Worker health and environment                                           |
+| `GET /api/systems?query=&limit=&offset=`                                           | Search reviewed system summaries in stable name/id order                |
+| `GET /api/systems/:id`                                                             | Retrieve one reviewed card projection                                   |
+| `GET /api/features?query=&category=&claim_type=&limit=`                            | Search reviewed features                                                |
+| `GET /api/feature-relations?system_id=&feature_id=&target_system_id=&type=&limit=` | Search reviewed feature relations                                       |
+| `GET /api/compositions?input_system=&claim_status=&limit=`                         | Search reviewed composition proposals, including cited evidence records |
+| `GET /api/modeling/:id`                                                            | Retrieve one fixed-commit modeling bundle                               |
+| `GET /api/graph`                                                                   | Return current system nodes and valid typed or legacy edges             |
+| `GET /api/graph/models`                                                            | Return a navigational system-to-mathematical-model projection           |
 
 The current API is read-only. It does not expose draft cards or provide review,
 promotion, or synthesis writes.
@@ -384,18 +493,30 @@ normalized model title, and question; changing those fields changes the key.
 
 The stdio MCP server provides the same read boundary to agents:
 
-| Tool                  | Inputs                                                                | Result                                                              |
-| --------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `list_systems`        | optional `include_drafts`                                             | System summaries                                                    |
-| `get_system`          | `system_id`, optional `include_drafts`                                | One Architecture Card                                               |
-| `search_features`     | `query`, optional `category`, `claim_type`, `include_drafts`, `limit` | Matching reusable features                                          |
-| `list_compositions`   | optional `input_system`, `claim_status`, `include_drafts`, `limit`    | Matching reviewed composition proposals with cited evidence records |
-| `get_modeling_bundle` | `system_id`                                                           | Fixed-commit modeling bundle                                        |
+| Tool                     | Inputs                                                                                    | Result                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `list_systems`           | optional `include_drafts`                                                                 | System summaries                                                    |
+| `get_system`             | `system_id`, optional `include_drafts`                                                    | One Architecture Card                                               |
+| `search_features`        | `query`, optional `category`, `claim_type`, `include_drafts`, `limit`                     | Matching reusable features                                          |
+| `list_feature_relations` | optional `system_id`, `feature_id`, `target_system_id`, `type`, `include_drafts`, `limit` | Matching evidence-backed feature relations                          |
+| `list_compositions`      | optional `input_system`, `claim_status`, `include_drafts`, `limit`                        | Matching reviewed composition proposals with cited evidence records |
+| `get_modeling_bundle`    | `system_id`                                                                               | Fixed-commit modeling bundle                                        |
 
 Without `MATHEN_API_URL`, the server uses the local filesystem. With
 `MATHEN_API_URL`, reviewed system, feature, and bundle reads use the Hono/D1
 API. Draft visibility is filesystem-only and API mode rejects
 `include_drafts=true`.
+
+`list_feature_relations` reads source-card-owned, evidence-backed directed
+relations. Its filters select the source system or feature, target system, and
+relation type; results retain source-card claim metadata and source-local
+evidence IDs. It is a read tool and does not infer, accept, or write a relation.
+
+The G6 `mathen relation-candidates` command produces a deterministic,
+review-only report. It never edits canonical cards or assigns a relation type,
+claim type, direction, or review status. Its scores are triage priorities for
+human review, not probabilities, semantic confidence, or proof; a
+`missing-target` result identifies an unresolved catalog boundary.
 
 ## 12. End-to-end operation flow
 

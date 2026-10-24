@@ -106,6 +106,52 @@ test("filesystem backend resolves composition evidence from the owning card", as
   }
 });
 
+test("filesystem backend lists source-card feature relations with draft isolation", async () => {
+  const root = await mkdtemp(resolve(tmpdir(), "mathen-feature-relations-"));
+  try {
+    await mkdir(resolve(root, "data/systems"), { recursive: true });
+    await mkdir(resolve(root, "data/drafts"), { recursive: true });
+    const relation = {
+      source_feature_id: "embedded",
+      target_system_id: "base-system",
+      target_feature_id: "embedded",
+      type: "resembles",
+      claim_type: "analogy",
+      claim_status: "proposed",
+      evidence_ids: ["architecture"],
+    };
+    await writeFile(
+      resolve(root, "data/systems/duckdb.json"),
+      JSON.stringify({ id: "duckdb", name: "DuckDB", feature_relations: [relation] }),
+    );
+    await writeFile(
+      resolve(root, "data/drafts/draft.json"),
+      JSON.stringify({
+        id: "draft",
+        name: "Draft",
+        feature_relations: [{ ...relation, target_system_id: "draft-base" }],
+      }),
+    );
+    const backend = new FilesystemBackend(root);
+    assert.deepEqual(
+      await backend.listFeatureRelations("duckdb", "embedded", "base-system", "resembles", false, 10),
+      [{ source_system_id: "duckdb", ...relation }],
+    );
+    assert.equal(
+      (await backend.listFeatureRelations(undefined, undefined, undefined, undefined, false, 10))
+        .length,
+      1,
+    );
+    assert.equal(
+      (await backend.listFeatureRelations(undefined, undefined, "draft-base", undefined, true, 10))[0]
+        ?.source_system_id,
+      "draft",
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("API backend normalizes composition query results and preserves draft boundary", async () => {
   const requests: string[] = [];
   const backend = new ApiBackend("https://api.example.test", async (input) => {

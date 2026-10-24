@@ -1,0 +1,421 @@
+{
+  "id": "g5-sqlite-transaction",
+  "kind": "experiment",
+  "title": "SQLite transaction rollback and post-rollback recovery",
+  "uri": "https://sqlite.org/src/info/4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "protocol": "For each repetition, create a fresh SQLite database, insert the fixed four-row dataset in a committed transaction, attempt a transaction that contains a duplicate primary key and roll it back, then commit the pending fifth row in a new transaction. Check integrity, reopen the database, and compare all observations across repetitions.",
+  "system_commit": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "environment": {
+    "os": "Linux",
+    "os_release": "7.2.11-1-cachyos",
+    "architecture": "x86_64",
+    "python": "3.13.13",
+    "sqlite": "3.50.4",
+    "sqlite_source_id": "2025-07-30 19:33:53 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+  },
+  "command": "uv run --offline python scripts/g5_sqlite_transaction_experiment.py --expected-source-id 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3 --repetitions 3 --output data/experiments/g5-sqlite-transaction-results.json",
+  "dataset": {
+    "name": "fixed-records-v1",
+    "rows": [
+      [
+        1,
+        "alpha",
+        10
+      ],
+      [
+        2,
+        "beta",
+        20
+      ],
+      [
+        3,
+        "gamma",
+        30
+      ],
+      [
+        4,
+        "delta",
+        40
+      ]
+    ],
+    "schema": "records(id INTEGER PRIMARY KEY, name TEXT NOT NULL, value INTEGER NOT NULL)"
+  },
+  "repetitions": 3,
+  "metrics": {
+    "seed_rows": 4,
+    "seed_value_sum": 100,
+    "rollback_preserved_rows": 4,
+    "rollback_preserved_sum": 100,
+    "recovered_rows": 5,
+    "recovered_value_sum": 150,
+    "reopened_rows": 5,
+    "integrity_checks_passed": 3,
+    "rollback_checks_passed": 3,
+    "repetitions_consistent": 1
+  },
+  "artifacts": [
+    {
+      "name": "per-repetition-observations",
+      "results": [
+        {
+          "seeded": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "after_rollback": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "recovered": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "reopened": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "failed_transaction_rolled_back": true,
+          "integrity_check": "ok",
+          "final_rows_sha256": "216b84a4a8809a38a0a796c9fdfef275a54e69f76ad3822302d57122118f2be0"
+        },
+        {
+          "seeded": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "after_rollback": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "recovered": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "reopened": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "failed_transaction_rolled_back": true,
+          "integrity_check": "ok",
+          "final_rows_sha256": "216b84a4a8809a38a0a796c9fdfef275a54e69f76ad3822302d57122118f2be0"
+        },
+        {
+          "seeded": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "after_rollback": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "recovered": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "reopened": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "failed_transaction_rolled_back": true,
+          "integrity_check": "ok",
+          "final_rows_sha256": "216b84a4a8809a38a0a796c9fdfef275a54e69f76ad3822302d57122118f2be0"
+        }
+      ],
+      "runner_sha256": "a9c16ffb0ad37763aec997af34259052def9293a84d82483d13fab8a11ac7eed"
+    }
+  ]
+}

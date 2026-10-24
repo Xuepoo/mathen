@@ -1,0 +1,254 @@
+{
+  "id": "comfyui",
+  "name": "ComfyUI",
+  "version_context": "commit 8baf68d53d751216dd95d4f678bf109d82db3442",
+  "summary": "An open-source node-based generative AI application and inference engine that represents workflows as executable graphs, loads node extensions, and exposes a local/server API for queued generation.",
+  "scope": [
+    "workflow graph model",
+    "node execution runtime",
+    "custom-node extension boundary",
+    "HTTP and WebSocket application boundary",
+    "model and device loading"
+  ],
+  "features": [
+    {
+      "id": "workflow-node-graph",
+      "name": "Workflow node graph",
+      "category": "workflow-model",
+      "claim_type": "fact",
+      "description": "ComfyUI represents generation workflows as nodes with typed inputs and outputs connected by links. The fixed documentation describes workflows as graphs, while the source contains graph validation and node-definition structures.",
+      "benefits": [
+        "Makes generation pipelines inspectable, serializable, and rearrangeable",
+        "Allows reusable operations to be composed without embedding one fixed pipeline"
+      ],
+      "costs": [
+        "Graph validity depends on compatible types, links, and node contracts",
+        "Large graphs increase UI, validation, and execution-state complexity"
+      ],
+      "evidence_ids": [
+        "comfy-workflow-doc",
+        "comfy-graph-source",
+        "comfy-nodes-source"
+      ]
+    },
+    {
+      "id": "queued-graph-execution",
+      "name": "Queued graph execution",
+      "category": "runtime-model",
+      "claim_type": "fact",
+      "description": "The execution module accepts prompt/workflow graph inputs, validates them, schedules executable nodes, tracks outputs and cached results, and reports progress and completion through the server boundary.",
+      "benefits": [
+        "Separates submitted workflow state from execution progress",
+        "Enables partial reuse and queue-oriented processing of generation jobs"
+      ],
+      "costs": [
+        "Caching and dependency readiness require explicit invalidation and error state",
+        "Model and accelerator resources can become the limiting shared runtime state"
+      ],
+      "evidence_ids": [
+        "comfy-execution-source",
+        "comfy-server-source",
+        "comfy-workflow-doc"
+      ]
+    },
+    {
+      "id": "custom-node-extension-boundary",
+      "name": "Custom-node extension boundary",
+      "category": "extension-model",
+      "claim_type": "fact",
+      "description": "ComfyUI discovers and loads built-in and custom node modules through a node registry surface. Official documentation presents custom nodes as the extension mechanism for adding operations and integrations to the workflow vocabulary.",
+      "benefits": [
+        "Permits domain-specific operators and model integrations without changing the core workflow format",
+        "Keeps optional functionality outside the built-in node set"
+      ],
+      "costs": [
+        "Third-party node code shares the process and can affect workflow reproducibility",
+        "Node version and dependency compatibility becomes a deployment concern"
+      ],
+      "evidence_ids": [
+        "comfy-custom-node-doc",
+        "comfy-nodes-source",
+        "comfy-custom-nodes-tree"
+      ]
+    },
+    {
+      "id": "api-and-ui-service-boundary",
+      "name": "API and UI service boundary",
+      "category": "application-model",
+      "claim_type": "fact",
+      "description": "The repository separates the Python execution/application server from workflow and API descriptions. The official documentation describes local and deployed workflows, while the source exposes HTTP endpoints and event-oriented progress communication.",
+      "benefits": [
+        "Allows browser and external clients to submit and observe workflows",
+        "Keeps interactive presentation distinct from graph execution state"
+      ],
+      "costs": [
+        "Clients must reconcile queue, progress, history, and output states over a network boundary",
+        "API compatibility is coupled to workflow and node schemas"
+      ],
+      "evidence_ids": [
+        "comfy-server-source",
+        "comfy-api-doc",
+        "comfy-deploy-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Typed workflow dependency graph",
+      "question": "Which node outputs satisfy the inputs of a generative workflow and in what dependency order can they execute?",
+      "assumptions": [
+        "Nodes are typed operations and links are value dependencies",
+        "Graph validation rejects or marks incompatible links",
+        "The model abstracts tensor layouts and model-specific mathematics"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "comfy-workflow-doc",
+        "comfy-graph-source",
+        "comfy-nodes-source"
+      ]
+    },
+    {
+      "model": "Queued execution transition system",
+      "question": "How does a submitted workflow transition through validation, readiness, execution, caching, failure, and completion?",
+      "assumptions": [
+        "A prompt has queue-visible lifecycle states",
+        "A node is ready after its dependencies and required resources are available",
+        "The model abstracts worker scheduling and accelerator kernels"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "comfy-execution-source",
+        "comfy-server-source"
+      ]
+    },
+    {
+      "model": "Extension registry graph",
+      "question": "How do built-in and custom node modules extend the executable workflow vocabulary?",
+      "assumptions": [
+        "Node modules are extension vertices registered under stable names",
+        "A workflow edge targets a node contract rather than a specific implementation history",
+        "The view does not infer trust or compatibility from registration alone"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "comfy-custom-node-doc",
+        "comfy-nodes-source",
+        "comfy-custom-nodes-tree"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "workflow-node-graph",
+      "benefits": ["Generation logic is explicit and composable as a serializable graph"],
+      "costs": ["Graph contracts and large workflow state increase validation and maintenance work"]
+    },
+    {
+      "feature_id": "queued-graph-execution",
+      "benefits": ["Submission and execution can be decoupled and observed"],
+      "costs": ["Queue, caching, memory, and accelerator state complicate failure recovery"]
+    },
+    {
+      "feature_id": "custom-node-extension-boundary",
+      "benefits": ["New operators and integrations can be added without a core rewrite"],
+      "costs": ["Process-shared extensions widen the security and reproducibility surface"]
+    },
+    {
+      "feature_id": "api-and-ui-service-boundary",
+      "benefits": ["Interactive and programmatic clients share a service boundary"],
+      "costs": ["Network-visible lifecycle state requires client synchronization"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "comfy-repository",
+      "kind": "source-code",
+      "title": "ComfyUI source at fixed commit 8baf68d53d75",
+      "uri": "https://github.com/Comfy-Org/ComfyUI/tree/8baf68d53d751216dd95d4f678bf109d82db3442",
+      "accessed": "2026-10-24",
+      "notes": "Official repository provenance fixed to a resolved commit."
+    },
+    {
+      "id": "comfy-readme",
+      "kind": "official-doc",
+      "title": "ComfyUI README at fixed commit",
+      "uri": "https://github.com/Comfy-Org/ComfyUI/blob/8baf68d53d751216dd95d4f678bf109d82db3442/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Official project overview describing the node-based application and local execution."
+    },
+    {
+      "id": "comfy-workflow-doc",
+      "kind": "official-doc",
+      "title": "ComfyUI workflow concepts",
+      "uri": "https://docs.comfy.org/basics/core-concepts",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for workflows, nodes, and links."
+    },
+    {
+      "id": "comfy-graph-source",
+      "kind": "source-code",
+      "title": "ComfyUI graph execution structures at fixed commit",
+      "uri": "https://github.com/Comfy-Org/ComfyUI/blob/8baf68d53d751216dd95d4f678bf109d82db3442/comfy_execution/graph.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for workflow graph validation and execution graph representation."
+    },
+    {
+      "id": "comfy-nodes-source",
+      "kind": "source-code",
+      "title": "ComfyUI built-in node definitions at fixed commit",
+      "uri": "https://github.com/Comfy-Org/ComfyUI/blob/8baf68d53d751216dd95d4f678bf109d82db3442/nodes.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for built-in node registration and node contracts."
+    },
+    {
+      "id": "comfy-execution-source",
+      "kind": "source-code",
+      "title": "ComfyUI execution engine at fixed commit",
+      "uri": "https://github.com/Comfy-Org/ComfyUI/blob/8baf68d53d751216dd95d4f678bf109d82db3442/execution.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for queue-facing prompt execution, dependency readiness, outputs, and cache behavior."
+    },
+    {
+      "id": "comfy-server-source",
+      "kind": "source-code",
+      "title": "ComfyUI server at fixed commit",
+      "uri": "https://github.com/Comfy-Org/ComfyUI/blob/8baf68d53d751216dd95d4f678bf109d82db3442/server.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for HTTP/WebSocket application and execution event boundaries."
+    },
+    {
+      "id": "comfy-custom-node-doc",
+      "kind": "official-doc",
+      "title": "ComfyUI custom node documentation",
+      "uri": "https://docs.comfy.org/custom-nodes/walkthrough",
+      "accessed": "2026-10-24",
+      "notes": "Official extension guide for custom nodes."
+    },
+    {
+      "id": "comfy-custom-nodes-tree",
+      "kind": "source-code",
+      "title": "ComfyUI custom node directory at fixed commit",
+      "uri": "https://github.com/Comfy-Org/ComfyUI/tree/8baf68d53d751216dd95d4f678bf109d82db3442/custom_nodes",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary for repository-provided custom node modules."
+    },
+    {
+      "id": "comfy-api-doc",
+      "kind": "official-doc",
+      "title": "ComfyUI API and deployment documentation",
+      "uri": "https://docs.comfy.org/development/core-concepts/api",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for programmatic workflow interaction."
+    },
+    {
+      "id": "comfy-deploy-doc",
+      "kind": "official-doc",
+      "title": "ComfyUI deployment documentation",
+      "uri": "https://docs.comfy.org/development/overview",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for local, server, and cloud deployment boundaries."
+    }
+  ],
+  "related_systems": ["pytorch", "transformers"]
+}

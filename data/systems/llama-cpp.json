@@ -1,0 +1,129 @@
+{
+  "id": "llama-cpp",
+  "name": "llama.cpp",
+  "version_context": "commit 280141e6d4769b1e4424de999437cc72ffac33d6",
+  "summary": "A C/C++ local inference runtime that loads GGUF model artifacts, evaluates ggml graphs across selectable hardware backends, and exposes command-line and HTTP serving interfaces.",
+  "scope": [
+    "GGUF model artifacts",
+    "ggml tensor graphs",
+    "quantized inference backends",
+    "constrained decoding",
+    "CLI and HTTP serving"
+  ],
+  "features": [
+    {
+      "id": "gguf-model-artifact-boundary",
+      "name": "GGUF model artifact boundary",
+      "category": "storage-model",
+      "claim_type": "fact",
+      "description": "The repository provides GGUF conversion and model tooling, and its CLI/server workflows load model artifacts identified by local paths or Hugging Face model references.",
+      "benefits": [
+        "Separates model metadata and tensor data from the runtime executable",
+        "Supports a portable artifact boundary for local and hosted model sources"
+      ],
+      "costs": [
+        "Artifact format and model-family support constrain interoperability",
+        "Loading and quantization choices remain tied to available memory and backend support"
+      ],
+      "evidence_ids": ["llama-readme", "llama-model-doc", "llama-source-commit"]
+    },
+    {
+      "id": "ggml-backend-graph-runtime",
+      "name": "ggml graph runtime with selectable backends",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "llama.cpp builds inference from ggml tensor operations and can dispatch work through CPU, CUDA, Metal, HIP, Vulkan, SYCL, and other configured backends, including CPU/GPU hybrid execution.",
+      "benefits": [
+        "Reuses one graph-oriented execution model across hardware targets",
+        "Allows partial offload when a model does not fit entirely in accelerator memory"
+      ],
+      "costs": [
+        "Backend capabilities and numerical behavior are hardware- and build-dependent",
+        "Graph placement and transfer boundaries add configuration and resource complexity"
+      ],
+      "evidence_ids": ["llama-readme", "llama-backend-doc", "llama-source-commit"]
+    },
+    {
+      "id": "llama-constrained-decoding",
+      "name": "Grammar-constrained decoding",
+      "category": "input-and-control",
+      "claim_type": "fact",
+      "description": "The project includes GBNF grammar tooling and exposes grammar-constrained completion paths, allowing a decoder to restrict generated token sequences to a supplied formal grammar.",
+      "benefits": [
+        "Moves selected output-shape constraints into the decoding boundary",
+        "Supports structured generation without requiring a separate post-parser"
+      ],
+      "costs": [
+        "Grammar construction and tokenization compatibility affect reachable outputs",
+        "Constraint processing adds state and can exclude otherwise likely continuations"
+      ],
+      "evidence_ids": ["llama-grammar-doc", "llama-server-doc", "llama-source-commit"]
+    },
+    {
+      "id": "llama-http-serving-interface",
+      "name": "CLI and OpenAI-compatible HTTP serving",
+      "category": "interface-model",
+      "claim_type": "fact",
+      "description": "The repository supplies command-line tools and a server tool that loads a model and serves completion/chat-style requests through an HTTP API described as OpenAI-compatible.",
+      "benefits": [
+        "Provides both embedded/local command execution and a process-level service boundary",
+        "Lets existing OpenAI-shaped clients call a local inference process"
+      ],
+      "costs": [
+        "The service inherits single-process model, memory, and scheduling constraints",
+        "API compatibility does not imply identical model, tokenizer, or sampling semantics"
+      ],
+      "evidence_ids": ["llama-readme", "llama-server-doc", "llama-source-commit"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Artifact-to-graph refinement",
+      "question": "How does a serialized model artifact determine the tensor graph and parameters evaluated by the runtime?",
+      "assumptions": [
+        "The artifact metadata and tensors are compatible with the selected model implementation",
+        "Conversion and loading are modeled as a boundary before graph execution",
+        "The view abstracts file layout and allocator details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["llama-readme", "llama-model-doc", "llama-source-commit"]
+    },
+    {
+      "model": "Backend graph refinement",
+      "question": "Which graph operations and tensor regions can be mapped from an abstract ggml graph onto heterogeneous backend resources?",
+      "assumptions": [
+        "Each configured backend implements the operation subset required by the graph",
+        "Transfers and partial offload are explicit transitions",
+        "This view does not claim performance equivalence across backends"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["llama-backend-doc", "llama-readme", "llama-source-commit"]
+    },
+    {
+      "model": "Grammar-constrained token transition system",
+      "question": "How does a grammar restrict the set of token transitions available during autoregressive decoding?",
+      "assumptions": [
+        "The grammar state is updated after each accepted token",
+        "Tokenizer and grammar terminals are compatible",
+        "The view abstracts logits, sampling policy, and model state outside allowed-token filtering"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["llama-grammar-doc", "llama-server-doc"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "gguf-model-artifact-boundary", "benefits": ["Portable model/runtime separation"], "costs": ["Format and compatibility constraints"]},
+    {"feature_id": "ggml-backend-graph-runtime", "benefits": ["One graph model across hardware backends"], "costs": ["Placement and backend variability"]},
+    {"feature_id": "llama-constrained-decoding", "benefits": ["Structured output at generation time"], "costs": ["Grammar/tokenizer state and reduced reachable outputs"]},
+    {"feature_id": "llama-http-serving-interface", "benefits": ["Local service boundary with familiar API shape"], "costs": ["Process resource and compatibility boundaries"]}
+  ],
+  "evidence": [
+    {"id": "llama-readme", "kind": "official-doc", "title": "llama.cpp README at fixed revision", "uri": "https://github.com/ggml-org/llama.cpp/blob/280141e6d4769b1e4424de999437cc72ffac33d6/README.md", "accessed": "2026-10-24", "notes": "Official README for local inference, model loading, quantization, supported hardware, and CLI/server entry points."},
+    {"id": "llama-model-doc", "kind": "official-doc", "title": "llama.cpp model documentation at fixed revision", "uri": "https://github.com/ggml-org/llama.cpp/blob/280141e6d4769b1e4424de999437cc72ffac33d6/docs/models.md", "accessed": "2026-10-24", "notes": "Pinned official model and GGUF documentation."},
+    {"id": "llama-backend-doc", "kind": "official-doc", "title": "llama.cpp build and backend documentation at fixed revision", "uri": "https://github.com/ggml-org/llama.cpp/blob/280141e6d4769b1e4424de999437cc72ffac33d6/docs/build.md", "accessed": "2026-10-24", "notes": "Pinned official backend/build documentation, including accelerator choices and hybrid execution context."},
+    {"id": "llama-grammar-doc", "kind": "official-doc", "title": "llama.cpp GBNF grammar documentation at fixed revision", "uri": "https://github.com/ggml-org/llama.cpp/blob/280141e6d4769b1e4424de999437cc72ffac33d6/grammars/README.md", "accessed": "2026-10-24", "notes": "Pinned official grammar documentation for constrained generation."},
+    {"id": "llama-server-doc", "kind": "official-doc", "title": "llama.cpp server documentation at fixed revision", "uri": "https://github.com/ggml-org/llama.cpp/blob/280141e6d4769b1e4424de999437cc72ffac33d6/tools/server/README.md", "accessed": "2026-10-24", "notes": "Pinned official server interface documentation."},
+    {"id": "llama-source-commit", "kind": "source-code", "title": "llama.cpp source at 280141e6d4769b1e4424de999437cc72ffac33d6", "uri": "https://github.com/ggml-org/llama.cpp/commit/280141e6d4769b1e4424de999437cc72ffac33d6", "accessed": "2026-10-24", "notes": "Fixed official source revision used as the provenance boundary; no benchmark claim is made."}
+  ],
+  "related_systems": ["transformers", "pytorch", "vllm" ]
+}

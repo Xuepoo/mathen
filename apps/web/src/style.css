@@ -215,6 +215,25 @@ h4 {
   color: var(--mint);
   margin-left: 8px;
 }
+.github-link {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  color: #c6d4d8;
+  border: 1px solid transparent;
+  border-radius: 9px;
+}
+.github-link:hover {
+  color: var(--mint);
+  background: #ffffff12;
+  border-color: #ffffff38;
+}
+.github-link svg {
+  width: 19px;
+  height: 19px;
+}
 .search-results {
   position: absolute;
   top: 53px;
@@ -859,6 +878,27 @@ summary {
   padding: 18px 0;
   border-top: 1px solid var(--border);
 }
+.evidence-list .evidence-experiment {
+  border-left: 2px solid #e7bb7d;
+  padding-left: 14px;
+  background: linear-gradient(90deg, #e7bb7d0d, transparent 55%);
+}
+.evidence-kind {
+  display: inline-block;
+}
+.evidence-experiment .evidence-kind {
+  color: #e7bb7d;
+}
+.relation-direction {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  color: #c4d2d9 !important;
+}
+.relation-direction span {
+  color: var(--mint);
+}
 .evidence-list a,
 .evidence-list small {
   display: block;
@@ -987,6 +1027,10 @@ summary {
   }
   .topbar > button span {
     display: none;
+  }
+  .github-link {
+    width: 32px;
+    height: 32px;
   }
   .graph-tools {
     top: 82px;

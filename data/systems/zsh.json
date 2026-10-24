@@ -1,0 +1,210 @@
+{
+    "id": "zsh",
+    "name": "Zsh",
+    "version_context": "tag zsh-5.9.2, commit ddee3e7a751a4f03d5a1041fd44bb7af7bc0cebb",
+    "summary": "An interactive shell that parses commands into compact wordcode, executes pipelines and shell functions with job-control state, and extends its builtin surface through dynamically loadable modules and autoloading.",
+    "scope": [
+        "shell parsing and wordcode",
+        "command, function, and pipeline execution",
+        "job control and signals",
+        "dynamic modules and autoloaded features"
+    ],
+    "features": [
+        {
+            "id": "wordcode-parse-execution",
+            "name": "Wordcode parse and execution pipeline",
+            "category": "execution-model",
+            "claim_type": "fact",
+            "description": "The fixed source parses shell input into an internal wordcode program and executes it through execode, execpline, and related functions. The Zsh manual documents shell grammar, lists, pipelines, functions, and substitutions at the language boundary.",
+            "benefits": [
+                "A compact intermediate program separates parsing from execution",
+                "The same execution machinery can run top-level commands, functions, and substitutions"
+            ],
+            "costs": [
+                "Wordcode and execution contexts add implementation-specific state",
+                "Shell grammar and expansion semantics remain highly interdependent"
+            ],
+            "evidence_ids": [
+                "zsh-parse-source",
+                "zsh-exec-source",
+                "zsh-shell-grammar-doc"
+            ]
+        },
+        {
+            "id": "zsh-job-control",
+            "name": "Job control and signal coordination",
+            "category": "process-model",
+            "claim_type": "fact",
+            "description": "Zsh's execution code creates and waits for pipelines while job tables and signal handling track foreground, background, stopped, and completed processes. The official manual documents job control and process handling as shell behavior.",
+            "benefits": [
+                "Composes Unix pipelines with interactive foreground and background control",
+                "Centralizes signal-driven process status in shell job state"
+            ],
+            "costs": [
+                "Signal timing and terminal process groups are OS-dependent",
+                "Nested execution and asynchronous jobs complicate cleanup and status propagation"
+            ],
+            "evidence_ids": [
+                "zsh-exec-source",
+                "zsh-jobs-source",
+                "zsh-signals-source",
+                "zsh-jobs-doc"
+            ]
+        },
+        {
+            "id": "dynamic-module-autoload-boundary",
+            "name": "Dynamic module and autoload boundary",
+            "category": "extension-model",
+            "claim_type": "fact",
+            "description": "Zsh maintains module tables and autoloadable definitions for builtins, conditions, parameters, and math functions. The manual documents dynamic modules and autoloading as extension mechanisms that add shell features on demand.",
+            "benefits": [
+                "Keeps optional functionality outside the always-loaded core",
+                "Allows features to be installed and resolved through stable shell names"
+            ],
+            "costs": [
+                "Feature availability depends on module paths and load-time state",
+                "Module ABI and autoload failures cross the shell language boundary"
+            ],
+            "evidence_ids": [
+                "zsh-module-source",
+                "zsh-autoload-source",
+                "zsh-modules-doc"
+            ]
+        }
+    ],
+    "mathematical_views": [
+        {
+            "model": "Shell wordcode refinement chain",
+            "question": "How does textual shell grammar become wordcode and then process, builtin, or function effects?",
+            "assumptions": [
+                "Parsing produces a finite wordcode program with control-flow and command boundaries",
+                "Execution interprets wordcode under shell and job contexts",
+                "The view abstracts lexical details, signals, and platform-specific process calls"
+            ],
+            "claim_type": "inference",
+            "evidence_ids": [
+                "zsh-parse-source",
+                "zsh-exec-source",
+                "zsh-shell-grammar-doc"
+            ]
+        },
+        {
+            "model": "Shell extension and job resource graph",
+            "question": "How do modules, autoloaded functions, shell contexts, pipelines, and job records connect?",
+            "assumptions": [
+                "Modules and autoload definitions are extension resources, while jobs and process groups are execution resources",
+                "Edges represent feature resolution, command execution, process creation, or status propagation",
+                "The graph does not claim that every module or autoload path is enabled in every installation"
+            ],
+            "claim_type": "hypothesis",
+            "evidence_ids": [
+                "zsh-module-source",
+                "zsh-autoload-source",
+                "zsh-jobs-source",
+                "zsh-modules-doc"
+            ]
+        }
+    ],
+    "trade_offs": [
+        {
+            "feature_id": "wordcode-parse-execution",
+            "benefits": ["Reusable intermediate execution representation"],
+            "costs": ["Intermediate state increases semantic and debugging complexity"]
+        },
+        {
+            "feature_id": "zsh-job-control",
+            "benefits": ["Rich interactive process composition"],
+            "costs": ["Signals and process groups complicate lifecycle handling"]
+        },
+        {
+            "feature_id": "dynamic-module-autoload-boundary",
+            "benefits": ["Optional features can be loaded on demand"],
+            "costs": [
+                "Runtime availability and module compatibility become operational concerns"
+            ]
+        }
+    ],
+    "evidence": [
+        {
+            "id": "zsh-fixed-source",
+            "kind": "source-code",
+            "title": "Zsh source at fixed tag zsh-5.9.2",
+            "uri": "https://github.com/zsh-users/zsh/tree/ddee3e7a751a4f03d5a1041fd44bb7af7bc0cebb",
+            "accessed": "2026-10-24",
+            "notes": "Official source inspected at the fixed commit; relevant paths include Src/parse.c, Src/exec.c, Src/loop.c, Src/jobs.c, Src/signals.c, Src/module.c, and Src/builtin.c."
+        },
+        {
+            "id": "zsh-parse-source",
+            "kind": "source-code",
+            "title": "Zsh parser source",
+            "uri": "https://github.com/zsh-users/zsh/blob/ddee3e7a751a4f03d5a1041fd44bb7af7bc0cebb/Src/parse.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for parse_event, parse_list, parse_string, and wordcode construction."
+        },
+        {
+            "id": "zsh-exec-source",
+            "kind": "source-code",
+            "title": "Zsh execution source",
+            "uri": "https://github.com/zsh-users/zsh/blob/ddee3e7a751a4f03d5a1041fd44bb7af7bc0cebb/Src/exec.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for execode, execpline, shell functions, substitutions, and process execution."
+        },
+        {
+            "id": "zsh-shell-grammar-doc",
+            "kind": "official-doc",
+            "title": "Zsh shell grammar",
+            "uri": "https://zsh.sourceforge.io/Doc/Release/Shell-Grammar.html",
+            "accessed": "2026-10-24",
+            "notes": "Official manual for lists, pipelines, commands, functions, and substitutions."
+        },
+        {
+            "id": "zsh-jobs-source",
+            "kind": "source-code",
+            "title": "Zsh job-control source",
+            "uri": "https://github.com/zsh-users/zsh/blob/ddee3e7a751a4f03d5a1041fd44bb7af7bc0cebb/Src/jobs.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for job tables, process groups, waiting, and status updates."
+        },
+        {
+            "id": "zsh-signals-source",
+            "kind": "source-code",
+            "title": "Zsh signal handling source",
+            "uri": "https://github.com/zsh-users/zsh/blob/ddee3e7a751a4f03d5a1041fd44bb7af7bc0cebb/Src/signals.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for signal-driven job updates and process control."
+        },
+        {
+            "id": "zsh-jobs-doc",
+            "kind": "official-doc",
+            "title": "Zsh job control",
+            "uri": "https://zsh.sourceforge.io/Doc/Release/Jobs-_0026-Signals.html",
+            "accessed": "2026-10-24",
+            "notes": "Official manual for jobs, signals, foreground/background execution, and process control."
+        },
+        {
+            "id": "zsh-module-source",
+            "kind": "source-code",
+            "title": "Zsh dynamic module source",
+            "uri": "https://github.com/zsh-users/zsh/blob/ddee3e7a751a4f03d5a1041fd44bb7af7bc0cebb/Src/module.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for module tables, linked modules, dynamic loading, and feature registration."
+        },
+        {
+            "id": "zsh-autoload-source",
+            "kind": "source-code",
+            "title": "Zsh builtin and autoload source",
+            "uri": "https://github.com/zsh-users/zsh/blob/ddee3e7a751a4f03d5a1041fd44bb7af7bc0cebb/Src/builtin.c",
+            "accessed": "2026-10-24",
+            "notes": "Fixed source for builtin registration and autoload-related shell features."
+        },
+        {
+            "id": "zsh-modules-doc",
+            "kind": "official-doc",
+            "title": "Zsh modules and autoloading",
+            "uri": "https://zsh.sourceforge.io/Doc/Release/Modules.html",
+            "accessed": "2026-10-24",
+            "notes": "Official manual for dynamic modules, module paths, and loadable shell features."
+        }
+    ],
+    "related_systems": ["bash", "fish", "vim"]
+}

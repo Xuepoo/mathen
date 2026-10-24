@@ -1,0 +1,284 @@
+{
+  "id": "chafa",
+  "name": "Chafa",
+  "version_context": "tag 1.18.3, commit 3b160556b3a6107196b614de1eb0634844144e15",
+  "summary": "A terminal image and media viewer whose CLI and C library decode media, map pixels to terminal symbols or graphics protocols, and emit terminal-specific output.",
+  "scope": [
+    "image and animation loading",
+    "pixel and symbol mapping",
+    "terminal capability selection",
+    "CLI and stream processing"
+  ],
+  "features": [
+    {
+      "id": "media-loader-pipeline",
+      "name": "Media loader and frame pipeline",
+      "category": "media-transformation-model",
+      "claim_type": "fact",
+      "description": "The fixed source separates public image/frame objects from CLI media loaders and a media pipeline that supports image formats, animation, and frame iteration before terminal rendering.",
+      "benefits": [
+        "Keeps decoding and frame selection separate from terminal output",
+        "Allows the CLI to process still images and animated media through one pipeline"
+      ],
+      "costs": [
+        "Format and animation support adds loader and frame-lifetime complexity",
+        "Decoded media can require substantially more memory than terminal output"
+      ],
+      "evidence_ids": [
+        "chafa-image-source",
+        "chafa-media-pipeline-source",
+        "chafa-readme"
+      ]
+    },
+    {
+      "id": "pixel-symbol-canvas-model",
+      "name": "Pixel-to-symbol canvas model",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "Chafa exposes canvas, frame, placement, and symbol-map types. The rendering path reduces image data into terminal cells and symbols while retaining color, dithering, and placement configuration.",
+      "benefits": [
+        "Provides a reusable library boundary above terminal escape sequences",
+        "Supports different symbol sets and color strategies for the same image"
+      ],
+      "costs": [
+        "Terminal-cell quantization loses information relative to a pixel display",
+        "Dithering, palette, and placement choices affect output quality and cost"
+      ],
+      "evidence_ids": [
+        "chafa-canvas-source",
+        "chafa-frame-source",
+        "chafa-symbol-map-source"
+      ]
+    },
+    {
+      "id": "terminal-capability-backends",
+      "name": "Terminal capability and graphics backends",
+      "category": "rendering-model",
+      "claim_type": "fact",
+      "description": "The source contains terminal databases and information objects plus dedicated kitty, iTerm2, and Sixel canvas implementations. Output is therefore selected against terminal capabilities rather than emitted through one universal encoding.",
+      "benefits": [
+        "Uses richer graphics protocols when the terminal advertises support",
+        "Retains text and ANSI-oriented output paths for broader compatibility"
+      ],
+      "costs": [
+        "Capability detection and protocol-specific encoders widen the compatibility surface",
+        "Terminal behavior can differ from the capabilities reported by its environment"
+      ],
+      "evidence_ids": [
+        "chafa-term-db-source",
+        "chafa-term-info-source",
+        "chafa-kitty-source",
+        "chafa-sixel-source",
+        "chafa-readme"
+      ]
+    },
+    {
+      "id": "cli-batch-stream-boundary",
+      "name": "CLI batch and stream boundary",
+      "category": "command-interface",
+      "claim_type": "inference",
+      "description": "The chafa executable composes path queues, stream readers/writers, terminal handling, and media loading around the library canvas. This makes the product surface a bounded CLI pipeline rather than a resident image runtime.",
+      "benefits": [
+        "Supports shell composition and bounded processing of multiple inputs",
+        "Keeps command-line orchestration outside the reusable rendering types"
+      ],
+      "costs": [
+        "Process lifetime and stream errors cross several independently configured stages",
+        "Interactive terminal behavior is difficult to reproduce in non-interactive automation"
+      ],
+      "evidence_ids": [
+        "chafa-cli-source",
+        "chafa-path-queue-source",
+        "chafa-stream-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Media-to-terminal dataflow",
+      "question": "How does a media frame become a terminal cell or graphics-protocol sequence?",
+      "assumptions": [
+        "A decoded frame is an input image state",
+        "Canvas and symbol-map operations are rendering transformations",
+        "Terminal capability selection chooses an output encoding",
+        "The model abstracts codec implementation and terminal display behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "chafa-image-source",
+        "chafa-canvas-source",
+        "chafa-symbol-map-source",
+        "chafa-term-info-source"
+      ]
+    },
+    {
+      "model": "Terminal capability selection relation",
+      "question": "Which output backend is admissible for a terminal capability set and requested format?",
+      "assumptions": [
+        "Capabilities are observations supplied by terminal information and environment configuration",
+        "Backend support is modeled as a compatibility relation, not a guarantee of visual equivalence",
+        "Kitty, iTerm2, Sixel, and text/ANSI paths are distinct output strategies"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "chafa-term-db-source",
+        "chafa-kitty-source",
+        "chafa-sixel-source",
+        "chafa-readme"
+      ]
+    },
+    {
+      "model": "CLI pipeline transition system",
+      "question": "How do input paths or streams transition through loading, frame processing, rendering, and terminal emission?",
+      "assumptions": [
+        "Each input can produce zero or more frames",
+        "Queue and stream stages can fail independently",
+        "The model describes the CLI boundary and does not claim exact scheduling"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "chafa-cli-source",
+        "chafa-path-queue-source",
+        "chafa-stream-source",
+        "chafa-media-pipeline-source"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "media-loader-pipeline",
+      "benefits": ["Multiple media formats and frames share one processing boundary"],
+      "costs": ["Loader and frame lifecycle complexity increases memory and error handling work"]
+    },
+    {
+      "feature_id": "pixel-symbol-canvas-model",
+      "benefits": ["One image model can target several terminal presentations"],
+      "costs": ["Cell resolution and palette constraints limit fidelity"]
+    },
+    {
+      "feature_id": "terminal-capability-backends",
+      "benefits": ["Protocol-specific paths can use richer terminal graphics features"],
+      "costs": ["Backend proliferation makes compatibility and testing broader"]
+    },
+    {
+      "feature_id": "cli-batch-stream-boundary",
+      "benefits": ["The CLI composes naturally with files, pipes, and shell workflows"],
+      "costs": ["Terminal state and stream failures complicate deterministic automation"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "chafa-repository",
+      "kind": "source-code",
+      "title": "Chafa source at tag 1.18.3",
+      "uri": "https://github.com/hpjansson/chafa/tree/3b160556b3a6107196b614de1eb0634844144e15",
+      "accessed": "2026-10-24",
+      "notes": "Official repository tag 1.18.3 resolved to a fixed commit."
+    },
+    {
+      "id": "chafa-readme",
+      "kind": "official-doc",
+      "title": "Chafa README at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Official overview of the terminal image viewer, library, formats, and output modes."
+    },
+    {
+      "id": "chafa-image-source",
+      "kind": "source-code",
+      "title": "Chafa image and frame APIs at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/tree/3b160556b3a6107196b614de1eb0634844144e15/chafa",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary containing image, frame, canvas, placement, and symbol-map APIs."
+    },
+    {
+      "id": "chafa-canvas-source",
+      "kind": "source-code",
+      "title": "Chafa canvas implementation at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/chafa/chafa-canvas.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for canvas configuration and terminal-cell rendering state."
+    },
+    {
+      "id": "chafa-frame-source",
+      "kind": "source-code",
+      "title": "Chafa frame implementation at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/chafa/chafa-frame.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for frame data and frame-level rendering inputs."
+    },
+    {
+      "id": "chafa-symbol-map-source",
+      "kind": "source-code",
+      "title": "Chafa symbol-map implementation at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/chafa/chafa-symbol-map.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for symbol selection and character-set mapping."
+    },
+    {
+      "id": "chafa-media-pipeline-source",
+      "kind": "source-code",
+      "title": "Chafa media pipeline at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/tools/chafa/chicle-media-pipeline.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed CLI source for media loading and frame pipeline coordination."
+    },
+    {
+      "id": "chafa-term-db-source",
+      "kind": "source-code",
+      "title": "Chafa terminal database at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/chafa/chafa-term-db.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for terminal capability database handling."
+    },
+    {
+      "id": "chafa-term-info-source",
+      "kind": "source-code",
+      "title": "Chafa terminal information at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/chafa/chafa-term-info.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for terminal information and output capability state."
+    },
+    {
+      "id": "chafa-kitty-source",
+      "kind": "source-code",
+      "title": "Chafa Kitty canvas at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/chafa/internal/chafa-kitty-canvas.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for Kitty graphics protocol output."
+    },
+    {
+      "id": "chafa-sixel-source",
+      "kind": "source-code",
+      "title": "Chafa Sixel canvas at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/chafa/internal/chafa-sixel-canvas.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for Sixel output."
+    },
+    {
+      "id": "chafa-cli-source",
+      "kind": "source-code",
+      "title": "Chafa CLI at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/tools/chafa/chafa.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for command-line orchestration."
+    },
+    {
+      "id": "chafa-path-queue-source",
+      "kind": "source-code",
+      "title": "Chafa path queue at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/blob/3b160556b3a6107196b614de1eb0634844144e15/tools/chafa/chicle-path-queue.c",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source for queued input paths."
+    },
+    {
+      "id": "chafa-stream-source",
+      "kind": "source-code",
+      "title": "Chafa stream reader and writer at fixed tag",
+      "uri": "https://github.com/hpjansson/chafa/tree/3b160556b3a6107196b614de1eb0634844144e15/tools/chafa",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source boundary containing stream reader and writer stages."
+    }
+  ],
+  "related_systems": ["imagemagick", "coreutils"]
+}

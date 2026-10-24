@@ -1,0 +1,268 @@
+{
+  "id": "hermes-agent",
+  "name": "Hermes Agent",
+  "version_context": "NousResearch/hermes-agent commit db1fa153fe24a051af44ef8ee862b93e27998060 (official main revision resolved 2026-10-24)",
+  "summary": "A Python agent and gateway system from Nous Research combining a terminal conversation loop, tool execution, context compression, persistent memory and skills, delegation, scheduled jobs, and multi-platform messaging backends.",
+  "scope": [
+    "Python conversation and tool loop",
+    "context compression and memory/skills",
+    "delegation and plugin/provider boundaries",
+    "cron scheduling, gateway, and messaging integrations"
+  ],
+  "temporal_context": {
+    "version": "NousResearch/hermes-agent commit db1fa153fe24a051af44ef8ee862b93e27998060",
+    "status": "current",
+    "claim_status": "accepted",
+    "evidence_ids": [
+      "hermes-agent-fixed-commit"
+    ]
+  },
+  "features": [
+    {
+      "id": "multi-surface-agent-loop",
+      "name": "Multi-surface conversation and tool loop",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "The official README describes a full TUI and a gateway for Telegram, Discord, Slack, WhatsApp, Signal, and other surfaces; the fixed conversation loop assembles requests, handles model responses, dispatches tool rounds, retries/fallbacks, and finalizes turns.",
+      "benefits": [
+        "One agent runtime can serve terminal and messaging workflows",
+        "Streaming, interruption, tool output, and retry behavior are centralized in the turn loop"
+      ],
+      "costs": [
+        "Many surfaces create input, delivery, and lifecycle variations",
+        "A large loop must coordinate provider, tool, context, and gateway policies"
+      ],
+      "evidence_ids": [
+        "hermes-agent-readme",
+        "hermes-conversation-loop-source",
+        "hermes-tool-executor-source"
+      ]
+    },
+    {
+      "id": "closed-learning-context-loop",
+      "name": "Context compression, memory, and skills learning loop",
+      "category": "context-model",
+      "claim_type": "fact",
+      "description": "Hermes includes automatic context compression with protected head/tail and summary routes, memory-provider fan-out with egress scrubbing and bounded calls, and skill-index delta notes that update available skills without rebuilding a cached prompt prefix.",
+      "benefits": [
+        "Supports long-lived conversations and cross-session recall",
+        "Keeps changing skills visible while preserving prompt-cache structure",
+        "Memory provider calls have explicit redaction and admission controls"
+      ],
+      "costs": [
+        "Summaries and memory are lossy or asynchronous projections",
+        "Multiple context and provider policies increase consistency surface",
+        "Background calls and caches require bounded-failure handling"
+      ],
+      "evidence_ids": [
+        "hermes-context-compressor-source",
+        "hermes-memory-source",
+        "hermes-skills-source"
+      ]
+    },
+    {
+      "id": "fail-closed-delegation-and-tools",
+      "name": "Fail-closed delegation and tool execution boundaries",
+      "category": "coordination-model",
+      "claim_type": "fact",
+      "description": "Delegation providers are selected from a normalized registry and unavailable configured backends return tool errors rather than silently switching routes; tool execution has sequential/concurrent dispatch, guardrails, persisted-result handling, and a common result projection.",
+      "benefits": [
+        "Preserves configured routing intent under provider failure",
+        "Centralizes tool-call identity, result shape, and safety checks"
+      ],
+      "costs": [
+        "Fail-closed behavior can stop work when a configured backend is unavailable",
+        "Concurrent tools require ordering, cancellation, and large-result memory policies"
+      ],
+      "evidence_ids": [
+        "hermes-delegation-source",
+        "hermes-tool-executor-source"
+      ]
+    },
+    {
+      "id": "scheduled-gateway-automation",
+      "name": "Scheduled automation through a gateway",
+      "category": "automation-model",
+      "claim_type": "fact",
+      "description": "The official README documents a built-in cron scheduler and gateway, while the fixed scheduler uses a tick lock, tracks in-flight jobs, handles stale gateway/code conditions, routes jobs, and delivers outcomes to configured platforms.",
+      "benefits": [
+        "Runs unattended jobs with platform delivery",
+        "Makes recurring agent work a first-class runtime surface"
+      ],
+      "costs": [
+        "Scheduling introduces overlap, liveness, stale-code, and delivery failure states",
+        "Background execution expands credential and authorization boundaries"
+      ],
+      "evidence_ids": [
+        "hermes-agent-readme",
+        "hermes-cron-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Tool-calling conversation transition system",
+      "question": "How do user input, model responses, tool rounds, compression, retries, interruptions, and finalization advance a Hermes turn?",
+      "assumptions": [
+        "A turn is an ordered transcript plus provider/tool runtime state",
+        "Tool calls may execute sequentially or concurrently and produce one projected result shape",
+        "Retries and fallback routes are policy transitions, not guaranteed success",
+        "The view abstracts network providers and platform delivery"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "hermes-conversation-loop-source",
+        "hermes-tool-executor-source"
+      ]
+    },
+    {
+      "model": "Lossy context and memory projection system",
+      "question": "How do compression summaries, retained transcript regions, memory providers, and skill-index notes affect the context seen by later model calls?",
+      "assumptions": [
+        "Compression maps a transcript to a bounded prompt projection",
+        "Memory and skill notes are auxiliary projections with explicit scrubbing or delta semantics",
+        "Asynchronous providers can be delayed, skipped, or bounded by admission controls",
+        "No projection is treated as a proof of semantic equivalence to the original history"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "hermes-context-compressor-source",
+        "hermes-memory-source",
+        "hermes-skills-source"
+      ]
+    },
+    {
+      "model": "Locked scheduled-job automaton",
+      "question": "Which job, ownership, liveness, route, execution, and delivery states permit a cron tick to run or defer work?",
+      "assumptions": [
+        "Ticks contend on a lock and jobs have persisted definitions and in-flight state",
+        "A stale process may yield to a fresh gateway under the scheduler policy",
+        "Delivery and execution are separate transitions with failure records",
+        "The model abstracts operating-system locking and platform APIs"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "hermes-cron-source",
+        "hermes-agent-readme"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "multi-surface-agent-loop",
+      "benefits": [
+        "Shared behavior across TUI and messaging"
+      ],
+      "costs": [
+        "Surface-specific lifecycle and delivery complexity"
+      ]
+    },
+    {
+      "feature_id": "closed-learning-context-loop",
+      "benefits": [
+        "Long-lived memory and adaptive skills"
+      ],
+      "costs": [
+        "Lossy/asynchronous projections need consistency and failure policies"
+      ]
+    },
+    {
+      "feature_id": "fail-closed-delegation-and-tools",
+      "benefits": [
+        "Configured routes are not silently bypassed"
+      ],
+      "costs": [
+        "Unavailable backends can block delegated work"
+      ]
+    },
+    {
+      "feature_id": "scheduled-gateway-automation",
+      "benefits": [
+        "Unattended recurring agent workflows"
+      ],
+      "costs": [
+        "Scheduler liveness, overlap, and delivery states add operational burden"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "hermes-agent-fixed-commit",
+      "kind": "source-code",
+      "title": "Hermes Agent official repository at fixed commit db1fa153fe24",
+      "uri": "https://github.com/NousResearch/hermes-agent/commit/db1fa153fe24a051af44ef8ee862b93e27998060",
+      "accessed": "2026-10-24",
+      "notes": "Official Nous Research repository. The remote main branch advanced during inspection; this exact resolved commit is the card boundary."
+    },
+    {
+      "id": "hermes-agent-readme",
+      "kind": "official-doc",
+      "title": "Hermes Agent README at fixed commit",
+      "uri": "https://github.com/NousResearch/hermes-agent/blob/db1fa153fe24a051af44ef8ee862b93e27998060/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Official overview of TUI, gateway platforms, skills, memory, delegation, terminal backends, cron, and installation."
+    },
+    {
+      "id": "hermes-conversation-loop-source",
+      "kind": "source-code",
+      "title": "Hermes conversation loop source",
+      "uri": "https://github.com/NousResearch/hermes-agent/blob/db1fa153fe24a051af44ef8ee862b93e27998060/agent/conversation_loop.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source inspected locally for request assembly, compression gates, retries/fallbacks, tool rounds, interruption, and turn finalization."
+    },
+    {
+      "id": "hermes-tool-executor-source",
+      "kind": "source-code",
+      "title": "Hermes tool executor source",
+      "uri": "https://github.com/NousResearch/hermes-agent/blob/db1fa153fe24a051af44ef8ee862b93e27998060/agent/tool_executor.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source inspected locally for sequential/concurrent dispatch, guardrails, persisted result paths, budgets, and common result projection."
+    },
+    {
+      "id": "hermes-context-compressor-source",
+      "kind": "source-code",
+      "title": "Hermes context compressor source",
+      "uri": "https://github.com/NousResearch/hermes-agent/blob/db1fa153fe24a051af44ef8ee862b93e27998060/agent/context_compressor.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source inspected locally for bounded summary routes, protected transcript regions, retries, tool-output pruning, and compression telemetry."
+    },
+    {
+      "id": "hermes-memory-source",
+      "kind": "source-code",
+      "title": "Hermes memory manager source",
+      "uri": "https://github.com/NousResearch/hermes-agent/blob/db1fa153fe24a051af44ef8ee862b93e27998060/agent/memory_manager.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source inspected locally for provider fan-out, egress redaction, bounded background calls, stuck-call admission, and memory context handling."
+    },
+    {
+      "id": "hermes-skills-source",
+      "kind": "source-code",
+      "title": "Hermes skill-index delta source",
+      "uri": "https://github.com/NousResearch/hermes-agent/blob/db1fa153fe24a051af44ef8ee862b93e27998060/agent/skills_index_delta.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source inspected locally for transcript skill-index deltas and prompt-prefix-preserving updates."
+    },
+    {
+      "id": "hermes-delegation-source",
+      "kind": "source-code",
+      "title": "Hermes delegation provider registry source",
+      "uri": "https://github.com/NousResearch/hermes-agent/blob/db1fa153fe24a051af44ef8ee862b93e27998060/agent/delegation_registry.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source inspected locally for normalized backend selection, plugin/bundled provider loading, availability checks, and fail-closed routing."
+    },
+    {
+      "id": "hermes-cron-source",
+      "kind": "source-code",
+      "title": "Hermes cron scheduler source",
+      "uri": "https://github.com/NousResearch/hermes-agent/blob/db1fa153fe24a051af44ef8ee862b93e27998060/cron/scheduler.py",
+      "accessed": "2026-10-24",
+      "notes": "Fixed source inspected locally for tick locking, stale-code yield, in-flight jobs, route selection, and scheduled execution handling."
+    }
+  ],
+  "related_systems": [
+    "pi-agent",
+    "opencode",
+    "python",
+    "sqlite"
+  ]
+}

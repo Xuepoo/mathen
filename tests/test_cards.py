@@ -56,6 +56,36 @@ class CardValidationTests(unittest.TestCase):
         self.assertNotIn("relations", card)
         validate_card(card)
 
+    def test_experiment_evidence_fixture_is_valid(self) -> None:
+        experiment = json.loads(
+            (ROOT / "data" / "experiments" / "g5-minimal.json").read_text()
+        )
+        card = self._evolution_fixture()
+        card["evidence"].append(experiment)
+        validate_card(card)
+
+    def test_experiment_evidence_requires_reproducibility_fields(self) -> None:
+        card = self._evolution_fixture()
+        card["evidence"].append(self._experiment_evidence())
+        del card["evidence"][1]["protocol"]
+        with self.assertRaisesRegex(CardValidationError, "missing experiment fields"):
+            validate_card(card)
+
+    def test_experiment_metrics_must_be_finite_numbers(self) -> None:
+        card = self._evolution_fixture()
+        experiment = self._experiment_evidence()
+        experiment["metrics"]["latency_ms"] = float("inf")
+        card["evidence"].append(experiment)
+        with self.assertRaisesRegex(CardValidationError, "must be finite"):
+            validate_card(card)
+
+        card = self._evolution_fixture()
+        experiment = self._experiment_evidence()
+        experiment["repetitions"] = 0
+        card["evidence"].append(experiment)
+        with self.assertRaisesRegex(CardValidationError, "positive integer"):
+            validate_card(card)
+
     def test_temporal_relations_and_composition_contract_is_valid(self) -> None:
         card = self._evolution_fixture()
         validate_card(card)
@@ -68,6 +98,15 @@ class CardValidationTests(unittest.TestCase):
         card = self._evolution_fixture()
         card["relations"][0]["evidence_ids"] = ["missing"]
         with self.assertRaisesRegex(CardValidationError, "unknown evidence ids"):
+            validate_card(card)
+
+    def test_duplicate_evidence_reference_is_rejected(self) -> None:
+        card = json.loads((ROOT / "data" / "systems" / "git.json").read_text())
+        card["features"][0]["evidence_ids"] = [
+            card["features"][0]["evidence_ids"][0],
+            card["features"][0]["evidence_ids"][0],
+        ]
+        with self.assertRaisesRegex(CardValidationError, "duplicate evidence ids"):
             validate_card(card)
 
         card = self._evolution_fixture()
@@ -195,6 +234,23 @@ class CardValidationTests(unittest.TestCase):
             },
         }
 
+    @staticmethod
+    def _experiment_evidence() -> dict:
+        return {
+            "id": "experiment",
+            "kind": "experiment",
+            "title": "Fixture experiment",
+            "uri": "https://example.com/experiment",
+            "protocol": "Run the fixture command.",
+            "system_commit": "a" * 40,
+            "environment": "Linux",
+            "command": "true",
+            "dataset": "fixture dataset",
+            "repetitions": 3,
+            "metrics": {"latency_ms": 1.5},
+            "artifacts": ["https://example.com/artifact"],
+        }
+
     def test_generated_draft_card_has_valid_references(self) -> None:
         spec = RepositorySpec(
             id="fixture",
@@ -248,6 +304,83 @@ class CardValidationTests(unittest.TestCase):
             report = inspect_repository(spec, checkout)
             self.assertEqual(report["provenance"], "github-archive")
             self.assertEqual(report["commit"], "b" * 40)
+
+    def test_repository_observations_record_manifest_signals_and_locations(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            checkout = Path(directory)
+            (checkout / "src").mkdir()
+            (checkout / "tests").mkdir()
+            (checkout / "benchmarks").mkdir()
+            (checkout / "pyproject.toml").write_text("[project]\nname = 'fixture'\n")
+            (checkout / "tests" / "test_recovery.py").write_text(
+                "# benchmark config\n# recovery test\n# test again\n"
+            )
+            (checkout / ".mathen-repository.json").write_text(
+                json.dumps(
+                    {
+                        "commit": "c" * 40,
+                        "repository": "https://github.com/example/project.git",
+                        "requested_ref": "main",
+                        "source": "github-archive",
+                    }
+                )
+            )
+            spec = RepositorySpec(
+                id="fixture",
+                name="Fixture",
+                category="test",
+                repository="https://github.com/example/project.git",
+                documentation="https://example.com/docs",
+                ref="main",
+                priority="test",
+            )
+
+            report = inspect_repository(spec, checkout)
+
+        self.assertEqual(report["analysis_version"], 3)
+        observations = report["observations"]
+        self.assertTrue(
+            any(
+                observation["kind"] == "dependency-manifest"
+                and observation["location"] == {"path": "pyproject.toml"}
+                for observation in observations
+            )
+        )
+        self.assertTrue(
+            any(
+                observation["kind"] == "test"
+                and observation["location"]["path"] == "tests/test_recovery.py"
+                for observation in observations
+            )
+        )
+        self.assertTrue(
+            any(
+                observation["kind"] == "source-location"
+                and observation["location"]["path"] == "tests/test_recovery.py"
+                for observation in observations
+            )
+        )
+        content_observation = next(
+            observation
+            for observation in observations
+            if observation["basis"] == "content"
+        )
+        self.assertEqual(content_observation["location"]["line"], 1)
+        self.assertEqual(content_observation["provenance"], "github-archive")
+        self.assertEqual(content_observation["tool"], "mathen-deterministic-inspector")
+        self.assertTrue(
+            {"benchmark", "recovery", "configuration"}.issubset(
+                {observation["kind"] for observation in observations}
+            )
+        )
+        content_kinds = [
+            observation["kind"]
+            for observation in observations
+            if observation["basis"] == "content"
+        ]
+        self.assertEqual(len(content_kinds), len(set(content_kinds)))
 
     def test_interrupted_archive_response_is_recoverable(self) -> None:
         class BrokenResponse:

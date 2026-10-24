@@ -1,0 +1,199 @@
+{
+  "id": "mihomo",
+  "name": "Mihomo",
+  "version_context": "commit 3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8",
+  "summary": "A configuration-driven proxy client and tunnel that separates TCP/UDP ingress dispatch from protocol-specific outbound adapters, provider-backed proxy groups, and controller/configuration concerns.",
+  "scope": [
+    "proxy client",
+    "TCP/UDP tunnel",
+    "outbound protocol adapters",
+    "proxy providers and groups",
+    "DNS and rule dispatch"
+  ],
+  "features": [
+    {
+      "id": "mihomo-tunnel-dispatch",
+      "name": "TCP/UDP tunnel dispatch boundary",
+      "category": "data-plane-model",
+      "claim_type": "fact",
+      "description": "Mihomo exposes a tunnel boundary that accepts TCP connections and UDP packets, initializes bounded worker queues, tracks NAT and session state, and dispatches traffic through configured proxy adapters. This is the local data plane, not a remote control plane.",
+      "benefits": [
+        "Provides one data-plane path for transparent, local, and proxy-routed traffic",
+        "Bounds UDP work queues and hashes packet sessions to workers"
+      ],
+      "costs": [
+        "Queue overflow can drop packets under load",
+        "NAT, DNS mode, sniffing, and process lookup add state to connection dispatch"
+      ],
+      "evidence_ids": [
+        "mihomo-tunnel-source",
+        "mihomo-config-source"
+      ]
+    },
+    {
+      "id": "mihomo-adapter-and-group-model",
+      "name": "Adapters, providers, and selectable proxy groups",
+      "category": "protocol-composition",
+      "claim_type": "fact",
+      "description": "Outbound proxy adapters share a common dial/UDP/resolution interface. Provider-backed groups materialize, filter, cache, health-test, and select adapters; a selector forwards traffic through the currently selected member.",
+      "benefits": [
+        "Adds many protocol clients behind one outbound adapter boundary",
+        "Separates remote proxy membership/provider refresh from per-connection dialing",
+        "Supports explicit selection and health-oriented groups"
+      ],
+      "costs": [
+        "Protocol-specific adapters still differ in UDP, DNS, and transport capabilities",
+        "Provider refresh and health checks introduce mutable shared group state",
+        "Selection and fallback semantics can change the path for subsequent connections"
+      ],
+      "evidence_ids": [
+        "mihomo-adapter-source",
+        "mihomo-groups-source"
+      ]
+    },
+    {
+      "id": "mihomo-config-and-controller-boundary",
+      "name": "Configuration-driven local control boundary",
+      "category": "control-plane-model",
+      "claim_type": "fact",
+      "description": "The configuration executor parses local configuration and initializes DNS, proxy, rule, and tunnel state. Mihomo may expose controller APIs through its hub surface, but the reviewed source separates those management routes from the adapter/tunnel packet path; no external control-plane authority is assumed by this card.",
+      "benefits": [
+        "Makes runtime composition explicit through configuration and initialization stages",
+        "Keeps controller/configuration concerns separate from common adapter dialing interfaces"
+      ],
+      "costs": [
+        "Configuration reloads must coordinate registries and live traffic",
+        "Controller/API availability is separate from proxy data-plane availability"
+      ],
+      "evidence_ids": [
+        "mihomo-config-source",
+        "mihomo-docs",
+        "mihomo-tunnel-source"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Tunnel-to-adapter routing graph",
+      "question": "How do inbound TCP/UDP traffic, tunnel workers, proxy adapters, groups, and providers form the local forwarding graph?",
+      "assumptions": [
+        "Tunnel, adapters, groups, and providers are distinct vertices",
+        "A provider/group edge represents membership or refresh, while a tunnel/adapter edge represents traffic dispatch",
+        "Controller APIs and external subscription services are outside the packet forwarding graph"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mihomo-tunnel-source",
+        "mihomo-adapter-source",
+        "mihomo-groups-source"
+      ]
+    },
+    {
+      "model": "Bounded ingress worker system",
+      "question": "How are TCP and UDP ingress events admitted, queued, assigned to workers, and dropped when capacity is exhausted?",
+      "assumptions": [
+        "UDP queues have finite capacity and packet hashing selects a worker queue",
+        "TCP and UDP paths have different lifecycle and NAT/session behavior",
+        "The model does not infer fairness or throughput from queue sizes"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "mihomo-tunnel-source"
+      ]
+    },
+    {
+      "model": "Provider-backed proxy selection state machine",
+      "question": "How does a configured provider-backed group move from member materialization to selection, health testing, fallback, and dialing?",
+      "assumptions": [
+        "Provider versions and cached proxy lists represent refreshable state",
+        "A selected proxy is an adapter implementing the common outbound contract",
+        "Health-test results influence group state but do not prove end-to-end availability"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "mihomo-groups-source",
+        "mihomo-adapter-source",
+        "mihomo-docs"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "mihomo-tunnel-dispatch",
+      "benefits": [
+        "Provides one data-plane path for transparent, local, and proxy-routed traffic"
+      ],
+      "costs": [
+        "Queue overflow can drop packets under load"
+      ]
+    },
+    {
+      "feature_id": "mihomo-adapter-and-group-model",
+      "benefits": [
+        "Adds many protocol clients behind one outbound adapter boundary"
+      ],
+      "costs": [
+        "Protocol-specific adapters still differ in UDP, DNS, and transport capabilities"
+      ]
+    },
+    {
+      "feature_id": "mihomo-config-and-controller-boundary",
+      "benefits": [
+        "Makes runtime composition explicit through configuration and initialization stages"
+      ],
+      "costs": [
+        "Configuration reloads must coordinate registries and live traffic"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "mihomo-repository-commit",
+      "kind": "source-code",
+      "title": "Mihomo source at 3f27ef39f8c9",
+      "uri": "https://github.com/MetaCubeX/mihomo/blob/3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Pinned official source revision corresponding to release tag v1.19.33."
+    },
+    {
+      "id": "mihomo-docs",
+      "kind": "official-doc",
+      "title": "Mihomo documentation",
+      "uri": "https://wiki.metacubex.one/",
+      "accessed": "2026-10-24",
+      "notes": "Official Mihomo documentation for configuration, proxy adapters, routing, DNS, and controller-facing APIs."
+    },
+    {
+      "id": "mihomo-adapter-source",
+      "kind": "source-code",
+      "title": "Proxy adapter interface at 3f27ef39f8c9",
+      "uri": "https://github.com/MetaCubeX/mihomo/blob/3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8/adapter/outbound/base.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for common outbound adapter properties, dialing, UDP support, resolver integration, and socket options."
+    },
+    {
+      "id": "mihomo-groups-source",
+      "kind": "source-code",
+      "title": "Proxy groups and providers at 3f27ef39f8c9",
+      "uri": "https://github.com/MetaCubeX/mihomo/blob/3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8/adapter/outboundgroup/groupbase.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for provider-backed proxy groups, filtering, health-test state, and cached member lists."
+    },
+    {
+      "id": "mihomo-tunnel-source",
+      "kind": "source-code",
+      "title": "Tunnel dispatcher at 3f27ef39f8c9",
+      "uri": "https://github.com/MetaCubeX/mihomo/blob/3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8/tunnel/tunnel.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for TCP/UDP ingress queues, worker hashing, proxy/provider registries, NAT state, and tunnel dispatch."
+    },
+    {
+      "id": "mihomo-config-source",
+      "kind": "source-code",
+      "title": "Configuration executor at 3f27ef39f8c9",
+      "uri": "https://github.com/MetaCubeX/mihomo/blob/3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8/hub/executor/executor.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for configuration parsing and initialization of DNS, proxy, rule, and tunnel state."
+    }
+  ]
+}

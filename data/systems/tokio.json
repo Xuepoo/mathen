@@ -1,0 +1,126 @@
+{
+  "id": "tokio",
+  "name": "Tokio",
+  "version_context": "commit 8a2408edcfa2b7f19c00428a9d3a8ea6652a083f",
+  "summary": "An asynchronous Rust runtime that combines task schedulers, an I/O event driver, timers, and asynchronous synchronization and networking utilities.",
+  "scope": [
+    "asynchronous task execution",
+    "I/O and timer readiness",
+    "single-thread and work-stealing schedulers",
+    "runtime lifecycle"
+  ],
+  "features": [
+    {
+      "id": "bundled-runtime-services",
+      "name": "Bundled scheduler, driver, and timer services",
+      "category": "runtime-model",
+      "claim_type": "fact",
+      "description": "Tokio's Runtime bundles a scheduler, an I/O event loop called the driver, and a timer service, and exposes construction and shutdown through one runtime type.",
+      "benefits": [
+        "Presents the services needed by asynchronous applications behind one lifecycle boundary",
+        "Allows applications to configure runtime services together"
+      ],
+      "costs": [
+        "Runtime configuration couples task execution to resource-driver and timer choices",
+        "Applications must drive a runtime for tasks to make progress"
+      ],
+      "evidence_ids": ["tokio-runtime-doc", "tokio-fixed-source"]
+    },
+    {
+      "id": "multiple-task-schedulers",
+      "name": "Current-thread and work-stealing schedulers",
+      "category": "scheduling-model",
+      "claim_type": "fact",
+      "description": "Tokio provides a current-thread scheduler and a multi-thread scheduler. The multi-thread scheduler uses worker-local queues, a global queue, and work stealing; the current-thread scheduler executes tasks on one thread.",
+      "benefits": [
+        "Supports lightweight single-thread deployments and parallel task execution",
+        "Makes scheduling strategy an explicit runtime configuration choice"
+      ],
+      "costs": [
+        "Different scheduler flavors expose different driving and Send constraints",
+        "Queue preference, stealing, and fairness behavior complicate latency reasoning"
+      ],
+      "evidence_ids": ["tokio-runtime-doc", "tokio-scheduler-source"]
+    },
+    {
+      "id": "readiness-driven-task-waking",
+      "name": "Readiness-driven task waking",
+      "category": "asynchronous-io-model",
+      "claim_type": "fact",
+      "description": "The runtime checks I/O resources and timers, wakes tasks associated with ready events, and polls ready futures. The source separates driver readiness handling from scheduler task execution.",
+      "benefits": [
+        "Lets many I/O-bound tasks share a bounded set of worker threads",
+        "Makes readiness and timer events explicit wakeup inputs"
+      ],
+      "costs": [
+        "A task that blocks a worker or fails to yield can delay unrelated work",
+        "Readiness, wakeups, and polling add coordination state to application reasoning"
+      ],
+      "evidence_ids": ["tokio-runtime-doc", "tokio-driver-source"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Readiness-wakeup task transition system",
+      "question": "How do I/O and timer readiness transitions move a future from waiting to scheduled polling?",
+      "assumptions": [
+        "Tasks, resource registrations, and timer entries are state nodes",
+        "A readiness event produces a wakeup edge that makes a task eligible for polling",
+        "The view abstracts operating-system readiness APIs and future implementation details"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["tokio-runtime-doc", "tokio-driver-source"]
+    },
+    {
+      "model": "Work-stealing queue transition system",
+      "question": "How do local queues, the global queue, lifo-slot behavior, and stealing determine which ready task is polled next?",
+      "assumptions": [
+        "Each worker has a local queue and workers share a global injection queue",
+        "Queue operations and stealing are transitions over ready-task state",
+        "The model abstracts exact queue capacity, heuristics, and platform thread behavior"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["tokio-runtime-doc", "tokio-scheduler-source"]
+    }
+  ],
+  "trade_offs": [
+    {"feature_id": "bundled-runtime-services", "benefits": ["One lifecycle boundary for core async services"], "costs": ["Service configuration and runtime driving become coupled"]},
+    {"feature_id": "multiple-task-schedulers", "benefits": ["Choice between local and parallel scheduling"], "costs": ["Scheduler-specific behavior complicates portability and latency analysis"]},
+    {"feature_id": "readiness-driven-task-waking", "benefits": ["Efficient multiplexing of I/O-bound tasks"], "costs": ["Blocking work and wakeup coordination can delay progress"]}
+  ],
+  "evidence": [
+    {
+      "id": "tokio-fixed-source",
+      "kind": "source-code",
+      "title": "Tokio source tree at fixed commit 8a2408edcfa2",
+      "uri": "https://github.com/tokio-rs/tokio/commit/8a2408edcfa2b7f19c00428a9d3a8ea6652a083f",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed official repository revision used for runtime, driver, and scheduler provenance."
+    },
+    {
+      "id": "tokio-runtime-doc",
+      "kind": "official-doc",
+      "title": "Tokio runtime module documentation",
+      "uri": "https://docs.rs/tokio/1.54.1/tokio/runtime/index.html",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Official API documentation for runtime services, scheduler flavors, task driving, readiness, and scheduling behavior."
+    },
+    {
+      "id": "tokio-scheduler-source",
+      "kind": "source-code",
+      "title": "Tokio scheduler source at fixed commit",
+      "uri": "https://github.com/tokio-rs/tokio/tree/8a2408edcfa2b7f19c00428a9d3a8ea6652a083f/tokio/src/runtime/scheduler",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed-commit source boundary for current-thread and multi-thread scheduler queues and workers."
+    },
+    {
+      "id": "tokio-driver-source",
+      "kind": "source-code",
+      "title": "Tokio runtime driver source at fixed commit",
+      "uri": "https://github.com/tokio-rs/tokio/tree/8a2408edcfa2b7f19c00428a9d3a8ea6652a083f/tokio/src/runtime/driver",
+      "accessed": "2026-10-24T00:00:00+00:00",
+      "notes": "Fixed-commit source boundary for I/O and timer driver components."
+    }
+  ],
+  "related_systems": ["rust", "libuv", "node"]
+}

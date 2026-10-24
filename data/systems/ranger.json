@@ -1,0 +1,174 @@
+{
+  "id": "ranger",
+  "name": "ranger",
+  "version_context": "Official ranger/ranger release ref v1.9.4 resolved to commit 55fc2839f693aed9486d211694d7317d78161341; bounded source snapshot, not a latest-release assertion.",
+  "summary": "A Python curses file manager that maintains navigable directory/tab state, advances background loader generators cooperatively, and delegates previews and file opening to external programs.",
+  "scope": [
+    "Concrete resolution of the generic file-manager target: ranger/ranger, GNU GPLv3 console file manager, distinct from Yazi",
+    "Directory hierarchy, selection, and tab cursor state",
+    "Cooperative loader and preview subprocess boundary",
+    "Architectural benefits and costs are inferences rather than measured performance claims"
+  ],
+  "features": [
+    {
+      "id": "tab-local-navigation-state",
+      "name": "Tab-local navigation state over directory objects",
+      "category": "state-model",
+      "claim_type": "fact",
+      "description": "Tab stores current directory/file, history, cursor pointer, path, and ancestor pathway. Movement and tab-change signals update the active file and restore the tab's saved pointer into the directory object. Selection returns marked entries when present and otherwise the current file.",
+      "benefits": [
+        "Navigation context survives switching tabs",
+        "Actions can consume a common selection interface for single and marked files"
+      ],
+      "costs": [
+        "Tab-local cursors must be synchronized with directory-object cursors",
+        "Saved navigation state does not freeze a filesystem that other processes can mutate"
+      ],
+      "evidence_ids": ["ranger-tab"]
+    },
+    {
+      "id": "cooperative-generator-loader",
+      "name": "Cooperative generator loader",
+      "category": "execution-model",
+      "claim_type": "fact",
+      "description": "Loader::work takes the first queued loadable with a generator, unpauses it, and repeatedly calls next until completion, failure, or the work-time budget expires. A changed active item pauses the previous one. CommandLoader integrates subprocess work into this loader interface.",
+      "benefits": [
+        "Generator steps provide a common incremental interface for copy and subprocess tasks",
+        "Time budgeting lets control return to the interactive loop between work intervals"
+      ],
+      "costs": [
+        "The budget is checked between generator steps and cannot preempt a blocking step",
+        "Queue priority, pause state, and external process behavior affect responsiveness"
+      ],
+      "evidence_ids": ["ranger-loader"]
+    },
+    {
+      "id": "preview-subprocess-cache-protocol",
+      "name": "Preview subprocess and dimension-aware cache protocol",
+      "category": "process-interface",
+      "claim_type": "fact",
+      "description": "get_preview either opens text directly or queues the configured preview script with path, dimensions, cache-image path, and image-preview flag. Exit codes select dimension-specific text, reusable text, image, direct-image, no-preview, or fallback-text outcomes. The in-memory preview dictionary is keyed by real path and dimension pairs with wildcard dimensions.",
+      "benefits": [
+        "Independent tools can add rich formats without embedding every decoder in the UI",
+        "Dimension-aware caching can reuse previews across redraws"
+      ],
+      "costs": [
+        "Preview behavior depends on installed tools and the script exit-code contract",
+        "Loading flags, caches, process completion, and current selection need coordinated updates"
+      ],
+      "evidence_ids": ["ranger-preview", "ranger-readme"]
+    },
+    {
+      "id": "external-file-launcher-boundary",
+      "name": "External file-launcher boundary",
+      "category": "composition-model",
+      "claim_type": "fact",
+      "description": "ranger ships rifle as its file launcher and routes execute_file through Rifle.execute with filenames and launch options. The official README distinguishes the file manager from programs selected to handle file types and lists optional external preview dependencies.",
+      "benefits": [
+        "File browsing can reuse existing viewers and editors",
+        "Launch policy can vary independently of tab navigation"
+      ],
+      "costs": [
+        "Actual behavior depends on launcher configuration and executable availability",
+        "External applications have their own failures and side effects outside navigation state"
+      ],
+      "evidence_ids": ["ranger-readme", "ranger-launch"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Navigation state machine over a changing directory graph",
+      "question": "How do tab switches, cursor movement, and marking determine the files an action receives?",
+      "assumptions": [
+        "State contains each tab's path, history, pointer, current directory/file, and the directory's marked entries",
+        "Movement signals and tab-change signals are explicit transitions; selection prefers marked entries over the current file",
+        "The graph is an observed filesystem view, not an immutable tree: links, deletion, permission failures, and concurrent changes are outside the simple navigation model"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["ranger-tab"]
+    },
+    {
+      "model": "Cooperative work-queue transition system",
+      "question": "What does the loader's work budget constrain, and where can a job exceed it?",
+      "assumptions": [
+        "Queued, active, paused, completed, and failed are abstract loadable states",
+        "A generator step is indivisible to Loader::work; the wall-clock budget is tested between next calls",
+        "A responsiveness bound requires a bound on each generator step and cannot be inferred from the budget alone",
+        "Subprocess execution can overlap independently, so this is not a claim that all system work is single-threaded"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": ["ranger-loader", "ranger-preview"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "tab-local-navigation-state",
+      "benefits": ["Persistent navigation context"],
+      "costs": ["Synchronization with shared directory objects and changing filesystem state"]
+    },
+    {
+      "feature_id": "cooperative-generator-loader",
+      "benefits": ["Incremental work with simple generator lifecycle"],
+      "costs": ["Long steps can overrun the intended work interval"]
+    },
+    {
+      "feature_id": "preview-subprocess-cache-protocol",
+      "benefits": ["Rich previews through replaceable external tools"],
+      "costs": ["Process, cache, and exit-code coordination"]
+    },
+    {
+      "feature_id": "external-file-launcher-boundary",
+      "benefits": ["Reuses specialized file handlers"],
+      "costs": ["Configuration and external program dependencies"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ranger-readme",
+      "kind": "official-doc",
+      "title": "ranger 1.9.4 identity, design goals, and dependencies",
+      "uri": "https://github.com/ranger/ranger/blob/55fc2839f693aed9486d211694d7317d78161341/README.md#L1-L100",
+      "accessed": "2026-10-24",
+      "notes": "Inspected Python/curses identity, GPLv3 license, rifle composition, directory hierarchy UI, and optional preview dependencies. Official ref v1.9.4 resolved through the repository commit API. Chosen explicitly for the otherwise generic file-manager request."
+    },
+    {
+      "id": "ranger-tab",
+      "kind": "source-code",
+      "title": "Tab state, movement signals, and selection",
+      "uri": "https://github.com/ranger/ranger/blob/55fc2839f693aed9486d211694d7317d78161341/ranger/core/tab.py#L15-L86",
+      "accessed": "2026-10-24",
+      "notes": "Inspected Tab initialization, move/tab.change handlers, at_level, and get_selection."
+    },
+    {
+      "id": "ranger-loader",
+      "kind": "source-code",
+      "title": "Generator-based loadables and cooperative work loop",
+      "uri": "https://github.com/ranger/ranger/blob/55fc2839f693aed9486d211694d7317d78161341/ranger/core/loader.py#L390-L439",
+      "accessed": "2026-10-24",
+      "notes": "Inspected Loader::work; Loadable, CopyLoader, and CommandLoader definitions locate the generator and subprocess interfaces. Budget enforcement occurs between generator next calls."
+    },
+    {
+      "id": "ranger-preview",
+      "kind": "source-code",
+      "title": "Preview subprocess and cache handling",
+      "uri": "https://github.com/ranger/ranger/blob/55fc2839f693aed9486d211694d7317d78161341/ranger/core/actions.py#L1058-L1200",
+      "accessed": "2026-10-24",
+      "notes": "Inspected get_preview including wildcard dimension lookup, loading flag, image mtime check, return-code cases 0-7, and CommandLoader callbacks."
+    },
+    {
+      "id": "ranger-launch",
+      "kind": "source-code",
+      "title": "File execution delegated to rifle",
+      "uri": "https://github.com/ranger/ranger/blob/55fc2839f693aed9486d211694d7317d78161341/ranger/core/actions.py#L414-L463",
+      "accessed": "2026-10-24",
+      "notes": "execute_file documents launcher arguments and delegates execution to self.rifle.execute; no claim that the file manager implements the selected viewers."
+    }
+  ],
+  "temporal_context": {
+    "version": "v1.9.4 / 55fc2839f693aed9486d211694d7317d78161341",
+    "status": "historical",
+    "claim_status": "accepted",
+    "evidence_ids": ["ranger-readme", "ranger-loader"]
+  },
+  "related_systems": ["yazi", "cpython"]
+}

@@ -5,6 +5,7 @@ from __future__ import annotations
 import http.client
 import json
 import os
+import re
 import shutil
 import subprocess
 import tarfile
@@ -66,6 +67,74 @@ PATH_SIGNAL_PATTERNS = {
     "compiler": ("compiler", "llvm", "ir", "parser", "ast", "codegen"),
     "media": ("codec", "filter", "mux", "demux", "avformat", "avcodec"),
 }
+
+DEPENDENCY_MANIFESTS = {
+    "Cargo.toml": "Rust",
+    "Cargo.lock": "Rust",
+    "composer.json": "PHP",
+    "composer.lock": "PHP",
+    "Gemfile": "Ruby",
+    "Gemfile.lock": "Ruby",
+    "Package.swift": "Swift",
+    "package.json": "JavaScript/TypeScript",
+    "package-lock.json": "JavaScript/TypeScript",
+    "pnpm-lock.yaml": "JavaScript/TypeScript",
+    "yarn.lock": "JavaScript/TypeScript",
+    "pom.xml": "Java",
+    "pyproject.toml": "Python",
+    "requirements.txt": "Python",
+    "Pipfile": "Python",
+    "poetry.lock": "Python",
+    "setup.py": "Python",
+    "go.mod": "Go",
+    "go.sum": "Go",
+}
+
+OBSERVATION_PATTERNS = {
+    "test": ("test", "tests", "spec", "specs"),
+    "benchmark": ("benchmark", "benchmarks", "perf", "performance"),
+    "recovery": ("recovery", "recover", "replay", "repair", "restore"),
+    "configuration": (
+        "config",
+        "configuration",
+        "settings",
+        "options",
+        "flags",
+        "defaults",
+    ),
+}
+
+CONTENT_SIGNAL_PATTERNS = {
+    "test": re.compile(r"\b(?:test|tests|testing|unittest|pytest|assert)\b", re.I),
+    "benchmark": re.compile(r"\b(?:benchmark|benchmarks|perf|performance)\b", re.I),
+    "recovery": re.compile(
+        r"\b(?:recover|recovery|replay|repair|restore|rollback)\b", re.I
+    ),
+    "configuration": re.compile(
+        r"\b(?:config|configuration|settings|options|flags|defaults)\b", re.I
+    ),
+}
+
+SOURCE_EXTENSIONS = {
+    ".c",
+    ".cc",
+    ".cpp",
+    ".go",
+    ".h",
+    ".hpp",
+    ".java",
+    ".js",
+    ".kt",
+    ".py",
+    ".rs",
+    ".sh",
+    ".sql",
+    ".ts",
+    ".tsx",
+}
+
+MAX_CONTENT_FILES = 64
+MAX_CONTENT_BYTES = 128 * 1024
 
 IGNORE_DIRS = {".git", ".cache", "node_modules", "vendor", "target", "dist"}
 
@@ -325,10 +394,11 @@ def inspect_repository(spec: RepositorySpec, checkout: Path) -> dict[str, Any]:
         path for path in paths if Path(path).name.lower().startswith("readme")
     ]
     path_signals = _path_signals(paths)
-    commit = _repository_commit(checkout)
     provenance = _repository_provenance(checkout)
+    observations = _repository_observations(checkout, paths, provenance=provenance)
+    commit = _repository_commit(checkout)
     return {
-        "analysis_version": 2,
+        "analysis_version": 3,
         "system_id": spec.id,
         "system_name": spec.name,
         "category": spec.category,
@@ -347,6 +417,7 @@ def inspect_repository(spec: RepositorySpec, checkout: Path) -> dict[str, Any]:
         "build_markers": markers,
         "readme_paths": readme_paths[:10],
         "path_signals": path_signals,
+        "observations": observations,
     }
 
 
@@ -532,6 +603,162 @@ def _path_signals(paths: list[str]) -> dict[str, int]:
         if count:
             signals[category] = count
     return dict(sorted(signals.items()))
+
+
+def _repository_observations(
+    checkout: Path, paths: list[str], *, provenance: str
+) -> list[dict[str, Any]]:
+    """Collect bounded path/content observations without interpreting behavior."""
+
+    observations: list[dict[str, Any]] = []
+    source_paths = {
+        path for path in paths if Path(path).suffix.lower() in SOURCE_EXTENSIONS
+    }
+    content_paths = set(sorted(source_paths)[:MAX_CONTENT_FILES])
+    for path in paths:
+        name = Path(path).name
+        if path in content_paths:
+            observations.append(
+                _observation(
+                    "source-location",
+                    path,
+                    "Tracked source path selected for bounded content inspection.",
+                    "path",
+                    provenance=provenance,
+                )
+            )
+        if name in DEPENDENCY_MANIFESTS:
+            observations.append(
+                _observation(
+                    "dependency-manifest",
+                    path,
+                    f"Recognized {DEPENDENCY_MANIFESTS[name]} dependency manifest.",
+                    "path",
+                    provenance=provenance,
+                )
+            )
+
+        path_parts = _path_tokens(path)
+        for kind, tokens in OBSERVATION_PATTERNS.items():
+            matched = sorted({token for token in tokens if token in path_parts})
+            if matched:
+                observations.append(
+                    _observation(
+                        kind,
+                        path,
+                        f"Path contains {', '.join(matched)} signal(s).",
+                        "path",
+                        provenance=provenance,
+                    )
+                )
+
+        if path in content_paths:
+            observations.extend(
+                _content_observations(checkout, path, provenance=provenance)
+            )
+    return observations
+
+
+def _path_tokens(path: str) -> set[str]:
+    """Split path components into stable, conservative signal tokens."""
+
+    return {
+        token
+        for component in Path(path).parts
+        for token in re.split(r"[^a-z0-9]+", component.lower())
+        if token
+    }
+
+
+def _content_observations(
+    checkout: Path, path: str, *, provenance: str
+) -> list[dict[str, Any]]:
+    """Find at most one first-line content signal per category in one source file."""
+
+    observations: list[dict[str, Any]] = []
+    seen_kinds: set[str] = set()
+    for line_number, line in _read_source_lines(checkout, path):
+        for kind, pattern in CONTENT_SIGNAL_PATTERNS.items():
+            if kind not in seen_kinds and pattern.search(line):
+                seen_kinds.add(kind)
+                observations.append(
+                    _observation(
+                        kind,
+                        path,
+                        f"Source line contains a {kind} interface signal.",
+                        "content",
+                        line_number,
+                        provenance=provenance,
+                    )
+                )
+        if len(observations) == len(CONTENT_SIGNAL_PATTERNS):
+            break
+    return observations
+
+
+def _observation(
+    kind: str,
+    path: str,
+    detail: str,
+    basis: str,
+    line: int | None = None,
+    *,
+    provenance: str,
+) -> dict[str, Any]:
+    location: dict[str, Any] = {"path": path}
+    if line is not None:
+        location["line"] = line
+    return {
+        "kind": kind,
+        "location": location,
+        "basis": basis,
+        "detail": detail,
+        "tool": "mathen-deterministic-inspector",
+        "provenance": provenance,
+    }
+
+
+def _read_source_lines(checkout: Path, path: str) -> list[tuple[int, str]]:
+    """Read bounded source text, returning only non-empty lines."""
+
+    try:
+        content = _read_repository_file(checkout, path)
+    except RepositoryAnalysisError:
+        return []
+    if len(content) > MAX_CONTENT_BYTES:
+        content = content[:MAX_CONTENT_BYTES]
+    return [
+        (number, line.strip())
+        for number, line in enumerate(content.splitlines(), start=1)
+        if line.strip()
+    ]
+
+
+def _read_repository_file(checkout: Path, path: str) -> str:
+    """Read one tracked file through Git or the archive checkout."""
+
+    if (checkout / ".git").exists():
+        try:
+            result = subprocess.run(
+                ["git", "show", f"HEAD:{path}"],
+                cwd=checkout,
+                check=False,
+                capture_output=True,
+                timeout=10,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            raise RepositoryAnalysisError(
+                f"cannot read tracked file {path}: {error}"
+            ) from error
+        if result.returncode:
+            raise RepositoryAnalysisError(f"cannot read tracked file {path}")
+        return result.stdout.decode("utf-8", errors="replace")
+    try:
+        return (checkout / path).read_text(encoding="utf-8", errors="replace")
+    except OSError as error:
+        raise RepositoryAnalysisError(
+            f"cannot read repository file {path}: {error}"
+        ) from error
 
 
 def _repository_commit(checkout: Path) -> str:

@@ -1,0 +1,205 @@
+{
+  "id": "xray",
+  "name": "Xray-core",
+  "version_context": "commit 1b1647cd9ddf0abc34b981d4611fc03bcac1ca74",
+  "summary": "A reusable proxy core that composes inbound protocol listeners, rule or script routing, DNS-aware target strategies, and outbound protocol/transport handlers; its local forwarding core is distinct from any external management service.",
+  "scope": [
+    "proxy core",
+    "inbound and outbound protocol handlers",
+    "reloadable routing",
+    "balancers and scripts",
+    "transport and multiplexing"
+  ],
+  "features": [
+    {
+      "id": "xray-core-instance",
+      "name": "Reusable feature-oriented core",
+      "category": "component-model",
+      "claim_type": "fact",
+      "description": "Xray exposes a reusable core instance whose components are registered and connected through typed feature interfaces. The core processes configured inbound traffic through routing to outbound handlers; it does not by itself define a hosted control plane.",
+      "benefits": [
+        "Supports embedding and composing protocol, DNS, policy, routing, and statistics features",
+        "Keeps component contracts explicit while allowing protocol implementations to vary"
+      ],
+      "costs": [
+        "Component registration and lifecycle ordering create integration constraints",
+        "The core still depends on configuration and compatible transport/protocol implementations"
+      ],
+      "evidence_ids": [
+        "xray-core-source",
+        "xray-overview-doc"
+      ]
+    },
+    {
+      "id": "xray-inbound-outbound-boundary",
+      "name": "Inbound and outbound protocol/transport boundary",
+      "category": "protocol-boundary",
+      "claim_type": "fact",
+      "description": "Inbound workers listen for TCP or UDP traffic, create session metadata, and invoke proxy.Inbound handlers. Outbound handlers instantiate proxy.Outbound implementations, apply target resolution and optional mux/XUDP behavior, then move bytes through the configured transport.",
+      "benefits": [
+        "Separates listener-facing protocol acceptance from egress protocol and transport selection",
+        "Supports multiple protocols and transport/security combinations behind common interfaces"
+      ],
+      "costs": [
+        "DNS target strategies and multiplexing alter session behavior and failure paths",
+        "Inbound and outbound configuration must preserve session metadata and destination semantics"
+      ],
+      "evidence_ids": [
+        "xray-inbound-source",
+        "xray-outbound-source"
+      ]
+    },
+    {
+      "id": "xray-reloadable-routing",
+      "name": "Reloadable rule, balancer, and script routing",
+      "category": "routing-model",
+      "claim_type": "fact",
+      "description": "The router evaluates routing context against rules or an optional script, resolves balancers, and atomically publishes rule and balancer maps for route selection. Webhooks observe decisions; they are management/observability hooks rather than a separate forwarding plane.",
+      "benefits": [
+        "Allows route policy changes without rebuilding every protocol handler",
+        "Supports rule tags, balancers, DNS-aware matching, scripts, and decision webhooks"
+      ],
+      "costs": [
+        "Reload and concurrent selection require synchronization and lifecycle cleanup",
+        "Route policy can change while long-lived sessions retain already-selected outbound state"
+      ],
+      "evidence_ids": [
+        "xray-router-source",
+        "xray-routing-doc"
+      ]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "model": "Core feature dependency graph",
+      "question": "How do Xray core features connect inbound listeners, routing, DNS, outbound managers, and transport handlers?",
+      "assumptions": [
+        "Feature interfaces are vertices and construction requirements are edges",
+        "The graph is local to one core instance; a remote management service is not inferred",
+        "Generated configuration and protocol primitive details are abstracted"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "xray-core-source",
+        "xray-inbound-source",
+        "xray-outbound-source"
+      ]
+    },
+    {
+      "model": "Inbound-to-outbound session pipeline",
+      "question": "How does an accepted connection become an outbound flow with target strategy and optional multiplexing?",
+      "assumptions": [
+        "An inbound worker creates session context and invokes a protocol handler",
+        "Routing produces an outbound tag and the outbound handler applies configured target and mux behavior",
+        "The model abstracts wire framing and encryption implementation"
+      ],
+      "claim_type": "inference",
+      "evidence_ids": [
+        "xray-inbound-source",
+        "xray-router-source",
+        "xray-outbound-source"
+      ]
+    },
+    {
+      "model": "Concurrent routing snapshot model",
+      "question": "How can rule and balancer updates become visible to route selection while existing selections remain valid?",
+      "assumptions": [
+        "The router publishes immutable or atomically replaced rule/balancer collections for readers",
+        "A route is a decision observation, not a promise that the selected outbound is reachable",
+        "The model does not claim zero-delay propagation to every concurrent reader"
+      ],
+      "claim_type": "hypothesis",
+      "evidence_ids": [
+        "xray-router-source",
+        "xray-routing-doc"
+      ]
+    }
+  ],
+  "trade_offs": [
+    {
+      "feature_id": "xray-core-instance",
+      "benefits": [
+        "Supports embedding and composing protocol, DNS, policy, routing, and statistics features"
+      ],
+      "costs": [
+        "Component registration and lifecycle ordering create integration constraints"
+      ]
+    },
+    {
+      "feature_id": "xray-inbound-outbound-boundary",
+      "benefits": [
+        "Separates listener-facing protocol acceptance from egress protocol and transport selection"
+      ],
+      "costs": [
+        "DNS target strategies and multiplexing alter session behavior and failure paths"
+      ]
+    },
+    {
+      "feature_id": "xray-reloadable-routing",
+      "benefits": [
+        "Allows route policy changes without rebuilding every protocol handler"
+      ],
+      "costs": [
+        "Reload and concurrent selection require synchronization and lifecycle cleanup"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "xray-repository-commit",
+      "kind": "source-code",
+      "title": "Xray-core source at 1b1647cd9ddf",
+      "uri": "https://github.com/XTLS/Xray-core/blob/1b1647cd9ddf0abc34b981d4611fc03bcac1ca74/README.md",
+      "accessed": "2026-10-24",
+      "notes": "Pinned official source revision corresponding to release tag v26.10.21."
+    },
+    {
+      "id": "xray-overview-doc",
+      "kind": "official-doc",
+      "title": "Project X documentation",
+      "uri": "https://xtls.github.io/",
+      "accessed": "2026-10-24",
+      "notes": "Official Xray documentation and configuration reference."
+    },
+    {
+      "id": "xray-routing-doc",
+      "kind": "official-doc",
+      "title": "Xray routing configuration",
+      "uri": "https://xtls.github.io/config/routing.html",
+      "accessed": "2026-10-24",
+      "notes": "Official documentation for routing rules, balancers, and outbound selection."
+    },
+    {
+      "id": "xray-core-source",
+      "kind": "source-code",
+      "title": "Core instance at 1b1647cd9ddf",
+      "uri": "https://github.com/XTLS/Xray-core/blob/1b1647cd9ddf0abc34b981d4611fc03bcac1ca74/core/core.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for Xray versioned core package and the reusable core entry point."
+    },
+    {
+      "id": "xray-inbound-source",
+      "kind": "source-code",
+      "title": "Inbound worker at 1b1647cd9ddf",
+      "uri": "https://github.com/XTLS/Xray-core/blob/1b1647cd9ddf0abc34b981d4611fc03bcac1ca74/app/proxyman/inbound/worker.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for listener workers, session context, sniffing, and inbound protocol dispatch."
+    },
+    {
+      "id": "xray-outbound-source",
+      "kind": "source-code",
+      "title": "Outbound handler at 1b1647cd9ddf",
+      "uri": "https://github.com/XTLS/Xray-core/blob/1b1647cd9ddf0abc34b981d4611fc03bcac1ca74/app/proxyman/outbound/handler.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for outbound protocol dispatch, target strategy, multiplexing, and UDP handling."
+    },
+    {
+      "id": "xray-router-source",
+      "kind": "source-code",
+      "title": "Routing engine at 1b1647cd9ddf",
+      "uri": "https://github.com/XTLS/Xray-core/blob/1b1647cd9ddf0abc34b981d4611fc03bcac1ca74/app/router/router.go",
+      "accessed": "2026-10-24",
+      "notes": "Pinned source for dynamically reloadable routing rules, balancers, webhooks, and outbound selection."
+    }
+  ]
+}

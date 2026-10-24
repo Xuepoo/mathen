@@ -51,6 +51,10 @@
       "type": "array",
       "items": { "$ref": "#/$defs/relation" }
     },
+    "feature_relations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/featureRelation" }
+    },
     "composition": { "$ref": "#/$defs/composition" }
   },
   "$defs": {
@@ -115,6 +119,44 @@
           "enum": ["uses", "extends", "composes", "resembles", "influenced-by"]
         },
         "target": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "featureRelation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_feature_id",
+        "target_system_id",
+        "target_feature_id",
+        "type",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "source_feature_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "target_system_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "target_feature_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "type": {
+          "type": "string",
+          "enum": [
+            "implements",
+            "refines",
+            "requires",
+            "supports",
+            "conflicts-with",
+            "composes",
+            "resembles"
+          ]
+        },
         "claim_type": { "$ref": "#/$defs/claimType" },
         "claim_status": { "$ref": "#/$defs/claimStatus" },
         "evidence_ids": {
@@ -250,6 +292,26 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "kind", "title", "uri"],
+      "allOf": [
+        {
+          "if": {
+            "required": ["kind"],
+            "properties": { "kind": { "const": "experiment" } }
+          },
+          "then": {
+            "required": [
+              "protocol",
+              "system_commit",
+              "environment",
+              "command",
+              "dataset",
+              "repetitions",
+              "metrics",
+              "artifacts"
+            ]
+          }
+        }
+      ],
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
         "kind": {
@@ -265,8 +327,41 @@
         "title": { "type": "string", "minLength": 1 },
         "uri": { "type": "string", "format": "uri" },
         "accessed": { "type": "string" },
-        "notes": { "type": "string" }
+        "notes": { "type": "string" },
+        "protocol": { "type": "string", "minLength": 1 },
+        "system_commit": { "type": "string", "minLength": 1 },
+        "environment": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "$ref": "#/$defs/metadataObject" }
+          ]
+        },
+        "command": { "type": "string", "minLength": 1 },
+        "dataset": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "$ref": "#/$defs/metadataObject" }
+          ]
+        },
+        "repetitions": { "type": "integer", "minimum": 1 },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              { "$ref": "#/$defs/metadataObject" }
+            ]
+          }
+        }
       }
+    },
+    "metadataObject": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

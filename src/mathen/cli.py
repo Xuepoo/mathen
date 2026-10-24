@@ -5,12 +5,21 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .cards import CardValidationError, discover_cards, load_card
+from .cards import (
+    CardValidationError,
+    discover_cards,
+    load_card,
+    validate_card_collection,
+)
 from .llm import LLMModelError, client_from_environment, model_bundles
 from .modeling import (
     ModelingBundleError,
     build_modeling_bundles,
     write_modeling_prompts,
+)
+from .relation_candidates import (
+    RelationCandidateError,
+    write_relation_candidate_report,
 )
 from .repositories import RepositoryAnalysisError, analyze_manifest
 
@@ -82,6 +91,18 @@ def build_parser() -> argparse.ArgumentParser:
     model.add_argument(
         "--force", action="store_true", help="overwrite existing draft cards"
     )
+    relation_candidates = subparsers.add_parser(
+        "relation-candidates",
+        help="generate a review-only deterministic relation-candidate report",
+    )
+    relation_candidates.add_argument(
+        "path", nargs="?", type=Path, default=DEFAULT_CARDS
+    )
+    relation_candidates.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_ANALYSES / "g6-relation-candidates.json",
+    )
     analyze.add_argument(
         "--refresh",
         action="store_true",
@@ -141,11 +162,14 @@ def main() -> int:
                 args.timeout,
                 args.force,
             )
+        if args.command == "relation-candidates":
+            return relation_candidates_command(args.path, args.output)
     except (
         CardValidationError,
         LLMModelError,
         ModelingBundleError,
         RepositoryAnalysisError,
+        RelationCandidateError,
     ) as error:
         print(f"ERROR: {error}")
         return 1
@@ -157,9 +181,17 @@ def validate_command(path: Path) -> int:
     if not cards:
         print(f"No cards found in {path}")
         return 1
+    loaded_cards = []
     for card_path in cards:
-        load_card(card_path)
+        loaded_cards.append(load_card(card_path))
         print(f"valid  {card_path}")
+    if path.is_dir():
+        resolved_path = path.resolve()
+        drafts_root = DEFAULT_DRAFTS.resolve()
+        is_drafts = resolved_path == drafts_root or drafts_root in resolved_path.parents
+        validate_card_collection(
+            loaded_cards, require_feature_relation_targets=not is_drafts
+        )
     return 0
 
 
@@ -261,6 +293,14 @@ def model_command(
         bundle_dir, output_dir, client, system_ids or None, overwrite=force
     ):
         print(f"draft  {path}")
+    return 0
+
+
+def relation_candidates_command(cards_path: Path, output_path: Path) -> int:
+    """Write the G6 report and print its path."""
+
+    path = write_relation_candidate_report(cards_path, output_path)
+    print(f"report  {path}")
     return 0
 
 

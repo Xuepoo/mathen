@@ -21,6 +21,21 @@ export type Feature = {
   evidence_ids: string[];
 };
 
+export type FeatureRelation = {
+  source_feature_id: string;
+  target_system_id: string;
+  target_feature_id: string;
+  type: string;
+  claim_type: string;
+  claim_status: string;
+  evidence_ids: string[];
+  notes?: string;
+};
+
+export type FeatureRelationResult = FeatureRelation & {
+  source_system_id: string;
+};
+
 export type ArchitectureCard = {
   id: string;
   name: string;
@@ -34,6 +49,7 @@ export type ArchitectureCard = {
   version_context?: string;
   temporal_context?: Record<string, unknown>;
   relations?: Array<Record<string, unknown>>;
+  feature_relations?: FeatureRelation[];
   composition?: Record<string, unknown>;
 };
 
@@ -68,6 +84,14 @@ export interface Backend {
     includeDrafts: boolean,
     limit: number,
   ): Promise<FeatureSearchResult[]>;
+  listFeatureRelations(
+    systemId: string | undefined,
+    featureId: string | undefined,
+    targetSystemId: string | undefined,
+    type: string | undefined,
+    includeDrafts: boolean,
+    limit: number,
+  ): Promise<FeatureRelationResult[]>;
   listCompositions(
     inputSystem: string | undefined,
     claimStatus: string | undefined,
@@ -141,6 +165,38 @@ export class FilesystemBackend implements Backend {
     return results.slice(0, limit);
   }
 
+  async listFeatureRelations(
+    systemId: string | undefined,
+    featureId: string | undefined,
+    targetSystemId: string | undefined,
+    type: string | undefined,
+    includeDrafts: boolean,
+    limit: number,
+  ): Promise<FeatureRelationResult[]> {
+    const cards = await this.loadAllCards(includeDrafts);
+    return cards
+      .flatMap((card) =>
+        (card.feature_relations ?? [])
+          .filter(
+            (relation) =>
+              (!systemId || card.id === systemId) &&
+              (!featureId || relation.source_feature_id === featureId) &&
+              (!targetSystemId || relation.target_system_id === targetSystemId) &&
+              (!type || relation.type === type),
+          )
+          .map((relation) => ({ source_system_id: card.id, ...relation })),
+      )
+      .sort(
+        (left, right) =>
+          left.source_system_id.localeCompare(right.source_system_id) ||
+          left.source_feature_id.localeCompare(right.source_feature_id) ||
+          left.target_system_id.localeCompare(right.target_system_id) ||
+          left.target_feature_id.localeCompare(right.target_feature_id) ||
+          left.type.localeCompare(right.type),
+      )
+      .slice(0, limit);
+  }
+
   async getModelingBundle(systemId: string): Promise<unknown> {
     try {
       return await readJson(resolve(this.bundlesDirectory, `${systemId}.json`));
@@ -160,18 +216,16 @@ export class FilesystemBackend implements Backend {
       .flatMap((card) => {
         const composition = card.composition;
         if (!isCompositionRecord(composition)) return [];
-        if (
-          inputSystem &&
-          !composition.inputs.some((input) => input.system_id === inputSystem)
-        ) {
+        if (inputSystem && !composition.inputs.some((input) => input.system_id === inputSystem)) {
           return [];
         }
         if (claimStatus && composition.claim_status !== claimStatus) return [];
         return [toCompositionResult(card, composition)];
       })
-      .sort((left, right) =>
-        left.system_name.localeCompare(right.system_name) ||
-        left.system_id.localeCompare(right.system_id),
+      .sort(
+        (left, right) =>
+          left.system_name.localeCompare(right.system_name) ||
+          left.system_id.localeCompare(right.system_id),
       )
       .slice(0, limit);
   }
@@ -260,6 +314,29 @@ export class ApiBackend implements Backend {
         feature: normalizeFeature(record.feature ?? record),
       };
     });
+  }
+
+  async listFeatureRelations(
+    systemId: string | undefined,
+    featureId: string | undefined,
+    targetSystemId: string | undefined,
+    type: string | undefined,
+    includeDrafts: boolean,
+    limit: number,
+  ): Promise<FeatureRelationResult[]> {
+    this.rejectDrafts(includeDrafts);
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (systemId) params.set("system_id", systemId);
+    if (featureId) params.set("feature_id", featureId);
+    if (targetSystemId) params.set("target_system_id", targetSystemId);
+    if (type) params.set("type", type);
+    const data = await this.request<unknown[]>(`/feature-relations?${params}`);
+    if (!Array.isArray(data)) {
+      throw new BackendError(
+        "API response for GET /api/feature-relations has invalid data",
+      );
+    }
+    return data.map((relation) => normalizeFeatureRelationResult(relation));
   }
 
   async getModelingBundle(systemId: string): Promise<unknown> {
@@ -379,6 +456,7 @@ function normalizeCard(value: unknown): ArchitectureCard {
     version_context: optionalString(card.version_context),
     temporal_context: optionalRecord(card.temporal_context),
     relations: recordArray(card.relations),
+    feature_relations: relationArray(card.feature_relations),
     composition: optionalRecord(card.composition),
   };
 }
@@ -404,9 +482,34 @@ function normalizeCompositionResult(value: unknown): CompositionSearchResult {
     system_name: requiredString(result.system_name, "system_name", "/api/compositions"),
     version_context: optionalString(result.version_context) ?? null,
     composition: asRecord(result.composition),
-    evidence: Array.isArray(result.evidence)
-      ? result.evidence.map(normalizeEvidence)
-      : [],
+    evidence: Array.isArray(result.evidence) ? result.evidence.map(normalizeEvidence) : [],
+  };
+}
+
+function normalizeFeatureRelationResult(value: unknown): FeatureRelationResult {
+  const relation = asRecord(value);
+  return {
+    source_system_id: requiredString(
+      relation.source_system_id,
+      "source_system_id",
+      "/api/feature-relations",
+    ),
+    ...normalizeFeatureRelation(relation, "/api/feature-relations"),
+  };
+}
+
+function normalizeFeatureRelation(value: unknown, endpoint: string): FeatureRelation {
+  const relation = asRecord(value);
+  const notes = optionalString(relation.notes);
+  return {
+    source_feature_id: requiredString(relation.source_feature_id, "source_feature_id", endpoint),
+    target_system_id: requiredString(relation.target_system_id, "target_system_id", endpoint),
+    target_feature_id: requiredString(relation.target_feature_id, "target_feature_id", endpoint),
+    type: requiredString(relation.type, "type", endpoint),
+    claim_type: requiredString(relation.claim_type, "claim_type", endpoint),
+    claim_status: requiredString(relation.claim_status, "claim_status", endpoint),
+    evidence_ids: stringArray(relation.evidence_ids),
+    ...(notes ? { notes } : {}),
   };
 }
 
@@ -455,13 +558,21 @@ function recordArray(value: unknown): Array<Record<string, unknown>> {
   return Array.isArray(value) ? value.filter(isRecord) : [];
 }
 
+function relationArray(value: unknown): FeatureRelation[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(isRecord)
+    .map((relation) => normalizeFeatureRelation(relation, "/api/systems/:id"));
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function isCompositionRecord(
-  value: Record<string, unknown> | undefined,
-): value is Record<string, unknown> & {
+function isCompositionRecord(value: Record<string, unknown> | undefined): value is Record<
+  string,
+  unknown
+> & {
   inputs: Array<Record<string, unknown> & { system_id: string }>;
   claim_status: string;
   constraints: unknown[];
@@ -482,10 +593,7 @@ function isCompositionRecord(
     return false;
   }
   return value.inputs.every(
-    (input) =>
-      isRecord(input) &&
-      typeof input.system_id === "string" &&
-      input.system_id.length > 0,
+    (input) => isRecord(input) && typeof input.system_id === "string" && input.system_id.length > 0,
   );
 }
 
