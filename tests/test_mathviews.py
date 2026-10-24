@@ -1,13 +1,19 @@
 import copy
+import io
 import json
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from mathen.cards import CardValidationError, validate_card
+from mathen.cli import validate_mathviews_command
 from mathen.mathviews import (
     MathematicalViewContract,
     MathematicalViewValidationError,
     classify_math_view_contract,
+    discover_math_view_contracts,
+    load_math_view_contract,
     validate_math_view_contract,
 )
 
@@ -37,6 +43,40 @@ class MathematicalViewContractTests(unittest.TestCase):
         model = MathematicalViewContract.from_dict(value, evidence_ids={"design-doc"})
         self.assertEqual(model.to_dict(), value)
         self.assertEqual(classify_math_view_contract(value)["result"], "valid")
+
+    def test_standalone_loader_and_cli_validate_contract_file(self) -> None:
+        fixture = FIXTURES / "math-view-valid.json"
+        self.assertEqual(
+            load_math_view_contract(fixture).to_dict(), self._fixture(fixture.name)
+        )
+        self.assertEqual(discover_math_view_contracts(fixture), [fixture])
+        output = io.StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(validate_mathviews_command(fixture), 0)
+        self.assertIn(f"valid  {fixture}", output.getvalue())
+
+    def test_mathview_cli_empty_or_absent_directory_is_successful_noop(self) -> None:
+        with TemporaryDirectory() as directory:
+            empty_path = Path(directory) / "mathviews"
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(validate_mathviews_command(empty_path), 0)
+            self.assertIn("nothing to validate", output.getvalue())
+
+            empty_path.mkdir()
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(validate_mathviews_command(empty_path), 0)
+            self.assertIn("nothing to validate", output.getvalue())
+
+    def test_mathview_cli_reports_invalid_contract_path(self) -> None:
+        with TemporaryDirectory() as directory:
+            invalid_path = Path(directory) / "invalid.json"
+            invalid_path.write_text("{", encoding="utf-8")
+            with self.assertRaisesRegex(
+                MathematicalViewValidationError, "invalid JSON"
+            ):
+                validate_mathviews_command(invalid_path)
 
     def test_semilattice_requires_and_checks_operation_laws(self) -> None:
         value = self._fixture("math-view-valid.json")

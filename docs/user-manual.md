@@ -138,6 +138,17 @@ Each evidence item contains:
 
 Every feature and mathematical view must reference existing evidence IDs.
 
+Standalone mathematical-view contracts can be checked without loading cards:
+
+```bash
+uv run mathen validate-mathviews data/mathviews
+```
+
+This command validates one JSON file or each top-level JSON file in a
+directory using the same mathematical-view loader and validator. An absent or
+empty directory succeeds as a no-op. Card-local evidence references remain
+bounded by the containing card when a contract is embedded there.
+
 The optional `feature_relations` array is owned by the source card. Each item
 references a source feature in that card, a target system and feature, a
 feature-relation type, claim metadata, and evidence IDs from the source card.

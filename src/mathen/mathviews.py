@@ -181,6 +181,16 @@ def load_math_view_contract(
         raise MathematicalViewValidationError(f"{path}: {error}") from error
 
 
+def discover_math_view_contracts(path: Path) -> list[Path]:
+    """Return standalone mathematical-view contract files in deterministic order."""
+
+    if path.is_file():
+        return [path]
+    if not path.is_dir():
+        return []
+    return sorted(candidate for candidate in path.glob("*.json") if candidate.is_file())
+
+
 def classify_math_view_contract(contract: dict[str, Any]) -> dict[str, Any]:
     """Return a deterministic classification for a structurally valid contract.
 
@@ -816,6 +826,7 @@ __all__ = [
     "MathematicalViewContract",
     "MathematicalViewValidationError",
     "classify_math_view_contract",
+    "discover_math_view_contracts",
     "load_math_view_contract",
     "validate_math_view_contract",
 ]

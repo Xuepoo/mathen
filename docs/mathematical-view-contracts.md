@@ -51,6 +51,21 @@ calling a dependency graph a DAG does not make it one: a cycle is a
 deterministic `invalid` result. Calling a system a semilattice without a
 finite binary operation table is `undetermined`, not valid.
 
+## Standalone validation
+
+Standalone contract files can be validated individually or as a directory:
+
+```bash
+uv run mathen validate-mathviews tests/fixtures/math-view-valid.json
+uv run mathen validate-mathviews data/mathviews
+```
+
+The command uses the same loader and semantic validator as embedded contracts.
+It scans only top-level `*.json` files in a directory, reports each valid path,
+and treats an absent or empty directory as a successful no-op. Standalone
+contracts validate their own non-empty `evidence_ids`; card-local evidence
+boundaries are checked when a contract is embedded in an Architecture Card.
+
 ## Partial, observational, and temporal scope
 
 Contracts may describe only an observational projection: put the observation

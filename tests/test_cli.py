@@ -6,7 +6,7 @@ from contextlib import redirect_stdout
 from dataclasses import replace
 from unittest.mock import patch
 
-from mathen.cli import mcp_command
+from mathen.cli import build_parser, mcp_command
 from mathen.config import MCPSettings, default_config
 
 
@@ -25,6 +25,12 @@ class _Response:
 
 
 class CliTests(unittest.TestCase):
+    def test_mathview_validation_command_is_in_help(self) -> None:
+        help_text = build_parser(default_config()).format_help()
+
+        self.assertIn("validate-mathviews", help_text)
+        self.assertIn("validate mathematical-view contracts", help_text)
+
     def test_mcp_check_sends_protocol_metadata_and_validates_response(self) -> None:
         config = replace(
             default_config(),

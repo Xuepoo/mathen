@@ -35,6 +35,11 @@ from .config import (
 from .data_sync import SyncError, sync_reviewed_cards
 from .data_sync import status as sync_status
 from .llm import LLMModelError, client_from_environment, model_bundles
+from .mathviews import (
+    MathematicalViewValidationError,
+    discover_math_view_contracts,
+    load_math_view_contract,
+)
 from .microstructures import (
     MicrostructureValidationError,
     discover_microstructures,
@@ -93,6 +98,10 @@ def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
         "validate-benchmark", help="validate research benchmark run manifests"
     )
     benchmark.add_argument("path", nargs="?", type=Path, default=Path("data/benchmark"))
+    mathview = subparsers.add_parser(
+        "validate-mathviews", help="validate mathematical-view contracts"
+    )
+    mathview.add_argument("path", nargs="?", type=Path, default=Path("data/mathviews"))
 
     listing = subparsers.add_parser("list", help="list architecture cards")
     listing.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
@@ -243,6 +252,8 @@ def main() -> int:
             return validate_negative_knowledge_command(args.path)
         if args.command == "validate-benchmark":
             return validate_benchmark_command(args.path)
+        if args.command == "validate-mathviews":
+            return validate_mathviews_command(args.path)
         if args.command == "list":
             return list_command(args.path)
         if args.command == "show":
@@ -293,6 +304,7 @@ def main() -> int:
         AnalogyValidationError,
         NegativeKnowledgeValidationError,
         BenchmarkManifestValidationError,
+        MathematicalViewValidationError,
     ) as error:
         print(f"ERROR: {error}")
         return 1
@@ -370,6 +382,19 @@ def validate_benchmark_command(path: Path) -> int:
     for manifest_path in paths:
         load_benchmark_manifest(manifest_path)
         print(f"valid  {manifest_path}")
+    return 0
+
+
+def validate_mathviews_command(path: Path) -> int:
+    """Validate standalone evidence-bounded mathematical-view contracts."""
+
+    paths = discover_math_view_contracts(path)
+    if not paths:
+        print(f"No mathematical-view contracts found in {path}; nothing to validate")
+        return 0
+    for contract_path in paths:
+        load_math_view_contract(contract_path)
+        print(f"valid  {contract_path}")
     return 0
 
 
