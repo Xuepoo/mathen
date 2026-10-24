@@ -38,6 +38,16 @@ jobs:
           path: python-test-report.txt
           if-no-files-found: warn
 
+  # Keep the historical required check name while the matrix provides the
+  # actual cross-platform coverage.
+  python-required:
+    name: python
+    needs: python
+    if: ${{ needs.python.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All cross-platform Python jobs passed."
+
   web-and-worker:
     runs-on: ubuntu-latest
     steps:
