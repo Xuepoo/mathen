@@ -69,3 +69,47 @@ bun scripts/web_performance_report.ts \
 Do not substitute local desktop or headless-Chromium values for mobile
 evidence. A representative mobile trace must identify the device, browser,
 network profile, build, URL, and workload.
+
+## API-backed acceptance and optional browser trace
+
+`scripts/web_acceptance.ts` is the reproducible acceptance harness for the
+graph entry point. It always checks `/api/access/config`, `/api/graph`, and
+`/api/graph/models` against a running API-backed preview. It writes a report
+whose entries distinguish executed checks from checks that were not run.
+
+Start the local API and web preview from separate terminals, then run the
+API-backed checks:
+
+```sh
+bun run db:reset:local
+(cd apps/api && bun run dev -- --port 8787)
+(cd apps/web && bun run dev -- --port 5173)
+bun scripts/web_acceptance.ts \
+  --base-url http://127.0.0.1:5173/ \
+  --output docs/web-acceptance-report.md
+```
+
+If API access protection is enabled, provide the configured service token with
+`--api-token` or `MATHEN_API_ACCESS_TOKEN`. The script does not bypass
+Turnstile or synthesize a browser session.
+
+Browser checks are opt-in because Playwright and its browser binaries are not
+project dependencies. When an operator has an installed Playwright module and
+Chromium, add `--browser` and a trace path. The module can be supplied
+explicitly with `--browser-module`:
+
+```sh
+bun scripts/web_acceptance.ts \
+  --base-url http://127.0.0.1:5173/ \
+  --browser \
+  --browser-module /absolute/path/to/playwright/index.mjs \
+  --trace /tmp/opencode/mathen-web-acceptance.zip \
+  --output docs/web-acceptance-report.md
+```
+
+The opt-in browser run verifies the lazy graph chunk request, Systems and Math
+models mode transitions, the catalog Escape/focus restoration path, the `/`
+search shortcut, and keyboard search/selection. It records a Playwright trace
+but makes no claim about drag, touch, mobile-device behavior, or mobile
+Lighthouse/Core Web Vitals. Those require external evidence naming the real
+device, browser, network profile, build, URL, and workload.
