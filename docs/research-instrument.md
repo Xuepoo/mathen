@@ -97,6 +97,75 @@ experiments, and review support a stronger claim. Similarity search must never
 silently create `uses`, `composes`, `refines`, `influenced-by`, or canonical
 feature relations.
 
+## Representation bridges: the Cartesian analogy
+
+The development of analytic geometry is a useful historical analogy for the
+kind of representation problem Mathen is studying. In the seventeenth century,
+Descartes and Fermat helped establish systematic methods for expressing
+geometric objects and conditions with coordinates and algebraic equations. A
+circle, for example, can be represented by:
+
+```text
+(x - a)^2 + (y - b)^2 = r^2
+```
+
+The important change was not the introduction of a shorter notation. It was the
+creation of a working bridge between two previously distinct practices:
+
+```text
+geometric object and condition
+        ↕ representation / interpretation
+coordinate and algebraic expression
+```
+
+Once the bridge was available, algebraic operations could help answer geometric
+questions, and geometric interpretation could constrain the meaning of
+algebraic results. The bridge did not make every algebraic expression a valid
+geometric object; its meaning depended on the representation, domain, and
+conditions of interpretation. Analytic geometry also developed through the work
+of more than one mathematician, so this is not a claim that one person alone
+created all of the later theory.
+
+The corresponding Mathen research hypothesis is:
+
+```text
+real software system and evidence
+        ↕ abstraction / realization
+architecture microstructure and mathematical contract
+        ↕ typed composition / validation
+candidate macro architecture
+```
+
+The hoped-for bridge would allow a documented system to be represented as
+states, operations, boundaries, invariants, resources, failures, and typed
+relations. A contract could then support bounded comparison or derivation, and
+the result could be interpreted back as a candidate architecture and tested in
+an implementation. This would be stronger than putting different systems in a
+shared graph merely because their names or descriptions are similar.
+
+The analogy is deliberately limited. Mathen does not currently have the mature
+mathematical objects, invertible representation rules, or theorem-producing
+semantics of analytic geometry. A software microstructure may be partial,
+context-dependent, historically changing, or only observationally identified.
+The following are therefore open research questions:
+
+- What information must a system-to-microstructure mapping preserve?
+- When is a mapping a refinement, a realization, a projection, or only an
+  analogy?
+- Which operations on a microstructure have a meaningful interpretation in the
+  source system and in a candidate target system?
+- Which properties survive translation, and which are weakened or lost?
+- Can a candidate generated in the shared representation predict a useful
+  implementation or experiment?
+- What counterexamples show that the representation bridge is too coarse?
+
+The intended standard is not “make everything translatable”. It is to find
+small, evidence-bounded bridges whose assumptions, preserved properties,
+non-preserved properties, and failure conditions are explicit. In Mathen's
+claim vocabulary, the Cartesian comparison is an `analogy` and the proposed
+software representation bridge is a `hypothesis` until those conditions are
+validated.
+
 ## Cross-community discovery
 
 Nearest-neighbor retrieval is useful for recall, but it is not enough for the
