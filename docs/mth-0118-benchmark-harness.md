@@ -41,7 +41,7 @@ numerator and denominator, and an empty denominator has value `null`:
   confusion matrix and per-outcome precision/recall;
 - `typed_obligation_satisfaction`, requiring exact provisions or an explicit
   adapter;
-- `counterexample_recall`, using held-out IDs as the reference set.
+- `counterexample_recall`, using held-out IDs as the reference set;
 
 These helpers are intentionally small pilot primitives. Confidence intervals,
 reviewer adjudication, baseline runners, and experiment execution remain future

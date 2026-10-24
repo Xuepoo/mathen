@@ -13,12 +13,17 @@
     "source_revisions",
     "evidence_bundle",
     "input_ids",
+    "input_evidence",
+    "split",
     "method",
     "provenance",
     "deployment",
     "randomness",
+    "novelty",
+    "analogy_policy",
     "candidates",
     "review",
+    "result_boundary",
     "outcome"
   ],
   "properties": {
