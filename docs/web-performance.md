@@ -109,7 +109,22 @@ bun scripts/web_acceptance.ts \
 
 The opt-in browser run verifies the lazy graph chunk request, Systems and Math
 models mode transitions, the catalog Escape/focus restoration path, the `/`
-search shortcut, and keyboard search/selection. It records a Playwright trace
-but makes no claim about drag, touch, mobile-device behavior, or mobile
-Lighthouse/Core Web Vitals. Those require external evidence naming the real
-device, browser, network profile, build, URL, and workload.
+search shortcut, and keyboard search/selection. Add `--drag`, `--pan`, and/or
+`--orbit` to execute real mouse pointer paths for 2D node drag, 2D background
+pan, and 3D orbit respectively:
+
+```sh
+bun scripts/web_acceptance.ts \
+  --base-url http://127.0.0.1:5173/ \
+  --browser --drag --pan --orbit \
+  --browser-module /absolute/path/to/playwright/index.mjs \
+  --trace /tmp/opencode/mathen-web-acceptance.zip
+```
+
+Each requested path is reported `passed` only after the browser observes its
+complete pointerdown/move/up sequence on the graph canvas. Unrequested paths
+are `not-run`; a missing browser run never becomes a pass. The report includes
+trace metadata (browser, headless mode, viewport, and path). This does not
+claim that a mouse path hit a graph node, moved a node, or proves touch/pinch
+behavior. Real mobile-device and touch evidence remains external and must name
+the device, browser, viewport, execution, build, URL, and workload.

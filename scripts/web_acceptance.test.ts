@@ -67,15 +67,57 @@ test("renders explicit unrun and external evidence boundaries", () => {
         status: "not-run",
         details: "opt-in",
       },
+      {
+        kind: "browser",
+        name: "3D orbit pointer path",
+        status: "external",
+        details: "Requires an executed browser path; no result inferred.",
+      },
     ],
     externalEvidenceGaps: [
       "Real mobile-device browser coverage remains external.",
-      "Drag-node interaction results remain external.",
+      "Touch and pinch interaction results remain external unless a named touch-capable browser execution is supplied.",
     ],
   });
   expect(output).toContain("browser flow");
   expect(output).toContain("not-run");
   expect(output).toContain("Real mobile-device browser coverage remains external.");
-  expect(output).toContain("Drag-node interaction results remain external.");
+  expect(output).toContain("Touch and pinch interaction results remain external");
   expect(output).not.toContain("mobile pass");
+});
+
+test("renders structured external requirements and trace metadata", () => {
+  const output = renderAcceptanceReport({
+    baseUrl: "http://preview.test/",
+    sourceCommit: "abc123",
+    generatedAt: "2026-10-25T00:00:00.000Z",
+    evidence: [
+      {
+        kind: "browser",
+        name: "3D orbit pointer path",
+        status: "passed",
+        details: "observed pointer path",
+        trace: {
+          format: "playwright-trace",
+          path: "/tmp/opencode/trace.zip",
+          browser: "chromium",
+          headless: true,
+          viewport: { width: 1280, height: 900 },
+        },
+      },
+    ],
+    externalEvidenceGaps: ["Touch remains external."],
+    externalEvidence: [
+      {
+        name: "real mobile touch",
+        reason: "No mobile hardware was executed.",
+        required: ["device", "browser", "touch execution"],
+      },
+    ],
+  });
+  expect(output).toContain("Status | Details");
+  expect(output).toContain("trace=/tmp/opencode/trace.zip");
+  expect(output).toContain("Structured external evidence");
+  expect(output).toContain("device, browser, touch execution");
+  expect(output).toContain("external");
 });
