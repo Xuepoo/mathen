@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Hosting and Integration Boundaries
 
 ## Current deployment target
@@ -13,23 +15,37 @@ Vite client
     │
     Hono Worker API (`/api/*`)
     ├── D1: canonical relational source of truth
-    └── Vectorize: optional semantic retrieval index
+    └── Vectorize: planned optional semantic retrieval index
 ```
 
-The current read API includes:
+The repository implements the following read API routes:
 
 - `GET /api/systems` and `GET /api/systems/:id` for reviewed cards;
 - `GET /api/features` for reusable feature retrieval;
+- `GET /api/feature-relations` and `GET /api/compositions` for reviewed
+  relations and composition proposals;
 - `GET /api/modeling/:id` for fixed-commit modeling bundles.
+- `GET /api/graph` and `GET /api/graph/models` for navigational projections.
+
+The routes are interfaces, not a guarantee that every repository artifact is
+populated or exposed. Migrations create the D1 schema, and the seed workflow
+loads reviewed cards and modeling bundles; a deployment that has not been
+seeded can return no records. JSON Schemas, validators, fixtures, and local
+benchmark manifests remain repository artifacts and do not populate D1 or make
+their contents available through the API or MCP. The hosted card and MCP data
+boundary is reviewed-only; the separate artifact route serves operator-uploaded
+deployment artifacts. The local stdio MCP server can read the repository
+filesystem, including explicitly requested drafts.
 
 D1 is intentionally sufficient for the first knowledge graph. Systems,
 features, evidence, mathematical views, trade-offs, and explicit relations are
 stored as normalized tables. Recursive SQL, join tables, and API-side graph
 assembly cover the initial query surface.
 
-Vectorize is an optimization and retrieval companion. It stores embeddings and
-metadata that point back to D1 records; it is not authoritative and can be
-rebuilt from reviewed cards.
+Vectorize is documented as a future optimization and retrieval companion. A
+planned integration would store embeddings and metadata that point back to D1
+records; it would not be authoritative and could be rebuilt from reviewed
+cards. The current Worker has no Vectorize binding or semantic retrieval route.
 
 The deployment workflow expects the repository secrets
 `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_KEY`. The latter must contain a

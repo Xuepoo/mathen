@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD060 -->
+
 <!-- markdownlint-disable MD013 -->
 
 # Mathen as a research instrument
@@ -17,8 +19,8 @@ Human researchers and language models contribute different capabilities:
 | Human researcher       | Problem reframing, curiosity, unusual questions, research direction, and final review           | Human insight is difficult to scale and is not automatically reproducible                              |
 | LLM                    | Broad cross-domain retrieval, local explanation, candidate abstractions, and candidate mappings | Output follows prompts and available evidence; it is not proof, a theorem, or an engineering guarantee |
 | Graph analysis         | Communities, centrality, paths, bridges, and structural positions                               | A graph metric describes the current projection, not intrinsic importance or truth                     |
-| Vector retrieval       | Semantic recall, terminology alignment, and distant candidate discovery                         | Similarity is a candidate signal, not a typed relation or compatibility result                         |
-| Mathematical contracts | Deterministic checks, assumptions, laws, scope, and property classifications                    | A finite check validates the supplied model data, not the entire implementation                        |
+| Planned vector retrieval | Would provide semantic recall, terminology alignment, and distant candidate discovery | Similarity is a candidate signal, not a typed relation or compatibility result; no integration is currently implemented |
+| Mathematical contracts | Deterministic checks, assumptions, laws, scope, and property classifications | A finite check validates supplied finite/model data, not the entire implementation |
 | Experiments            | Runtime behavior, counterexamples, failure modes, and new evidence                              | An experiment has a workload and scope; it does not automatically generalize                           |
 
 The intended division of labor is:
@@ -26,7 +28,7 @@ The intended division of labor is:
 ```text
 human question and reframing
               ↓
-graph/vector candidate discovery
+graph candidate discovery and planned vector candidate discovery
               ↓
 LLM explanation and structural hypothesis
               ↓
@@ -42,8 +44,8 @@ human review and new evidence
 LLM output remains under `data/drafts/` or in a research candidate record. It
 does not become canonical knowledge without deliberate human review. The
 evidence-bounded protocol is described in
-[`llm-modeling.md`](llm-modeling.md), and the current decision is recorded in
-CarryCtx as `DEC-0003`.
+[`llm-modeling.md`](llm-modeling.md). This document does not rely on an
+external decision-record identifier for provenance.
 
 ## Why direct LLM architecture design is insufficient
 
@@ -251,6 +253,15 @@ The repository already contains the first pieces of this direction:
   counterexamples;
 - bounded composition candidates that remain `proven: false`;
 - read-only graph/API/MCP boundaries.
+
+The presence of a schema, validator, fixture, or research harness is not the
+same as a populated corpus or a public data surface. D1/API/MCP expose only
+data loaded into their configured stores and read boundaries; local filesystem
+mode can inspect repository artifacts explicitly. The MTH-0118 plan is linked
+to its present research-only harness in
+[`mth-0118-benchmark-harness.md`](mth-0118-benchmark-harness.md); that harness
+validates supplied manifests and metrics but does not execute experiments or
+publish results.
 
 The following research issues extend the instrument:
 

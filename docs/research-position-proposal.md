@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Public research narrative proposal
 
 **Issue:** MTH-0119 / [#49](https://github.com/Xuepoo/mathen/issues/49)
@@ -114,7 +116,7 @@ non-interchangeable:
 | Deterministic repository tooling | Resolves fixed revisions and records reproducible source/tree observations | Path and build signals are navigation evidence, not semantic architecture claims |
 | LLM | Explains local evidence, proposes abstractions, compares distant structures, and drafts candidate mappings or cards | Output follows the prompt and available evidence; it is not proof, a theorem, an implementation guarantee, or an autonomous architecture authority |
 | Graph retrieval or analysis | Exposes typed neighborhoods, communities, paths, bridges, centrality, and possible cross-community routes | A graph projection describes the selected data and relations; position is not importance, truth, causality, or compatibility |
-| Vector retrieval | Recovers terminology variants and semantically distant candidate records | Similarity is a recall signal, not a typed relation, causal link, or composition result |
+| Planned vector retrieval | Would recover terminology variants and semantically distant candidate records | Similarity is a recall signal, not a typed relation, causal link, or composition result; no such integration is currently implemented |
 | Microstructure and mathematical contracts | Make scale, scope, assumptions, interfaces, operations, and checkable properties explicit | A contract checks supplied finite/model data and cannot validate omitted implementation behavior |
 | Experiment and failure test | Measures runtime behavior, trade-offs, counterexamples, and reproducibility | Results are workload-, version-, environment-, and deployment-scoped |
 
@@ -223,18 +225,26 @@ The public narrative should claim only the following current capabilities:
   writes drafts and protocol sidecars rather than canonical cards;
 - scale-aware microstructure documents with explicit state, operation,
   boundary, resource, failure, and validity fields;
-- checkable mathematical-view contracts with finite classifications of
-  `valid`, `invalid`, or `undetermined` for supported model families;
+- checkable mathematical-view contracts with `valid`, `invalid`, or
+  `undetermined` classifications for supplied finite model data in supported
+  model families;
 - typed, bounded composition candidates that retain discovery provenance and
   `proven: false`;
 - standalone cross-domain analogy mappings with non-equivalence and
   counterexample requirements;
 - standalone negative-knowledge records for bounded invalid or misleading
   candidates;
-- D1 as the canonical structured store, with optional rebuildable semantic
-  retrieval and read-only API/MCP surfaces; and
+- D1 as the canonical structured store, with read-only API/MCP surfaces and
+  documented plans for optional rebuildable semantic retrieval; and
 - a browser/API/MCP deployment boundary that keeps reviewed cards separate from
   drafts and modeling evidence.
+
+These statements distinguish artifact availability from data exposure. Schemas,
+validators, fixtures, and research harnesses can be present and runnable
+without a populated dataset. The API and hosted MCP expose only the reviewed
+rows loaded into D1; the local filesystem MCP can read local artifacts under
+its explicit mode. A finite classification checks the supplied finite/model
+data, not the semantics of the source implementation.
 
 The narrative must also state what is *not* currently provided:
 
@@ -254,6 +264,12 @@ The narrative must also state what is *not* currently provided:
 - no validated claim that the full evidence-to-experiment loop improves
   discovery, review time, or architecture quality. Those are experiments to
   design and measure.
+
+The MTH-0118 planning document now has a small research-only implementation:
+[`docs/mth-0118-benchmark-harness.md`](mth-0118-benchmark-harness.md). Its
+manifest validator and deterministic metric helpers validate supplied run
+records; they do not execute the benchmark, populate a dataset, or expose
+results through the API or MCP.
 
 ## Deployment and provenance origins
 

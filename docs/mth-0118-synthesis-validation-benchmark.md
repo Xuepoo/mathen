@@ -1,8 +1,16 @@
+<!-- markdownlint-disable MD013 -->
+
 # MTH-0118: synthesis validation and architecture novelty benchmark
 
 Status: planning/design artifact only. This document specifies an evaluation
 plan; it reports no experiment results and changes no canonical card, draft,
 schema, API, MCP, or production behavior.
+
+The plan has a research-only pilot boundary in
+[`docs/mth-0118-benchmark-harness.md`](mth-0118-benchmark-harness.md). The
+harness validates supplied run manifests and computes deterministic metrics; it
+does not execute the benchmark, populate a dataset, or publish results through
+the API or MCP.
 
 ## 1. Purpose and research boundary
 

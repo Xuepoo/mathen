@@ -4,6 +4,10 @@ The research-only harness in `mathen.benchmark` turns the MTH-0118 plan into a
 small executable boundary. It does not run an LLM, contact a deployment
 origin, infer support from a URI, or promote a card.
 
+It implements the pilot boundary described in
+[`mth-0118-synthesis-validation-benchmark.md`](mth-0118-synthesis-validation-benchmark.md);
+it is not an experiment result or a populated benchmark dataset.
+
 ## Manifest
 
 `schemas/benchmark-run-manifest.schema.json` and

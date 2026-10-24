@@ -28,30 +28,37 @@ Generated files remain in `data/drafts/llm/`, and evidence IDs and records are
 checked against the fixed bundle before a draft is written. Human review is
 still required for promotion to `data/systems/`.
 
-## Phase 3: Cloudflare application and retrieval
+## Phase 3: Cloudflare application and planned retrieval
 
 - Use D1 as the canonical relational knowledge graph.
 - Add Hono Worker API and a minimal Vite browser client.
-- Add Vectorize as a rebuildable semantic retrieval index.
+- Document and later add Vectorize as a rebuildable semantic retrieval index;
+  no Vectorize integration is currently implemented.
 - Add queries for reusable features and compatible combinations.
-- Expose the reviewed-card and modeling-bundle read boundary through a local
-  stdio MCP server.
+- The current implementation exposes the reviewed-card and modeling-bundle
+  read boundary through a local stdio MCP server.
 - Add graph export to JSON-LD or RDF only if the simpler graph model is
   insufficient.
 
-## Phase 4: Local repository analysis and MCP
+## Phase 4: Local repository analysis and broader MCP workflows
 
 - Analyze a local repository or a catalog entry into a draft Architecture
   Card. The first catalog covers databases, logs, orchestration, isolation,
   virtualization, networking, compilers, media, and backend platforms.
-- Expose comparison and retrieval through an MCP server.
+- Extend MCP comparison and retrieval workflows beyond the current reviewed
+  card, feature, relation, composition, and modeling-bundle reads.
 - Keep draft analysis separate from reviewed canonical cards.
 
-## Phase 5: Architecture synthesis
+## Phase 5: Architecture synthesis and validation
 
 - Express design goals and constraints as queries.
 - Generate candidate compositions with explicit conflicts and assumptions.
 - Validate candidates with prototypes, benchmarks, and failure tests.
+
+The MTH-0118 planning document has a research-only harness for validating run
+manifests and computing deterministic pilot metrics:
+[`mth-0118-benchmark-harness.md`](mth-0118-benchmark-harness.md). It does not
+run the benchmark or make results available through the API/MCP.
 
 The synthesis direction is deliberately human–LLM collaborative. LLMs broaden
 cross-domain search and propose evidence-bounded mappings; humans reframe

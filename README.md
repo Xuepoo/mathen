@@ -101,7 +101,7 @@ These participants and mechanisms are complementary, not interchangeable:
 | Deterministic tooling | Records fixed-revision observations | Signals guide review; they are not semantic claims |
 | LLM | Explains evidence and drafts abstractions | It is not proof or an architecture authority |
 | Graph analysis | Exposes typed paths and neighborhoods | Position is not truth, causality, or compatibility |
-| Vector retrieval | Recovers terminology variants | Similarity is not a typed relation |
+| Planned vector retrieval | Would recover terminology variants | Similarity is not a typed relation; no integration is currently implemented |
 | Contracts and microstructures | Make scope and checks explicit | Contracts cannot validate omitted behavior |
 | Experiments and failure tests | Measure behavior and counterexamples | Results are deployment-scoped |
 
@@ -150,9 +150,10 @@ The current implementation provides reviewed, evidence-linked cards; fixed-
 commit analysis and modeling bundles; deterministic repository observations;
 an evidence-bounded OpenAI-compatible LLM adapter that writes drafts and
 protocol sidecars; scale-aware microstructure documents; finite mathematical
-view classifications; bounded composition candidates; analogy and negative-
-knowledge records; D1-backed API/browser/MCP boundaries; and optional,
-rebuildable semantic retrieval. It does **not** automatically prove
+view classifications for supplied model data; bounded composition candidates;
+analogy and negative-knowledge records; and D1-backed API/browser/MCP
+boundaries. Optional, rebuildable semantic retrieval is documented as planned
+architecture, not as a current implementation. It does **not** automatically prove
 implementation semantics, produce theorems, promote LLM output or analogies,
 guarantee graph/vector recall or compatibility, assign calibrated originality
 or quality scores, infer historical influence, replace source review and
@@ -380,13 +381,25 @@ The repository currently provides:
   service-token API access, and per-IP limits;
 - explicit separation between reviewed cards, drafts, and modeling evidence.
 
+These implementation and repository-artifact statements do not imply a
+populated deployment or a public data surface. Schemas, validators, fixtures,
+and sample benchmark manifests can be present and runnable without loading
+their contents into D1. The API and hosted MCP expose only reviewed rows
+seeded into the configured D1 database; the local filesystem MCP can inspect
+repository artifacts only in its explicit local mode. The research-only
+MTH-0118 harness is documented in
+[`docs/mth-0118-benchmark-harness.md`](docs/mth-0118-benchmark-harness.md); it
+validates supplied manifests and metrics but does not run the benchmark or
+publish results.
+
 The canonical tree currently contains 219 reviewed cards. The representative
 repository manifest contains 62 entries, all with matching canonical cards.
 
 The current knowledge graph is intentionally relational and small. D1 is the
-canonical structured store. Vectorize is an optional rebuildable semantic
-index, and a dedicated graph database remains a future adapter rather than a
-first-milestone dependency.
+canonical structured store. Vectorize is documented as a planned, optional
+rebuildable semantic index; no Vectorize integration is currently implemented.
+A dedicated graph database remains a future adapter rather than a first-
+milestone dependency.
 
 ## Quick start: Python card tooling
 
@@ -483,9 +496,10 @@ The local API runs at `http://localhost:8787` and the Vite client runs at
 `http://localhost:5173`. The Vite development server proxies `/api` requests
 to the Worker.
 
-The application deliberately uses D1 as the source of truth. Vectorize is an
-optional search index and is not required for local structured browsing. A
-local MCP server exposes read-only system, feature, and modeling-bundle tools;
+The application deliberately uses D1 as the source of truth. Vectorize is a
+planned optional search index and is not required for local structured
+browsing. A local MCP server exposes read-only system, feature, and modeling-
+bundle tools;
 see [`docs/mcp.md`](docs/mcp.md). Set `MATHEN_API_URL=http://localhost:8787/api`
 to make it read reviewed data and modeling bundles through the Hono/D1 API;
 without that variable it uses the local filesystem. A future hosted MCP server
@@ -562,8 +576,8 @@ The project is developed in stages:
 1. **Representation and evidence:** stabilize Architecture Cards and review
    rules.
 2. **Assisted extraction:** turn fixed-commit evidence into constrained drafts.
-3. **Application and retrieval:** provide D1, API, browser, semantic search,
-   and MCP access.
+3. **Application and retrieval:** provide D1, API, browser, planned semantic
+   search, and MCP access.
 4. **Temporal and relational graph:** model versions, evolution, communities,
    composition, constraints, and evidence lineage.
 5. **Architecture synthesis:** query requirements, generate candidate
