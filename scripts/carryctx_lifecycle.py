@@ -24,8 +24,11 @@ EXIT_USAGE = 2
 EXIT_VERIFICATION = 10
 EXIT_UNSAFE = 11
 EXIT_CARRYCTX = 12
-PR_STATES = frozenset({"open", "merged", "closed", "draft", "absent", "local-only"})
+PR_STATES = frozenset(
+    {"open", "merged", "closed", "draft", "absent", "local-only", "lookup-error"}
+)
 RETRYABLE_CLEANUP_STATES = frozenset({"pending", "failed", "blocked", "retryable"})
+SAFE_RETRY_CLEANUP_STATES = frozenset({"pending", "failed", "retryable"})
 
 
 @dataclass(frozen=True)
@@ -131,6 +134,23 @@ def git_status(root: Path) -> list[str]:
     return [line for line in result.stdout.splitlines() if line]
 
 
+def validate_branch_name(root: Path, branch: str) -> str:
+    """Validate a branch name with Git before using it in any command."""
+
+    if not branch or branch.startswith("-"):
+        raise RuntimeError("branch name must be non-empty and must not start with '-'")
+    result = subprocess.run(
+        ["git", "check-ref-format", "--branch", branch],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        raise RuntimeError(f"invalid Git branch name: {branch!r}")
+    return branch
+
+
 def carryctx_state(root: Path) -> dict[str, Any]:
     """Read lifecycle state without mutating CarryCtx SQLite."""
 
@@ -151,6 +171,8 @@ def carryctx_state(root: Path) -> dict[str, Any]:
     ]
     return {
         "managed_worktree": managed,
+        "worktrees": worktrees,
+        "sessions": sessions,
         "active_sessions": active_sessions,
         "cleanup_requests": cleanup,
         "pending_cleanup": [
@@ -167,16 +189,58 @@ def cleanup_audit(requests: list[dict[str, Any]]) -> dict[str, Any]:
     counts: dict[str, int] = {}
     pending: list[dict[str, Any]] = []
     retryable: list[dict[str, Any]] = []
+    normalized: list[dict[str, Any]] = []
     for request in requests:
         state = str(request.get("state", request.get("status", "unknown")))
         counts[state] = counts.get(state, 0) + 1
+        retryable_state = state in RETRYABLE_CLEANUP_STATES
+        safe_to_retry = state in SAFE_RETRY_CLEANUP_STATES
+        if state == "blocked":
+            preservation_reason = str(
+                request.get("blocked_reason")
+                or "cleanup gate blocked; preserve the worktree and owner files"
+            )
+            operator_action = (
+                "review the blocking gate and owner state, then retry with a dry-run"
+            )
+        elif state in {"pending", "failed", "retryable"}:
+            preservation_reason = str(
+                request.get("blocked_reason")
+                or "cleanup remains deferred until all safety gates pass"
+            )
+            operator_action = (
+                "run the cleanup dry-run; retry only after it reports safe"
+            )
+        elif state == "completed":
+            preservation_reason = (
+                "cleanup completed; retain the historical outbox record"
+            )
+            operator_action = "no action"
+        elif state == "cancelled":
+            preservation_reason = (
+                "cleanup was cancelled; preserve the historical record"
+            )
+            operator_action = "no action unless an owner explicitly reopens the request"
+        else:
+            preservation_reason = "unknown cleanup state; preserve pending work"
+            operator_action = "inspect the request before any retry"
+        item = {
+            **request,
+            "state": state,
+            "retryable": retryable_state,
+            "safe_to_retry": safe_to_retry,
+            "preservation_reason": preservation_reason,
+            "operator_action": operator_action,
+        }
         if state not in {"completed", "cancelled"}:
-            pending.append(request)
-        if state in RETRYABLE_CLEANUP_STATES:
-            retryable.append(request)
+            pending.append(item)
+        if retryable_state:
+            retryable.append(item)
+        normalized.append(item)
     return {
         "total": len(requests),
         "counts": dict(sorted(counts.items())),
+        "requests": normalized,
         "pending": pending,
         "retryable": retryable,
         "retry_command": "carryctx worktree cleanup run --dry-run",
@@ -202,6 +266,8 @@ def git_branch(root: Path, requested: str | None = None) -> dict[str, Any]:
     if not branch:
         return {"name": None, "local": False, "detached": True}
 
+    validate_branch_name(root, branch)
+
     result = subprocess.run(
         ["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
         cwd=root,
@@ -214,9 +280,12 @@ def classify_pr_state(
     payload: dict[str, Any] | None,
     *,
     local_branch: bool,
+    lookup_error: str | None = None,
 ) -> str:
     """Classify a PR payload, distinguishing a local-only branch from absence."""
 
+    if lookup_error:
+        return "lookup-error"
     if payload is not None:
         state = str(payload.get("state", "")).upper()
         if payload.get("isDraft") is True and state == "OPEN":
@@ -227,11 +296,14 @@ def classify_pr_state(
             return "merged"
         if state == "CLOSED":
             return "closed"
+        return "lookup-error"
     return "local-only" if local_branch else "absent"
 
 
 def lookup_pull_request(root: Path, branch: str) -> PullRequestLookup:
     """Look up PRs with ``gh`` using a read-only command and no credentials in code."""
+
+    validate_branch_name(root, branch)
 
     command = [
         "gh",
@@ -281,25 +353,115 @@ def lookup_pull_request(root: Path, branch: str) -> PullRequestLookup:
     )
 
 
-def branch_policy(pr_state: str, *, lookup_error: str | None = None) -> dict[str, Any]:
-    """Describe preservation policy; this function never authorizes deletion."""
+def cleanup_eligibility(
+    pr_state: str,
+    *,
+    local_deliverable: bool = False,
+    lookup_error: str | None = None,
+    detached: bool = False,
+    managed: bool = True,
+    external: bool = False,
+    clean: bool | None = None,
+    no_active_session: bool | None = None,
+    task_completed: bool | None = None,
+) -> dict[str, Any]:
+    """Return a deterministic, fail-closed cleanup eligibility decision.
 
-    if pr_state == "merged" and lookup_error is None:
-        reason = (
-            "merged PR state is confirmed; repository policy still retains branches"
-        )
-    elif lookup_error:
-        reason = (
-            "PR state could not be confirmed; preserve branch and retry observation"
-        )
+    This function only describes policy.  It never removes a worktree, branch,
+    file, or CarryCtx record.  A local-only deliverable requires the explicit
+    ``local_deliverable`` policy switch; a lookup error is never absence.
+    """
+
+    gates: dict[str, Any] = {
+        "pr_state": pr_state,
+        "merged_or_explicit_local_deliverable": pr_state == "merged"
+        or (pr_state == "local-only" and local_deliverable),
+        "clean": clean,
+        "no_active_session": no_active_session,
+        "task_completed": task_completed,
+        "managed": managed,
+        "external": external,
+        "detached": detached,
+        "lookup_confirmed": lookup_error is None,
+    }
+    if lookup_error:
+        reason = "GitHub PR lookup failed; preserve because absence was not proven"
+    elif detached:
+        reason = "detached worktree has no validated branch owner; preserve"
+    elif external:
+        reason = "external worktree requires explicit owner confirmation; preserve"
+    elif not managed:
+        reason = "unmanaged worktree is not eligible for automated cleanup; preserve"
+    elif pr_state in {"open", "draft", "closed", "absent"}:
+        reason = f"PR state {pr_state!r} is not cleanup-eligible; preserve"
+    elif pr_state == "local-only" and not local_deliverable:
+        reason = "local-only cleanup requires the explicit local-deliverable policy"
+    elif pr_state not in {"merged", "local-only"}:
+        reason = f"unknown PR state {pr_state!r}; preserve"
+    elif clean is not True:
+        reason = "worktree cleanliness is not confirmed; preserve"
+    elif no_active_session is not True:
+        reason = "active-session gate is not confirmed; preserve"
+    elif task_completed is not True:
+        reason = "task completion gate is not confirmed; preserve"
     else:
-        reason = "no merged PR is confirmed; preserve branch and local work"
+        reason = "PR and cleanup gates are confirmed; cleanup may be considered"
+    eligible_pr = pr_state == "merged" or (
+        pr_state == "local-only" and local_deliverable
+    )
+    eligible = (
+        (not lookup_error and not detached and not external and managed and eligible_pr)
+        and clean is True
+        and no_active_session is True
+        and task_completed is True
+    )
+    return {
+        "eligible": eligible,
+        "decision": "eligible" if eligible else "preserve",
+        "preserve": not eligible,
+        "delete_branch": "never",
+        "preservation_reason": None if eligible else reason,
+        "operator_action": (
+            "run the separately reviewed CarryCtx cleanup dry-run"
+            if eligible
+            else "preserve; resolve the stated gate or obtain explicit owner review"
+        ),
+        "gates": gates,
+    }
+
+
+def branch_policy(
+    pr_state: str,
+    *,
+    lookup_error: str | None = None,
+    local_deliverable: bool = False,
+    detached: bool = False,
+    managed: bool = True,
+    external: bool = False,
+    clean: bool | None = None,
+    no_active_session: bool | None = None,
+    task_completed: bool | None = None,
+) -> dict[str, Any]:
+    """Describe branch preservation and cleanup eligibility; never delete."""
+
+    eligibility = cleanup_eligibility(
+        pr_state,
+        local_deliverable=local_deliverable,
+        lookup_error=lookup_error,
+        detached=detached,
+        managed=managed,
+        external=external,
+        clean=clean,
+        no_active_session=no_active_session,
+        task_completed=task_completed,
+    )
     return {
         "preserve_branch": True,
         "delete_branch": "never",
         "merge_confirmed": pr_state == "merged" and lookup_error is None,
-        "decision": "preserve",
-        "reason": reason,
+        **eligibility,
+        "reason": eligibility["preservation_reason"]
+        or "merged PR confirmed and all cleanup gates passed",
     }
 
 
@@ -315,9 +477,15 @@ def observe(
         if name and name != "main"
         else PullRequestLookup(None, [], "not-applicable")
     )
-    pr_state = classify_pr_state(lookup.payload, local_branch=branch_info["local"])
+    pr_state = classify_pr_state(
+        lookup.payload,
+        local_branch=branch_info["local"],
+        lookup_error=lookup.error,
+    )
     state = carryctx_state(root)
     cleanup = cleanup_audit(state["cleanup_requests"])
+    dirty = git_status(root)
+    managed = state["managed_worktree"] is not None
     report: dict[str, Any] = {
         "schema_version": 1,
         "mode": "dry-run" if dry_run else "read-only",
@@ -330,7 +498,14 @@ def observe(
             "selected": lookup.payload,
             "candidates": lookup.candidates,
         },
-        "branch_policy": branch_policy(pr_state, lookup_error=lookup.error),
+        "branch_policy": branch_policy(
+            pr_state,
+            lookup_error=lookup.error,
+            detached=branch_info["detached"],
+            managed=managed,
+            clean=not dirty,
+            no_active_session=not state["active_sessions"],
+        ),
         "cleanup": cleanup,
         "action": "preserve; observation is read-only and no cleanup was requested",
     }
@@ -419,6 +594,14 @@ def complete(root: Path, task_ref: str, profile: str, *, dry_run: bool = False) 
         )
         return EXIT_UNSAFE
 
+    managed_branch = managed.get("branch") if isinstance(managed, dict) else None
+    if "branch" in managed and not managed_branch:
+        print(
+            "refusing completion: detached HEAD has no validated branch owner; "
+            "check out the task branch explicitly",
+            file=sys.stderr,
+        )
+        return EXIT_UNSAFE
     dirty = git_status(root)
     if dirty:
         print(

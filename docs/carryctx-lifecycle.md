@@ -104,3 +104,29 @@ second dispatcher or edit CarryCtx's runtime `state.sqlite`.
 The adapter is advisory for orchestration: it may refuse unsafe work, but it
 does not remove worktrees, delete branches, reset files, prune Git metadata, or
 override CarryCtx's cleanup gates.
+
+## MTH-0120 implementation boundary
+
+The current adapter slice implements and tests the following safeguards:
+
+- GitHub lookup failures are reported as `lookup-error`, never as `local-only`
+  or `absent`;
+- branch names are validated with Git before lookup/use, and completion refuses
+  a managed record that has no branch owner (detached completion);
+- cleanup eligibility is a read-only, fail-closed policy projection: a
+  confirmed merged PR may pass only with clean/no-session/completed-task gates;
+  a local-only branch requires the explicit local-deliverable policy; open,
+  draft, closed, absent, lookup-error, detached, unmanaged, and external cases
+  are preserved;
+- cleanup outbox records expose normalized `retryable`, `safe_to_retry`,
+  `preservation_reason`, and `operator_action` fields.
+
+These safeguards do **not** mean the parent lifecycle issue is complete. The
+remaining acceptance gaps are an `audit --all --json` inventory of every Git
+worktree (including external, unmanaged, detached, and prunable paths),
+inventory of cleanup requests/sessions plus dry-run prune observation, stable
+structured `verify --dry-run` profile/argv/projected-result output, and a
+fully documented/implemented lifecycle state-machine integration. Native
+CarryCtx `task complete` remains able to bypass this repository adapter; this
+repository documents that upstream gap but does not claim to intercept or
+change CarryCtx globally.

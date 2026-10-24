@@ -65,17 +65,62 @@ class LifecyclePolicyTests(unittest.TestCase):
         completed = type(
             "Completed", (), {"returncode": 1, "stdout": "", "stderr": "not logged in"}
         )()
-        with patch.object(LIFECYCLE.subprocess, "run", return_value=completed) as run:
-            lookup = LIFECYCLE.lookup_pull_request(Path("/repo"), "carryctx/mth-1")
+        validation = type(
+            "Completed", (), {"returncode": 0, "stdout": "", "stderr": ""}
+        )()
+        with patch.object(
+            LIFECYCLE.subprocess,
+            "run",
+            side_effect=[validation, completed],
+        ) as run:
+            lookup = LIFECYCLE.lookup_pull_request(Path.cwd(), "carryctx/mth-1")
 
         self.assertEqual(lookup.source, "github-cli")
         self.assertEqual(lookup.error, "not logged in")
         self.assertEqual(lookup.candidates, [])
-        run.assert_called_once()
+        self.assertEqual(run.call_count, 2)
         self.assertEqual(
-            LIFECYCLE.branch_policy("absent", lookup_error=lookup.error)["decision"],
+            LIFECYCLE.classify_pr_state(
+                lookup.payload, local_branch=True, lookup_error=lookup.error
+            ),
+            "lookup-error",
+        )
+        self.assertEqual(
+            LIFECYCLE.branch_policy("lookup-error", lookup_error=lookup.error)[
+                "decision"
+            ],
             "preserve",
         )
+
+    def test_invalid_branch_name_is_rejected_before_lookup(self):
+        with self.assertRaisesRegex(RuntimeError, "invalid Git branch"):
+            LIFECYCLE.validate_branch_name(Path.cwd(), "bad branch")
+
+    def test_cleanup_eligibility_requires_confirmed_pr_and_all_gates(self):
+        base = dict(clean=True, no_active_session=True, task_completed=True)
+        merged = LIFECYCLE.cleanup_eligibility("merged", **base)
+        self.assertTrue(merged["eligible"])
+        local = LIFECYCLE.cleanup_eligibility("local-only", **base)
+        self.assertFalse(local["eligible"])
+        local = LIFECYCLE.cleanup_eligibility(
+            "local-only", local_deliverable=True, **base
+        )
+        self.assertTrue(local["eligible"])
+        lookup_error = LIFECYCLE.cleanup_eligibility(
+            "lookup-error", lookup_error="offline", **base
+        )
+        self.assertFalse(lookup_error["eligible"])
+        self.assertIn("not proven", lookup_error["preservation_reason"])
+
+    def test_cleanup_observability_normalizes_operator_fields(self):
+        report = LIFECYCLE.cleanup_audit(
+            [{"id": "blocked", "state": "blocked", "blocked_reason": "dirty"}]
+        )
+        item = report["requests"][0]
+        self.assertTrue(item["retryable"])
+        self.assertFalse(item["safe_to_retry"])
+        self.assertEqual(item["preservation_reason"], "dirty")
+        self.assertIn("review", item["operator_action"])
 
     def test_successful_github_lookup_is_read_only_and_selects_latest_candidate(self):
         payload = (
@@ -118,12 +163,13 @@ class LifecyclePolicyTests(unittest.TestCase):
                 ),
             ),
             patch.object(LIFECYCLE, "carryctx_state", return_value=state),
+            patch.object(LIFECYCLE, "git_status", return_value=[]),
             patch.object(LIFECYCLE, "_envelope") as envelope,
         ):
             report = LIFECYCLE.observe(Path("/repo"), dry_run=True)
 
         self.assertEqual(report["mode"], "dry-run")
-        self.assertEqual(report["pull_request"]["state"], "local-only")
+        self.assertEqual(report["pull_request"]["state"], "lookup-error")
         self.assertEqual(report["cleanup"]["retryable"][0]["id"], "r1")
         self.assertFalse(report["branch_policy"]["merge_confirmed"])
         envelope.assert_not_called()
@@ -172,7 +218,7 @@ class LifecyclePolicyTests(unittest.TestCase):
 
     def test_dirty_worktree_is_preserved_before_verification(self):
         state = {
-            "managed_worktree": {"path": "/repo"},
+            "managed_worktree": {"path": "/repo", "branch": None},
             "active_sessions": [],
             "cleanup_requests": [],
         }
@@ -196,6 +242,26 @@ class LifecyclePolicyTests(unittest.TestCase):
             result = LIFECYCLE.complete(Path("/repo"), "MTH-1", "full")
 
         self.assertEqual(result, LIFECYCLE.EXIT_UNSAFE)
+
+    def test_detached_path_is_refused_before_verification(self):
+        state = {
+            "managed_worktree": {"path": "/repo", "branch": None},
+            "active_sessions": [],
+            "cleanup_requests": [],
+        }
+        with (
+            patch.object(LIFECYCLE, "carryctx_state", return_value=state),
+            patch.object(
+                LIFECYCLE,
+                "git_branch",
+                return_value={"name": None, "local": False, "detached": True},
+            ),
+            patch.object(LIFECYCLE, "git_status", return_value=[]),
+            patch.object(LIFECYCLE, "verify_profile") as verify,
+        ):
+            result = LIFECYCLE.complete(Path("/repo"), "MTH-1", "full")
+        self.assertEqual(result, LIFECYCLE.EXIT_UNSAFE)
+        verify.assert_not_called()
 
     def test_failed_verification_keeps_task_incomplete(self):
         state = {
