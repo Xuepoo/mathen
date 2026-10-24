@@ -144,19 +144,12 @@ test("projects independent layers and only explicit typed composition edges", ()
   );
   assert.ok(graph.edges.some((edge) => edge.type === "adapter"));
   assert.ok(graph.edges.some((edge) => edge.type === "has-typed-relation"));
-  assert.ok(
-    graph.edges.some((edge) => edge.type === "declares-property-effect"),
-  );
+  assert.ok(graph.edges.some((edge) => edge.type === "declares-property-effect"));
   assert.equal(
-    graph.edges.some(
-      (edge) =>
-        edge.source === "system:alpha" && edge.target === "system:missing",
-    ),
+    graph.edges.some((edge) => edge.source === "system:alpha" && edge.target === "system:missing"),
     false,
   );
-  const composition = graph.nodes.find(
-    (node) => node.id === "composition:alpha",
-  );
+  const composition = graph.nodes.find((node) => node.id === "composition:alpha");
   assert.equal(composition?.metadata.proven, false);
   assert.deepEqual(composition?.metadata.discovery, {
     method: "review",
@@ -192,4 +185,54 @@ test("origin filtering is configurable and keeps originless documents visible", 
     graph.nodes.map((node) => node.id),
     ["microstructure:local", "microstructure:unspecified"],
   );
+});
+
+test("composition origin filtering removes every scoped descendant", () => {
+  const graph = buildLayeredGraphProjection(
+    {
+      systems: [
+        {
+          id: "alpha",
+          name: "Alpha",
+          scope: [],
+          features: [],
+          mathematical_views: [],
+          composition: {
+            typed_semantics: {
+              proven: false,
+              claim_type: "hypothesis",
+              claim_status: "proposed",
+              validity_scope: { deployment_origins: ["other"] },
+              components: [{ id: "part", role: "part" }],
+              adapters: [],
+              boundaries: [],
+              property_effects: [{ id: "effect", property: "p" }],
+            },
+          },
+        },
+      ],
+    },
+    "local",
+  );
+  assert.deepEqual(
+    graph.nodes.map((node) => node.id),
+    ["system:alpha"],
+  );
+  assert.deepEqual(graph.edges, []);
+});
+
+test("document nodes retain the complete reviewed payload", () => {
+  const document = {
+    id: "bounded-loop",
+    name: "Bounded loop",
+    claim_type: "inference",
+    claim_status: "accepted",
+    validity_scope: { deployment_origins: ["local"] },
+    operations: [{ id: "repeat", description: "repeat" }],
+  };
+  const graph = buildLayeredGraphProjection({
+    systems: [],
+    microstructures: [{ id: document.id, name: document.name, document }],
+  });
+  assert.deepEqual(graph.nodes[0]?.metadata.payload, document);
 });

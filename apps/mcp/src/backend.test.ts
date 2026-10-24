@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { test } from "node:test";
-import { ApiBackend } from "./backend.js";
+import { tmpdir } from "node:os";
+import { resolve } from "node:path";
+import { ApiBackend, FilesystemBackend } from "./backend.js";
 
 test("API backend accepts a deployment origin or its /api base URL", async () => {
   for (const baseUrl of [
@@ -15,6 +18,75 @@ test("API backend accepts a deployment origin or its /api base URL", async () =>
       return jsonResponse({ data: [] });
     });
     assert.deepEqual(await backend.listSystems(false), []);
+  }
+});
+
+test("filesystem and hosted graph backends preserve the same projection shape", async () => {
+  const root = await mkdtemp(resolve(tmpdir(), "mathen-graph-parity-"));
+  try {
+    await mkdir(resolve(root, "data/systems"), { recursive: true });
+    const card = {
+      id: "alpha",
+      name: "Alpha",
+      summary: "Alpha",
+      scope: [],
+      features: [
+        {
+          id: "state",
+          name: "State",
+          category: "behavior",
+          claim_type: "fact",
+          claim_status: "accepted",
+          validity_scope: { deployment_origins: ["local"] },
+          description: "State",
+          evidence_ids: [],
+        },
+      ],
+      mathematical_views: [
+        {
+          model: "State machine",
+          question: "How?",
+          assumptions: ["finite"],
+          claim_type: "inference",
+          claim_status: "under-review",
+          validity_scope: { deployment_origins: ["local"] },
+          contract: { family: "state_machine" },
+          evidence_ids: [],
+        },
+      ],
+      trade_offs: [],
+      evidence: [],
+    };
+    await writeFile(resolve(root, "data/systems/alpha.json"), JSON.stringify(card));
+    const filesystem = await new FilesystemBackend(root).getLayeredGraph("local");
+    const hosted = await new ApiBackend(
+      "https://api.example.test",
+      async () =>
+        new Response(JSON.stringify({ data: filesystem }), {
+          headers: { "content-type": "application/json" },
+        }),
+    ).getLayeredGraph("local");
+    assert.deepEqual(hosted, filesystem);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("filesystem graph projection validates standalone documents before reading them", async () => {
+  const root = await mkdtemp(resolve(tmpdir(), "mathen-invalid-graph-doc-"));
+  try {
+    await mkdir(resolve(root, "data/systems"), { recursive: true });
+    await mkdir(resolve(root, "data/analogies"), { recursive: true });
+    await writeFile(
+      resolve(root, "data/analogies/invalid.json"),
+      JSON.stringify({ id: "invalid", name: "Invalid" }),
+    );
+    await assert.rejects(
+      new FilesystemBackend(root).getLayeredGraph(),
+      /Invalid data\/analogies|missing fields|invalid/i,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
 

@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import {
@@ -8,6 +9,7 @@ import {
   type ProjectionLayer,
   type ProjectionMicrostructure,
   type ProjectionSystem,
+  stableProjectionViewId,
 } from "../../api/src/graph-projection.js";
 
 export type Evidence = {
@@ -139,6 +141,7 @@ export class FilesystemBackend implements Backend {
   }
 
   async getLayeredGraph(origin?: string): Promise<LayeredGraphProjection> {
+    await this.validateGraphDocuments();
     const [cards, analogies, microstructures] = await Promise.all([
       this.loadCards(this.systemsDirectory),
       this.loadDocuments(resolve(this.repositoryRoot, "data/analogies")),
@@ -152,6 +155,39 @@ export class FilesystemBackend implements Backend {
       },
       origin,
     );
+  }
+
+  private async validateGraphDocuments(): Promise<void> {
+    await Promise.all([
+      this.runValidator("validate-microstructures", "data/microstructures"),
+      this.runValidator("validate-analogies", "data/analogies"),
+    ]);
+  }
+
+  private runValidator(command: string, path: string): Promise<void> {
+    return new Promise((resolvePromise, reject) => {
+      const child = spawn(
+        "uv",
+        ["run", "mathen", command, resolve(this.repositoryRoot, path)],
+        {
+          cwd: resolve(import.meta.dir, "../../.."),
+          stdio: ["ignore", "ignore", "pipe"],
+        },
+      );
+      let stderr = "";
+      child.stderr?.on("data", (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+      child.once("error", reject);
+      child.once("close", (code) => {
+        if (code === 0) return resolvePromise();
+        reject(
+          new BackendError(
+            `Invalid ${path}: ${stderr.trim() || `validator exited with ${code}`}`,
+          ),
+        );
+      });
+    });
   }
 
   async listSystems(includeDrafts: boolean): Promise<SystemSummary[]> {
@@ -588,15 +624,22 @@ function toProjectionSystem(card: ArchitectureCard): ProjectionSystem {
       metadata: {
         ...feature.metadata,
         ...(feature.claim_status ? { claim_status: feature.claim_status } : {}),
-        ...(feature.validity_scope ? { validity_scope: feature.validity_scope } : {}),
+        ...(feature.validity_scope
+          ? { validity_scope: feature.validity_scope }
+          : {}),
       },
     })),
-    mathematical_views: card.mathematical_views.flatMap((view, index) => [
+    mathematical_views: card.mathematical_views.flatMap((view) => [
       {
         id:
           typeof view.id === "string" || typeof view.id === "number"
             ? view.id
-            : index,
+            : stableProjectionViewId(card.id, {
+                model: typeof view.model === "string" ? view.model : "",
+                question:
+                  typeof view.question === "string" ? view.question : "",
+                metadata: optionalRecord(view.metadata) ?? {},
+              }),
         model:
           typeof view.model === "string" ? view.model : "Unclassified model",
         question: typeof view.question === "string" ? view.question : "",
@@ -607,8 +650,12 @@ function toProjectionSystem(card: ArchitectureCard): ProjectionSystem {
         evidence_ids: stringArray(view.evidence_ids),
         metadata: {
           ...optionalRecord(view.metadata),
-          ...(typeof view.claim_status === "string" ? { claim_status: view.claim_status } : {}),
-          ...(isRecord(view.validity_scope) ? { validity_scope: view.validity_scope } : {}),
+          ...(typeof view.claim_status === "string"
+            ? { claim_status: view.claim_status }
+            : {}),
+          ...(isRecord(view.validity_scope)
+            ? { validity_scope: view.validity_scope }
+            : {}),
           ...(isRecord(view.contract) ? { contract: view.contract } : {}),
         },
       },

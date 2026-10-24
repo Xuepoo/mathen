@@ -81,6 +81,7 @@ const output = resolve(import.meta.dir, "../.wrangler/generated-seed.sql");
 const mode = process.argv.includes("--remote") ? "--remote" : "--local";
 const cards = await loadCards();
 const modelingBundles = await loadModelingBundles();
+await validateGraphDocuments();
 const graphDocuments = [
   ...(await loadGraphDocuments(analogyRoot, "analogy")),
   ...(await loadGraphDocuments(microstructureRoot, "microstructure")),
@@ -174,6 +175,25 @@ async function loadGraphDocuments(directory: string, kind: "microstructure" | "a
   );
 }
 
+async function validateGraphDocuments() {
+  await Promise.all([
+    runValidator("validate-microstructures", microstructureRoot),
+    runValidator("validate-analogies", analogyRoot),
+  ]);
+}
+
+async function runValidator(command: string, path: string) {
+  const childProcess = Bun.spawn(["uv", "run", "mathen", command, path], {
+    cwd: resolve(import.meta.dir, "../../.."),
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  const exitCode = await childProcess.exited;
+  if (exitCode !== 0) {
+    throw new Error(`Document validation failed: ${command} ${path}`);
+  }
+}
+
 function toStatements(card: Card) {
   const statements = [
     insert("systems", {
@@ -226,7 +246,7 @@ function toStatements(card: Card) {
         question: view.question,
         assumptions_json: JSON.stringify(view.assumptions),
         claim_type: view.claim_type,
-        metadata_json: JSON.stringify(viewMetadata(view)),
+        metadata_json: JSON.stringify(viewMetadata(card.id, view)),
       }),
       ...view.evidence_ids.map(
         (evidence_id) =>
@@ -277,13 +297,23 @@ function featureMetadata(feature: Card["features"][number]) {
   };
 }
 
-function viewMetadata(view: Card["mathematical_views"][number]) {
+function viewMetadata(systemId: string, view: Card["mathematical_views"][number]) {
   return {
-    ...(view.id !== undefined ? { id: view.id } : {}),
+    id: view.id ?? stableViewId(systemId, view.model, view.question),
     ...(view.claim_status ? { claim_status: view.claim_status } : {}),
     ...(view.validity_scope ? { validity_scope: view.validity_scope } : {}),
     ...(view.contract ? { contract: view.contract } : {}),
   };
+}
+
+function stableViewId(systemId: string, model: string, question: string) {
+  return `view:${encodeURIComponent(
+    JSON.stringify([
+      systemId.trim(),
+      model.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase(),
+      question.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase(),
+    ]),
+  )}`;
 }
 
 function toFeatureRelationStatements(card: Card) {

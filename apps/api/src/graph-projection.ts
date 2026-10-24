@@ -61,6 +61,7 @@ export type ProjectionSystem = {
   scope: string[];
   claim_type?: string;
   claim_status?: string;
+  validity_scope?: Record<string, unknown>;
   evidence_ids?: string[];
   features: ProjectionFeature[];
   mathematical_views: ProjectionView[];
@@ -111,7 +112,7 @@ export function buildLayeredGraphProjection(
   input: ProjectionInput,
   origin?: string,
 ): LayeredGraphProjection {
-  const nodes: ProjectionNode[] = [];
+  let nodes: ProjectionNode[] = [];
   const edges: ProjectionEdge[] = [];
   const addNode = (node: ProjectionNode) => {
     if (matchesOrigin(node.metadata, origin)) nodes.push(node);
@@ -138,9 +139,7 @@ export function buildLayeredGraphProjection(
         metadata: {
           ...feature.metadata,
           claim_type: feature.claim_type,
-          ...(feature.claim_status
-            ? { claim_status: feature.claim_status }
-            : {}),
+          ...(feature.claim_status ? { claim_status: feature.claim_status } : {}),
           evidence_ids: feature.evidence_ids,
           category: feature.category,
           description: feature.description,
@@ -157,7 +156,8 @@ export function buildLayeredGraphProjection(
       });
     }
     for (const view of [...system.mathematical_views].sort(compareViews)) {
-      const contractId = `math:${system.id}:${String(view.id)}`;
+      const stableViewId = stableProjectionViewId(system.id, view);
+      const contractId = `math:${system.id}:${stableViewId}`;
       addNode({
         id: contractId,
         layer: "mathematical-contract",
@@ -170,6 +170,7 @@ export function buildLayeredGraphProjection(
           evidence_ids: view.evidence_ids,
           question: view.question,
           assumptions: view.assumptions,
+          ...(view.metadata?.contract !== undefined ? { contract: view.metadata.contract } : {}),
         },
       });
       addEdge({
@@ -185,9 +186,7 @@ export function buildLayeredGraphProjection(
     projectComposition(system, addNode, addEdge);
   }
 
-  for (const microstructure of [...(input.microstructures ?? [])].sort(
-    compareDocuments,
-  )) {
+  for (const microstructure of [...(input.microstructures ?? [])].sort(compareDocuments)) {
     const document = microstructure.document;
     const metadata = documentMetadata(document);
     addNode({
@@ -200,6 +199,7 @@ export function buildLayeredGraphProjection(
         scale: document.scale,
         role: document.role,
         summary: document.summary,
+        payload: document,
       },
     });
   }
@@ -215,9 +215,21 @@ export function buildLayeredGraphProjection(
         ...metadata,
         source_domain: analogy.document.source_domain,
         target_domain: analogy.document.target_domain,
+        payload: analogy.document,
       },
     });
   }
+
+  // A scoped composition is one unit: never retain descendants when its root
+  // was filtered out by the requested deployment origin.
+  const visibleCompositionRoots = new Set(
+    nodes.filter((node) => node.layer === "composition").map((node) => node.id),
+  );
+  nodes = nodes.filter(
+    (node) =>
+      !node.id.startsWith("composition:") ||
+      visibleCompositionRoots.has(node.id.split(":", 2).join(":")),
+  );
 
   // A dangling explicit edge is never emitted.  This keeps filters and future
   // source bugs from creating an invented relation to an unknown system.
@@ -241,12 +253,11 @@ function projectComposition(
   addEdge: (edge: ProjectionEdge) => void,
 ) {
   const composition = system.composition;
-  const typed = isRecord(composition?.typed_semantics)
-    ? composition.typed_semantics
-    : undefined;
+  const typed = isRecord(composition?.typed_semantics) ? composition.typed_semantics : undefined;
   if (!typed || typed.proven !== false) return;
   const compositionId = `composition:${system.id}`;
   const compositionMetadata = documentMetadata(typed);
+  const compositionScope = compositionValidityScope(typed);
   addNode({
     id: compositionId,
     layer: "composition",
@@ -256,15 +267,9 @@ function projectComposition(
       ...compositionMetadata,
       proven: false,
       ...(isRecord(typed.discovery) ? { discovery: typed.discovery } : {}),
-      ...(isRecord(typed.validity_scope)
-        ? { validity_scope: typed.validity_scope }
-        : {}),
-      ...(typed.uncertainties !== undefined
-        ? { uncertainties: typed.uncertainties }
-        : {}),
-      ...(typed.disagreements !== undefined
-        ? { disagreements: typed.disagreements }
-        : {}),
+      ...(isRecord(typed.validity_scope) ? { validity_scope: typed.validity_scope } : {}),
+      ...(typed.uncertainties !== undefined ? { uncertainties: typed.uncertainties } : {}),
+      ...(typed.disagreements !== undefined ? { disagreements: typed.disagreements } : {}),
     },
   });
   addEdge({
@@ -275,17 +280,12 @@ function projectComposition(
     claim_status: stringValue(typed.claim_status),
     evidence_ids: stringArray(typed.evidence_ids),
     metadata: {
+      ...compositionMetadata,
       proven: false,
       ...(isRecord(typed.discovery) ? { discovery: typed.discovery } : {}),
-      ...(isRecord(typed.validity_scope)
-        ? { validity_scope: typed.validity_scope }
-        : {}),
-      ...(typed.uncertainties !== undefined
-        ? { uncertainties: typed.uncertainties }
-        : {}),
-      ...(typed.disagreements !== undefined
-        ? { disagreements: typed.disagreements }
-        : {}),
+      ...(isRecord(typed.validity_scope) ? { validity_scope: typed.validity_scope } : {}),
+      ...(typed.uncertainties !== undefined ? { uncertainties: typed.uncertainties } : {}),
+      ...(typed.disagreements !== undefined ? { disagreements: typed.disagreements } : {}),
     },
   });
 
@@ -300,7 +300,7 @@ function projectComposition(
       kind: "composition-component",
       label: stringValue(component.role) || id,
       metadata: {
-        ...documentMetadata(component),
+        ...inheritedCompositionMetadata(component, compositionMetadata, compositionScope),
         component_id: id,
         role: component.role,
       },
@@ -312,7 +312,7 @@ function projectComposition(
       claim_type: stringValue(component.claim_type),
       claim_status: stringValue(component.claim_status),
       evidence_ids: stringArray(component.evidence_ids),
-      metadata: documentMetadata(component),
+      metadata: inheritedCompositionMetadata(component, compositionMetadata, compositionScope),
     });
   }
   for (const adapter of records(typed.adapters)) {
@@ -323,6 +323,8 @@ function projectComposition(
       componentIds,
       adapter,
       "adapter",
+      compositionMetadata,
+      compositionScope,
     );
   }
   for (const boundary of records(typed.boundaries)) {
@@ -333,6 +335,8 @@ function projectComposition(
       componentIds,
       boundary,
       "boundary",
+      compositionMetadata,
+      compositionScope,
     );
   }
   for (const effect of records(typed.property_effects)) {
@@ -344,7 +348,10 @@ function projectComposition(
       layer: "property-effect",
       kind: "typed-property-effect",
       label: stringValue(effect.property) || id,
-      metadata: { ...documentMetadata(effect), relation: effect.relation },
+      metadata: {
+        ...inheritedCompositionMetadata(effect, compositionMetadata, compositionScope),
+        relation: effect.relation,
+      },
     });
     addEdge({
       source: compositionId,
@@ -353,7 +360,7 @@ function projectComposition(
       claim_type: stringValue(effect.claim_type),
       claim_status: stringValue(effect.claim_status),
       evidence_ids: stringArray(effect.evidence_ids),
-      metadata: documentMetadata(effect),
+      metadata: inheritedCompositionMetadata(effect, compositionMetadata, compositionScope),
     });
   }
 }
@@ -365,23 +372,20 @@ function addTypedRelation(
   componentIds: Set<string>,
   relation: Record<string, unknown>,
   type: "adapter" | "boundary",
+  compositionMetadata: ProjectionMetadata,
+  compositionScope: Record<string, unknown> | undefined,
 ) {
   const source = stringValue(relation.source) || stringValue(relation.inside);
   const target = stringValue(relation.target) || stringValue(relation.outside);
-  if (
-    !source ||
-    !target ||
-    !componentIds.has(source) ||
-    !componentIds.has(target)
-  )
-    return;
+  if (!source || !target || !componentIds.has(source) || !componentIds.has(target)) return;
   const relationId = `${compositionId}:relation:${type}:${stringValue(relation.id) ?? `${source}-${target}`}`;
+  const metadata = inheritedCompositionMetadata(relation, compositionMetadata, compositionScope);
   addNode({
     id: relationId,
     layer: "relation",
     kind: "typed-relation",
     label: stringValue(relation.description) || type,
-    metadata: { ...documentMetadata(relation), relation_type: type },
+    metadata: { ...metadata, relation_type: type },
   });
   addEdge({
     source: compositionId,
@@ -390,6 +394,7 @@ function addTypedRelation(
     claim_type: stringValue(relation.claim_type),
     claim_status: stringValue(relation.claim_status),
     evidence_ids: stringArray(relation.evidence_ids),
+    metadata,
   });
   addEdge({
     source: `${compositionId}:component:${source}`,
@@ -399,8 +404,26 @@ function addTypedRelation(
     claim_status: stringValue(relation.claim_status),
     evidence_ids: stringArray(relation.evidence_ids),
     notes: stringValue(relation.description),
-    metadata: documentMetadata(relation),
+    metadata,
   });
+}
+
+function inheritedCompositionMetadata(
+  value: Record<string, unknown>,
+  compositionMetadata: ProjectionMetadata,
+  compositionScope: Record<string, unknown> | undefined,
+): ProjectionMetadata {
+  return {
+    ...compositionMetadata,
+    ...documentMetadata(value),
+    ...(compositionScope ? { validity_scope: compositionScope } : {}),
+  };
+}
+
+function compositionValidityScope(
+  value: Record<string, unknown>,
+): Record<string, unknown> | undefined {
+  return isRecord(value.validity_scope) ? value.validity_scope : undefined;
 }
 
 function claimMetadata(value: Record<string, unknown>): ProjectionMetadata {
@@ -434,13 +457,31 @@ function documentMetadata(value: Record<string, unknown>): ProjectionMetadata {
     ...(value.uncertainties ? { uncertainties: value.uncertainties } : {}),
     ...(value.uncertainty ? { uncertainty: value.uncertainty } : {}),
     ...(value.disagreements ? { disagreements: value.disagreements } : {}),
-    ...(value.counterexamples
-      ? { counterexamples: value.counterexamples }
-      : {}),
-    ...(value.non_equivalence
-      ? { non_equivalence: value.non_equivalence }
-      : {}),
+    ...(value.counterexamples ? { counterexamples: value.counterexamples } : {}),
+    ...(value.non_equivalence ? { non_equivalence: value.non_equivalence } : {}),
   };
+}
+
+export function stableProjectionViewId(
+  systemId: string,
+  view: Pick<ProjectionView, "model" | "question" | "metadata"> & {
+    id?: string | number;
+  },
+): string {
+  const explicit = view.metadata?.id;
+  if (typeof explicit === "string" || typeof explicit === "number") {
+    return String(explicit);
+  }
+  if (typeof view.id === "string" || typeof view.id === "number") {
+    return String(view.id);
+  }
+  return `view:${encodeURIComponent(
+    JSON.stringify([
+      systemId.trim(),
+      view.model.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase(),
+      view.question.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase(),
+    ]),
+  )}`;
 }
 
 function matchesOrigin(metadata: ProjectionMetadata, origin?: string): boolean {
@@ -461,9 +502,7 @@ function stringValue(value: unknown): string | undefined {
 }
 function stringArray(value: unknown): string[] {
   return Array.isArray(value)
-    ? value.filter(
-        (item): item is string => typeof item === "string" && item.length > 0,
-      )
+    ? value.filter((item): item is string => typeof item === "string" && item.length > 0)
     : [];
 }
 function compareSystems(left: ProjectionSystem, right: ProjectionSystem) {

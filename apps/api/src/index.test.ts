@@ -139,7 +139,10 @@ test("hosted MCP requires its bearer token and stays read-only", async () => {
 test("artifact route rejects traversal before accessing R2", async () => {
   assert.equal(artifactKey("/api/artifacts/%2e%2e/secret.json"), undefined);
   assert.equal(artifactKey("/api/artifacts/%5c/secret.json"), undefined);
-  assert.equal(artifactKey("/api/artifacts/reports/v1.json"), "reports/v1.json");
+  assert.equal(
+    artifactKey("/api/artifacts/reports/v1.json"),
+    "reports/v1.json",
+  );
 
   let requestedKey: string | undefined;
   const env = {
@@ -560,18 +563,29 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
   );
   assert.match(queries[0]!, /WHERE mve\.view_id = mathematical_views\.id/);
   assert.equal(
-    body.data.nodes.some((node) => node.id === "model:state-transition-systems"),
+    body.data.nodes.some(
+      (node) => node.id === "model:state-transition-systems",
+    ),
     true,
   );
   assert.equal(body.data.edges.length, 2);
-  const temporalEdge = body.data.edges.find((edge) => edge.metadata.some((view) => view.id === 7));
+  const temporalEdge = body.data.edges.find((edge) =>
+    edge.metadata.some((view) => view.id === 7),
+  );
   assert.equal(temporalEdge?.claim_type, "mixed");
-  assert.equal(body.data.edges.find((edge) => edge.source === "other")?.claim_type, "hypothesis");
+  assert.equal(
+    body.data.edges.find((edge) => edge.source === "other")?.claim_type,
+    "hypothesis",
+  );
   assert.deepEqual(
     temporalEdge?.metadata.find((view) => view.id === 7),
     {
       id: 7,
-      key: modelViewKey("temporal", "Queue-mediated workflow state machine", "How does work move?"),
+      key: modelViewKey(
+        "temporal",
+        "Queue-mediated workflow state machine",
+        "How does work move?",
+      ),
       model: "Queue-mediated workflow state machine",
       question: "How does work move?",
       assumptions: ["workers poll"],
@@ -601,7 +615,9 @@ test("system detail view keys match graph identity across database ids", async (
             },
             all() {
               return Promise.resolve({
-                results: sql.includes("FROM mathematical_views WHERE") ? [view] : [],
+                results: sql.includes("FROM mathematical_views WHERE")
+                  ? [view]
+                  : [],
               });
             },
           };
@@ -632,8 +648,101 @@ test("system detail view keys match graph identity across database ids", async (
     modelViewKey(system.id, view.model, view.question),
   );
   assert.equal(body.data.mathematical_views[0]?.claim_type, "hypothesis");
-  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, ["architecture"]);
+  assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, [
+    "architecture",
+  ]);
   assert.deepEqual(body.data.feature_relations, []);
+});
+
+test("GET /api/graph/layers preserves D1 document and view metadata", async () => {
+  const document = {
+    id: "loop",
+    name: "Loop",
+    claim_type: "inference",
+    claim_status: "accepted",
+    validity_scope: { deployment_origins: ["local"] },
+    operations: [{ id: "repeat" }],
+  };
+  const db = {
+    prepare(sql: string) {
+      return {
+        all<T>() {
+          if (sql.includes("FROM graph_documents"))
+            return Promise.resolve({
+              results: [
+                {
+                  id: "loop",
+                  kind: "microstructure",
+                  name: "Loop",
+                  document_json: JSON.stringify(document),
+                },
+              ] as T[],
+            });
+          return Promise.resolve({
+            results: [
+              {
+                id: "alpha",
+                name: "Alpha",
+                scope_json: "[]",
+                composition_json: null,
+                features_json: JSON.stringify([
+                  {
+                    id: "state",
+                    name: "State",
+                    category: "behavior",
+                    claim_type: "fact",
+                    description: "State",
+                    evidence_ids: [],
+                    metadata_json: JSON.stringify({ claim_status: "accepted" }),
+                  },
+                ]),
+                views_json: JSON.stringify([
+                  {
+                    id: 1,
+                    model: "State machine",
+                    question: "How?",
+                    assumptions: [],
+                    claim_type: "inference",
+                    evidence_ids: [],
+                    metadata_json: JSON.stringify({
+                      id: "stable-view",
+                      claim_status: "under-review",
+                      contract: { family: "state_machine" },
+                    }),
+                  },
+                ]),
+              },
+            ] as T[],
+          });
+        },
+      };
+    },
+  } as unknown as D1Database;
+  const response = await app.request(
+    "/api/graph/layers?origin=local",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as {
+    data: { nodes: Array<{ id: string; metadata: Record<string, unknown> }> };
+  };
+  assert.deepEqual(Object.keys(body), ["data"]);
+  assert.deepEqual(
+    body.data.nodes.find((node) => node.id === "microstructure:loop")?.metadata
+      .payload,
+    document,
+  );
+  assert.equal(
+    body.data.nodes.find((node) => node.id === "property:alpha:state")?.metadata
+      .claim_status,
+    "accepted",
+  );
+  assert.deepEqual(
+    body.data.nodes.find((node) => node.id === "math:alpha:stable-view")
+      ?.metadata.contract,
+    { family: "state_machine" },
+  );
 });
 
 function systemRow(index: number) {
