@@ -5,6 +5,11 @@ Architecture Card draft. It is provider-neutral: the adapter uses the Python
 standard-library `urllib` client and the OpenAI Chat Completions request shape,
 so it can target compatible local or hosted services.
 
+Mathen treats the LLM as a broad research instrument rather than an autonomous
+architecture authority. The human–LLM complement, cross-community search
+questions, and planned evaluation criteria are documented in
+[`research-instrument.md`](research-instrument.md).
+
 ## Workflow
 
 Build deterministic bundles first, then run the model command:

@@ -53,6 +53,15 @@ still required for promotion to `data/systems/`.
 - Generate candidate compositions with explicit conflicts and assumptions.
 - Validate candidates with prototypes, benchmarks, and failure tests.
 
+The synthesis direction is deliberately human–LLM collaborative. LLMs broaden
+cross-domain search and propose evidence-bounded mappings; humans reframe
+problems, choose research directions, and review candidates; graph/vector
+analysis finds paths and neighborhoods; mathematical contracts and experiments
+test the resulting hypotheses. See
+[`research-instrument.md`](research-instrument.md) for the open questions and
+evaluation dimensions. Direct LLM output is never treated as proof or as
+automatic architectural novelty.
+
 ## Non-goals for the first milestone
 
 - Automatically proving that an implementation satisfies a mathematical model.

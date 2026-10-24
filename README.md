@@ -204,6 +204,14 @@ An LLM proposes abstractions and comparisons; deterministic tools provide
 provenance and observations; schema and semantic validation constrain output;
 human review decides what becomes canonical.
 
+Mathen also studies this as a human–LLM research instrument: LLMs provide broad
+cross-domain retrieval and candidate explanations, while humans provide
+problem reformulation, curiosity-driven exploration, and final review. Graphs,
+vectors, mathematical contracts, and experiments have separate roles in the
+loop. This is an open research direction, not a claim that direct LLM output
+is architectural novelty or proof. See
+[`docs/research-instrument.md`](docs/research-instrument.md).
+
 ## Current implementation
 
 The repository currently provides:
