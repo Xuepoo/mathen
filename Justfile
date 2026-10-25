@@ -52,6 +52,17 @@ db-seed-remote:
 deploy:
     bun run deploy
 
+# Operator-only CarryCtx lifecycle snapshot commands. These are never part of
+# ordinary checks or merge automation; publication requires an explicit --push.
+workflow-publish *args:
+    scripts/workflow-publish.sh {{args}}
+
+workflow-import *args:
+    scripts/workflow-import.sh {{args}}
+
+workflow-snapshot-test:
+    scripts/tests/workflow-snapshot.test.sh
+
 db-query:
     bun run db:query:local
 

@@ -1,0 +1,47 @@
+name: CarryCtx snapshot freshness
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check snapshot provenance
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          if ! git fetch --no-tags origin +refs/heads/carryctx-snapshots:refs/remotes/origin/carryctx-snapshots; then
+            echo "::notice title=CarryCtx snapshot::snapshot ref is not published yet"
+            exit 0
+          fi
+          snapshot=refs/remotes/origin/carryctx-snapshots
+          source_line="$(git log -1 --format=%B "$snapshot" | sed -n 's/^CarryCtx-Source: //p' | head -n1)"
+          export_id="$(git log -1 --format=%B "$snapshot" | sed -n 's/^CarryCtx-Export-Id: //p' | head -n1)"
+          [[ -n "$source_line" && -n "$export_id" ]] || { echo '::error::snapshot provenance trailers are missing'; exit 1; }
+          source_sha="${source_line##*@}"
+          source_sha="${source_sha%% *}"
+          main_sha="$(git rev-parse refs/remotes/origin/main)"
+          if [[ "$source_sha" == "$main_sha" ]] || git merge-base --is-ancestor "$main_sha" "$source_sha"; then
+            echo "snapshot source $source_sha is current with main $main_sha"
+            exit 0
+          fi
+          msg="snapshot source $source_sha is behind main $main_sha; run just workflow-publish --push"
+          if [[ "$EVENT_NAME" == schedule || "$EVENT_NAME" == workflow_dispatch ]]; then
+            echo "::error::$msg"
+            exit 1
+          fi
+          echo "::notice title=CarryCtx snapshot::$msg (informational push check)"
