@@ -9,6 +9,7 @@ import {
   type ProjectionEdge,
   type ProjectionLayer,
   type ProjectionMicrostructure,
+  type ProjectionRelation,
   type ProjectionSystem,
   stableProjectionViewId,
 } from "../../api/src/graph-projection.js";
@@ -92,10 +93,7 @@ export type CompositionSearchResult = {
 export interface Backend {
   getLayeredGraph(origin?: string): Promise<LayeredGraphProjection>;
   listSystems(includeDrafts: boolean): Promise<SystemSummary[]>;
-  getSystem(
-    systemId: string,
-    includeDrafts: boolean,
-  ): Promise<ArchitectureCard | undefined>;
+  getSystem(systemId: string, includeDrafts: boolean): Promise<ArchitectureCard | undefined>;
   searchFeatures(
     query: string,
     category: string | undefined,
@@ -167,14 +165,10 @@ export class FilesystemBackend implements Backend {
 
   private runValidator(command: string, path: string): Promise<void> {
     return new Promise((resolvePromise, reject) => {
-      const child = spawn(
-        "uv",
-        ["run", "mathen", command, resolve(this.repositoryRoot, path)],
-        {
-          cwd: resolve(fileURLToPath(new URL("../../..", import.meta.url))),
-          stdio: ["ignore", "ignore", "pipe"],
-        },
-      );
+      const child = spawn("uv", ["run", "mathen", command, resolve(this.repositoryRoot, path)], {
+        cwd: resolve(fileURLToPath(new URL("../../..", import.meta.url))),
+        stdio: ["ignore", "ignore", "pipe"],
+      });
       let stderr = "";
       child.stderr?.on("data", (chunk: Buffer) => {
         stderr += chunk.toString();
@@ -183,9 +177,7 @@ export class FilesystemBackend implements Backend {
       child.once("close", (code) => {
         if (code === 0) return resolvePromise();
         reject(
-          new BackendError(
-            `Invalid ${path}: ${stderr.trim() || `validator exited with ${code}`}`,
-          ),
+          new BackendError(`Invalid ${path}: ${stderr.trim() || `validator exited with ${code}`}`),
         );
       });
     });
@@ -202,10 +194,7 @@ export class FilesystemBackend implements Backend {
     }));
   }
 
-  async getSystem(
-    systemId: string,
-    includeDrafts: boolean,
-  ): Promise<ArchitectureCard | undefined> {
+  async getSystem(systemId: string, includeDrafts: boolean): Promise<ArchitectureCard | undefined> {
     const cards = await this.loadAllCards(includeDrafts);
     return cards.find((candidate) => candidate.id === systemId);
   }
@@ -255,8 +244,7 @@ export class FilesystemBackend implements Backend {
             (relation) =>
               (!systemId || card.id === systemId) &&
               (!featureId || relation.source_feature_id === featureId) &&
-              (!targetSystemId ||
-                relation.target_system_id === targetSystemId) &&
+              (!targetSystemId || relation.target_system_id === targetSystemId) &&
               (!type || relation.type === type),
           )
           .map((relation) => ({ source_system_id: card.id, ...relation })),
@@ -291,10 +279,7 @@ export class FilesystemBackend implements Backend {
       .flatMap((card) => {
         const composition = card.composition;
         if (!isCompositionRecord(composition)) return [];
-        if (
-          inputSystem &&
-          !composition.inputs.some((input) => input.system_id === inputSystem)
-        ) {
+        if (inputSystem && !composition.inputs.some((input) => input.system_id === inputSystem)) {
           return [];
         }
         if (claimStatus && composition.claim_status !== claimStatus) return [];
@@ -308,17 +293,13 @@ export class FilesystemBackend implements Backend {
       .slice(0, limit);
   }
 
-  private async loadAllCards(
-    includeDrafts: boolean,
-  ): Promise<ArchitectureCard[]> {
+  private async loadAllCards(includeDrafts: boolean): Promise<ArchitectureCard[]> {
     const reviewed = await this.loadCards(this.systemsDirectory);
     if (!includeDrafts) return reviewed;
     const drafts = await this.loadCards(this.draftsDirectory);
     return [
       ...reviewed,
-      ...drafts.filter(
-        (draft) => !reviewed.some((card) => card.id === draft.id),
-      ),
+      ...drafts.filter((draft) => !reviewed.some((card) => card.id === draft.id)),
     ];
   }
 
@@ -327,15 +308,11 @@ export class FilesystemBackend implements Backend {
       .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
       .map((entry) => entry.name);
     return Promise.all(
-      entries
-        .sort()
-        .map((entry) => readJson<ArchitectureCard>(resolve(directory, entry))),
+      entries.sort().map((entry) => readJson<ArchitectureCard>(resolve(directory, entry))),
     );
   }
 
-  private async loadDocuments(
-    directory: string,
-  ): Promise<Array<Record<string, unknown>>> {
+  private async loadDocuments(directory: string): Promise<Array<Record<string, unknown>>> {
     let entries;
     try {
       entries = await readdir(directory, { withFileTypes: true });
@@ -347,9 +324,7 @@ export class FilesystemBackend implements Backend {
       entries
         .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
         .sort((left, right) => left.name.localeCompare(right.name))
-        .map((entry) =>
-          readJson<Record<string, unknown>>(resolve(directory, entry.name)),
-        ),
+        .map((entry) => readJson<Record<string, unknown>>(resolve(directory, entry.name))),
     );
   }
 }
@@ -364,12 +339,7 @@ export class ApiBackend implements Backend {
   private readonly timeoutMs: number;
   private readonly apiToken: string | undefined;
 
-  constructor(
-    baseUrl: string,
-    fetcher: Fetcher = fetch,
-    timeoutMs = 10_000,
-    apiToken?: string,
-  ) {
+  constructor(baseUrl: string, fetcher: Fetcher = fetch, timeoutMs = 10_000, apiToken?: string) {
     this.baseUrl = normalizeBaseUrl(baseUrl);
     this.fetcher = fetcher;
     this.timeoutMs = timeoutMs;
@@ -380,9 +350,7 @@ export class ApiBackend implements Backend {
     this.rejectDrafts(includeDrafts);
     const data = await this.request<unknown[]>("/systems");
     if (!Array.isArray(data))
-      throw new BackendError(
-        "API response for GET /api/systems has invalid data",
-      );
+      throw new BackendError("API response for GET /api/systems has invalid data");
     return data.map((system) => {
       const card = asRecord(system);
       return {
@@ -400,18 +368,12 @@ export class ApiBackend implements Backend {
     return normalizeLayeredGraph(await this.request(`/graph/layers${suffix}`));
   }
 
-  async getSystem(
-    systemId: string,
-    includeDrafts: boolean,
-  ): Promise<ArchitectureCard | undefined> {
+  async getSystem(systemId: string, includeDrafts: boolean): Promise<ArchitectureCard | undefined> {
     this.rejectDrafts(includeDrafts);
     try {
-      return normalizeCard(
-        await this.request<unknown>(`/systems/${encodeURIComponent(systemId)}`),
-      );
+      return normalizeCard(await this.request<unknown>(`/systems/${encodeURIComponent(systemId)}`));
     } catch (error) {
-      if (error instanceof ApiHttpError && error.status === 404)
-        return undefined;
+      if (error instanceof ApiHttpError && error.status === 404) return undefined;
       throw error;
     }
   }
@@ -429,22 +391,12 @@ export class ApiBackend implements Backend {
     if (claimType) params.set("claim_type", claimType);
     const data = await this.request<unknown[]>(`/features?${params}`);
     if (!Array.isArray(data))
-      throw new BackendError(
-        "API response for GET /api/features has invalid data",
-      );
+      throw new BackendError("API response for GET /api/features has invalid data");
     return data.map((result) => {
       const record = asRecord(result);
       return {
-        system_id: requiredString(
-          record.system_id,
-          "system_id",
-          "/api/features",
-        ),
-        system_name: requiredString(
-          record.system_name,
-          "system_name",
-          "/api/features",
-        ),
+        system_id: requiredString(record.system_id, "system_id", "/api/features"),
+        system_name: requiredString(record.system_name, "system_name", "/api/features"),
         feature: normalizeFeature(record.feature ?? record),
       };
     });
@@ -466,18 +418,14 @@ export class ApiBackend implements Backend {
     if (type) params.set("type", type);
     const data = await this.request<unknown[]>(`/feature-relations?${params}`);
     if (!Array.isArray(data)) {
-      throw new BackendError(
-        "API response for GET /api/feature-relations has invalid data",
-      );
+      throw new BackendError("API response for GET /api/feature-relations has invalid data");
     }
     return data.map((relation) => normalizeFeatureRelationResult(relation));
   }
 
   async getModelingBundle(systemId: string): Promise<unknown> {
     try {
-      return await this.request<unknown>(
-        `/modeling/${encodeURIComponent(systemId)}`,
-      );
+      return await this.request<unknown>(`/modeling/${encodeURIComponent(systemId)}`);
     } catch (error) {
       if (error instanceof ApiHttpError && error.status === 404) {
         throw new BackendError(`modeling bundle not found: ${systemId}`);
@@ -498,9 +446,7 @@ export class ApiBackend implements Backend {
     if (claimStatus) params.set("claim_status", claimStatus);
     const data = await this.request<unknown[]>(`/compositions?${params}`);
     if (!Array.isArray(data))
-      throw new BackendError(
-        "API response for GET /api/compositions has invalid data",
-      );
+      throw new BackendError("API response for GET /api/compositions has invalid data");
     return data.map(normalizeCompositionResult);
   }
 
@@ -520,9 +466,7 @@ export class ApiBackend implements Backend {
       const response = await this.fetcher(endpoint, {
         headers: {
           accept: "application/json",
-          ...(this.apiToken
-            ? { authorization: `Bearer ${this.apiToken}` }
-            : {}),
+          ...(this.apiToken ? { authorization: `Bearer ${this.apiToken}` } : {}),
         },
         signal: controller.signal,
       });
@@ -531,20 +475,15 @@ export class ApiBackend implements Backend {
       try {
         body = await response.json();
       } catch {
-        throw new BackendError(
-          `API response for GET /api${path} was not valid JSON`,
-        );
+        throw new BackendError(`API response for GET /api${path} was not valid JSON`);
       }
       if (!isRecord(body) || !("data" in body)) {
-        throw new BackendError(
-          `API response for GET /api${path} did not contain data`,
-        );
+        throw new BackendError(`API response for GET /api${path} did not contain data`);
       }
       return (body as ApiEnvelope<T>).data;
     } catch (error) {
       if (error instanceof BackendError) throw error;
-      if (isAbortError(error))
-        throw new BackendError(`API request timed out: GET /api${path}`);
+      if (isAbortError(error)) throw new BackendError(`API request timed out: GET /api${path}`);
       throw new BackendError(`API request failed: GET /api${path}`);
     } finally {
       clearTimeout(timeout);
@@ -594,18 +533,14 @@ function normalizeCard(value: unknown): ArchitectureCard {
     name: requiredString(card.name, "name", "/api/systems/:id"),
     summary: requiredString(card.summary, "summary", "/api/systems/:id"),
     scope: stringArray(card.scope),
-    features: Array.isArray(card.features)
-      ? card.features.map(normalizeFeature)
-      : [],
+    features: Array.isArray(card.features) ? card.features.map(normalizeFeature) : [],
     mathematical_views: Array.isArray(card.mathematical_views)
       ? card.mathematical_views.map((view) => asRecord(view))
       : [],
     trade_offs: Array.isArray(card.trade_offs)
       ? card.trade_offs.map((tradeOff) => asRecord(tradeOff))
       : [],
-    evidence: Array.isArray(card.evidence)
-      ? card.evidence.map(normalizeEvidence)
-      : [],
+    evidence: Array.isArray(card.evidence) ? card.evidence.map(normalizeEvidence) : [],
     related_systems: stringArray(card.related_systems),
     version_context: optionalString(card.version_context),
     temporal_context: optionalRecord(card.temporal_context),
@@ -625,9 +560,7 @@ function toProjectionSystem(card: ArchitectureCard): ProjectionSystem {
       metadata: {
         ...feature.metadata,
         ...(feature.claim_status ? { claim_status: feature.claim_status } : {}),
-        ...(feature.validity_scope
-          ? { validity_scope: feature.validity_scope }
-          : {}),
+        ...(feature.validity_scope ? { validity_scope: feature.validity_scope } : {}),
       },
     })),
     mathematical_views: card.mathematical_views.flatMap((view) => [
@@ -637,37 +570,54 @@ function toProjectionSystem(card: ArchitectureCard): ProjectionSystem {
             ? view.id
             : stableProjectionViewId(card.id, {
                 model: typeof view.model === "string" ? view.model : "",
-                question:
-                  typeof view.question === "string" ? view.question : "",
+                question: typeof view.question === "string" ? view.question : "",
                 metadata: optionalRecord(view.metadata) ?? {},
               }),
-        model:
-          typeof view.model === "string" ? view.model : "Unclassified model",
+        model: typeof view.model === "string" ? view.model : "Unclassified model",
         question: typeof view.question === "string" ? view.question : "",
         assumptions: stringArray(view.assumptions),
-        claim_type:
-          typeof view.claim_type === "string" ? view.claim_type : "inference",
+        claim_type: typeof view.claim_type === "string" ? view.claim_type : "inference",
         claim_status: optionalString(view.claim_status),
         evidence_ids: stringArray(view.evidence_ids),
         metadata: {
           ...optionalRecord(view.metadata),
-          ...(typeof view.claim_status === "string"
-            ? { claim_status: view.claim_status }
-            : {}),
-          ...(isRecord(view.validity_scope)
-            ? { validity_scope: view.validity_scope }
-            : {}),
+          ...(typeof view.claim_status === "string" ? { claim_status: view.claim_status } : {}),
+          ...(isRecord(view.validity_scope) ? { validity_scope: view.validity_scope } : {}),
           ...(isRecord(view.contract) ? { contract: view.contract } : {}),
         },
       },
     ]),
+    relations: card.relations?.flatMap((relation): ProjectionRelation[] => {
+      const target = typeof relation.target === "string" ? relation.target : undefined;
+      const type = typeof relation.type === "string" ? relation.type : undefined;
+      if (!target || !type) return [];
+      return [
+        {
+          target,
+          type,
+          claim_type: optionalString(relation.claim_type),
+          claim_status: optionalString(relation.claim_status),
+          ...(Array.isArray(relation.evidence_ids)
+            ? { evidence_ids: stringArray(relation.evidence_ids) }
+            : {}),
+          notes: optionalString(relation.notes),
+          metadata: relationMetadata(relation),
+        },
+      ];
+    }),
     composition: card.composition ?? null,
   };
 }
 
-function toProjectionAnalogy(
-  document: Record<string, unknown>,
-): ProjectionAnalogy {
+function relationMetadata(value: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...(isRecord(value.validity_scope) ? { validity_scope: value.validity_scope } : {}),
+    ...(isRecord(value.provenance) ? { provenance: value.provenance } : {}),
+    ...(isRecord(value.discovery) ? { discovery: value.discovery } : {}),
+  };
+}
+
+function toProjectionAnalogy(document: Record<string, unknown>): ProjectionAnalogy {
   return {
     id: requiredString(document.id, "id", "filesystem analogy"),
     name: requiredString(document.name, "name", "filesystem analogy"),
@@ -675,9 +625,7 @@ function toProjectionAnalogy(
   };
 }
 
-function toProjectionMicrostructure(
-  document: Record<string, unknown>,
-): ProjectionMicrostructure {
+function toProjectionMicrostructure(document: Record<string, unknown>): ProjectionMicrostructure {
   return {
     id: requiredString(document.id, "id", "filesystem microstructure"),
     name: requiredString(document.name, "name", "filesystem microstructure"),
@@ -691,16 +639,8 @@ function normalizeFeature(value: unknown): Feature {
     id: requiredString(feature.id, "id", "/api/features"),
     name: requiredString(feature.name, "name", "/api/features"),
     category: requiredString(feature.category, "category", "/api/features"),
-    claim_type: requiredString(
-      feature.claim_type,
-      "claim_type",
-      "/api/features",
-    ),
-    description: requiredString(
-      feature.description,
-      "description",
-      "/api/features",
-    ),
+    claim_type: requiredString(feature.claim_type, "claim_type", "/api/features"),
+    description: requiredString(feature.description, "description", "/api/features"),
     benefits: stringArray(feature.benefits),
     costs: stringArray(feature.costs),
     evidence_ids: stringArray(feature.evidence_ids),
@@ -711,21 +651,11 @@ function normalizeFeature(value: unknown): Feature {
 function normalizeCompositionResult(value: unknown): CompositionSearchResult {
   const result = asRecord(value);
   return {
-    system_id: requiredString(
-      result.system_id,
-      "system_id",
-      "/api/compositions",
-    ),
-    system_name: requiredString(
-      result.system_name,
-      "system_name",
-      "/api/compositions",
-    ),
+    system_id: requiredString(result.system_id, "system_id", "/api/compositions"),
+    system_name: requiredString(result.system_name, "system_name", "/api/compositions"),
     version_context: optionalString(result.version_context) ?? null,
     composition: asRecord(result.composition),
-    evidence: Array.isArray(result.evidence)
-      ? result.evidence.map(normalizeEvidence)
-      : [],
+    evidence: Array.isArray(result.evidence) ? result.evidence.map(normalizeEvidence) : [],
   };
 }
 
@@ -741,35 +671,16 @@ function normalizeFeatureRelationResult(value: unknown): FeatureRelationResult {
   };
 }
 
-function normalizeFeatureRelation(
-  value: unknown,
-  endpoint: string,
-): FeatureRelation {
+function normalizeFeatureRelation(value: unknown, endpoint: string): FeatureRelation {
   const relation = asRecord(value);
   const notes = optionalString(relation.notes);
   return {
-    source_feature_id: requiredString(
-      relation.source_feature_id,
-      "source_feature_id",
-      endpoint,
-    ),
-    target_system_id: requiredString(
-      relation.target_system_id,
-      "target_system_id",
-      endpoint,
-    ),
-    target_feature_id: requiredString(
-      relation.target_feature_id,
-      "target_feature_id",
-      endpoint,
-    ),
+    source_feature_id: requiredString(relation.source_feature_id, "source_feature_id", endpoint),
+    target_system_id: requiredString(relation.target_system_id, "target_system_id", endpoint),
+    target_feature_id: requiredString(relation.target_feature_id, "target_feature_id", endpoint),
     type: requiredString(relation.type, "type", endpoint),
     claim_type: requiredString(relation.claim_type, "claim_type", endpoint),
-    claim_status: requiredString(
-      relation.claim_status,
-      "claim_status",
-      endpoint,
-    ),
+    claim_status: requiredString(relation.claim_status, "claim_status", endpoint),
     evidence_ids: stringArray(relation.evidence_ids),
     ...(notes ? { notes } : {}),
   };
@@ -796,15 +707,9 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
-function requiredString(
-  value: unknown,
-  field: string,
-  endpoint: string,
-): string {
+function requiredString(value: unknown, field: string, endpoint: string): string {
   if (typeof value !== "string")
-    throw new BackendError(
-      `API response for GET ${endpoint} has invalid ${field}`,
-    );
+    throw new BackendError(`API response for GET ${endpoint} has invalid ${field}`);
   return value;
 }
 
@@ -819,9 +724,7 @@ function normalizeLayeredGraph(value: unknown): LayeredGraphProjection {
     !Array.isArray(graph.nodes) ||
     !Array.isArray(graph.edges)
   ) {
-    throw new BackendError(
-      "API response for GET /api/graph/layers has invalid data",
-    );
+    throw new BackendError("API response for GET /api/graph/layers has invalid data");
   }
   return {
     schema_version: "1.0",
@@ -851,16 +754,12 @@ function projectionLayer(value: unknown): ProjectionLayer {
     "analogy",
   ];
   if (!allowed.includes(layer as ProjectionLayer)) {
-    throw new BackendError(
-      `API response for GET /api/graph/layers has invalid layer`,
-    );
+    throw new BackendError(`API response for GET /api/graph/layers has invalid layer`);
   }
   return layer as ProjectionLayer;
 }
 
-function normalizeProjectionEdge(
-  value: Record<string, unknown>,
-): ProjectionEdge[] {
+function normalizeProjectionEdge(value: Record<string, unknown>): ProjectionEdge[] {
   const source = optionalString(value.source);
   const target = optionalString(value.target);
   const type = optionalString(value.type);
@@ -870,19 +769,13 @@ function normalizeProjectionEdge(
       source,
       target,
       type,
-      ...(optionalString(value.claim_type)
-        ? { claim_type: optionalString(value.claim_type) }
-        : {}),
+      ...(optionalString(value.claim_type) ? { claim_type: optionalString(value.claim_type) } : {}),
       ...(optionalString(value.claim_status)
         ? { claim_status: optionalString(value.claim_status) }
         : {}),
       evidence_ids: stringArray(value.evidence_ids),
-      ...(optionalString(value.notes)
-        ? { notes: optionalString(value.notes) }
-        : {}),
-      ...(optionalRecord(value.metadata)
-        ? { metadata: optionalRecord(value.metadata) }
-        : {}),
+      ...(optionalString(value.notes) ? { notes: optionalString(value.notes) } : {}),
+      ...(optionalRecord(value.metadata) ? { metadata: optionalRecord(value.metadata) } : {}),
     },
   ];
 }
@@ -912,9 +805,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function isCompositionRecord(
-  value: Record<string, unknown> | undefined,
-): value is Record<string, unknown> & {
+function isCompositionRecord(value: Record<string, unknown> | undefined): value is Record<
+  string,
+  unknown
+> & {
   inputs: Array<Record<string, unknown> & { system_id: string }>;
   claim_status: string;
   constraints: unknown[];
@@ -930,17 +824,12 @@ function isCompositionRecord(
   if (
     !Array.isArray(value.evidence_ids) ||
     value.evidence_ids.length === 0 ||
-    !value.evidence_ids.every(
-      (item) => typeof item === "string" && item.length > 0,
-    )
+    !value.evidence_ids.every((item) => typeof item === "string" && item.length > 0)
   ) {
     return false;
   }
   return value.inputs.every(
-    (input) =>
-      isRecord(input) &&
-      typeof input.system_id === "string" &&
-      input.system_id.length > 0,
+    (input) => isRecord(input) && typeof input.system_id === "string" && input.system_id.length > 0,
   );
 }
 

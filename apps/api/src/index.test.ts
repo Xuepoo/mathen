@@ -711,6 +711,17 @@ test("GET /api/graph/layers preserves D1 document and view metadata", async () =
                 id: "alpha",
                 name: "Alpha",
                 scope_json: "[]",
+                relations_json: JSON.stringify([
+                  {
+                    target: "beta",
+                    type: "uses",
+                    claim_type: "fact",
+                    claim_status: "proposed",
+                    evidence_ids: ["alpha-doc"],
+                    notes: "Explicit relation.",
+                    validity_scope: { deployment_origins: ["local"] },
+                  },
+                ]),
                 composition_json: null,
                 features_json: JSON.stringify([
                   {
@@ -739,6 +750,15 @@ test("GET /api/graph/layers preserves D1 document and view metadata", async () =
                   },
                 ]),
               },
+              {
+                id: "beta",
+                name: "Beta",
+                scope_json: "[]",
+                relations_json: "[]",
+                composition_json: null,
+                features_json: "[]",
+                views_json: "[]",
+              },
             ] as T[],
           });
         },
@@ -752,7 +772,10 @@ test("GET /api/graph/layers preserves D1 document and view metadata", async () =
   );
   assert.equal(response.status, 200);
   const body = (await response.json()) as {
-    data: { nodes: Array<{ id: string; metadata: Record<string, unknown> }> };
+    data: {
+      nodes: Array<{ id: string; metadata: Record<string, unknown> }>;
+      edges: Array<Record<string, unknown>>;
+    };
   };
   assert.deepEqual(Object.keys(body), ["data"]);
   assert.deepEqual(
@@ -766,6 +789,19 @@ test("GET /api/graph/layers preserves D1 document and view metadata", async () =
   assert.deepEqual(
     body.data.nodes.find((node) => node.id === "math:alpha:stable-view")?.metadata.contract,
     { family: "state_machine" },
+  );
+  assert.deepEqual(
+    body.data.edges.find((edge) => edge.type === "uses"),
+    {
+      source: "system:alpha",
+      target: "system:beta",
+      type: "uses",
+      claim_type: "fact",
+      claim_status: "proposed",
+      evidence_ids: ["alpha-doc"],
+      notes: "Explicit relation.",
+      metadata: { validity_scope: { deployment_origins: ["local"] } },
+    },
   );
 });
 

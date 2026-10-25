@@ -18,6 +18,13 @@ The projection keeps these dimensions separate:
 - `component` and `property-effect`: records inside that composition candidate.
 - `relation`: an explicitly declared typed adapter or boundary record.
 
+Explicit Architecture Card `relations` are also projected as directed edges
+between `system:<source>` and `system:<target>` nodes. Their `type`, claim
+fields, evidence IDs, notes, and declared validity scope are copied without
+normalization into another relation or inferred from card names, categories,
+similarity, or layout. Unknown endpoints are omitted. The legacy
+`related_systems` navigation field is not used by this layered projection.
+
 The projection does **not** turn navigation categories into graph nodes. The
 existing model-family groups are UI-only. A client may show `Others` only as
 an explicit fallback for an item with no UI mapping; it must never serialize

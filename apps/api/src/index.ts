@@ -110,6 +110,7 @@ type GraphLayerSystemRow = {
   id: string;
   name: string;
   scope_json: string;
+  relations_json: string | null;
   composition_json: string | null;
   features_json: string;
   views_json: string;
@@ -574,7 +575,7 @@ app.get("/graph/layers", async (c) => {
   const origin = c.req.query("origin")?.trim() || undefined;
   const [systems, documents] = await Promise.all([
     c.env.DB.prepare(
-      `SELECT s.id, s.name, s.scope_json, s.composition_json,
+      `SELECT s.id, s.name, s.scope_json, s.relations_json, s.composition_json,
        COALESCE((SELECT json_group_array(json_object(
          'id', f.id, 'name', f.name, 'category', f.category,
          'claim_type', f.claim_type, 'description', f.description,
@@ -847,6 +848,25 @@ function toProjectionSystem(row: GraphLayerSystemRow): ProjectionSystem {
     id: row.id,
     name: row.name,
     scope: parseJson<string[]>(row.scope_json, []),
+    relations: parseJsonArray<Record<string, unknown>>(row.relations_json).flatMap((relation) => {
+      if (!isRecord(relation)) return [];
+      const target = stringValue(relation.target);
+      const type = stringValue(relation.type);
+      if (!target || !type) return [];
+      return [
+        {
+          target,
+          type,
+          claim_type: stringValue(relation.claim_type),
+          claim_status: stringValue(relation.claim_status),
+          ...(Array.isArray(relation.evidence_ids)
+            ? { evidence_ids: parseStringArray(relation.evidence_ids) }
+            : {}),
+          notes: stringValue(relation.notes),
+          metadata: relationMetadata(relation),
+        },
+      ];
+    }),
     features: parseJsonArray<Record<string, unknown>>(row.features_json).flatMap((feature) => {
       if (!isRecord(feature) || typeof feature.id !== "string" || typeof feature.name !== "string")
         return [];
@@ -896,6 +916,14 @@ function toProjectionSystem(row: GraphLayerSystemRow): ProjectionSystem {
       ];
     }),
     composition: parseJson<Record<string, unknown> | null>(row.composition_json, null),
+  };
+}
+
+function relationMetadata(value: Record<string, unknown>) {
+  return {
+    ...(isRecord(value.validity_scope) ? { validity_scope: value.validity_scope } : {}),
+    ...(isRecord(value.provenance) ? { provenance: value.provenance } : {}),
+    ...(isRecord(value.discovery) ? { discovery: value.discovery } : {}),
   };
 }
 

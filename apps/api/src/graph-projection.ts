@@ -3,8 +3,9 @@
  *
  * The projection is intentionally not a semantic closure.  It emits only
  * relations represented by a source document: a feature belongs to its card,
- * a view belongs to its card, and typed composition edges are copied from the
- * typed contract.  Navigation categories and layout are not graph layers.
+ * a view belongs to its card, explicit card relations connect cards, and typed
+ * composition edges are copied from the typed contract. Navigation categories
+ * and layout are not graph layers.
  */
 
 export type ProjectionLayer =
@@ -65,6 +66,7 @@ export type ProjectionSystem = {
   evidence_ids?: string[];
   features: ProjectionFeature[];
   mathematical_views: ProjectionView[];
+  relations?: ProjectionRelation[];
   composition?: Record<string, unknown> | null;
 };
 
@@ -87,6 +89,16 @@ export type ProjectionView = {
   claim_type: string;
   claim_status?: string;
   evidence_ids: string[];
+  metadata?: ProjectionMetadata;
+};
+
+export type ProjectionRelation = {
+  target: string;
+  type: string;
+  claim_type?: string;
+  claim_status?: string;
+  evidence_ids?: string[];
+  notes?: string;
   metadata?: ProjectionMetadata;
 };
 
@@ -181,6 +193,22 @@ export function buildLayeredGraphProjection(
         ...(view.claim_status ? { claim_status: view.claim_status } : {}),
         evidence_ids: view.evidence_ids,
         metadata: view.metadata,
+      });
+    }
+    for (const relation of [...(system.relations ?? [])].sort(compareRelations)) {
+      const target = stringValue(relation.target);
+      const type = stringValue(relation.type);
+      if (!target || !type) continue;
+      const metadata = relation.metadata ?? {};
+      addEdge({
+        source: `system:${system.id}`,
+        target: `system:${target}`,
+        type,
+        ...(relation.claim_type ? { claim_type: relation.claim_type } : {}),
+        ...(relation.claim_status ? { claim_status: relation.claim_status } : {}),
+        ...(relation.evidence_ids ? { evidence_ids: relation.evidence_ids } : {}),
+        ...(relation.notes ? { notes: relation.notes } : {}),
+        metadata,
       });
     }
     projectComposition(system, addNode, addEdge);
@@ -513,6 +541,9 @@ function compareFeatures(left: ProjectionFeature, right: ProjectionFeature) {
 }
 function compareViews(left: ProjectionView, right: ProjectionView) {
   return String(left.id).localeCompare(String(right.id));
+}
+function compareRelations(left: ProjectionRelation, right: ProjectionRelation) {
+  return left.target.localeCompare(right.target) || left.type.localeCompare(right.type);
 }
 function compareDocuments(left: { id: string }, right: { id: string }) {
   return left.id.localeCompare(right.id);

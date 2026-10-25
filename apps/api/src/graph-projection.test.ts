@@ -187,6 +187,87 @@ test("origin filtering is configurable and keeps originless documents visible", 
   );
 });
 
+test("projects only explicit directed card relations with evidence metadata", () => {
+  const graph = buildLayeredGraphProjection(
+    {
+      systems: [
+        {
+          id: "source",
+          name: "Source",
+          scope: [],
+          features: [],
+          mathematical_views: [],
+          relations: [
+            {
+              target: "target",
+              type: "uses",
+              claim_type: "fact",
+              claim_status: "proposed",
+              evidence_ids: ["source-doc"],
+              notes: "Explicit implementation dependency.",
+              metadata: {
+                validity_scope: { deployment_origins: ["local"] },
+              },
+            },
+            { target: "missing", type: "resembles" },
+          ],
+        },
+        {
+          id: "target",
+          name: "Target",
+          scope: [],
+          features: [],
+          mathematical_views: [],
+        },
+      ],
+    },
+    "local",
+  );
+
+  assert.deepEqual(graph.edges, [
+    {
+      source: "system:source",
+      target: "system:target",
+      type: "uses",
+      claim_type: "fact",
+      claim_status: "proposed",
+      evidence_ids: ["source-doc"],
+      notes: "Explicit implementation dependency.",
+      metadata: { validity_scope: { deployment_origins: ["local"] } },
+    },
+  ]);
+
+  const otherOrigin = buildLayeredGraphProjection(
+    {
+      systems: [
+        {
+          id: "source",
+          name: "Source",
+          scope: [],
+          features: [],
+          mathematical_views: [],
+          relations: [
+            {
+              target: "target",
+              type: "uses",
+              metadata: { validity_scope: { deployment_origins: ["other"] } },
+            },
+          ],
+        },
+        {
+          id: "target",
+          name: "Target",
+          scope: [],
+          features: [],
+          mathematical_views: [],
+        },
+      ],
+    },
+    "local",
+  );
+  assert.equal(otherOrigin.edges.length, 0);
+});
+
 test("composition origin filtering removes every scoped descendant", () => {
   const graph = buildLayeredGraphProjection(
     {

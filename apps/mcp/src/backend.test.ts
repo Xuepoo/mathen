@@ -54,10 +54,35 @@ test("filesystem and hosted graph backends preserve the same projection shape", 
           evidence_ids: [],
         },
       ],
+      relations: [
+        {
+          target: "beta",
+          type: "uses",
+          claim_type: "fact",
+          claim_status: "proposed",
+          evidence_ids: ["architecture"],
+          notes: "Explicit relation.",
+          validity_scope: { deployment_origins: ["local"] },
+        },
+        { target: "missing", type: "resembles" },
+      ],
       trade_offs: [],
       evidence: [],
     };
     await writeFile(resolve(root, "data/systems/alpha.json"), JSON.stringify(card));
+    await writeFile(
+      resolve(root, "data/systems/beta.json"),
+      JSON.stringify({
+        id: "beta",
+        name: "Beta",
+        summary: "Beta",
+        scope: [],
+        features: [],
+        mathematical_views: [],
+        trade_offs: [],
+        evidence: [],
+      }),
+    );
     const filesystem = await new FilesystemBackend(root).getLayeredGraph("local");
     const hosted = await new ApiBackend(
       "https://api.example.test",
@@ -67,6 +92,19 @@ test("filesystem and hosted graph backends preserve the same projection shape", 
         }),
     ).getLayeredGraph("local");
     assert.deepEqual(hosted, filesystem);
+    assert.deepEqual(
+      filesystem.edges.find((edge) => edge.type === "uses"),
+      {
+        source: "system:alpha",
+        target: "system:beta",
+        type: "uses",
+        claim_type: "fact",
+        claim_status: "proposed",
+        evidence_ids: ["architecture"],
+        notes: "Explicit relation.",
+        metadata: { validity_scope: { deployment_origins: ["local"] } },
+      },
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
