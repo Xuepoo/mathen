@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Mathen User Manual
 
 This manual explains the data contracts, storage layers, commands, and
@@ -36,6 +38,58 @@ data/modeling/      fixed-commit LLM evidence bundles
 
 Only `data/systems/` is canonical. LLM output must remain under a draft
 directory and cannot overwrite reviewed cards.
+
+### 1.1 Public MVP orientation
+
+The public starting point is [mathen.xuepoo.xyz](https://mathen.xuepoo.xyz).
+The browser opens a reviewed systems graph and lets you search the card
+catalog, inspect a system, switch to mathematical model neighborhoods, and
+follow explicit relations. The current UI uses `/api/graph` and
+`/api/graph/models` for the graph and loads card details from
+`/api/systems/:id`; it does not expose drafts.
+
+Use these terms while exploring:
+
+- **System:** a product or project represented by one reviewed card at a stated
+  version or context.
+- **Layer:** a typed projection of records, for example `system`, `property`,
+  `mathematical-contract`, `composition`, `microstructure`, or `analogy`.
+  Layers separate record kinds; they do not assert that every visible node is
+  equivalent or connected by an inferred relation.
+- **Property:** a reusable feature attached to a system, with a category,
+  claim type, description, and evidence IDs. A property is not a promise that
+  another system can provide it under the same conditions.
+- **Mathematical contract/view:** a candidate model tied to a question and
+  assumptions. It preserves claim type and evidence so a reader can inspect
+  the boundary. It is not an automatic formal proof of implementation
+  behavior.
+
+For a quick first visit: open the site, use **Browse systems** to find a
+familiar card, inspect one feature and its source evidence, switch to **Math
+models** and read a model's question and assumptions, then follow one typed
+relation to another card. Graph position, navigation groups, and edge layout
+are for exploration; they do not add evidence.
+
+### 1.2 Evidence, claims, and discovery signals
+
+Read the cited evidence first, then the claim label. `fact` means directly
+supported by the cited source; `inference` means an abstraction derived from
+facts; `hypothesis` means a proposal requiring validation; and `analogy` means
+a bounded comparison rather than formal equivalence. A composition record or
+mathematical view can be useful while still remaining a hypothesis.
+
+Search and graph navigation are discovery aids. A future semantic retrieval
+implementation may rank reviewed records by embedding similarity, but a score
+would be an uncalibrated review-priority signal only. It would not establish
+truth, evidence, compatibility, causality, originality, substitutability, or
+historical influence. The design names `GET /api/retrieval` and
+`search_semantic` as planned contracts; neither route/tool is implemented in
+the current public MVP. Until a deployment explicitly announces it, use the
+current lexical routes and graph/card UI instead.
+
+There are no formal mobile performance metrics in this manual. Small-screen
+and touch use should be judged from real user feedback and improved as that
+feedback arrives.
 
 The checked-in canonical tree contains 219 reviewed cards. The representative
 repository manifest contains 62 entries, all of which currently have matching
@@ -475,6 +529,12 @@ The Hono Worker uses the `/api` base path. Successful responses use a
 The current API is read-only. It does not expose draft cards or provide review,
 promotion, or synthesis writes.
 
+All successful API reads use the `{"data": ...}` envelope. Errors are returned
+as error objects with an HTTP status. Hosted browser requests use the same
+origin; clients must not expose a deployment-specific API URL or secret in
+browser code. The planned semantic retrieval route is not part of the current
+endpoint table and must not be assumed to exist.
+
 System searches default to 50 results, with a maximum page size of 100. Use
 `offset` (default 0) to read subsequent pages with the same query. Browser
 metadata loading must cover every page; an unloaded system does not have zero
@@ -613,6 +673,16 @@ Then use the browser at `http://localhost:5173`, the API at
 ```bash
 MATHEN_API_URL=http://localhost:8787/api bun run mcp
 ```
+
+### Step 8: Provide reviewed evidence
+
+Open an issue or pull request with the source URI, version or commit, scope,
+claim type, assumptions, and evidence IDs. Work in `data/drafts/` while a card
+is being prepared; run validation and request human review before adding an
+accepted card to `data/systems/`. Do not overwrite canonical cards from an
+automated analysis, and do not treat a draft as public API/MCP content. The
+hosted API and MCP currently provide reads only; authenticated review and
+promotion writes are not available.
 
 ## 13. Recommended development loop
 

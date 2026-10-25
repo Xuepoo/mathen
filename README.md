@@ -189,6 +189,78 @@ This repository is a research prototype. Architecture Cards are structured,
 evidence-backed models, not automatic formal proofs of the corresponding
 implementations.
 
+## Public MVP: start here
+
+Open the hosted browser at **[mathen.xuepoo.xyz](https://mathen.xuepoo.xyz)**.
+It opens the reviewed architecture atlas. If the deployment asks for a
+Cloudflare access check, complete it in the browser; this is separate from the
+read-only MCP service token described in [`docs/mcp.md`](docs/mcp.md).
+
+### A five-minute exploration
+
+1. **Minute 1 — orient:** leave **Systems** selected and use **Fit** to frame
+   the graph. The graph is a navigation view of reviewed records; position,
+   distance, and layout are not semantic scores.
+2. **Minute 2 — find a card:** use **Find a system…** or **Browse systems**.
+   Search a familiar system such as SQLite, DuckDB, Git, or PostgreSQL, then
+   choose **Read card**.
+3. **Minute 3 — inspect evidence:** read the card summary and scope, then open
+   a feature. Check its `fact`, `inference`, `hypothesis`, or `analogy` label
+   and follow its evidence IDs to the linked source.
+4. **Minute 4 — compare views:** return to the atlas, select **Math models**,
+   and open a model family. Read its question, assumptions, claim label, and
+   source-card evidence. A model view is a candidate contract, not a theorem.
+5. **Minute 5 — follow a relation:** select a system, choose a typed relation
+   or a navigation group, and open a neighboring card. Treat the edge as the
+   stated, evidence-backed relation only; a navigation group is not a
+   dependency or compatibility claim.
+
+The browser uses the reviewed graph and card routes currently implemented by
+the Worker (`/api/graph`, `/api/graph/models`, `/api/systems`, and
+`/api/systems/:id`). Touch and small-screen use are supported as part of the
+current UI; mobile optimization will follow real user feedback rather than a
+claimed performance metric.
+
+### How to read the atlas
+
+- A **system** is a product or project represented by one reviewed
+  Architecture Card at a stated version or context.
+- A **property** is a reusable feature recorded on a system, such as a storage
+  or execution structure. The graph layer copies the card's property and its
+  claim metadata; it does not invent properties from names or proximity.
+- A **layer** is a typed projection such as system, property,
+  mathematical-contract, composition, microstructure, or analogy. Layers make
+  different kinds of records visible without turning them into one kind of
+  claim.
+- A **mathematical contract/view** states a question, assumptions, candidate
+  model, claim type, and evidence. It describes what can be checked about the
+  supplied model data; it does not prove that an implementation has those
+  semantics.
+- A **fact** is directly supported by cited evidence. An **inference** is an
+  abstraction derived from supported facts. A **hypothesis** needs validation.
+  An **analogy** is a bounded comparison, not formal equivalence, causality,
+  or historical influence.
+
+Always distinguish the source evidence from an interpretation. A graph edge,
+model label, composition candidate, or future retrieval ranking can help you
+decide what to inspect next; none is evidence by itself. If semantic retrieval
+is enabled in a later deployment, its score will be an uncalibrated discovery
+ranking signal over reviewed records—not truth, compatibility, causality,
+originality, or proof. The planned `GET /api/retrieval` route and hosted
+`search_semantic` MCP tool are **not deployed by this MVP**; do not build a
+client against them yet.
+
+### Contribute evidence safely
+
+Start with a focused issue or pull request in the
+[Mathen repository](https://github.com/Xuepoo/mathen). Add primary sources,
+version context, scope, assumptions, counterexamples, and evidence IDs to a
+draft or proposed card. Validate it, request review, and only then place an
+accepted card under `data/systems/`. Generated cards remain under
+`data/drafts/` or `data/drafts/llm/`; do not overwrite or promote them
+automatically. The hosted API and MCP are read-only and do not accept card
+submissions.
+
 Source code and the browser client are available in the
 [Mathen GitHub repository](https://github.com/Xuepoo/mathen).
 

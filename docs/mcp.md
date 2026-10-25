@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Mathen MCP Server
 
 Mathen includes a local stdio MCP server for reading the architecture knowledge
@@ -10,17 +12,34 @@ canonical system cards.
 The hosted MCP endpoint is a remote HTTPS service:
 
 ```text
-https://mathen.example.com/api/mcp
+https://mathen.xuepoo.xyz/api/mcp
 ```
 
-Replace the example origin with your deployment. The route is `/api/mcp`, under
-the same `/api` prefix as the read API. Python CLI users can set `mcp.url` in
-TOML or override it with `MATHEN_MCP_URL`; no hosted origin is built in.
+The route is `/api/mcp`, under the same `/api` prefix as the read API. Python
+CLI users can set `mcp.url` in TOML or override it with `MATHEN_MCP_URL`.
 
 The endpoint is stateless and reviewed-only. It requires the `API_ACCESS_TOKEN`
 Bearer credential and supports JSON Streamable HTTP requests for `initialize`,
 `tools/list`, and `tools/call`. It does not expose filesystem-only drafts. Use
 the stdio server below for offline filesystem access.
+
+For hosted requests, the exact authentication header is:
+
+```http
+Authorization: Bearer <API_ACCESS_TOKEN>
+```
+
+The value must match the configured Worker secret exactly. Do not put a real
+token in a URL, source file, browser bundle, card, issue, or log. The hosted
+endpoint is read-only and this repository does not claim that production MCP
+authentication has been verified; operators must provision the secret and run
+their own deployment smoke test.
+
+If a request includes `Origin`, it must exactly match one of the comma-separated
+`MCP_ALLOWED_ORIGINS` values. The current implementation also accepts an
+explicit `*` entry. With an empty allowlist, no-`Origin` requests are allowed,
+while browser-origin requests are rejected. CORS response headers are emitted
+only for an allowed origin, and `OPTIONS` uses the same rule.
 
 ## Start
 
@@ -40,7 +59,7 @@ To use the deployed Hono API instead of local files, set `MATHEN_API_URL` to
 the API origin or `/api` base URL before starting the server:
 
 ```bash
-MATHEN_API_URL=https://mathen.example.com/api bun run mcp
+MATHEN_API_URL=https://mathen.xuepoo.xyz/api bun run mcp
 ```
 
 API mode uses `GET /api/systems`, `GET /api/systems/:id`, `GET /api/features`,
@@ -49,6 +68,11 @@ and `GET /api/modeling/:id`. Requests have a
 10-second timeout and API
 failures are returned as concise JSON tool errors. Draft cards are
 filesystem-only and are not exposed by the MCP tools or graph projection.
+
+The planned semantic retrieval design names a `search_semantic` tool, but it is
+not registered by the current hosted or stdio server. Do not treat it as a
+live endpoint or tool until a separate implementation and deployment announce
+it.
 
 If the deployed API has Turnstile protection enabled, configure the matching
 read-only service token with `MATHEN_API_TOKEN`. The token is sent as a Bearer
