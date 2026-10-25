@@ -47,7 +47,10 @@ assembly cover the initial query surface.
 Vectorize is documented as a future optimization and retrieval companion. A
 planned integration would store embeddings and metadata that point back to D1
 records; it would not be authoritative and could be rebuilt from reviewed
-cards. The current Worker has no Vectorize binding or semantic retrieval route.
+cards. The current Worker has no Vectorize binding. The implemented retrieval
+route is the provider-neutral `GET /api/retrieval` bounded lexical baseline;
+it builds a bounded snapshot from hydrated D1 records for each request and is
+not embeddings or semantic/vector similarity.
 
 The deployment workflow expects the repository secrets
 `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_KEY`. The latter must contain a
@@ -65,6 +68,66 @@ and deploys the Worker:
 ```bash
 just deploy
 ```
+
+### Retrieval MVP deployment read-back (operator checklist)
+
+This checklist prepares a release but does not itself authorize or perform a
+production deployment. The retrieval MVP uses the existing Worker, D1, R2,
+and Workers Static Assets resources. Do not add a Vectorize binding, provider,
+secret, or remote index for this release. Record the exact Git commit/tag,
+Worker deployment version, deployment timestamp, database migration result,
+and operator identity in the release record; never record credentials.
+
+Before deployment, verify the `production` GitHub environment contains the
+existing account/API credentials and, when enabled, the Turnstile and
+`API_ACCESS_TOKEN` values. Confirm that the custom domain binding is
+`https://mathen.xuepoo.xyz`, that the alternate `workers.dev` origin is still
+expected, and that the configured production R2 bucket is
+`mathen-artifacts-production`. The checked-in configuration is sufficient for
+the MVP; resource creation and DNS changes remain operator actions.
+
+Run the existing workflow or its reviewed manual equivalent, in this order:
+
+1. Build the browser asset and confirm the generated `apps/web/dist/` output is
+   not staged or committed.
+2. Apply the checked-in D1 migrations and read back the migration list/status
+   from the target `mathen-db`; record the database ID, migration names, and
+   result. Seed reviewed cards separately only when the release requires a
+   refreshed canonical snapshot, because seeding replaces structured D1 data.
+3. Deploy the Worker and record the exact Wrangler deployment version from the
+   command output or Cloudflare dashboard. Do not describe a source commit as
+   the Worker version unless the platform read-back confirms that mapping.
+4. Read `GET https://mathen.xuepoo.xyz/api/health`, then query a known reviewed
+   term such as:
+
+   ```bash
+   curl -fsS 'https://mathen.xuepoo.xyz/api/retrieval?q=embedded%20execution&limit=3'
+   ```
+
+   Confirm the response is a `{ "data": ... }` envelope, the index method is
+   `bounded_lexical_baseline`, `score_kind` is `lexical_overlap`, provenance is
+   `bounded_lexical_baseline`, and no result contains a draft path. Record the
+   HTTP status, `X-Request-ID`, index ID, result count, and warnings. A ranking
+   score is only an uncalibrated discovery signal; it is not embedding
+   similarity, truth, compatibility, causality, or a graph edge.
+5. Open the custom domain and verify the Web retrieval panel loads the deployed
+   asset and still uses same-origin `/api/retrieval` requests. Record the asset
+   URL/hash or deployment version; do not change a Vite API URL.
+6. Verify hosted MCP at `POST https://mathen.xuepoo.xyz/api/mcp`: without the
+   exact `Authorization: Bearer <API_ACCESS_TOKEN>` header it must return 401,
+   and an `Origin` outside the exact `MCP_ALLOWED_ORIGINS` list must be denied.
+   With the token and an allowed origin, call `tools/list` and
+   `search_semantic`; confirm the result preserves the API IDs, evidence,
+   scope, warnings, and bounded lexical method. Test `OPTIONS` from an allowed
+   and a disallowed origin and record status, CORS headers, and request IDs.
+7. Read back the D1 migration state and one seeded reviewed record after the
+   Worker deployment. Confirm the route remains read-only, D1 is the canonical
+   source, and no Vectorize/index/provider resource was created.
+
+If any read-back fails, stop and record the failure and request IDs. Do not
+claim that new code is deployed based only on a successful local build or
+source review. The unresolved provider/model, vector index, retention policy,
+and semantic retrieval deployment choices remain outside this MVP.
 
 ## Public API protection
 
