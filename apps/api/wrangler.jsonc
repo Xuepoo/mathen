@@ -28,7 +28,7 @@
 		"R2_BUCKET_PRODUCTION": "mathen-artifacts-production",
 		"MCP_RATE_LIMIT_PER_MINUTE": "60",
 		"MCP_RATE_LIMIT_WINDOW_SECONDS": "60",
-		"MCP_ALLOWED_ORIGINS": "",
+		"MCP_ALLOWED_ORIGINS": "https://mathen.xuepoo.xyz,https://mathen-api.ven3428set.workers.dev",
 		// Public deployment settings; keep credentials in Wrangler secrets.
 		"TURNSTILE_SITE_KEY": "",
 		// Empty pins verification to the incoming request URL's hostname.

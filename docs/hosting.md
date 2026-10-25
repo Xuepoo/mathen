@@ -136,10 +136,11 @@ replaces the structured contents of the target database:
 just db-seed-remote
 ```
 
-After deployment, attach your Worker custom domain (for example,
-`mathen.example.com`) in
-Cloudflare. The repository does not configure the custom domain until the DNS
-binding is confirmed.
+The production Worker is currently available at the custom domain
+`https://mathen.xuepoo.xyz`, with the Cloudflare `workers.dev` URL
+`https://mathen-api.ven3428set.workers.dev` retained as an alternate origin.
+The deployment does not create or modify DNS bindings; verify the custom-domain
+binding in Cloudflare before publishing a new domain.
 
 The browser always uses same-origin `/api/*` requests, so changing the custom
 domain or using a `workers.dev` preview requires no browser build-time URL.
