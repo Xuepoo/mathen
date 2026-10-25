@@ -3,6 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { BackendError, createBackend } from "./backend.js";
+import { registerRetrievalTool } from "./retrieval-tool.js";
 
 const repositoryRoot = resolveRepositoryRoot();
 const backend = createBackend(repositoryRoot);
@@ -20,6 +21,7 @@ function errorResult(error: unknown) {
 }
 
 const server = new McpServer({ name: "mathen", version: "0.0.2" });
+registerRetrievalTool(server, backend);
 
 server.registerTool(
   "get_layered_graph",

@@ -64,15 +64,39 @@ MATHEN_API_URL=https://mathen.xuepoo.xyz/api bun run mcp
 
 API mode uses `GET /api/systems`, `GET /api/systems/:id`, `GET /api/features`,
 `GET /api/feature-relations`, `GET /api/compositions`, `GET /api/graph/layers`,
-and `GET /api/modeling/:id`. Requests have a
+`GET /api/modeling/:id`, and `GET /api/retrieval`. Requests have a
 10-second timeout and API
 failures are returned as concise JSON tool errors. Draft cards are
 filesystem-only and are not exposed by the MCP tools or graph projection.
 
-The planned semantic retrieval design names a `search_semantic` tool, but it is
-not registered by the current hosted or stdio server. Do not treat it as a
-live endpoint or tool until a separate implementation and deployment announce
-it.
+The source registers `search_semantic` on hosted and stdio MCP. The legacy
+tool name does **not** imply semantic similarity: the first MVP is a **bounded
+lexical baseline**, not embeddings or vector search. Availability on a deployed
+endpoint requires an operator deployment and readback; source implementation
+alone is not a production deployment claim.
+
+In API mode the stdio tool forwards `q` (trimmed, 1–1,000 characters), `limit`
+(default 10, maximum 50), and the allowlisted `record_kind` (CSV), `system_id`,
+`feature_id`, `category`, `claim_type`, `claim_status`, `version_context`, and
+`deployment_origin` filters to same-contract `GET /api/retrieval`. Unknown or
+draft arguments are rejected; the tool schema has `additionalProperties: false`.
+Its JSON text is the API envelope's `data` object, matching hosted MCP. IDs,
+rank order, scores, `score_kind: lexical_overlap`, hydrated documents, claim
+types/statuses, evidence, validity/deployment scope, source references/digests,
+`bounded_lexical_baseline` provenance, index metadata, and warnings are retained.
+Absent claim metadata stays absent; retrieval does not promote a claim.
+
+Scores are **uncalibrated discovery ranking signals**, not semantic proof,
+compatibility, relation, causality, originality, or historical influence. No graph
+edge is inferred. Ready queries with no matches and an empty reviewed corpus are
+successful responses with distinct index states. API failures return sanitized
+tool errors without query text, credentials, URLs, or upstream error bodies.
+
+Filesystem mode exposes the same tool/arguments but returns an explicit
+`semantic_index_unavailable` tool error: no verified local retrieval index is
+implemented. It does not read drafts or silently fabricate a local index or run a
+fallback. Configure `MATHEN_API_URL` for retrieval, or explicitly use the separate
+`list_systems` / `search_features` tools for offline browsing.
 
 If the deployed API has Turnstile protection enabled, configure the matching
 read-only service token with `MATHEN_API_TOKEN`. The token is sent as a Bearer
@@ -88,6 +112,8 @@ queries; system detail responses include the source card's relation array.
 - `get_layered_graph`: retrieve the deterministic reviewed-only layered graph;
 - `get_system`: retrieve one reviewed card;
 - `search_features`: find reusable features by text and optional category;
+- `search_semantic`: bounded lexical discovery over reviewed canonical records
+  in API mode; explicitly unavailable in filesystem mode (see above);
 - `list_feature_relations`: list source-card-owned feature relations with optional
   system, feature, target-system, and relation-type filters. Results preserve
   source-card claim metadata and source-local evidence IDs;

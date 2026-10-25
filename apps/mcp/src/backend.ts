@@ -3,6 +3,12 @@ import { readdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  normalizeRetrieval,
+  retrievalParams,
+  type RetrievalArguments,
+  type RetrievalResponse,
+} from "./retrieval-contract.js";
+import {
   buildLayeredGraphProjection,
   type LayeredGraphProjection,
   type ProjectionAnalogy,
@@ -91,6 +97,7 @@ export type CompositionSearchResult = {
 };
 
 export interface Backend {
+  searchRetrieval(args: RetrievalArguments): Promise<RetrievalResponse>;
   getLayeredGraph(origin?: string): Promise<LayeredGraphProjection>;
   listSystems(includeDrafts: boolean): Promise<SystemSummary[]>;
   getSystem(systemId: string, includeDrafts: boolean): Promise<ArchitectureCard | undefined>;
@@ -122,6 +129,8 @@ export class BackendError extends Error {}
 
 export class UnsupportedBackendError extends BackendError {}
 
+export class RetrievalUnavailableError extends BackendError {}
+
 async function readJson<T>(path: string): Promise<T> {
   return JSON.parse(await readFile(path, "utf8")) as T;
 }
@@ -137,6 +146,13 @@ export class FilesystemBackend implements Backend {
     this.systemsDirectory = resolve(repositoryRoot, "data/systems");
     this.draftsDirectory = resolve(repositoryRoot, "data/drafts");
     this.bundlesDirectory = resolve(repositoryRoot, "data/modeling");
+  }
+
+  async searchRetrieval(args: RetrievalArguments): Promise<RetrievalResponse> {
+    retrievalParams(args);
+    throw new RetrievalUnavailableError(
+      "Retrieval is unavailable: no verified local retrieval index. Configure MATHEN_API_URL for the bounded lexical baseline, or use list_systems/search_features explicitly.",
+    );
   }
 
   async getLayeredGraph(origin?: string): Promise<LayeredGraphProjection> {
@@ -344,6 +360,24 @@ export class ApiBackend implements Backend {
     this.fetcher = fetcher;
     this.timeoutMs = timeoutMs;
     this.apiToken = apiToken?.trim() || undefined;
+  }
+
+  async searchRetrieval(args: RetrievalArguments): Promise<RetrievalResponse> {
+    const params = retrievalParams(args);
+    try {
+      return normalizeRetrieval(
+        await this.request(`/retrieval?${params}`),
+        Number(params.get("limit")),
+      );
+    } catch (error) {
+      if (error instanceof ApiHttpError && error.status === 503) {
+        throw new RetrievalUnavailableError(
+          "Retrieval is unavailable; retry later or browse reviewed systems explicitly.",
+        );
+      }
+      // Queries and upstream error bodies can contain private text or credentials.
+      throw new BackendError("Retrieval request failed; check API access or retry later.");
+    }
   }
 
   async listSystems(includeDrafts: boolean): Promise<SystemSummary[]> {

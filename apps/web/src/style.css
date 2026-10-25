@@ -761,6 +761,40 @@ dialog::backdrop {
   display: grid;
   gap: 13px;
 }
+.retrieval {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.retrieval h3 {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+.retrieval .catalog-search {
+  margin-top: 16px;
+}
+.retrieval-warning {
+  color: #e8ca9e;
+  margin: 12px 0;
+}
+.retrieval-results {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+}
+.retrieval dt {
+  color: var(--muted);
+  margin-top: 12px;
+}
+.retrieval dd {
+  margin: 3px 0 0;
+}
+.retrieval dd small {
+  color: var(--muted);
+}
 .catalog-item {
   border: 1px solid var(--border);
   border-radius: 12px;
