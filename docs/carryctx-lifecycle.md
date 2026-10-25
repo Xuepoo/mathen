@@ -184,6 +184,37 @@ The adapter is advisory for orchestration: it may refuse unsafe work, but it
 does not remove worktrees, delete branches, reset files, prune Git metadata, or
 override CarryCtx's cleanup gates.
 
+## Redacted snapshot lifecycle (MTH-0131)
+
+Mathen keeps CarryCtx's lifecycle metadata separate from its architecture
+knowledge base. `scripts/workflow-publish.sh` invokes only
+`carryctx export --publication`, which is the CarryCtx redaction boundary, and
+validates the resulting `manifest.json`, `CarryCtx-Source`, and
+`CarryCtx-Export-Id` read-back before accepting the fixed
+`refs/heads/carryctx-snapshots` ref. The command requires a current `main`
+checkout. It is local-only by default; a network push requires the explicit
+operator command `scripts/workflow-publish.sh --push` (or the equivalent Just
+recipe). It never publishes unredacted state.
+
+`scripts/workflow-import.sh` fetches and validates that ref, reports snapshot
+provenance, and restores it only after the operator has selected a safe local
+target. It refuses to overwrite a non-empty CarryCtx database without
+`--force`, supports a no-mutation `--dry-run`, rejects missing/wrong/malformed
+publication manifests, and restores an existing `.carryctx/config.toml`
+byte-identically after import. It dynamically inspects all project-owned
+durable tables, including sequences, tombstones, worktree cleanup requests,
+snapshot state, and future tables; schema, integrity, count, active session,
+active task, prepared operation, or concurrent-state uncertainty fails closed.
+Snapshot state is lifecycle metadata, not a D1 backup or canonical
+architecture research data: it is not a transport or backup for reviewed
+cards, drafts, evidence, analyses, modeling bundles, or other `data/` content.
+
+The freshness workflow is informational for a `main` push because publication
+is a separate closeout action. Scheduled and manually dispatched runs enforce
+freshness. CI never publishes, imports, uses secrets, or creates the snapshot
+branch. The scripts and Just recipes are operator-only and are not included in
+ordinary checks or merge automation.
+
 ## Lifecycle state machine
 
 The repository adapter models completion as an explicit, fail-closed state

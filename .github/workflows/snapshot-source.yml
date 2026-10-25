@@ -12,34 +12,83 @@ permissions:
 
 jobs:
   freshness:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - name: Check snapshot provenance
+      - name: Validate snapshot freshness
         env:
           EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
-          if ! git fetch --no-tags origin +refs/heads/carryctx-snapshots:refs/remotes/origin/carryctx-snapshots; then
-            echo "::notice title=CarryCtx snapshot::snapshot ref is not published yet"
-            exit 0
-          fi
-          snapshot=refs/remotes/origin/carryctx-snapshots
-          source_line="$(git log -1 --format=%B "$snapshot" | sed -n 's/^CarryCtx-Source: //p' | head -n1)"
-          export_id="$(git log -1 --format=%B "$snapshot" | sed -n 's/^CarryCtx-Export-Id: //p' | head -n1)"
-          [[ -n "$source_line" && -n "$export_id" ]] || { echo '::error::snapshot provenance trailers are missing'; exit 1; }
-          source_sha="${source_line##*@}"
-          source_sha="${source_sha%% *}"
           main_sha="$(git rev-parse refs/remotes/origin/main)"
-          if [[ "$source_sha" == "$main_sha" ]] || git merge-base --is-ancestor "$main_sha" "$source_sha"; then
-            echo "snapshot source $source_sha is current with main $main_sha"
+          set +e
+          snapshot_line="$(git ls-remote --refs origin refs/heads/carryctx-snapshots 2>/tmp/snapshot-ls-remote.err)"
+          snapshot_status=$?
+          set -e
+          if ((snapshot_status != 0)); then
+            cat /tmp/snapshot-ls-remote.err >&2
+            echo "::error::unable to query snapshot ref (authentication/network failure)"
+            exit 1
+          fi
+          if [[ -z "$snapshot_line" ]]; then
+            echo "::notice title=CarryCtx snapshot::refs/heads/carryctx-snapshots is not published yet"
             exit 0
           fi
-          msg="snapshot source $source_sha is behind main $main_sha; run just workflow-publish --push"
+          [[ "$snapshot_line" =~ ^[0-9a-f]{40}$'\t'"refs/heads/carryctx-snapshots"$ ]] || {
+            echo "::error::snapshot ref response is malformed"
+            exit 1
+          }
+          snapshot_sha="${snapshot_line%%$'\t'*}"
+          git fetch --no-tags --no-write-fetch-head origin "refs/heads/carryctx-snapshots"
+          git cat-file -e "$snapshot_sha^{commit}"
+          git show "$snapshot_sha:manifest.json" > /tmp/carryctx-manifest.json
+          python3 - /tmp/carryctx-manifest.json <<'PY'
+          import json
+          import sys
+
+          manifest = json.load(open(sys.argv[1], encoding="utf-8"))
+          if manifest.get("redacted") is not True:
+              raise SystemExit("snapshot manifest redacted is not boolean true")
+          if manifest.get("format") != "carryctx-pack-dir" or manifest.get("format_version") != 2:
+              raise SystemExit("snapshot manifest format is unsupported")
+          if manifest.get("schema_version") != 18 or not isinstance(manifest.get("export_id"), str):
+              raise SystemExit("snapshot manifest identity is unsupported")
+          source = manifest.get("source")
+          if not isinstance(source, dict) or not isinstance(source.get("git_commit"), str):
+              raise SystemExit("snapshot manifest source is missing")
+          PY
+          manifest_export_id="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["export_id"])' /tmp/carryctx-manifest.json)"
+          message="$(git log -1 --format=%B "$snapshot_sha")"
+          source_line="$(sed -n 's/^CarryCtx-Source: //p' <<<"$message" | head -n1)"
+          export_line="$(sed -n 's/^CarryCtx-Export-Id: //p' <<<"$message" | head -n1)"
+          [[ "$source_line" =~ ^mathen@[0-9a-f]{7,64}' ('[A-Za-z0-9._/-]{1,100}')?'$ ]] || {
+            echo "::error::snapshot source provenance is malformed"
+            exit 1
+          }
+          [[ "$export_line" =~ ^[0-9A-Z]{26}$ ]] || {
+            echo "::error::snapshot export provenance is malformed"
+            exit 1
+          }
+          [[ "$export_line" == "$manifest_export_id" ]] || {
+            echo "::error::snapshot export provenance does not match manifest"
+            exit 1
+          }
+          source_token="${source_line#mathen@}"
+          source_token="${source_token%% *}"
+          source_sha="$(git rev-parse "$source_token^{commit}" 2>/dev/null || true)"
+          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "::error::snapshot source commit cannot be resolved"
+            exit 1
+          }
+          if [[ "$source_sha" == "$main_sha" ]] || git merge-base --is-ancestor "$main_sha" "$source_sha"; then
+            echo "snapshot source is current with main"
+            exit 0
+          fi
+          msg="snapshot source is behind main; run just workflow-publish --push"
           if [[ "$EVENT_NAME" == schedule || "$EVENT_NAME" == workflow_dispatch ]]; then
             echo "::error::$msg"
             exit 1
