@@ -110,6 +110,7 @@ Run the existing workflow or its reviewed manual equivalent, in this order:
    HTTP status, `X-Request-ID`, index ID, result count, and warnings. A ranking
    score is only an uncalibrated discovery signal; it is not embedding
    similarity, truth, compatibility, causality, or a graph edge.
+
 5. Open the custom domain and verify the Web retrieval panel loads the deployed
    asset and still uses same-origin `/api/retrieval` requests. Record the asset
    URL/hash or deployment version; do not change a Vite API URL.
@@ -222,8 +223,9 @@ browser rather than copying a cookie or service token into client code.
 
 The API and hosted MCP are read-only. They expose reviewed records seeded into
 D1, not drafts, prompts, or local analysis reports. D1 is the structured source
-of truth; the planned semantic index is rebuildable and is not currently
-connected to this Worker.
+of truth. The Worker source includes bounded lexical retrieval, while a
+semantic/vector index remains planned and rebuildable; verify the deployed
+route and response before claiming that a hosted site serves retrieval.
 
 ## Future graph stores
 

@@ -78,14 +78,16 @@ facts; `hypothesis` means a proposal requiring validation; and `analogy` means
 a bounded comparison rather than formal equivalence. A composition record or
 mathematical view can be useful while still remaining a hypothesis.
 
-Search and graph navigation are discovery aids. A future semantic retrieval
-implementation may rank reviewed records by embedding similarity, but a score
-would be an uncalibrated review-priority signal only. It would not establish
-truth, evidence, compatibility, causality, originality, substitutability, or
-historical influence. The design names `GET /api/retrieval` and
-`search_semantic` as planned contracts; neither route/tool is implemented in
-the current public MVP. Until a deployment explicitly announces it, use the
-current lexical routes and graph/card UI instead.
+Search and graph navigation are discovery aids. The first retrieval
+implementation is a bounded lexical baseline over reviewed records; it is not
+embedding or semantic/vector search. Its score is an uncalibrated
+review-priority signal only. It does not establish truth, evidence,
+compatibility, causality, originality, substitutability, or historical
+influence. `GET /api/retrieval` and the `search_semantic` MCP tool preserve
+claim labels, evidence, scope, and provenance, but only become available on a
+hosted site after that deployment has been made and read back. If the public
+deployment has not announced them, use the lexical system routes and
+graph/card UI instead; do not infer hosted availability from source code.
 
 There are no formal mobile performance metrics in this manual. Small-screen
 and touch use should be judged from real user feedback and improved as that
@@ -525,6 +527,7 @@ The Hono Worker uses the `/api` base path. Successful responses use a
 | `GET /api/graph`                                                                   | Return current system nodes and valid typed or legacy edges               |
 | `GET /api/graph/layers?origin=`                                                    | Return the reviewed layered graph, optionally scoped by deployment origin |
 | `GET /api/graph/models`                                                            | Return a navigational system-to-mathematical-model projection             |
+| `GET /api/retrieval?q=&limit=&record_kind=...`                                     | Bounded lexical discovery over hydrated reviewed records                  |
 
 The current API is read-only. It does not expose draft cards or provide review,
 promotion, or synthesis writes.
@@ -532,8 +535,9 @@ promotion, or synthesis writes.
 All successful API reads use the `{"data": ...}` envelope. Errors are returned
 as error objects with an HTTP status. Hosted browser requests use the same
 origin; clients must not expose a deployment-specific API URL or secret in
-browser code. The planned semantic retrieval route is not part of the current
-endpoint table and must not be assumed to exist.
+browser code. Retrieval is a bounded lexical baseline, not semantic/vector
+search. Its availability is deployment-specific: source implementation and
+local tests do not prove that a hosted deployment has received the route.
 
 System searches default to 50 results, with a maximum page size of 100. Use
 `offset` (default 0) to read subsequent pages with the same query. Browser

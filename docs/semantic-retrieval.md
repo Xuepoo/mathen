@@ -287,7 +287,7 @@ Successful responses preserve the API envelope:
       {
         "rank": 1,
         "score": 0.81,
-        "score_kind": "embedding_similarity",
+        "score_kind": "lexical_overlap",
         "document": {
           "id": "system:duckdb:feature:embedded-execution",
           "record_kind": "feature",
@@ -305,7 +305,7 @@ Successful responses preserve the API envelope:
         "provenance": {
           "source_ref": "data/systems/duckdb.json#features/embedded-execution",
           "source_digest": "sha256:...",
-          "retrieval_method": "vector"
+          "retrieval_method": "bounded_lexical_baseline"
         }
       }
     ],

@@ -151,9 +151,10 @@ commit analysis and modeling bundles; deterministic repository observations;
 an evidence-bounded OpenAI-compatible LLM adapter that writes drafts and
 protocol sidecars; scale-aware microstructure documents; finite mathematical
 view classifications for supplied model data; bounded composition candidates;
-analogy and negative-knowledge records; and D1-backed API/browser/MCP
-boundaries. Optional, rebuildable semantic retrieval is documented as planned
-architecture, not as a current implementation. It does **not** automatically prove
+analogy and negative-knowledge records; a bounded lexical retrieval baseline;
+and D1-backed API/browser/MCP boundaries. Optional, rebuildable semantic/vector
+retrieval remains planned architecture, not a current implementation. It does
+**not** automatically prove
 implementation semantics, produce theorems, promote LLM output or analogies,
 guarantee graph/vector recall or compatibility, assign calibrated originality
 or quality scores, infer historical influence, replace source review and
@@ -242,13 +243,14 @@ claimed performance metric.
   or historical influence.
 
 Always distinguish the source evidence from an interpretation. A graph edge,
-model label, composition candidate, or future retrieval ranking can help you
-decide what to inspect next; none is evidence by itself. If semantic retrieval
-is enabled in a later deployment, its score will be an uncalibrated discovery
-ranking signal over reviewed records—not truth, compatibility, causality,
-originality, or proof. The planned `GET /api/retrieval` route and hosted
-`search_semantic` MCP tool are **not deployed by this MVP**; do not build a
-client against them yet.
+model label, composition candidate, or retrieval ranking can help you decide
+what to inspect next; none is evidence by itself. The bounded lexical
+`GET /api/retrieval` route and hosted `search_semantic` MCP tool are read-only
+discovery aids when present in a deployment. Their scores are uncalibrated
+ranking signals over reviewed records—not truth, compatibility, causality,
+originality, or proof. Semantic/vector retrieval is not implemented. Verify a
+deployment's route and response before assuming it has received the retrieval
+commits; source code alone is not a deployment claim.
 
 ### Contribute evidence safely
 
