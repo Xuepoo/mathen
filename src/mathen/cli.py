@@ -14,7 +14,9 @@ from .analogies import AnalogyValidationError, discover_analogies, load_analogy
 from .benchmark import (
     BenchmarkManifestValidationError,
     discover_benchmark_manifests,
+    discover_retrieval_evaluation_manifests,
     load_benchmark_manifest,
+    load_retrieval_evaluation_manifest,
 )
 from .cards import (
     CardValidationError,
@@ -98,6 +100,13 @@ def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
         "validate-benchmark", help="validate research benchmark run manifests"
     )
     benchmark.add_argument("path", nargs="?", type=Path, default=Path("data/benchmark"))
+    retrieval_benchmark = subparsers.add_parser(
+        "validate-retrieval-evaluation",
+        help="validate research-only retrieval evaluation manifests",
+    )
+    retrieval_benchmark.add_argument(
+        "path", nargs="?", type=Path, default=Path("data/benchmark/retrieval")
+    )
     mathview = subparsers.add_parser(
         "validate-mathviews", help="validate mathematical-view contracts"
     )
@@ -252,6 +261,8 @@ def main() -> int:
             return validate_negative_knowledge_command(args.path)
         if args.command == "validate-benchmark":
             return validate_benchmark_command(args.path)
+        if args.command == "validate-retrieval-evaluation":
+            return validate_retrieval_evaluation_command(args.path)
         if args.command == "validate-mathviews":
             return validate_mathviews_command(args.path)
         if args.command == "list":
@@ -381,6 +392,19 @@ def validate_benchmark_command(path: Path) -> int:
         return 0
     for manifest_path in paths:
         load_benchmark_manifest(manifest_path)
+        print(f"valid  {manifest_path}")
+    return 0
+
+
+def validate_retrieval_evaluation_command(path: Path) -> int:
+    """Validate research-only retrieval evaluation manifests."""
+
+    paths = discover_retrieval_evaluation_manifests(path)
+    if not paths:
+        print(f"No retrieval evaluation manifests found in {path}; nothing to validate")
+        return 0
+    for manifest_path in paths:
+        load_retrieval_evaluation_manifest(manifest_path)
         print(f"valid  {manifest_path}")
     return 0
 

@@ -59,6 +59,44 @@ These helpers are intentionally small pilot primitives. Confidence intervals,
 reviewer adjudication, baseline runners, and experiment execution remain future
 research work described in the planning document.
 
+## Retrieval evaluation contract (MTH-0134)
+
+`schemas/retrieval-evaluation-manifest.schema.json` and the retrieval functions
+in `mathen.benchmark` define a separate `retrieval_evaluation` manifest at
+schema version `1.0`. It is an extension of the research harness, not a change
+to the existing `1.1` synthesis manifest and not a retrieval backend.
+
+Validate it with:
+
+```bash
+uv run mathen validate-retrieval-evaluation data/benchmark/retrieval
+```
+
+The contract freezes a reviewed `canonical_cards` corpus snapshot and a
+deterministically digested query set. Corpus documents retain stable IDs,
+source references/digests, claim types/statuses, evidence IDs, and version and
+deployment-origin scope. Query labels are separate from the corpus and record
+graded relevance, evidence locality, scope match, and label provenance. A
+three-way query split is disjoint and exhaustive; held-out negative-knowledge,
+counterexample, and unknown labels are explicitly excluded from candidate
+generation.
+
+Method, provider/model, representation, dimensions, distance metric, and prompt
+metadata are recorded even when a method does not use an embedding model. The
+novelty boundary declares all six dimensions without allowing an aggregate
+novelty score. Analogy boundaries require non-equivalence, direct evidence for
+historical influence, and no implied substitutability. Results must hydrate
+reviewed corpus IDs and preserve source/evidence/scope metadata; draft IDs,
+missing evidence closure, duplicate ranks, and unbounded output are rejected.
+
+The permitted metrics are bounded **discovery** metrics only: recall@k, nDCG@k,
+evidence locality, claim-type accuracy, scope completeness, false-link rate,
+and abstention rate. Every metric retains numerator, denominator, and a null
+value for an empty denominator. These metrics do not establish retrieval
+quality, truth, compatibility, causality, or originality. The result boundary
+requires `canonical: false`, research/draft storage, human review before any
+promotion, and explicitly marks scores as neither truth nor compatibility.
+
 ## Reproducibility and leakage checklist
 
 Before treating a manifest as an input to analysis, verify that:

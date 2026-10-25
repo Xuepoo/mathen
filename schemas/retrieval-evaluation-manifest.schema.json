@@ -1,0 +1,377 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/retrieval-evaluation-manifest.schema.json",
+  "title": "Mathen research-only retrieval evaluation manifest",
+  "description": "A reproducible discovery evaluation over a fixed reviewed corpus; it is not a quality, truth, compatibility, causality, or originality claim.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_kind",
+    "schema_version",
+    "evaluation_id",
+    "protocol_version",
+    "benchmark_version",
+    "corpus_snapshot",
+    "evidence_bundle",
+    "query_set",
+    "labels",
+    "split",
+    "method",
+    "model",
+    "boundaries",
+    "results",
+    "metrics",
+    "result_boundary"
+  ],
+  "properties": {
+    "manifest_kind": { "const": "retrieval_evaluation" },
+    "schema_version": { "const": "1.0" },
+    "evaluation_id": { "$ref": "#/$defs/id" },
+    "protocol_version": { "$ref": "#/$defs/id" },
+    "benchmark_version": { "$ref": "#/$defs/id" },
+    "corpus_snapshot": { "$ref": "#/$defs/corpusSnapshot" },
+    "evidence_bundle": { "$ref": "#/$defs/evidenceBundle" },
+    "query_set": { "$ref": "#/$defs/querySet" },
+    "labels": { "$ref": "#/$defs/labels" },
+    "split": { "$ref": "#/$defs/split" },
+    "method": { "$ref": "#/$defs/method" },
+    "model": { "$ref": "#/$defs/model" },
+    "boundaries": { "$ref": "#/$defs/boundaries" },
+    "results": { "type": "array", "items": { "$ref": "#/$defs/queryResult" } },
+    "metrics": { "$ref": "#/$defs/metrics" },
+    "result_boundary": { "$ref": "#/$defs/resultBoundary" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "nonEmptyStringList": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "claimType": { "enum": ["fact", "inference", "hypothesis", "analogy"] },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version_context", "deployment_origins", "conditions", "exclusions"],
+      "properties": {
+        "version_context": { "type": ["string", "null"], "minLength": 1 },
+        "deployment_origins": { "$ref": "#/$defs/stringList" },
+        "conditions": { "$ref": "#/$defs/stringList" },
+        "exclusions": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "corpusSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "corpus", "reviewed_only", "source_revision", "digest", "documents"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "corpus": { "const": "canonical_cards" },
+        "reviewed_only": { "const": true },
+        "source_revision": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository_id"],
+          "properties": {
+            "repository_id": { "$ref": "#/$defs/id" },
+            "commit": { "$ref": "#/$defs/id" },
+            "archive_digest": { "$ref": "#/$defs/digest" }
+          },
+          "anyOf": [
+            { "required": ["commit"] },
+            { "required": ["archive_digest"] }
+          ]
+        },
+        "digest": { "$ref": "#/$defs/digest" },
+        "documents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/document" }
+        }
+      }
+    },
+    "evidenceBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "digest", "evidence_ids"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "digest": { "$ref": "#/$defs/digest" },
+        "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "record_kind", "source_ref", "source_digest", "claim_type", "claim_status", "evidence_ids", "validity_scope"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "record_kind": { "enum": ["system", "feature", "view", "trade_off", "relation", "composition"] },
+        "source_ref": { "$ref": "#/$defs/id" },
+        "source_digest": { "$ref": "#/$defs/digest" },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"] },
+        "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" },
+        "validity_scope": { "$ref": "#/$defs/scope" }
+      }
+    },
+    "querySet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "digest", "queries"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "digest": { "$ref": "#/$defs/digest" },
+        "queries": { "type": "array", "items": { "$ref": "#/$defs/query" } }
+      }
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "query_digest", "question", "scope"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "query_digest": { "$ref": "#/$defs/digest" },
+        "question": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "scope": { "$ref": "#/$defs/scope" }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relevance", "holdout"],
+      "properties": {
+        "relevance": { "type": "array", "items": { "$ref": "#/$defs/relevanceLabel" } },
+        "holdout": { "type": "array", "items": { "$ref": "#/$defs/holdoutLabel" } }
+      }
+    },
+    "relevanceLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "document_id", "grade", "claim_type", "evidence_ids", "evidence_locality", "scope_match", "label_source"],
+      "properties": {
+        "query_id": { "$ref": "#/$defs/id" },
+        "document_id": { "$ref": "#/$defs/id" },
+        "grade": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" },
+        "evidence_locality": { "enum": ["local", "not-local", "undetermined"] },
+        "scope_match": { "enum": ["match", "mismatch", "undetermined"] },
+        "link_outcome": { "enum": ["relevant", "false-link", "undetermined"] },
+        "label_source": { "$ref": "#/$defs/id" }
+      }
+    },
+    "holdoutLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "query_id", "document_id", "kind", "reason", "candidate_generation_excluded", "claim_type", "evidence_ids"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "query_id": { "$ref": "#/$defs/id" },
+        "document_id": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["negative-knowledge", "counterexample", "unknown"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "candidate_generation_excluded": { "const": true },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" }
+      }
+    },
+    "split": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "partitions", "digest", "holdout_query_ids", "candidate_generation_exclusions", "temporal_cutoff", "leakage_controls"],
+      "properties": {
+        "strategy": { "$ref": "#/$defs/id" },
+        "partitions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["train", "evaluation", "holdout"],
+          "properties": {
+            "train": { "$ref": "#/$defs/stringList" },
+            "evaluation": { "$ref": "#/$defs/stringList" },
+            "holdout": { "$ref": "#/$defs/stringList" }
+          }
+        },
+        "digest": { "$ref": "#/$defs/digest" },
+        "holdout_query_ids": { "$ref": "#/$defs/stringList" },
+        "candidate_generation_exclusions": { "$ref": "#/$defs/stringList" },
+        "temporal_cutoff": { "type": ["string", "null"], "minLength": 1 },
+        "leakage_controls": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "baseline", "retrieval_method"],
+      "properties": {
+        "name": { "$ref": "#/$defs/id" },
+        "baseline": { "enum": ["lexical", "vector", "graph", "vector-plus-graph", "structured", "direct-llm", "human", "other"] },
+        "retrieval_method": { "$ref": "#/$defs/id" }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model_id", "representation_version", "dimensions", "metric", "prompt_digest"],
+      "properties": {
+        "provider": { "type": ["string", "null"], "minLength": 1 },
+        "model_id": { "type": ["string", "null"], "minLength": 1 },
+        "representation_version": { "$ref": "#/$defs/id" },
+        "dimensions": { "type": ["integer", "null"], "minimum": 1 },
+        "metric": { "$ref": "#/$defs/id" },
+        "prompt_digest": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "boundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["negative_knowledge", "novelty", "analogy"],
+      "properties": {
+        "negative_knowledge": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["excluded_from_corpus", "excluded_from_candidate_generation"],
+          "properties": {
+            "excluded_from_corpus": { "const": true },
+            "excluded_from_candidate_generation": { "const": true }
+          }
+        },
+        "novelty": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reference_window", "dimensions", "aggregate_score_allowed"],
+          "properties": {
+            "reference_window": { "$ref": "#/$defs/id" },
+            "dimensions": { "type": "array", "items": { "enum": ["topology", "composition", "constraints", "behavior", "deployment", "historical"] }, "minItems": 6, "maxItems": 6, "uniqueItems": true },
+            "aggregate_score_allowed": { "const": false }
+          }
+        },
+        "analogy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["non_equivalence_required", "historical_influence_requires_direct_evidence", "substitutability_not_implied"],
+          "properties": {
+            "non_equivalence_required": { "const": true },
+            "historical_influence_requires_direct_evidence": { "const": true },
+            "substitutability_not_implied": { "const": true }
+          }
+        }
+      }
+    },
+    "queryResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "abstained", "results"],
+      "properties": {
+        "query_id": { "$ref": "#/$defs/id" },
+        "abstained": { "type": "boolean" },
+        "abstention_reason": { "type": ["string", "null"], "minLength": 1 },
+        "results": { "type": "array", "maxItems": 50, "items": { "$ref": "#/$defs/result" } }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rank", "score", "score_kind", "document", "evidence", "provenance"],
+      "properties": {
+        "rank": { "type": "integer", "minimum": 1, "maximum": 50 },
+        "score": { "type": "number" },
+        "score_kind": { "$ref": "#/$defs/id" },
+        "document": { "$ref": "#/$defs/resultDocument" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "resultDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "record_kind", "claim_type", "claim_status", "evidence_ids", "validity_scope"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "record_kind": { "enum": ["system", "feature", "view", "trade_off", "relation", "composition"] },
+        "system_id": { "$ref": "#/$defs/id" },
+        "feature_id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"] },
+        "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" },
+        "validity_scope": { "$ref": "#/$defs/scope" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "uri": { "type": "string", "minLength": 1 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_ref", "source_digest", "retrieval_method"],
+      "properties": {
+        "source_ref": { "$ref": "#/$defs/id" },
+        "source_digest": { "$ref": "#/$defs/digest" },
+        "retrieval_method": { "$ref": "#/$defs/id" }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numerator", "denominator", "value"],
+      "properties": {
+        "k": { "type": "integer", "minimum": 1, "maximum": 50 },
+        "numerator": { "type": "number", "minimum": 0 },
+        "denominator": { "type": "integer", "minimum": 0 },
+        "value": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recall_at_k", "ndcg_at_k", "evidence_locality", "claim_type_accuracy", "scope_completeness", "false_link_rate", "abstention_rate"],
+      "properties": {
+        "recall_at_k": { "type": "array", "items": { "$ref": "#/$defs/kMetric" } },
+        "ndcg_at_k": { "type": "array", "items": { "$ref": "#/$defs/kMetric" } },
+        "evidence_locality": { "$ref": "#/$defs/metric" },
+        "claim_type_accuracy": { "$ref": "#/$defs/metric" },
+        "scope_completeness": { "$ref": "#/$defs/metric" },
+        "false_link_rate": { "$ref": "#/$defs/metric" },
+        "abstention_rate": { "$ref": "#/$defs/metric" }
+      }
+    },
+    "kMetric": {
+      "allOf": [
+        { "$ref": "#/$defs/metric" },
+        { "type": "object", "required": ["k"], "properties": { "k": { "type": "integer", "minimum": 1, "maximum": 50 } } }
+      ]
+    },
+    "resultBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical", "storage_scope", "promotion_requires_human_review", "discovery_only", "score_is_truth", "score_is_compatibility"],
+      "properties": {
+        "canonical": { "const": false },
+        "storage_scope": { "enum": ["research", "draft"] },
+        "promotion_requires_human_review": { "const": true },
+        "discovery_only": { "const": true },
+        "score_is_truth": { "const": false },
+        "score_is_compatibility": { "const": false }
+      }
+    }
+  }
+}

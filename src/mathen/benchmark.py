@@ -10,12 +10,15 @@ infer evidence support from names, URLs, or prose similarity.
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 BENCHMARK_MANIFEST_SCHEMA_VERSION = "1.1"
+RETRIEVAL_EVALUATION_MANIFEST_SCHEMA_VERSION = "1.0"
 CLAIM_TYPES = frozenset({"fact", "inference", "hypothesis", "analogy"})
 CLAIM_STATUSES = frozenset(
     {"proposed", "under-review", "accepted", "rejected", "deprecated"}
@@ -44,6 +47,24 @@ NOVELTY_DIMENSIONS = frozenset(
     }
 )
 SPLIT_PARTITIONS = ("train", "evaluation", "holdout")
+RETRIEVAL_BASELINES = frozenset(
+    {
+        "lexical",
+        "vector",
+        "graph",
+        "vector-plus-graph",
+        "structured",
+        "direct-llm",
+        "human",
+        "other",
+    }
+)
+RETRIEVAL_RECORD_KINDS = frozenset(
+    {"system", "feature", "view", "trade_off", "relation", "composition"}
+)
+RETRIEVAL_NOVELTY_DIMENSIONS = frozenset(
+    {"topology", "composition", "constraints", "behavior", "deployment", "historical"}
+)
 
 
 class BenchmarkManifestValidationError(ValueError):
@@ -55,7 +76,7 @@ class Metric:
     """A numerator/denominator metric with an explicit empty denominator."""
 
     name: str
-    numerator: int
+    numerator: int | float
     denominator: int
 
     @property
@@ -92,6 +113,23 @@ class BenchmarkRunManifest:
         return copy.deepcopy(self.value)
 
 
+@dataclass(frozen=True, slots=True)
+class RetrievalEvaluationManifest:
+    """Immutable model of one validated retrieval discovery evaluation."""
+
+    value: dict[str, Any]
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, Any]) -> "RetrievalEvaluationManifest":
+        validate_retrieval_evaluation_manifest(value)
+        return cls(copy.deepcopy(dict(value)))
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a detached JSON-compatible representation."""
+
+        return copy.deepcopy(self.value)
+
+
 def load_benchmark_manifest(path: Path) -> BenchmarkRunManifest:
     """Load and validate a single JSON benchmark manifest."""
 
@@ -109,6 +147,23 @@ def load_benchmark_manifest(path: Path) -> BenchmarkRunManifest:
         raise BenchmarkManifestValidationError(f"{path}: {error}") from error
 
 
+def load_retrieval_evaluation_manifest(path: Path) -> RetrievalEvaluationManifest:
+    """Load and validate one research-only retrieval evaluation manifest."""
+
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise BenchmarkManifestValidationError(
+            f"{path}: invalid JSON: {error}"
+        ) from error
+    if not isinstance(value, dict):
+        raise BenchmarkManifestValidationError(f"{path}: manifest must be an object")
+    try:
+        return RetrievalEvaluationManifest.from_dict(value)
+    except BenchmarkManifestValidationError as error:
+        raise BenchmarkManifestValidationError(f"{path}: {error}") from error
+
+
 def discover_benchmark_manifests(path: Path) -> list[Path]:
     """Return benchmark manifest files in deterministic order."""
 
@@ -119,6 +174,332 @@ def discover_benchmark_manifests(path: Path) -> list[Path]:
     return sorted(
         candidate for candidate in path.rglob("*.json") if candidate.is_file()
     )
+
+
+def discover_retrieval_evaluation_manifests(path: Path) -> list[Path]:
+    """Return retrieval evaluation manifests in deterministic order."""
+
+    if path.is_file():
+        return [path]
+    if not path.is_dir():
+        return []
+    return sorted(
+        candidate for candidate in path.rglob("*.json") if candidate.is_file()
+    )
+
+
+def retrieval_digest(value: Any) -> str:
+    """Return the stable digest used by retrieval manifests."""
+
+    encoded = json.dumps(
+        value, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
+
+
+def validate_retrieval_evaluation_manifest(value: Mapping[str, Any]) -> None:
+    """Validate the reproducible, discovery-only retrieval contract."""
+
+    required = {
+        "manifest_kind",
+        "schema_version",
+        "evaluation_id",
+        "protocol_version",
+        "benchmark_version",
+        "corpus_snapshot",
+        "evidence_bundle",
+        "query_set",
+        "labels",
+        "split",
+        "method",
+        "model",
+        "boundaries",
+        "results",
+        "metrics",
+        "result_boundary",
+    }
+    _object("retrieval manifest", value)
+    _allowed("retrieval manifest", value, required)
+    if set(value) != required:
+        raise BenchmarkManifestValidationError(
+            f"retrieval manifest fields must be exactly {sorted(required)}"
+        )
+    if value["manifest_kind"] != "retrieval_evaluation":
+        raise BenchmarkManifestValidationError("invalid retrieval manifest_kind")
+    if value["schema_version"] != RETRIEVAL_EVALUATION_MANIFEST_SCHEMA_VERSION:
+        raise BenchmarkManifestValidationError(
+            "unsupported retrieval evaluation schema_version"
+        )
+    for field in ("evaluation_id", "protocol_version", "benchmark_version"):
+        _text(value, field, "retrieval manifest")
+
+    corpus = value["corpus_snapshot"]
+    _object("corpus_snapshot", corpus)
+    _allowed(
+        "corpus_snapshot",
+        corpus,
+        {"id", "corpus", "reviewed_only", "source_revision", "digest", "documents"},
+    )
+    _text(corpus, "id", "corpus_snapshot")
+    if corpus.get("corpus") != "canonical_cards":
+        raise BenchmarkManifestValidationError(
+            "corpus_snapshot.corpus must be canonical_cards"
+        )
+    if corpus.get("reviewed_only") is not True:
+        raise BenchmarkManifestValidationError(
+            "corpus_snapshot.reviewed_only must remain true"
+        )
+    revision = corpus.get("source_revision")
+    _object("corpus_snapshot.source_revision", revision)
+    _allowed(
+        "corpus_snapshot.source_revision",
+        revision,
+        {"repository_id", "commit", "archive_digest"},
+    )
+    _text(revision, "repository_id", "corpus_snapshot.source_revision")
+    if "commit" in revision:
+        _text(revision, "commit", "corpus_snapshot.source_revision")
+    if "commit" not in revision and "archive_digest" not in revision:
+        raise BenchmarkManifestValidationError(
+            "corpus_snapshot.source_revision needs commit or archive_digest"
+        )
+    if "archive_digest" in revision:
+        _digest(revision, "archive_digest", "corpus_snapshot.source_revision")
+    _digest(corpus, "digest", "corpus_snapshot")
+    documents = _list(corpus, "documents", "corpus_snapshot")
+    document_ids: set[str] = set()
+    document_evidence: dict[str, set[str]] = {}
+    document_metadata: dict[str, Mapping[str, Any]] = {}
+    for index, document in enumerate(documents):
+        label = f"corpus_snapshot.documents[{index}]"
+        _validate_retrieval_document(document, label)
+        document_id = document["id"]
+        if document_id in document_ids:
+            raise BenchmarkManifestValidationError(
+                f"duplicate corpus document id: {document_id}"
+            )
+        document_ids.add(document_id)
+        document_evidence[document_id] = set(document["evidence_ids"])
+        document_metadata[document_id] = document
+    if corpus["digest"] != retrieval_digest(documents):
+        raise BenchmarkManifestValidationError(
+            "corpus_snapshot.digest does not match documents"
+        )
+
+    evidence_bundle = value["evidence_bundle"]
+    _object("evidence_bundle", evidence_bundle)
+    _allowed("evidence_bundle", evidence_bundle, {"id", "digest", "evidence_ids"})
+    _text(evidence_bundle, "id", "evidence_bundle")
+    _digest(evidence_bundle, "digest", "evidence_bundle")
+    bundle_evidence = set(
+        _non_empty_string_list(evidence_bundle, "evidence_ids", "evidence_bundle")
+    )
+    if evidence_bundle["digest"] != retrieval_digest(sorted(bundle_evidence)):
+        raise BenchmarkManifestValidationError(
+            "evidence_bundle.digest does not match evidence_ids"
+        )
+    if not all(
+        evidence.issubset(bundle_evidence) for evidence in document_evidence.values()
+    ):
+        raise BenchmarkManifestValidationError(
+            "evidence_bundle must close every corpus document"
+        )
+
+    query_set = value["query_set"]
+    _object("query_set", query_set)
+    _allowed("query_set", query_set, {"id", "digest", "queries"})
+    _text(query_set, "id", "query_set")
+    _digest(query_set, "digest", "query_set")
+    queries = _list(query_set, "queries", "query_set")
+    query_ids: set[str] = set()
+    for index, query in enumerate(queries):
+        label = f"query_set.queries[{index}]"
+        _validate_retrieval_query(query, label)
+        query_id = query["id"]
+        if query_id in query_ids:
+            raise BenchmarkManifestValidationError(f"duplicate query id: {query_id}")
+        query_ids.add(query_id)
+        if query["query_digest"] != retrieval_digest(
+            {key: query[key] for key in ("id", "question", "scope")}
+        ):
+            raise BenchmarkManifestValidationError(
+                f"{label}.query_digest does not match query"
+            )
+    if query_set["digest"] != retrieval_digest(queries):
+        raise BenchmarkManifestValidationError(
+            "query_set.digest does not match queries"
+        )
+
+    labels = value["labels"]
+    _object("labels", labels)
+    _allowed("labels", labels, {"relevance", "holdout"})
+    relevance = _list(labels, "relevance", "labels")
+    relevance_pairs: set[tuple[str, str]] = set()
+    for index, label_record in enumerate(relevance):
+        label = f"labels.relevance[{index}]"
+        _validate_relevance_label(
+            label_record,
+            label,
+            query_ids,
+            document_ids,
+            document_evidence,
+            bundle_evidence,
+        )
+        pair = (label_record["query_id"], label_record["document_id"])
+        if pair in relevance_pairs:
+            raise BenchmarkManifestValidationError(f"duplicate relevance label: {pair}")
+        relevance_pairs.add(pair)
+    holdout = _list(labels, "holdout", "labels")
+    holdout_ids: set[str] = set()
+    for index, holdout_record in enumerate(holdout):
+        label = f"labels.holdout[{index}]"
+        _validate_holdout_label(holdout_record, label, query_ids, bundle_evidence)
+        if holdout_record["id"] in holdout_ids:
+            raise BenchmarkManifestValidationError(
+                f"duplicate holdout label id: {holdout_record['id']}"
+            )
+        holdout_ids.add(holdout_record["id"])
+        if holdout_record["document_id"] in document_ids:
+            raise BenchmarkManifestValidationError(
+                "holdout documents must remain outside the canonical corpus"
+            )
+
+    split = value["split"]
+    _validate_retrieval_split(split, query_ids, holdout, holdout_ids)
+    method = value["method"]
+    _validate_retrieval_method(method)
+    model = value["model"]
+    _validate_retrieval_model(model)
+    _validate_retrieval_boundaries(value["boundaries"])
+
+    results = _list(value, "results")
+    result_query_ids: set[str] = set()
+    for index, query_result in enumerate(results):
+        label = f"results[{index}]"
+        _validate_query_result(
+            query_result,
+            label,
+            query_ids,
+            document_ids,
+            document_evidence,
+            document_metadata,
+        )
+        query_id = query_result["query_id"]
+        if query_id in result_query_ids:
+            raise BenchmarkManifestValidationError(
+                f"duplicate query result: {query_id}"
+            )
+        result_query_ids.add(query_id)
+    if result_query_ids != query_ids:
+        raise BenchmarkManifestValidationError(
+            "results must cover every query exactly once"
+        )
+    _validate_retrieval_metrics(value["metrics"])
+    _validate_retrieval_result_boundary(value["result_boundary"])
+
+
+def recall_at_k(
+    relevance: Mapping[str, Mapping[str, int]],
+    ranked_document_ids: Mapping[str, Iterable[str]],
+    k: int,
+) -> Metric:
+    """Compute discovery recall@k over queries with at least one relevant item."""
+
+    if k < 1:
+        raise ValueError("k must be positive")
+    eligible = {
+        query_id: labels
+        for query_id, labels in relevance.items()
+        if any(labels.values())
+    }
+    found = sum(
+        any(
+            relevance[query_id].get(document_id, 0) > 0
+            for document_id in list(ranked_document_ids.get(query_id, ()))[:k]
+        )
+        for query_id in eligible
+    )
+    return _metric(f"recall@{k}", found, len(eligible))
+
+
+def retrieval_scope_completeness(records: Iterable[Mapping[str, Any]]) -> Metric:
+    """Measure returned records with complete declared validity scope."""
+
+    observations = list(records)
+    complete = sum(
+        all(
+            isinstance(record.get(field), (str, list))
+            and (record[field] if isinstance(record[field], str) else True)
+            for field in (
+                "version_context",
+                "deployment_origins",
+                "conditions",
+                "exclusions",
+            )
+        )
+        for record in observations
+    )
+    return _metric("scope_completeness", complete, len(observations))
+
+
+def retrieval_claim_type_accuracy(records: Iterable[Mapping[str, Any]]) -> Metric:
+    """Measure agreement with independently supplied claim-type labels."""
+
+    observations = [
+        record for record in records if record.get("expected_claim_type") in CLAIM_TYPES
+    ]
+    correct = sum(
+        record.get("claim_type") == record["expected_claim_type"]
+        for record in observations
+    )
+    return _metric("claim_type_accuracy", correct, len(observations))
+
+
+def retrieval_false_link_rate(records: Iterable[Mapping[str, Any]]) -> Metric:
+    """Measure independently labelled false links among evaluated links."""
+
+    observations = [
+        record
+        for record in records
+        if record.get("link_outcome") in {"relevant", "false-link"}
+    ]
+    false_links = sum(record["link_outcome"] == "false-link" for record in observations)
+    return _metric("false_link_rate", false_links, len(observations))
+
+
+def retrieval_abstention_rate(query_results: Iterable[Mapping[str, Any]]) -> Metric:
+    """Measure explicit abstentions over all evaluated queries."""
+
+    observations = list(query_results)
+    abstained = sum(record.get("abstained") is True for record in observations)
+    return _metric("abstention_rate", abstained, len(observations))
+
+
+def ndcg_at_k(
+    relevance: Mapping[str, Mapping[str, int]],
+    ranked_document_ids: Mapping[str, Iterable[str]],
+    k: int,
+) -> dict[str, Any]:
+    """Compute bounded discovery nDCG@k without interpreting relevance as truth."""
+
+    if k < 1:
+        raise ValueError("k must be positive")
+    values: list[float] = []
+    for query_id, labels in relevance.items():
+        if not labels:
+            continue
+        ranked = list(ranked_document_ids.get(query_id, ()))[:k]
+        actual = sum(
+            (2 ** labels.get(document_id, 0) - 1) / math.log2(rank + 2)
+            for rank, document_id in enumerate(ranked)
+        )
+        ideal_grades = sorted(labels.values(), reverse=True)[:k]
+        ideal = sum(
+            (2**grade - 1) / math.log2(rank + 2)
+            for rank, grade in enumerate(ideal_grades)
+        )
+        values.append(actual / ideal if ideal else 0.0)
+    return _float_metric("nDCG@%d" % k, sum(values), len(values))
 
 
 def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
@@ -714,6 +1095,617 @@ def _metric(name: str, numerator: int, denominator: int) -> Metric:
     return Metric(name, numerator, denominator)
 
 
+def _float_metric(name: str, numerator: float, denominator: int) -> Metric:
+    if numerator < 0 or denominator < 0 or numerator > denominator:
+        raise ValueError("metric counts must satisfy 0 <= numerator <= denominator")
+    return Metric(name, numerator, denominator)
+
+
+def _digest(value: Mapping[str, Any], field: str, label: str) -> None:
+    digest = value.get(field)
+    if not isinstance(digest, str) or not digest.startswith("sha256:"):
+        raise BenchmarkManifestValidationError(f"{label}.{field} needs a sha256 digest")
+    try:
+        hexadecimal = digest.removeprefix("sha256:")
+        if len(hexadecimal) != 64:
+            raise ValueError
+        int(hexadecimal, 16)
+    except ValueError as error:
+        raise BenchmarkManifestValidationError(
+            f"{label}.{field} needs a sha256 digest"
+        ) from error
+
+
+def _validate_retrieval_document(document: Any, label: str) -> None:
+    _object(label, document)
+    _allowed(
+        label,
+        document,
+        {
+            "id",
+            "record_kind",
+            "source_ref",
+            "source_digest",
+            "claim_type",
+            "claim_status",
+            "evidence_ids",
+            "validity_scope",
+        },
+    )
+    for field in ("id", "source_ref"):
+        _text(document, field, label)
+    if document.get("record_kind") not in RETRIEVAL_RECORD_KINDS:
+        raise BenchmarkManifestValidationError(f"{label}.record_kind is invalid")
+    _digest(document, "source_digest", label)
+    if document.get("claim_type") not in CLAIM_TYPES:
+        raise BenchmarkManifestValidationError(f"{label}.claim_type is invalid")
+    if document.get("claim_status") not in CLAIM_STATUSES:
+        raise BenchmarkManifestValidationError(f"{label}.claim_status is invalid")
+    _non_empty_string_list(document, "evidence_ids", label)
+    _validate_scope(document.get("validity_scope"), f"{label}.validity_scope")
+
+
+def _validate_scope(scope: Any, label: str) -> None:
+    _object(label, scope)
+    _allowed(
+        label,
+        scope,
+        {"version_context", "deployment_origins", "conditions", "exclusions"},
+    )
+    if scope.get("version_context") is not None:
+        _text(scope, "version_context", label)
+    for field in ("deployment_origins", "conditions", "exclusions"):
+        _string_list(scope, field, label)
+
+
+def _validate_retrieval_query(query: Any, label: str) -> None:
+    _object(label, query)
+    _allowed(label, query, {"id", "query_digest", "question", "scope"})
+    _text(query, "id", label)
+    _digest(query, "query_digest", label)
+    question = query.get("question")
+    if not isinstance(question, str) or not 1 <= len(question) <= 1000:
+        raise BenchmarkManifestValidationError(
+            f"{label}.question must be 1-1000 characters"
+        )
+    _validate_scope(query.get("scope"), f"{label}.scope")
+
+
+def _validate_relevance_label(
+    record: Any,
+    label: str,
+    query_ids: set[str],
+    document_ids: set[str],
+    document_evidence: Mapping[str, set[str]],
+    bundle_evidence: set[str],
+) -> None:
+    _object(label, record)
+    _allowed(
+        label,
+        record,
+        {
+            "query_id",
+            "document_id",
+            "grade",
+            "claim_type",
+            "evidence_ids",
+            "evidence_locality",
+            "scope_match",
+            "link_outcome",
+            "label_source",
+        },
+    )
+    for field, known in (("query_id", query_ids), ("document_id", document_ids)):
+        _text(record, field, label)
+        if record[field] not in known:
+            raise BenchmarkManifestValidationError(f"{label}.{field} is unknown")
+    if (
+        not isinstance(record.get("grade"), int)
+        or isinstance(record["grade"], bool)
+        or not 0 <= record["grade"] <= 3
+    ):
+        raise BenchmarkManifestValidationError(
+            f"{label}.grade must be an integer from 0 to 3"
+        )
+    if record.get("claim_type") not in CLAIM_TYPES:
+        raise BenchmarkManifestValidationError(f"{label}.claim_type is invalid")
+    _non_empty_string_list(record, "evidence_ids", label)
+    if not set(record["evidence_ids"]).issubset(bundle_evidence):
+        raise BenchmarkManifestValidationError(
+            f"{label}.evidence_ids are outside evidence bundle"
+        )
+    if not set(record["evidence_ids"]).issubset(
+        document_evidence[record["document_id"]]
+    ):
+        raise BenchmarkManifestValidationError(
+            f"{label}.evidence_ids must be local to the document"
+        )
+    if record.get("evidence_locality") not in {"local", "not-local", "undetermined"}:
+        raise BenchmarkManifestValidationError(f"{label}.evidence_locality is invalid")
+    if record.get("scope_match") not in {"match", "mismatch", "undetermined"}:
+        raise BenchmarkManifestValidationError(f"{label}.scope_match is invalid")
+    if record.get("link_outcome") is not None and record["link_outcome"] not in {
+        "relevant",
+        "false-link",
+        "undetermined",
+    }:
+        raise BenchmarkManifestValidationError(f"{label}.link_outcome is invalid")
+    _text(record, "label_source", label)
+
+
+def _validate_holdout_label(
+    record: Any, label: str, query_ids: set[str], bundle_evidence: set[str]
+) -> None:
+    _object(label, record)
+    _allowed(
+        label,
+        record,
+        {
+            "id",
+            "query_id",
+            "document_id",
+            "kind",
+            "reason",
+            "candidate_generation_excluded",
+            "claim_type",
+            "evidence_ids",
+        },
+    )
+    for field in ("id", "query_id", "document_id", "reason"):
+        _text(record, field, label)
+    if record["query_id"] not in query_ids:
+        raise BenchmarkManifestValidationError(f"{label}.query_id is unknown")
+    if record.get("kind") not in {"negative-knowledge", "counterexample", "unknown"}:
+        raise BenchmarkManifestValidationError(f"{label}.kind is invalid")
+    if record.get("candidate_generation_excluded") is not True:
+        raise BenchmarkManifestValidationError(
+            f"{label}.candidate_generation_excluded must remain true"
+        )
+    if record.get("claim_type") not in CLAIM_TYPES:
+        raise BenchmarkManifestValidationError(f"{label}.claim_type is invalid")
+    _non_empty_string_list(record, "evidence_ids", label)
+    if not set(record["evidence_ids"]).issubset(bundle_evidence):
+        raise BenchmarkManifestValidationError(
+            f"{label}.evidence_ids are outside evidence bundle"
+        )
+
+
+def _validate_retrieval_split(
+    split: Any,
+    query_ids: set[str],
+    holdout: list[Any],
+    holdout_ids: set[str],
+) -> None:
+    _object("split", split)
+    _allowed(
+        "split",
+        split,
+        {
+            "strategy",
+            "partitions",
+            "digest",
+            "holdout_query_ids",
+            "candidate_generation_exclusions",
+            "temporal_cutoff",
+            "leakage_controls",
+        },
+    )
+    _text(split, "strategy", "split")
+    partitions = split.get("partitions")
+    _object("split.partitions", partitions)
+    _allowed("split.partitions", partitions, set(SPLIT_PARTITIONS))
+    refs: list[str] = []
+    for partition in SPLIT_PARTITIONS:
+        refs.extend(_string_list(partitions, partition, "split.partitions"))
+    if len(refs) != len(set(refs)):
+        raise BenchmarkManifestValidationError(
+            "retrieval split partitions must be disjoint"
+        )
+    if set(refs) != query_ids:
+        raise BenchmarkManifestValidationError(
+            "retrieval split partitions must cover all query IDs"
+        )
+    _digest(split, "digest", "split")
+    if split["digest"] != retrieval_digest(partitions):
+        raise BenchmarkManifestValidationError("split.digest does not match partitions")
+    holdout_query_ids = set(_string_list(split, "holdout_query_ids", "split"))
+    expected_holdout_queries = {record["query_id"] for record in holdout}
+    if holdout_query_ids != expected_holdout_queries:
+        raise BenchmarkManifestValidationError(
+            "split.holdout_query_ids must match holdout labels"
+        )
+    if not holdout_query_ids.issubset(set(partitions["holdout"])):
+        raise BenchmarkManifestValidationError(
+            "holdout queries must be in holdout partition"
+        )
+    exclusions = set(_string_list(split, "candidate_generation_exclusions", "split"))
+    if not holdout_ids.issubset(exclusions):
+        raise BenchmarkManifestValidationError(
+            "all holdout labels must be excluded from candidate generation"
+        )
+    temporal_cutoff = split.get("temporal_cutoff")
+    if temporal_cutoff is not None and (
+        not isinstance(temporal_cutoff, str) or not temporal_cutoff
+    ):
+        raise BenchmarkManifestValidationError(
+            "split.temporal_cutoff must be a non-empty string or null"
+        )
+    _string_list(split, "leakage_controls", "split")
+
+
+def _validate_retrieval_method(method: Any) -> None:
+    _object("method", method)
+    _allowed("method", method, {"name", "baseline", "retrieval_method"})
+    for field in ("name", "retrieval_method"):
+        _text(method, field, "method")
+    if method.get("baseline") not in RETRIEVAL_BASELINES:
+        raise BenchmarkManifestValidationError("method.baseline is invalid")
+
+
+def _validate_retrieval_model(model: Any) -> None:
+    _object("model", model)
+    _allowed(
+        "model",
+        model,
+        {
+            "provider",
+            "model_id",
+            "representation_version",
+            "dimensions",
+            "metric",
+            "prompt_digest",
+        },
+    )
+    for field in ("provider", "model_id", "prompt_digest"):
+        if model.get(field) is not None and (
+            not isinstance(model[field], str) or not model[field]
+        ):
+            raise BenchmarkManifestValidationError(
+                f"model.{field} must be non-empty or null"
+            )
+    _text(model, "representation_version", "model")
+    dimensions = model.get("dimensions")
+    if dimensions is not None and (
+        not isinstance(dimensions, int)
+        or isinstance(dimensions, bool)
+        or dimensions < 1
+    ):
+        raise BenchmarkManifestValidationError(
+            "model.dimensions must be positive or null"
+        )
+    _text(model, "metric", "model")
+    if model.get("prompt_digest") is not None:
+        _digest(model, "prompt_digest", "model")
+    if bool(model.get("provider")) != bool(model.get("model_id")):
+        raise BenchmarkManifestValidationError(
+            "model.provider and model_id must be supplied together"
+        )
+
+
+def _validate_retrieval_boundaries(boundaries: Any) -> None:
+    _object("boundaries", boundaries)
+    _allowed("boundaries", boundaries, {"negative_knowledge", "novelty", "analogy"})
+    negative = boundaries.get("negative_knowledge")
+    _object("boundaries.negative_knowledge", negative)
+    _allowed(
+        "boundaries.negative_knowledge",
+        negative,
+        {"excluded_from_corpus", "excluded_from_candidate_generation"},
+    )
+    if (
+        negative.get("excluded_from_corpus") is not True
+        or negative.get("excluded_from_candidate_generation") is not True
+    ):
+        raise BenchmarkManifestValidationError("negative-knowledge must be excluded")
+    novelty = boundaries.get("novelty")
+    _object("boundaries.novelty", novelty)
+    _allowed(
+        "boundaries.novelty",
+        novelty,
+        {"reference_window", "dimensions", "aggregate_score_allowed"},
+    )
+    _text(novelty, "reference_window", "boundaries.novelty")
+    dimensions = set(_string_list(novelty, "dimensions", "boundaries.novelty"))
+    if dimensions != RETRIEVAL_NOVELTY_DIMENSIONS:
+        raise BenchmarkManifestValidationError(
+            "novelty must declare all six dimensions"
+        )
+    if novelty.get("aggregate_score_allowed") is not False:
+        raise BenchmarkManifestValidationError(
+            "novelty.aggregate_score_allowed must remain false"
+        )
+    analogy = boundaries.get("analogy")
+    _object("boundaries.analogy", analogy)
+    _allowed(
+        "boundaries.analogy",
+        analogy,
+        {
+            "non_equivalence_required",
+            "historical_influence_requires_direct_evidence",
+            "substitutability_not_implied",
+        },
+    )
+    for field in (
+        "non_equivalence_required",
+        "historical_influence_requires_direct_evidence",
+        "substitutability_not_implied",
+    ):
+        if analogy.get(field) is not True:
+            raise BenchmarkManifestValidationError(
+                f"boundaries.analogy.{field} must remain true"
+            )
+
+
+def _validate_query_result(
+    query_result: Any,
+    label: str,
+    query_ids: set[str],
+    document_ids: set[str],
+    document_evidence: Mapping[str, set[str]],
+    document_metadata: Mapping[str, Mapping[str, Any]],
+) -> None:
+    _object(label, query_result)
+    _allowed(
+        label, query_result, {"query_id", "abstained", "abstention_reason", "results"}
+    )
+    _text(query_result, "query_id", label)
+    if query_result["query_id"] not in query_ids:
+        raise BenchmarkManifestValidationError(f"{label}.query_id is unknown")
+    if not isinstance(query_result.get("abstained"), bool):
+        raise BenchmarkManifestValidationError(f"{label}.abstained must be boolean")
+    if query_result.get("abstention_reason") is not None and (
+        not isinstance(query_result["abstention_reason"], str)
+        or not query_result["abstention_reason"]
+    ):
+        raise BenchmarkManifestValidationError(
+            f"{label}.abstention_reason must be non-empty or null"
+        )
+    results = _list(query_result, "results", label)
+    if query_result["abstained"] and results:
+        raise BenchmarkManifestValidationError(
+            f"{label} cannot return results after abstention"
+        )
+    previous_rank = 0
+    seen: set[str] = set()
+    for index, result in enumerate(results):
+        result_label = f"{label}.results[{index}]"
+        _validate_retrieval_result(
+            result,
+            result_label,
+            document_ids,
+            document_evidence,
+            document_metadata,
+        )
+        if result["rank"] != previous_rank + 1:
+            raise BenchmarkManifestValidationError(
+                f"{result_label}.rank must be contiguous and deterministic"
+            )
+        previous_rank = result["rank"]
+        document_id = result["document"]["id"]
+        if document_id in seen:
+            raise BenchmarkManifestValidationError(
+                f"duplicate result document: {document_id}"
+            )
+        seen.add(document_id)
+
+
+def _validate_retrieval_result(
+    result: Any,
+    label: str,
+    document_ids: set[str],
+    document_evidence: Mapping[str, set[str]],
+    document_metadata: Mapping[str, Mapping[str, Any]],
+) -> None:
+    _object(label, result)
+    _allowed(
+        label,
+        result,
+        {"rank", "score", "score_kind", "document", "evidence", "provenance"},
+    )
+    rank = result.get("rank")
+    if not isinstance(rank, int) or isinstance(rank, bool) or not 1 <= rank <= 50:
+        raise BenchmarkManifestValidationError(
+            f"{label}.rank must be an integer from 1 to 50"
+        )
+    if (
+        not isinstance(result.get("score"), (int, float))
+        or isinstance(result["score"], bool)
+        or not math.isfinite(result["score"])
+    ):
+        raise BenchmarkManifestValidationError(f"{label}.score must be finite")
+    _text(result, "score_kind", label)
+    document = result.get("document")
+    _object(f"{label}.document", document)
+    _allowed(
+        f"{label}.document",
+        document,
+        {
+            "id",
+            "record_kind",
+            "system_id",
+            "feature_id",
+            "name",
+            "description",
+            "claim_type",
+            "claim_status",
+            "evidence_ids",
+            "validity_scope",
+        },
+    )
+    _text(document, "id", f"{label}.document")
+    if document["id"] not in document_ids:
+        raise BenchmarkManifestValidationError(f"{label}.document.id is not in corpus")
+    if (
+        document.get("record_kind") not in RETRIEVAL_RECORD_KINDS
+        or document.get("claim_type") not in CLAIM_TYPES
+        or document.get("claim_status") not in CLAIM_STATUSES
+    ):
+        raise BenchmarkManifestValidationError(
+            f"{label} has invalid record or claim type"
+        )
+    _non_empty_string_list(document, "evidence_ids", f"{label}.document")
+    if set(document["evidence_ids"]) != document_evidence[document["id"]]:
+        raise BenchmarkManifestValidationError(
+            f"{label}.evidence_ids must preserve local corpus evidence closure"
+        )
+    _validate_scope(document.get("validity_scope"), f"{label}.document.validity_scope")
+    corpus_document = document_metadata[document["id"]]
+    for field in ("record_kind", "claim_type", "claim_status", "validity_scope"):
+        if document[field] != corpus_document[field]:
+            raise BenchmarkManifestValidationError(
+                f"{label}.document.{field} does not match corpus"
+            )
+    evidence = _list(result, "evidence", label)
+    evidence_ids: set[str] = set()
+    for index, evidence_record in enumerate(evidence):
+        evidence_label = f"{label}.evidence[{index}]"
+        _object(evidence_label, evidence_record)
+        _allowed(evidence_label, evidence_record, {"id", "kind", "title", "uri"})
+        _text(evidence_record, "id", evidence_label)
+        if evidence_record["id"] in evidence_ids:
+            raise BenchmarkManifestValidationError(
+                f"duplicate result evidence id: {evidence_record['id']}"
+            )
+        evidence_ids.add(evidence_record["id"])
+    if not evidence_ids.issuperset(document["evidence_ids"]):
+        raise BenchmarkManifestValidationError(
+            f"{label}.evidence must close document evidence IDs"
+        )
+    provenance = result.get("provenance")
+    _object(f"{label}.provenance", provenance)
+    _allowed(
+        f"{label}.provenance",
+        provenance,
+        {"source_ref", "source_digest", "retrieval_method"},
+    )
+    _text(provenance, "source_ref", f"{label}.provenance")
+    _digest(provenance, "source_digest", f"{label}.provenance")
+    _text(provenance, "retrieval_method", f"{label}.provenance")
+    if provenance["source_ref"] != corpus_document["source_ref"]:
+        raise BenchmarkManifestValidationError(
+            f"{label}.provenance.source_ref does not match corpus"
+        )
+    if provenance["source_digest"] != corpus_document["source_digest"]:
+        raise BenchmarkManifestValidationError(
+            f"{label}.provenance.source_digest does not match corpus"
+        )
+
+
+def _validate_retrieval_metrics(metrics: Any) -> None:
+    _object("metrics", metrics)
+    names = {
+        "recall_at_k",
+        "ndcg_at_k",
+        "evidence_locality",
+        "claim_type_accuracy",
+        "scope_completeness",
+        "false_link_rate",
+        "abstention_rate",
+    }
+    _allowed("metrics", metrics, names)
+    for field in ("recall_at_k", "ndcg_at_k"):
+        records = _list(metrics, field, "metrics")
+        for index, record in enumerate(records):
+            _validate_metric(record, f"metrics.{field}[{index}]")
+            if (
+                "k" not in record
+                or not isinstance(record["k"], int)
+                or not 1 <= record["k"] <= 50
+            ):
+                raise BenchmarkManifestValidationError(
+                    f"metrics.{field}[{index}].k is invalid"
+                )
+    for field in (
+        "evidence_locality",
+        "claim_type_accuracy",
+        "scope_completeness",
+        "false_link_rate",
+        "abstention_rate",
+    ):
+        _validate_metric(metrics.get(field), f"metrics.{field}")
+
+
+def _validate_metric(metric: Any, label: str) -> None:
+    _object(label, metric)
+    _allowed(label, metric, {"k", "numerator", "denominator", "value"})
+    if (
+        not isinstance(metric.get("numerator"), (int, float))
+        or isinstance(metric["numerator"], bool)
+        or not math.isfinite(metric["numerator"])
+        or metric["numerator"] < 0
+    ):
+        raise BenchmarkManifestValidationError(
+            f"{label}.numerator must be non-negative"
+        )
+    if (
+        not isinstance(metric.get("denominator"), int)
+        or isinstance(metric["denominator"], bool)
+        or metric["denominator"] < 0
+    ):
+        raise BenchmarkManifestValidationError(
+            f"{label}.denominator must be non-negative integer"
+        )
+    if metric["numerator"] > metric["denominator"]:
+        raise BenchmarkManifestValidationError(
+            f"{label}.numerator cannot exceed denominator"
+        )
+    metric_value = metric.get("value")
+    if metric_value is not None and (
+        not isinstance(metric_value, (int, float))
+        or isinstance(metric_value, bool)
+        or not 0 <= metric_value <= 1
+    ):
+        raise BenchmarkManifestValidationError(
+            f"{label}.value must be null or between 0 and 1"
+        )
+    if metric["denominator"] == 0 and metric_value is not None:
+        raise BenchmarkManifestValidationError(
+            f"{label}.value must be null for an empty denominator"
+        )
+    if metric["denominator"] > 0 and metric_value is None:
+        raise BenchmarkManifestValidationError(
+            f"{label}.value is required for a non-empty denominator"
+        )
+    if metric_value is not None and (
+        not math.isfinite(metric_value)
+        or not math.isclose(metric_value, metric["numerator"] / metric["denominator"])
+    ):
+        raise BenchmarkManifestValidationError(
+            f"{label}.value must equal numerator divided by denominator"
+        )
+
+
+def _validate_retrieval_result_boundary(boundary: Any) -> None:
+    _object("result_boundary", boundary)
+    _allowed(
+        "result_boundary",
+        boundary,
+        {
+            "canonical",
+            "storage_scope",
+            "promotion_requires_human_review",
+            "discovery_only",
+            "score_is_truth",
+            "score_is_compatibility",
+        },
+    )
+    if (
+        boundary.get("canonical") is not False
+        or boundary.get("promotion_requires_human_review") is not True
+    ):
+        raise BenchmarkManifestValidationError("retrieval results cannot be canonical")
+    if boundary.get("storage_scope") not in {"research", "draft"}:
+        raise BenchmarkManifestValidationError(
+            "result_boundary.storage_scope is invalid"
+        )
+    if (
+        boundary.get("discovery_only") is not True
+        or boundary.get("score_is_truth") is not False
+        or boundary.get("score_is_compatibility") is not False
+    ):
+        raise BenchmarkManifestValidationError("retrieval metrics are discovery-only")
+
+
 def _object(label: str, value: Any) -> None:
     if not isinstance(value, Mapping):
         raise BenchmarkManifestValidationError(f"{label} must be an object")
@@ -747,6 +1739,15 @@ def _string_list(
         raise BenchmarkManifestValidationError(
             f"{label}.{field} must be a list of strings"
         )
+    return result
+
+
+def _non_empty_string_list(
+    value: Mapping[str, Any], field: str, label: str = "manifest"
+) -> list[str]:
+    result = _string_list(value, field, label)
+    if not result:
+        raise BenchmarkManifestValidationError(f"{label}.{field} must not be empty")
     return result
 
 

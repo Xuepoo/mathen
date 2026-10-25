@@ -14,14 +14,24 @@ from mathen.benchmark import (
     evidence_locality,
     heldout_counterexample_recall,
     load_benchmark_manifest,
+    load_retrieval_evaluation_manifest,
+    ndcg_at_k,
     novelty_scope_completeness,
+    recall_at_k,
+    retrieval_abstention_rate,
+    retrieval_claim_type_accuracy,
+    retrieval_digest,
+    retrieval_false_link_rate,
+    retrieval_scope_completeness,
     typed_obligation_satisfaction,
     validate_benchmark_manifest,
+    validate_retrieval_evaluation_manifest,
 )
 from mathen.cli import validate_benchmark_command
 
 ROOT = Path(__file__).parents[1]
 FIXTURE = ROOT / "tests" / "fixtures" / "benchmark-run-valid.json"
+RETRIEVAL_FIXTURE = ROOT / "tests" / "fixtures" / "retrieval-evaluation-valid.json"
 
 
 class BenchmarkManifestTests(unittest.TestCase):
@@ -266,6 +276,150 @@ class BenchmarkMetricTests(unittest.TestCase):
     def test_counterexample_recall_is_set_based_and_bounded(self) -> None:
         result = counterexample_recall(["a", "b"], ["b", "c"])
         self.assertEqual((result.numerator, result.denominator), (1, 2))
+
+
+class RetrievalEvaluationManifestTests(unittest.TestCase):
+    def test_fixture_round_trips_and_digest_is_reproducible(self) -> None:
+        schema = json.loads(
+            (ROOT / "schemas" / "retrieval-evaluation-manifest.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(schema["properties"]["schema_version"]["const"], "1.0")
+        self.assertEqual(
+            schema["properties"]["manifest_kind"]["const"], "retrieval_evaluation"
+        )
+        self.assertIn("document", schema["$defs"]["result"]["required"])
+        self.assertIn("provenance", schema["$defs"]["result"]["required"])
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        validate_retrieval_evaluation_manifest(value)
+        self.assertEqual(
+            load_retrieval_evaluation_manifest(RETRIEVAL_FIXTURE).to_dict(), value
+        )
+        self.assertEqual(
+            value["corpus_snapshot"]["digest"],
+            retrieval_digest(value["corpus_snapshot"]["documents"]),
+        )
+
+    def test_retrieval_rejects_digest_split_and_holdout_boundary_changes(self) -> None:
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["corpus_snapshot"]["digest"] = "sha256:" + "0" * 64
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "corpus_snapshot.digest"
+        ):
+            validate_retrieval_evaluation_manifest(value)
+
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["split"]["partitions"]["holdout"] = []
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "cover all query"
+        ):
+            validate_retrieval_evaluation_manifest(value)
+
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["split"]["candidate_generation_exclusions"] = []
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "excluded"):
+            validate_retrieval_evaluation_manifest(value)
+
+    def test_retrieval_rejects_novelty_analogy_and_result_boundaries(self) -> None:
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["boundaries"]["novelty"]["aggregate_score_allowed"] = True
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "aggregate"):
+            validate_retrieval_evaluation_manifest(value)
+
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["boundaries"]["analogy"]["non_equivalence_required"] = False
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "non_equivalence"
+        ):
+            validate_retrieval_evaluation_manifest(value)
+
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["result_boundary"]["score_is_truth"] = True
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "discovery-only"):
+            validate_retrieval_evaluation_manifest(value)
+
+    def test_retrieval_rejects_unknown_or_unlocal_evidence_results(self) -> None:
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["results"][0]["results"][0]["document"]["evidence_ids"] = ["outside"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "local"):
+            validate_retrieval_evaluation_manifest(value)
+
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["results"][0]["results"][0]["document"]["id"] = "draft:unreviewed"
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "not in corpus"):
+            validate_retrieval_evaluation_manifest(value)
+
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["results"][0]["results"][0]["provenance"]["source_digest"] = (
+            "sha256:" + "0" * 64
+        )
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "does not match"):
+            validate_retrieval_evaluation_manifest(value)
+
+    def test_retrieval_requires_nonempty_labels_and_contiguous_ranks(self) -> None:
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["labels"]["relevance"][0]["evidence_ids"] = []
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "must not be empty"
+        ):
+            validate_retrieval_evaluation_manifest(value)
+
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["results"][0]["results"][0]["rank"] = 2
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "contiguous"):
+            validate_retrieval_evaluation_manifest(value)
+
+    def test_retrieval_rejects_undeclared_fields_and_unpaired_model(self) -> None:
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["unexpected"] = True
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "unknown fields"):
+            validate_retrieval_evaluation_manifest(value)
+
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        value["model"]["model_id"] = None
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "supplied together"
+        ):
+            validate_retrieval_evaluation_manifest(value)
+
+    def test_retrieval_discovery_metrics_keep_bounded_denominators(self) -> None:
+        relevance = {"q": {"a": 3, "b": 1}}
+        ranked = {"q": ["b", "a"]}
+        recall = recall_at_k(relevance, ranked, 1)
+        self.assertEqual((recall.numerator, recall.denominator), (1, 1))
+        self.assertEqual(ndcg_at_k(relevance, ranked, 1).value, (2**1 - 1) / (2**3 - 1))
+        self.assertIsNone(recall_at_k({"q": {}}, {"q": []}, 1).value)
+
+        self.assertEqual(
+            retrieval_claim_type_accuracy(
+                [{"claim_type": "fact", "expected_claim_type": "fact"}]
+            ).value,
+            1.0,
+        )
+        self.assertEqual(
+            retrieval_scope_completeness(
+                [
+                    {
+                        "version_context": "1",
+                        "deployment_origins": [],
+                        "conditions": [],
+                        "exclusions": [],
+                    }
+                ]
+            ).value,
+            1.0,
+        )
+        self.assertEqual(
+            retrieval_false_link_rate([{"link_outcome": "false-link"}]).value,
+            1.0,
+        )
+        self.assertEqual(
+            retrieval_abstention_rate(
+                [{"abstained": True}, {"abstained": False}]
+            ).value,
+            0.5,
+        )
         self.assertIsNone(counterexample_recall([], ["a"]).value)
 
     def test_heldout_counterexample_recall_rejects_leakage(self) -> None:
