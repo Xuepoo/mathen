@@ -19,6 +19,7 @@ type McpBackend = {
   ): Promise<unknown>;
   listCompositions(inputSystem?: string, claimStatus?: string, limit?: number): Promise<unknown>;
   getModelingBundle(systemId: string): Promise<unknown>;
+  searchRetrieval(path: string): Promise<unknown>;
 };
 
 type JsonRpcRequest = {
@@ -147,6 +148,7 @@ export function createMcpApiBackend(request: (path: string) => Promise<unknown>)
       return request(`/compositions?${params}`);
     },
     getModelingBundle: (systemId) => request(`/modeling/${encodeURIComponent(systemId)}`),
+    searchRetrieval: (path) => request(`/retrieval?${path}`),
   };
 }
 
@@ -193,6 +195,30 @@ async function callTool(params: unknown, backend: McpBackend) {
     case "get_modeling_bundle":
       value = await backend.getModelingBundle(requiredString(args.system_id, "system_id"));
       break;
+    case "search_semantic": {
+      const query = requiredString(args.q, "q");
+      if (query.length > 1_000) throw new Error("q must contain 1 to 1,000 characters");
+      const params = new URLSearchParams({ q: query });
+      for (const name of [
+        "limit",
+        "record_kind",
+        "system_id",
+        "feature_id",
+        "category",
+        "claim_type",
+        "claim_status",
+        "version_context",
+        "deployment_origin",
+      ]) {
+        const value = args[name];
+        if (typeof value === "string" && value.trim()) params.set(name, value);
+        else if (name === "limit" && typeof value === "number" && Number.isInteger(value)) {
+          params.set(name, String(value));
+        }
+      }
+      value = await backend.searchRetrieval(params.toString());
+      break;
+    }
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
@@ -258,6 +284,23 @@ function toolDefinitions() {
       "Get one fixed-commit modeling bundle.",
       { system_id: { type: "string" } },
       ["system_id"],
+    ],
+    [
+      "search_semantic",
+      "Find reviewed canonical records using a bounded lexical discovery baseline. Scores are uncalibrated ranking signals, never proof, relation, compatibility, causality, or historical influence.",
+      {
+        q: { type: "string", minLength: 1, maxLength: 1000 },
+        limit: { type: "integer", minimum: 1, maximum: 50 },
+        record_kind: { type: "string" },
+        system_id: { type: "string" },
+        feature_id: { type: "string" },
+        category: { type: "string" },
+        claim_type: { type: "string", enum: ["fact", "inference", "hypothesis", "analogy"] },
+        claim_status: { type: "string" },
+        version_context: { type: "string" },
+        deployment_origin: { type: "string" },
+      },
+      ["q"],
     ],
   ];
   return definitions.map(([name, description, properties, required]) => ({

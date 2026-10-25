@@ -1,7 +1,8 @@
 # Evidence-bounded semantic retrieval
 
-**Status:** implementation-ready design; no retrieval backend is implemented by
-this document.
+**Status:** implementation-ready design; the first public MVP is implemented as
+a provider-neutral bounded lexical baseline over hydrated D1 records. It is not
+an embedding or ANN implementation.
 
 **Scope:** reviewed-card discovery for the API, browser, and read-only MCP
 surfaces. This design does not add a dependency, create a Cloudflare resource,
@@ -547,3 +548,23 @@ adjudication must test them by task and scope, not by a single aggregate score.
 7. The rebuild trigger and operator ownership (release workflow, scheduled job,
    or explicit command). No automatic trigger should be enabled before cost,
    rollback, and observability gates are accepted.
+
+## 11. First-public-MVP implementation note
+
+The initial `GET /api/retrieval` implementation deliberately does not select an
+embedding provider, create a Vectorize binding, add a secret, or add a remote
+index. It builds a bounded deterministic `canonical_cards` document snapshot
+from the reviewed D1 tables for each request, applies allowlisted filters before
+ranking, and uses token-overlap ranking with deterministic ID tie-breaking. The
+response labels this as `bounded_lexical_baseline`; its scores are discovery
+signals only and are not `embedding_similarity`.
+
+The implementation is usable for public reviewed-card discovery while the D1
+binding is reachable. It fails closed on missing evidence closure by omitting
+the document and reporting `stale_source_ref`, and returns `503
+semantic_index_unavailable` when D1 access fails. A later embedding adapter must
+replace the ranking/index layer without changing the D1 hydration, corpus,
+filter, evidence, scope, provenance, or API envelope contracts. True semantic
+retrieval still requires a separately approved provider/model, privacy and
+retention review, versioned rebuild workflow, active-index publication, and
+deployment configuration.

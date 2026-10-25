@@ -28,6 +28,25 @@ import {
   type ProjectionMicrostructure,
   type ProjectionSystem,
 } from "./graph-projection.js";
+import {
+  buildRetrievalDocuments,
+  parseRetrievalQuery,
+  rankRetrievalDocuments,
+  RetrievalRequestError,
+  sha256Digest,
+  RETRIEVAL_CORPUS,
+  RETRIEVAL_INDEX_ID,
+  RETRIEVAL_REPRESENTATION,
+} from "./retrieval.js";
+import type {
+  RetrievalCompositionRow,
+  RetrievalEvidenceRow,
+  RetrievalFeatureRow,
+  RetrievalRelationRow,
+  RetrievalSystemRow,
+  RetrievalTradeOffRow,
+  RetrievalViewRow,
+} from "./retrieval.js";
 
 type Bindings = {
   DB: D1Database;
@@ -137,6 +156,7 @@ const accessRateLimiter = new InMemoryRateLimiter();
 const mcpRateLimiter = new InMemoryRateLimiter();
 
 app.use("*", async (c, next) => {
+  c.header("X-Request-ID", crypto.randomUUID());
   const pathname = new URL(c.req.url).pathname;
   if (
     pathname === "/api/health" ||
@@ -355,6 +375,128 @@ app.get("/systems", async (c) => {
 
   return c.json({ data: result.results.map(serializeSystem) });
 });
+
+app.get("/retrieval", async (c) => {
+  const requestId = crypto.randomUUID();
+  c.header("X-Request-ID", requestId);
+  let retrievalQuery;
+  try {
+    retrievalQuery = parseRetrievalQuery(new URL(c.req.url).searchParams);
+  } catch (error) {
+    if (error instanceof RetrievalRequestError) {
+      return c.json({ error: error.message, code: "invalid_request", request_id: requestId }, 400, {
+        "X-Request-ID": requestId,
+      });
+    }
+    return c.json(
+      { error: "Invalid retrieval request", code: "invalid_request", request_id: requestId },
+      400,
+      {
+        "X-Request-ID": requestId,
+      },
+    );
+  }
+  try {
+    const [systems, features, views, tradeOffs, relations, compositions, evidence] =
+      await Promise.all([
+        c.env.DB.prepare(
+          `SELECT id, name, version_context, summary, scope_json, temporal_context_json,
+                relations_json, composition_json, source_path
+         FROM systems ORDER BY id LIMIT 5000`,
+        ).all<RetrievalSystemRow>(),
+        c.env.DB.prepare(
+          `SELECT f.id, f.system_id, s.name AS system_name, f.name, f.category,
+                f.claim_type, f.description, f.benefits_json, f.costs_json,
+                f.metadata_json,
+                COALESCE((SELECT json_group_array(substr(fe.evidence_id, length(fe.system_id) + 2))
+                  FROM feature_evidence fe
+                  WHERE fe.system_id = f.system_id AND fe.feature_id = f.id
+                  ORDER BY fe.evidence_id), '[]') AS evidence_ids_json
+         FROM features f JOIN systems s ON s.id = f.system_id
+         ORDER BY f.system_id, f.id LIMIT 10000`,
+        ).all<RetrievalFeatureRow>(),
+        c.env.DB.prepare(
+          `SELECT v.id, v.system_id, v.model, v.question, v.assumptions_json,
+                v.claim_type, v.metadata_json,
+                COALESCE((SELECT json_group_array(substr(mve.evidence_id, length(v.system_id) + 2))
+                  FROM mathematical_view_evidence mve WHERE mve.view_id = v.id
+                  ORDER BY mve.evidence_id), '[]') AS evidence_ids_json
+         FROM mathematical_views v ORDER BY v.system_id, v.id LIMIT 10000`,
+        ).all<RetrievalViewRow>(),
+        c.env.DB.prepare(
+          "SELECT id, system_id, feature_id, benefits_json, costs_json FROM trade_offs ORDER BY system_id, id LIMIT 10000",
+        ).all<RetrievalTradeOffRow>(),
+        c.env.DB.prepare(
+          `SELECT fr.id, fr.source_system_id, fr.source_feature_id, fr.target_system_id,
+                fr.target_feature_id, fr.type, fr.claim_type, fr.claim_status, fr.notes,
+                COALESCE((SELECT json_group_array(substr(fre.evidence_id, length(fr.source_system_id) + 2))
+                  FROM feature_relation_evidence fre WHERE fre.relation_id = fr.id
+                  ORDER BY fre.evidence_id), '[]') AS evidence_ids_json
+         FROM feature_relations fr ORDER BY fr.source_system_id, fr.id LIMIT 10000`,
+        ).all<RetrievalRelationRow>(),
+        c.env.DB.prepare(
+          `SELECT id AS system_id, name AS system_name, version_context, composition_json
+         FROM systems WHERE composition_json IS NOT NULL ORDER BY id LIMIT 5000`,
+        ).all<RetrievalCompositionRow>(),
+        c.env.DB.prepare(
+          "SELECT substr(id, length(system_id) + 2) AS id, system_id, kind, title, uri, accessed, notes FROM evidence ORDER BY system_id, id LIMIT 20000",
+        ).all<RetrievalEvidenceRow>(),
+      ]);
+    const documents = await buildRetrievalDocuments({
+      systems: systems.results,
+      features: features.results,
+      views: views.results,
+      tradeOffs: tradeOffs.results,
+      relations: relations.results,
+      compositions: compositions.results,
+      evidence: evidence.results,
+    });
+    const warnings: string[] = [];
+    const sourceRowCount =
+      systems.results.length +
+      features.results.length +
+      views.results.length +
+      tradeOffs.results.length +
+      relations.results.length +
+      compositions.results.length;
+    if (documents.length < sourceRowCount) {
+      warnings.push("stale_source_ref");
+    }
+    const indexStatus = documents.length === 0 ? "empty" : "ready";
+    const result = {
+      schema_version: "1.0",
+      query: {
+        q_digest: await sha256QueryDigest(retrievalQuery.query),
+        filters: retrievalQuery.filters,
+      },
+      index: {
+        status: indexStatus,
+        index_id: RETRIEVAL_INDEX_ID,
+        corpus: RETRIEVAL_CORPUS,
+        representation_version: RETRIEVAL_REPRESENTATION,
+        method: "bounded_lexical_baseline",
+        warnings: ["Scores are uncalibrated discovery ranking signals, not semantic proof."],
+      },
+      results: rankRetrievalDocuments(documents, retrievalQuery),
+      warnings: [...warnings, ...(indexStatus === "empty" ? ["empty_index"] : [])],
+    };
+    return c.json({ data: result }, 200, { "X-Request-ID": requestId });
+  } catch {
+    return c.json(
+      {
+        error: "Semantic retrieval is unavailable",
+        code: "semantic_index_unavailable",
+        request_id: requestId,
+      },
+      503,
+      { "X-Request-ID": requestId },
+    );
+  }
+});
+
+async function sha256QueryDigest(query: string): Promise<string> {
+  return sha256Digest(query.normalize("NFKC").trim());
+}
 
 app.get("/systems/:id", async (c) => {
   const system = await c.env.DB.prepare(

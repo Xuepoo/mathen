@@ -805,6 +805,134 @@ test("GET /api/graph/layers preserves D1 document and view metadata", async () =
   );
 });
 
+test("GET /api/retrieval returns a reviewed-only envelope and request ID", async () => {
+  const db = {
+    prepare(sql: string) {
+      return {
+        all<T>() {
+          let results: unknown[] = [];
+          if (sql.includes("FROM systems")) {
+            results = [
+              {
+                id: "alpha",
+                name: "Alpha",
+                version_context: "1.0",
+                summary: "Embedded execution",
+                scope_json: '["execution"]',
+                temporal_context_json: null,
+                relations_json: "[]",
+                composition_json: null,
+                source_path: "data/systems/alpha.json",
+              },
+            ];
+          } else if (sql.includes("FROM features")) {
+            results = [
+              {
+                id: "embedded",
+                system_id: "alpha",
+                system_name: "Alpha",
+                name: "Embedded execution",
+                category: "deployment",
+                claim_type: "fact",
+                description: "Runs in the host process.",
+                benefits_json: "[]",
+                costs_json: "[]",
+                metadata_json: '{"claim_status":"accepted"}',
+                evidence_ids_json: '["architecture"]',
+              },
+            ];
+          } else if (sql.includes("FROM evidence")) {
+            results = [
+              {
+                id: "architecture",
+                system_id: "alpha",
+                kind: "official-doc",
+                title: "Architecture",
+                uri: "https://example.test/architecture",
+                accessed: null,
+                notes: null,
+              },
+            ];
+          }
+          return Promise.resolve({ results: results as T[] });
+        },
+      };
+    },
+  } as unknown as D1Database;
+
+  const response = await app.request(
+    "/api/retrieval?q=embedded+execution&record_kind=feature",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("x-request-id") ?? "", /^[0-9a-f-]{36}$/);
+  const body = (await response.json()) as {
+    data: {
+      index: { method: string; corpus: string };
+      results: Array<{ document: { id: string } }>;
+    };
+  };
+  assert.deepEqual(Object.keys(body), ["data"]);
+  assert.equal(body.data.index.method, "bounded_lexical_baseline");
+  assert.equal(body.data.index.corpus, "canonical_cards");
+  assert.deepEqual(
+    body.data.results.map((result) => result.document.id),
+    ["system:alpha:feature:embedded"],
+  );
+});
+
+test("GET /api/retrieval rejects malformed requests and reports unavailable D1", async () => {
+  const invalid = await app.request(
+    "/api/retrieval?q=x&limit=0",
+    {},
+    { DB: {} as D1Database, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+  assert.equal(invalid.status, 400);
+  assert.equal(((await invalid.json()) as { code: string }).code, "invalid_request");
+
+  const unavailable = await app.request(
+    "/api/retrieval?q=x",
+    {},
+    {
+      DB: {
+        prepare() {
+          throw new Error("D1 unavailable");
+        },
+      } as unknown as D1Database,
+      APP_ENV: "test",
+      ASSETS: {} as Fetcher,
+    },
+  );
+  assert.equal(unavailable.status, 503);
+  assert.equal(((await unavailable.json()) as { code: string }).code, "semantic_index_unavailable");
+  assert.match(unavailable.headers.get("x-request-id") ?? "", /^[0-9a-f-]{36}$/);
+});
+
+test("GET /api/retrieval distinguishes an empty verified corpus", async () => {
+  const db = {
+    prepare() {
+      return {
+        all<T>() {
+          return Promise.resolve({ results: [] as T[] });
+        },
+      };
+    },
+  } as unknown as D1Database;
+  const response = await app.request(
+    "/api/retrieval?q=anything",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as {
+    data: { index: { status: string }; results: unknown[]; warnings: string[] };
+  };
+  assert.equal(body.data.index.status, "empty");
+  assert.deepEqual(body.data.results, []);
+  assert.deepEqual(body.data.warnings, ["empty_index"]);
+});
+
 function systemRow(index: number) {
   const id = `system-${String(index).padStart(3, "0")}`;
   return {
