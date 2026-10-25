@@ -17,6 +17,10 @@ not treated as typed semantic evidence.
 No canonical card was changed by this review. Candidate recommendations below
 remain `claim_status: proposed` and are inputs to a separate card edit/review.
 
+The historical tables below preserve the earlier review snapshot and its
+individual decisions. The current-corpus recheck is recorded separately so
+those historical counts are not mistaken for the current inventory.
+
 ## Exact audit commands and metrics
 
 The following commands were run from the repository root:
@@ -62,6 +66,60 @@ Results:
 `uv run mathen validate` reported every card valid. The unittest command ran 20
 tests and finished `OK`. The existing worktree change is in
 `docs/user-manual.md`; this review only adds this report.
+
+## Current canonical recheck (2026-10-25)
+
+The current `data/systems/` tree was rechecked without editing cards or
+promoting any candidate. The same source-local rule still holds: every typed
+relation evidence ID must resolve in its source card, every typed target must
+be a reviewed card, and `related_systems` remains navigation metadata rather
+than typed semantic evidence.
+
+Commands run:
+
+```text
+uv run mathen validate
+uv run python -m unittest tests.test_relation_candidates tests.test_cards -v
+uv run mathen relation-candidates data/systems --output /tmp/opencode/mth-0071-relation-candidates.json
+```
+
+Current metrics:
+
+| Check                                      |                                     Result |
+| ------------------------------------------ | -----------------------------------------: |
+| Reviewed cards                             |                                        219 |
+| Features                                   |                                        830 |
+| Mathematical views                         |                                        608 |
+| Typed relations                            |                                         46 |
+| Valid legacy `related_systems` edges       |                                        375 |
+| Missing relation targets                   |                                          0 |
+| Missing source-local relation evidence IDs |                                          0 |
+| Relation types                             | `uses`: 30; `resembles`: 12; `composes`: 4 |
+| Relation claim types                       |                  `fact`: 34; `analogy`: 12 |
+| Relation statuses                          |                             `proposed`: 46 |
+
+The candidate report remains review-only: it emits directed candidates and
+source-local `evidence_candidates`, but does not add `relations`, select a
+relation type, change `claim_status`, or promote a candidate. No candidate
+was copied into canonical cards during this recheck.
+
+### Graph/API/MCP projection finding
+
+The evidence ownership boundary is preserved by the canonical validator, the
+`/api/graph` typed-edge builder, and `/api/systems/:id`: those paths retain
+card-level relation metadata and source-local evidence IDs. However,
+`GET /api/graph/layers` and MCP `get_layered_graph` currently use
+`buildLayeredGraphProjection` without passing or projecting the card-level
+`relations` array. The filesystem MCP adapter has the same omission. Thus the
+layered graph can omit reviewed `uses`, `resembles`, and `composes` edges even
+though the cards and ordinary graph endpoint contain them.
+
+This is a transport projection gap, not evidence for any new relation. The
+safe follow-up is to add an explicit card-relation projection with target-node
+existence checks while preserving each relation's source `claim_type`,
+`claim_status`, `evidence_ids`, direction, and notes. It must not read drafts,
+infer edges, or promote candidates. This MTH-0071 audit records the gap only;
+it does not modify projection code or canonical cards.
 
 ## Current typed relations
 
