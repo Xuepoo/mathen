@@ -624,6 +624,7 @@ app.get("/graph/models", async (c) => {
             mathematical_views.id AS view_id, mathematical_views.model,
             mathematical_views.question, mathematical_views.assumptions_json,
             mathematical_views.claim_type,
+            mathematical_views.metadata_json,
             COALESCE((
               SELECT json_group_array(
                 substr(mve.evidence_id, length(mathematical_views.system_id) + 2)

@@ -7,6 +7,7 @@ export type ModelViewRow = {
   assumptions_json: string;
   claim_type: string;
   evidence_ids_json: string;
+  metadata_json?: string;
 };
 
 export type ModelViewMetadata = {
@@ -18,6 +19,9 @@ export type ModelViewMetadata = {
   assumptions: string[];
   claim_type: string;
   evidence_ids: string[];
+  claim_status?: string;
+  validity_scope?: Record<string, unknown>;
+  contract?: Record<string, unknown>;
 };
 
 export type ModelGraphNode = {
@@ -311,6 +315,7 @@ function normalizeRow(row: ModelViewRow): ModelViewRow | null {
     assumptions_json: stringValue(row.assumptions_json),
     claim_type: stringValue(row.claim_type),
     evidence_ids_json: stringValue(row.evidence_ids_json),
+    metadata_json: stringValue(row.metadata_json),
   };
 }
 
@@ -350,6 +355,7 @@ function addRawGroup(
 }
 
 function toMetadata(row: ModelViewRow, key: string): ModelViewMetadata {
+  const metadata = parseRecord(row.metadata_json);
   return {
     id: row.view_id,
     key,
@@ -358,6 +364,9 @@ function toMetadata(row: ModelViewRow, key: string): ModelViewMetadata {
     assumptions: stringArray(row.assumptions_json),
     claim_type: row.claim_type,
     evidence_ids: stringArray(row.evidence_ids_json),
+    ...(typeof metadata.claim_status === "string" ? { claim_status: metadata.claim_status } : {}),
+    ...(isRecord(metadata.validity_scope) ? { validity_scope: metadata.validity_scope } : {}),
+    ...(isRecord(metadata.contract) ? { contract: metadata.contract } : {}),
   };
 }
 
@@ -472,6 +481,20 @@ function stringArray(value: string): string[] {
   return Array.isArray(parsed)
     ? parsed.filter((item): item is string => typeof item === "string")
     : [];
+}
+
+function parseRecord(value: unknown): Record<string, unknown> {
+  if (typeof value !== "string") return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return isRecord(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function stringValue(value: unknown): string {

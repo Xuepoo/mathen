@@ -105,6 +105,31 @@ test("aggregates shared hubs while preserving view metadata and source evidence"
   assert.equal(stateEdges[0]?.type, "modeled-by");
 });
 
+test("preserves reviewed view scope and contract metadata", () => {
+  const graph = buildModelGraph([
+    row({
+      metadata_json: JSON.stringify({
+        claim_status: "under-review",
+        validity_scope: { versions: ["1.0"], deployment_origins: ["local"] },
+        contract: { schema_version: "1.0", family: "state_machine" },
+      }),
+    }),
+  ]);
+
+  assert.deepEqual(graph.edges[0]?.metadata[0], {
+    id: 1,
+    key: graph.edges[0]?.metadata[0]?.key,
+    model: "State machine",
+    question: "How does it transition?",
+    assumptions: ["finite states"],
+    claim_type: "inference",
+    evidence_ids: ["architecture"],
+    claim_status: "under-review",
+    validity_scope: { versions: ["1.0"], deployment_origins: ["local"] },
+    contract: { schema_version: "1.0", family: "state_machine" },
+  });
+});
+
 test("malformed JSON and non-array values are safe, and inputs are not mutated", () => {
   const input = [
     row({

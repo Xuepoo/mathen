@@ -551,6 +551,11 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
                 question: "How does work move?",
                 assumptions_json: '["workers poll"]',
                 claim_type: "inference",
+                metadata_json: JSON.stringify({
+                  claim_status: "under-review",
+                  validity_scope: { versions: ["1.0"] },
+                  contract: { schema_version: "1.0", family: "state_machine" },
+                }),
                 evidence_ids_json: '["temporal-task-queues"]',
               },
               {
@@ -614,6 +619,9 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
       assumptions: ["workers poll"],
       claim_type: "inference",
       evidence_ids: ["temporal-task-queues"],
+      claim_status: "under-review",
+      validity_scope: { versions: ["1.0"] },
+      contract: { schema_version: "1.0", family: "state_machine" },
     },
   );
 });
