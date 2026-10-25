@@ -1,6 +1,6 @@
 import "./style.css";
 import type { ForceGraph3DInstance } from "3d-force-graph";
-import { createLabelPool } from "./graph-labels";
+import { createLabelPool, shouldShowLabel } from "./graph-labels";
 import { lazyModule } from "./lazy-module";
 import {
   frameNodes,
@@ -77,14 +77,17 @@ app.innerHTML = `
     <section class="graph-tools glass" aria-label="Graph controls">
       <div class="dimension-switch graph-mode-switch" role="group" aria-label="Graph mode"><button id="graph-systems" aria-pressed="true">Systems</button><button id="graph-models" aria-pressed="false">Math models</button></div>
       <div class="dimension-switch" role="group" aria-label="Graph dimensions"><button id="mode-2" aria-pressed="true">2D</button><button id="mode-3" aria-pressed="false">3D</button></div>
-      <span class="tool-divider"></span>
-      <button id="fit" title="Fit all visible nodes">Fit</button>
-      <button id="names" aria-pressed="true" title="Toggle all names or highlighted names">Names: all</button>
-      <button id="focus" disabled title="Focus selected node and its neighbors">Focus</button>
-      <button id="pause" aria-pressed="false">Pause forces</button>
-      <button id="reheat" title="Restart the force simulation">Reheat</button>
-      <button id="reset" title="Clear filters and restore the overview">Reset</button>
-      <button id="restore-hidden" hidden>Restore hidden</button>
+       <button id="mobile-tools" class="mobile-tools-toggle" aria-expanded="false" aria-controls="secondary-tools">More</button>
+       <div id="secondary-tools" class="secondary-tools">
+         <span class="tool-divider"></span>
+         <button id="fit" title="Fit all visible nodes">Fit</button>
+         <button id="names" aria-pressed="true" title="Toggle all names or focused names">Names: all</button>
+         <button id="focus" disabled title="Focus selected node and its neighbors">Focus</button>
+         <button id="pause" aria-pressed="false">Pause forces</button>
+         <button id="reheat" title="Restart the force simulation">Reheat</button>
+         <button id="reset" title="Clear filters and restore the overview">Reset</button>
+         <button id="restore-hidden" hidden>Restore hidden</button>
+       </div>
     </section>
 
     <aside class="filters glass" aria-label="Navigation filters">
@@ -145,7 +148,7 @@ helpDialog
   );
 helpDialog.insertAdjacentHTML(
   "beforeend",
-  `<h3>Why these shapes?</h3><p>Stars show a hub with many direct neighbors; in Math models a hub often represents a model family shared by several systems. Chains follow successive supplied links. Disconnected islands have no connecting links in the current data or filter. None of these shapes adds a new relationship.</p><p>2D and 3D are force-layout projections, not semantic distance maps. Position, closeness, direction, and depth do not measure similarity, chronology, or influence. A 3D chain can look shorter or overlap when viewed end-on: orbit to inspect it, or use 2D for a flat overview.</p><p>Names are shown beside every node by default and keep their screen size when zooming. Use Names to show only hovered, selected, or highlighted names in crowded views. Fit frames the current graph; filters and dimension changes frame their new layout until you pan, zoom, or drag.</p>`,
+  `<h3>Why these shapes?</h3><p>Stars show a hub with many direct neighbors; in Math models a hub often represents a model family shared by several systems. Chains follow successive supplied links. Disconnected islands have no connecting links in the current data or filter. None of these shapes adds a new relationship.</p><p>2D and 3D are force-layout projections, not semantic distance maps. Position, closeness, direction, and depth do not measure similarity, chronology, or influence. A 3D chain can look shorter or overlap when viewed end-on: orbit to inspect it, or use 2D for a flat overview.</p><p>Names are shown beside every node on desktop and keep their screen size when zooming. On smaller screens, names start in focused mode to keep the graph readable; use Names to show all labels when needed. Fit frames the current graph; filters and dimension changes frame their new layout until you pan, zoom, or drag.</p>`,
 );
 const catalogSearch = required<HTMLInputElement>("catalog-search");
 mountRetrieval(
@@ -173,7 +176,12 @@ let paused = reducedMotion.matches;
 let dimensions: 2 | 3 = 2;
 let autoFit = true;
 let initialFitPending = false;
-let allNames = true;
+const mobileViewport = window.matchMedia("(max-width: 700px)");
+let allNames = !mobileViewport.matches;
+let namesManuallySet = false;
+let mobileToolsOpen = false;
+required("names").setAttribute("aria-pressed", String(allNames));
+required("names").textContent = allNames ? "Names: all" : "Names: focus";
 let detailRequest = 0;
 let metadataLoaded = false;
 let accessReady = false;
@@ -425,12 +433,13 @@ async function createGraph() {
     .backgroundColor("#10192300")
     .showNavInfo(false)
     .numDimensions(dimensions)
-    .nodeRelSize(4)
+    .nodeRelSize(mobileViewport.matches ? 3.2 : 4)
     .nodeResolution(16)
-    .nodeVal(
-      (node: SimulationNode) =>
-        (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65,
-    )
+    .nodeVal((node: SimulationNode) => {
+      const value =
+        (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65;
+      return mobileViewport.matches ? value * 0.78 : value;
+    })
     .nodeColor(nodeColor)
     .nodeOpacity(0.95)
     .nodeLabel((node) => {
@@ -520,11 +529,20 @@ async function createGraph() {
         autoFit = false;
       }
     });
-  graph.d3Force("charge")?.strength(-140).distanceMax(650);
+  graph
+    .d3Force("charge")
+    ?.strength(mobileViewport.matches ? -230 : -140)
+    .distanceMax(mobileViewport.matches ? 900 : 650);
   graph
     .d3Force("link")
     ?.distance((link: SimulationLink) =>
-      link.type === "modeled-by" ? 220 : 150,
+      link.type === "modeled-by"
+        ? mobileViewport.matches
+          ? 260
+          : 220
+        : mobileViewport.matches
+          ? 190
+          : 150,
     )
     .strength((link: SimulationLink) =>
       link.type === "related" ? 0.12 : 0.35,
@@ -569,6 +587,12 @@ function closeNodeMenu(restore = true) {
   if (nodeMenu.hidden) return;
   nodeMenu.hidden = true;
   if (restore && menuOpener?.isConnected) menuOpener.focus();
+}
+function closeMobileTools() {
+  if (!mobileToolsOpen) return;
+  mobileToolsOpen = false;
+  required("mobile-tools").setAttribute("aria-expanded", "false");
+  required("secondary-tools").classList.remove("is-open");
 }
 function openNodeMenu(id: string, x?: number, y?: number) {
   const node = graph?.graphData().nodes.find((item) => item.id === id);
@@ -637,7 +661,18 @@ nodeMenu.addEventListener("keydown", (event) => {
   }
   if (event.key === "Tab") closeNodeMenu(false);
 });
-window.addEventListener("resize", () => closeNodeMenu(false));
+window.addEventListener("resize", () => {
+  closeNodeMenu(false);
+  updateLabels();
+});
+mobileViewport.addEventListener("change", ({ matches }) => {
+  if (!namesManuallySet) {
+    allNames = !matches;
+    required("names").setAttribute("aria-pressed", String(allNames));
+    required("names").textContent = allNames ? "Names: all" : "Names: focus";
+  }
+  updateLabels();
+});
 function nodeColor(node: SimulationNode) {
   const active =
     (!highlighted.size || highlighted.has(node.id)) &&
@@ -659,13 +694,15 @@ function linkColor(link: SimulationLink) {
   return relationColor(link.type);
 }
 function labelVisible(node: SimulationNode) {
-  return (
-    allNames ||
-    node.id === hoveredId ||
-    node.id === selectedId ||
-    highlighted.has(node.id) ||
-    Boolean(searchMatches?.has(node.id))
-  );
+  return shouldShowLabel({
+    id: node.id,
+    allNames,
+    mobile: mobileViewport.matches,
+    selectedId,
+    hoveredId,
+    highlighted,
+    searchMatches,
+  });
 }
 function updateStyles() {
   if (!graph) return;
@@ -891,6 +928,7 @@ function clearSelection() {
 }
 function selectNode(id: string) {
   closeNodeMenu(false);
+  closeMobileTools();
   selectedId = id;
   selectedEdge = undefined;
   highlighted = neighborhood(visible, id);
@@ -1181,8 +1219,7 @@ async function loadGraph() {
       if (!response.ok)
         throw new Error(`Graph API returned ${response.status}`);
       const payload = (await response.json()) as
-        | GraphPayload
-        | { data: GraphPayload };
+        GraphPayload | { data: GraphPayload };
       canonical = "data" in payload ? payload.data : payload;
       if (!Array.isArray(canonical.nodes) || !Array.isArray(canonical.edges))
         throw new Error("Invalid graph payload");
@@ -1328,6 +1365,14 @@ required("catalog-open").onclick = () => {
   renderCatalog();
   showDialog(catalog);
 };
+required("mobile-tools").onclick = () => {
+  mobileToolsOpen = !mobileToolsOpen;
+  required("mobile-tools").setAttribute(
+    "aria-expanded",
+    String(mobileToolsOpen),
+  );
+  required("secondary-tools").classList.toggle("is-open", mobileToolsOpen);
+};
 required("help-open").onclick = required("legend-open").onclick = () =>
   showDialog(helpDialog);
 domainSelect.onchange = () => {
@@ -1348,6 +1393,7 @@ required("fit").onclick = () => {
   fit();
 };
 required("names").onclick = () => {
+  namesManuallySet = true;
   allNames = !allNames;
   required("names").setAttribute("aria-pressed", String(allNames));
   required("names").textContent = allNames ? "Names: all" : "Names: focus";

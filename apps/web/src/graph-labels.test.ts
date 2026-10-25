@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createLabelPool } from "./graph-labels";
+import { createLabelPool, shouldShowLabel } from "./graph-labels";
 
 test("clearing a graph cancels queued allocations before their frame runs", () => {
   const frames: (() => void)[] = [];
@@ -69,4 +69,24 @@ test("repeated sync reuses resources and pending callbacks use the newest graph"
   expect(created).toEqual(["new"]);
   expect(updates).toEqual(["mint", "white"]);
   expect(frames).toHaveLength(0);
+});
+
+test("mobile label mode keeps selected and searched nodes without showing the highlighted neighborhood", () => {
+  const options = {
+    allNames: false,
+    mobile: true,
+    selectedId: "selected",
+    highlighted: new Set(["selected", "neighbor"]),
+    searchMatches: new Set<string>(),
+  };
+  expect(shouldShowLabel({ ...options, id: "selected" })).toBe(true);
+  expect(shouldShowLabel({ ...options, id: "neighbor" })).toBe(false);
+  expect(
+    shouldShowLabel({
+      ...options,
+      id: "search",
+      searchMatches: new Set(["search"]),
+    }),
+  ).toBe(true);
+  expect(shouldShowLabel({ ...options, id: "neighbor", mobile: false })).toBe(true);
 });

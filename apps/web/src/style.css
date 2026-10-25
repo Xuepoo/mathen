@@ -248,6 +248,7 @@ h4 {
   padding: 7px;
   max-height: min(60vh, 500px);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 .search-results button {
   width: 100%;
@@ -259,6 +260,13 @@ h4 {
   background: transparent;
   text-align: left;
   padding: 12px;
+}
+.search-results button strong,
+.search-results button small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .search-results small {
   color: var(--muted);
@@ -323,6 +331,12 @@ h4 {
   width: 1px;
   background: var(--border);
   margin: 0 4px;
+}
+.mobile-tools-toggle {
+  display: none;
+}
+.secondary-tools {
+  display: contents;
 }
 .filters {
   position: absolute;
@@ -1066,6 +1080,13 @@ summary {
   .search-wrap kbd {
     display: none;
   }
+  .search-results {
+    left: 50%;
+    right: auto;
+    width: min(320px, calc(100vw - 24px));
+    transform: translateX(-50%);
+    z-index: 5;
+  }
   .search-icon {
     top: 4px;
     left: 9px;
@@ -1093,6 +1114,34 @@ summary {
     max-width: none;
     gap: 1px;
     padding: 5px;
+    overflow: visible;
+  }
+  .mobile-tools-toggle {
+    display: block;
+  }
+  .secondary-tools {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 4;
+    min-width: 150px;
+    padding: 6px;
+    border: 1px solid #ffffff14;
+    border-radius: 11px;
+    background: #14202ef5;
+    box-shadow: 0 16px 40px #02081170;
+  }
+  .secondary-tools.is-open {
+    display: grid;
+    gap: 3px;
+  }
+  .secondary-tools .tool-divider {
+    display: none;
+  }
+  .secondary-tools button {
+    width: 100%;
+    text-align: left;
   }
   .graph-tools button {
     font-size: 10px;
