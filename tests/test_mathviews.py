@@ -44,6 +44,109 @@ class MathematicalViewContractTests(unittest.TestCase):
         self.assertEqual(model.to_dict(), value)
         self.assertEqual(classify_math_view_contract(value)["result"], "valid")
 
+    def test_validation_records_are_bounded_and_round_trip(self) -> None:
+        value = self._fixture("math-view-validation-record.json")
+        validate_math_view_contract(value, evidence_ids={"design-doc", "run-a"})
+        model = MathematicalViewContract.from_dict(value, evidence_ids={"design-doc"})
+        self.assertEqual(
+            model.to_dict()["validation_records"], value["validation_records"]
+        )
+
+    def test_validation_records_reject_unclosed_or_proof_like_results(self) -> None:
+        value = self._fixture("math-view-valid.json")
+        record = self._validation_record()
+        record["evidence_ids"] = ["missing"]
+        value["validation_records"] = [record]
+        with self.assertRaisesRegex(
+            MathematicalViewValidationError, "unknown evidence"
+        ):
+            validate_math_view_contract(value, evidence_ids={"design-doc", "run-a"})
+
+        value = self._fixture("math-view-valid.json")
+        record = self._validation_record()
+        record["kind"] = "invariant"
+        record["result"] = {
+            "status": "observed",
+            "summary": "This proves the invariant for every implementation.",
+        }
+        value["validation_records"] = [record]
+        with self.assertRaisesRegex(MathematicalViewValidationError, "status"):
+            validate_math_view_contract(value, evidence_ids={"design-doc", "run-a"})
+
+    def test_absence_of_evidence_is_not_a_negative_finding(self) -> None:
+        value = self._fixture("math-view-valid.json")
+        record = self._validation_record()
+        record.update(
+            {
+                "id": "no-runtime-evidence",
+                "kind": "absence-of-evidence",
+                "basis": "absence-of-evidence",
+                "result": {
+                    "status": "not-established",
+                    "summary": "No runtime result was established for this view.",
+                },
+                "question": "Was this view tested at runtime?",
+                "what_not_established": "Runtime behavior was not established.",
+            }
+        )
+        value["validation_records"] = [record]
+        validate_math_view_contract(value, evidence_ids={"design-doc", "run-a"})
+
+    def test_failed_predictions_counterexamples_invariants_and_negative_knowledge(
+        self,
+    ) -> None:
+        records = []
+        for kind, details, status in (
+            (
+                "failed-prediction",
+                {
+                    "target_claim": "The release order is observed at runtime.",
+                    "condition": "A hotfix path bypasses the documented pipeline.",
+                    "observed_result": "The bypass was observed.",
+                },
+                "failed",
+            ),
+            (
+                "counterexample",
+                {
+                    "target_claim": "The release order covers every deployment path.",
+                    "condition": "An emergency hotfix is deployed.",
+                    "observed_result": "The hotfix skipped the test stage.",
+                    "implication": "The view is bounded to the documented pipeline.",
+                },
+                "counterexample",
+            ),
+            (
+                "invariant",
+                {"condition": "The documented pipeline is used."},
+                "invariant-under-conditions",
+            ),
+            (
+                "negative-knowledge",
+                {
+                    "negative_claim": "The view does not establish hotfix behavior.",
+                    "what_not_established": "Hotfix behavior remains unestablished.",
+                },
+                "not-established",
+            ),
+        ):
+            record = self._validation_record()
+            record.update(
+                {
+                    "id": f"release-order-{kind}",
+                    "kind": kind,
+                    "result": {
+                        "status": status,
+                        "summary": "A bounded result for the declared scope.",
+                    },
+                    **details,
+                }
+            )
+            records.append(record)
+        value = self._fixture("math-view-valid.json")
+        value["validation_records"] = records
+        validate_math_view_contract(value, evidence_ids={"design-doc", "run-a"})
+
     def test_standalone_loader_and_cli_validate_contract_file(self) -> None:
         fixture = FIXTURES / "math-view-valid.json"
         self.assertEqual(
@@ -368,6 +471,43 @@ class MathematicalViewContractTests(unittest.TestCase):
     @staticmethod
     def _fixture(name: str) -> dict:
         return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
+
+    @staticmethod
+    def _validation_record() -> dict:
+        return {
+            "id": "release-order-observed",
+            "view_id": "release-order",
+            "kind": "observed-result",
+            "basis": "experiment",
+            "claim_type": "inference",
+            "claim_status": "under-review",
+            "system": "fixture-system",
+            "version": "2.x",
+            "scope": {
+                "systems": ["fixture-system"],
+                "versions": ["2.x"],
+                "deployment_origins": ["configured-origin"],
+                "conditions": ["documented release pipeline"],
+                "exclusions": ["emergency hotfix procedure"],
+            },
+            "evidence_ids": ["run-a"],
+            "provenance": {
+                "run_id": "run-a",
+                "source_revision": "commit-a",
+                "protocol_digest": "sha256:protocol",
+                "recorded_at": "2026-10-26T00:00:00Z",
+                "runner": "local-runner-1",
+                "toolchain": {"python": "3.12"},
+            },
+            "result": {
+                "status": "observed",
+                "summary": "The release stages occurred in the declared order.",
+            },
+            "limitations": [
+                "One fixture workload",
+                "This result is not a theorem or proof of implementation behavior",
+            ],
+        }
 
 
 if __name__ == "__main__":

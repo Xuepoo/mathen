@@ -21,6 +21,20 @@ Every contract records:
 - assumptions, a version/system/deployment-origin **validity_scope**;
 - `claim_type`, `claim_status`, and non-empty local `evidence_ids`.
 
+An optional `validation_records` array records bounded results about the
+candidate view. Each record has its own view ID, system/version, explicit
+scope, local evidence IDs, run provenance, result status, and limitations.
+Record kinds include observed results, failed predictions, counterexamples,
+invariants under stated conditions, bounded negative knowledge, and absence of
+evidence. These are result records, not theorem or proof objects: a valid
+classifier or an observed invariant never upgrades the view's candidate
+status or claim type.
+
+Record `claim_type` remains one of `fact`, `inference`, `hypothesis`, or
+`analogy`; `experiment` is a result basis, not a claim type. An explicit
+`absence-of-evidence` record means that a bounded question was not established;
+it is never a negative finding. Validation records do not infer graph edges.
+
 Evidence IDs must exist in the containing Architecture Card when the contract
 is embedded. A contract can be `valid` only because its supplied finite data
 passes the defined checks. This is not a proof that the implementation has the
@@ -28,6 +42,14 @@ modeled semantics. Missing observations or an uncheckable infinite model must
 remain `undetermined`; a failed law is `invalid`. `analogy` and `hypothesis`
 are permitted claim types and do not become facts because a classifier returns
 `valid`.
+
+Validation records use the same evidence-locality rule and require explicit
+scope/provenance closure. They do not promote a result into a card claim or
+change the candidate-view status. Existing views without `validation_records`
+remain valid; no runtime result is inferred from a classifier, source
+evidence, name, version, or URL. Future migration is additive and reviewed,
+preserves stable IDs, and must report unresolved dimensions rather than
+fabricating conditions or bulk-backfilling canonical views.
 
 ## Family templates
 
