@@ -1,0 +1,52 @@
+{
+  "analysis_id": "mth-0150-retrieval-embedding-pilot",
+  "status": "research-only",
+  "protocol": "mth-0150-pilot-v1",
+  "corpus": {
+    "corpus": "canonical_cards",
+    "reviewed_only": true,
+    "document_count": 2481,
+    "query_count": 12,
+    "source_revision": "7e141f50f3729189108c6eee52562808f8fa52be",
+    "digest": "sha256:f935de7a8f1bb91a0d139e959ffabbeab30d2e42dc91343c7514810db436f4a9"
+  },
+  "model": {
+    "provider": "local-file",
+    "model_id": "bge-micro-v2",
+    "model_provenance": "Candidate matches TaylorAI/bge-micro-v2 configuration and model family; local file provenance is not independently established.",
+    "source_reference": "https://huggingface.co/TaylorAI/bge-micro-v2",
+    "model_sha256": "sha256:828e1496d7fabb79cfa4dcd84fa38625c0d3d21da474a00f08db0f559940cf35",
+    "tokenizer_sha256": "sha256:cb374d6bc042c22455946f4e09a89d29882a199fdaf8fb25be00dc8b8857a448",
+    "dimensions": 384,
+    "metric": "cosine",
+    "pooling": "mean",
+    "normalization": "l2",
+    "runtime": "Transformers.js 4.3.1 + onnxruntime-node 1.30.0",
+    "execution_provider": "CPU",
+    "gpu_observation": "NVIDIA GeForce RTX 4060 Laptop GPU was present but not used; CUDA provider loading failed because the installed Node runtime lacked its shared provider library."
+  },
+  "timing": {
+    "model_load_ms": 1243.767534,
+    "document_embedding_ms": 280784.742442,
+    "document_embedding_seconds": 280.785
+  },
+  "metrics": {
+    "lexical_baseline": {
+      "recall_at_5": {"numerator": 10, "denominator": 12, "value": 0.8333333333333334},
+      "ndcg_at_5": {"numerator": 6.695028204361973, "denominator": 12, "value": 0.5579190170301644}
+    },
+    "local_vector_candidate": {
+      "recall_at_5": {"numerator": 10, "denominator": 12, "value": 0.8333333333333334},
+      "ndcg_at_5": {"numerator": 6.5565101137523145, "denominator": 12, "value": 0.5463758428126929}
+    }
+  },
+  "interpretation": "On this small manually labeled discovery pilot, the local vector candidate did not improve recall@5 and had lower nDCG@5 than the lexical control. This is not evidence that lexical retrieval is universally better or that the model is unsuitable for all corpora.",
+  "boundaries": [
+    "research-only",
+    "discovery-only",
+    "manual pilot labels are not a reviewed production benchmark",
+    "no production vector index, provider, secret, Vectorize binding, or canonical relation inference",
+    "no canonical card or draft was modified",
+    "no embedding vector payloads are stored in the repository"
+  ]
+}
