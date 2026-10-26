@@ -26,6 +26,7 @@ export type SystemDetail = SystemSummary & {
     type: string;
     claim_type?: string;
     claim_status?: string;
+    lifecycle?: Record<string, unknown>;
     evidence_ids?: string[];
     notes?: string | null;
   }>;

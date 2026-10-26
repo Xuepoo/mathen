@@ -59,6 +59,7 @@ export type RetrievalDocument = {
   text: string;
   claim_type?: string;
   claim_status?: string;
+  lifecycle?: Record<string, unknown>;
   version_context?: string | null;
   validity_scope?: Record<string, unknown>;
   scope_context?: Record<string, unknown>;
@@ -326,6 +327,7 @@ export async function buildRetrievalDocuments(input: {
       costs: parseJsonArray(row.costs_json),
       claim_type: row.claim_type,
       ...(typeof metadata.claim_status === "string" ? { claim_status: metadata.claim_status } : {}),
+      ...(recordValue(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
       version_context: system.version_context,
       ...(scope ? { validity_scope: scope } : {}),
       ...(scopeContext ? { scope_context: scopeContext } : {}),
@@ -348,6 +350,7 @@ export async function buildRetrievalDocuments(input: {
       ),
       claim_type: row.claim_type,
       claim_status: typeof metadata.claim_status === "string" ? metadata.claim_status : undefined,
+      lifecycle: recordValue(metadata.lifecycle),
       version_context: system.version_context,
       validity_scope: scope,
       scope_context: scopeContext,
@@ -378,6 +381,7 @@ export async function buildRetrievalDocuments(input: {
       assumptions: parseJsonArray(row.assumptions_json),
       claim_type: row.claim_type,
       ...(typeof metadata.claim_status === "string" ? { claim_status: metadata.claim_status } : {}),
+      ...(recordValue(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
       version_context: system.version_context,
       ...(scope ? { validity_scope: scope } : {}),
       ...(scopeContext ? { scope_context: scopeContext } : {}),
@@ -392,6 +396,7 @@ export async function buildRetrievalDocuments(input: {
       text: renderText(system, "view", row.model, row.question, row.assumptions_json),
       claim_type: row.claim_type,
       claim_status: typeof metadata.claim_status === "string" ? metadata.claim_status : undefined,
+      lifecycle: recordValue(metadata.lifecycle),
       version_context: system.version_context,
       validity_scope: scope,
       scope_context: scopeContext,
@@ -426,6 +431,7 @@ export async function buildRetrievalDocuments(input: {
       ...(typeof featureMetadata.claim_status === "string"
         ? { claim_status: featureMetadata.claim_status }
         : {}),
+      ...(recordValue(featureMetadata.lifecycle) ? { lifecycle: featureMetadata.lifecycle } : {}),
       version_context: system.version_context,
       ...(validityScope ? { validity_scope: validityScope } : {}),
       ...(scopeContext ? { scope_context: scopeContext } : {}),
@@ -448,6 +454,7 @@ export async function buildRetrievalDocuments(input: {
       claim_type: feature.claim_type,
       claim_status:
         typeof featureMetadata.claim_status === "string" ? featureMetadata.claim_status : undefined,
+      lifecycle: recordValue(featureMetadata.lifecycle),
       version_context: system.version_context,
       validity_scope: validityScope,
       scope_context: scopeContext,

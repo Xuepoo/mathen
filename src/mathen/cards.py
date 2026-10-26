@@ -33,6 +33,13 @@ REQUIRED_TOP_LEVEL = {
 }
 CLAIM_TYPES = {"fact", "inference", "hypothesis", "analogy"}
 CLAIM_STATUSES = {"proposed", "under-review", "accepted", "rejected", "deprecated"}
+LIFECYCLE_STATUSES = {
+    "proposed",
+    "observed",
+    "reviewed",
+    "deprecated",
+    "superseded",
+}
 RELATION_TYPES = {"uses", "extends", "composes", "resembles", "influenced-by"}
 FEATURE_RELATION_TYPES = {
     "implements",
@@ -135,6 +142,7 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
         _check_evidence_ids(
             label, feature_id, feature.get("evidence_ids"), evidence_ids
         )
+        _validate_lifecycle(label, feature_id, feature.get("lifecycle"), evidence_ids)
         if "scope_context" in feature:
             _validate_scope_context(
                 label,
@@ -155,6 +163,9 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
         )
         _check_evidence_ids(
             label, view.get("model", "view"), view.get("evidence_ids"), evidence_ids
+        )
+        _validate_lifecycle(
+            label, view.get("model", "view"), view.get("lifecycle"), evidence_ids
         )
         if "scope_context" in view:
             _validate_scope_context(
@@ -535,6 +546,69 @@ def _check_claim_status(label: str, item_id: str, status: Any) -> None:
 def _check_optional_claim_status(label: str, item_id: str, status: Any) -> None:
     if status is not None:
         _check_claim_status(label, item_id, status)
+
+
+def _validate_lifecycle(
+    label: str,
+    item_id: str,
+    lifecycle: Any,
+    evidence_ids: set[str | None],
+) -> None:
+    """Validate explicit lifecycle metadata without deriving it from claims.
+
+    Lifecycle answers what was observed or reviewed about a record's evolution;
+    claim_type and claim_status remain independent epistemic/review fields.
+    """
+
+    if lifecycle is None:
+        return
+    lifecycle_label = f"{item_id} lifecycle"
+    lifecycle = _require_object(label, lifecycle_label, lifecycle)
+    allowed = {
+        "status",
+        "evidence_ids",
+        "claim_type",
+        "claim_status",
+        "superseded_by",
+        "notes",
+    }
+    unexpected = lifecycle.keys() - allowed
+    if unexpected:
+        raise CardValidationError(
+            f"{label}: {lifecycle_label} has unexpected fields: {sorted(unexpected)}"
+        )
+    status = lifecycle.get("status")
+    if status not in LIFECYCLE_STATUSES:
+        raise CardValidationError(f"{label}: invalid {lifecycle_label} status")
+    _check_evidence_ids(
+        label, lifecycle_label, lifecycle.get("evidence_ids"), evidence_ids
+    )
+    if lifecycle.get("claim_type") not in CLAIM_TYPES:
+        raise CardValidationError(f"{label}: invalid {lifecycle_label} claim type")
+    _check_claim_status(label, lifecycle_label, lifecycle.get("claim_status"))
+    if status in {"deprecated", "superseded"} and (
+        not isinstance(lifecycle.get("notes"), str) or not lifecycle["notes"].strip()
+    ):
+        raise CardValidationError(
+            f"{label}: {lifecycle_label} {status} status needs notes"
+        )
+    superseded_by = lifecycle.get("superseded_by")
+    if superseded_by is not None:
+        if status != "superseded":
+            raise CardValidationError(
+                f"{label}: {lifecycle_label}.superseded_by requires superseded status"
+            )
+        if (
+            not isinstance(superseded_by, list)
+            or not superseded_by
+            or not all(
+                isinstance(item, str) and ID_PATTERN.fullmatch(item)
+                for item in superseded_by
+            )
+        ):
+            raise CardValidationError(
+                f"{label}: {lifecycle_label}.superseded_by must be a list of ids"
+            )
 
 
 def _check_evidence_ids(
