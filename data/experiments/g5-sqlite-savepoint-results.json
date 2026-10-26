@@ -1,0 +1,634 @@
+{
+  "id": "g5-sqlite-savepoint",
+  "kind": "experiment",
+  "title": "SQLite savepoint partial rollback preserves outer transaction work",
+  "uri": "https://sqlite.org/src/info/4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "protocol": "For each repetition, create a fresh SQLite database, commit a fixed four-row dataset, begin a transaction and insert a fifth row, create a savepoint, insert a sixth row, roll back to and release the savepoint, then commit the outer transaction. Compare states before and after the savepoint rollback, check integrity, reopen, and compare repetitions.",
+  "system_commit": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "environment": {
+    "os": "Linux",
+    "os_release": "7.3.0-4-cachyos",
+    "architecture": "x86_64",
+    "python": "3.13.13",
+    "sqlite": "3.50.4",
+    "sqlite_source_id": "2025-07-30 19:33:53 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+  },
+  "command": "uv run --offline python scripts/g5_sqlite_savepoint_experiment.py --expected-source-id 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3 --repetitions 3 --output data/experiments/g5-sqlite-savepoint-results.json",
+  "dataset": {
+    "name": "fixed-records-v1",
+    "rows": [
+      [
+        1,
+        "alpha",
+        10
+      ],
+      [
+        2,
+        "beta",
+        20
+      ],
+      [
+        3,
+        "gamma",
+        30
+      ],
+      [
+        4,
+        "delta",
+        40
+      ]
+    ],
+    "schema": "records(id INTEGER PRIMARY KEY, name TEXT NOT NULL, value INTEGER NOT NULL)"
+  },
+  "repetitions": 3,
+  "metrics": {
+    "seed_rows": 4,
+    "outer_rows_before_savepoint": 5,
+    "inner_rows_before_savepoint_rollback": 6,
+    "rows_after_savepoint_rollback": 5,
+    "rows_after_outer_commit": 5,
+    "reopened_rows": 5,
+    "integrity_checks_passed": 3,
+    "savepoint_rollback_checks_passed": 3,
+    "outer_commit_checks_passed": 3,
+    "repetitions_consistent": 1
+  },
+  "artifacts": [
+    {
+      "name": "per-repetition-observations",
+      "results": [
+        {
+          "seeded": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "before_savepoint_rollback": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "after_savepoint_insert": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ],
+              [
+                6,
+                "zeta",
+                60
+              ]
+            ],
+            "row_count": 6,
+            "value_sum": 210
+          },
+          "after_savepoint_rollback": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "after_outer_commit": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "reopened": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "integrity_check": "ok",
+          "final_rows_sha256": "216b84a4a8809a38a0a796c9fdfef275a54e69f76ad3822302d57122118f2be0"
+        },
+        {
+          "seeded": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "before_savepoint_rollback": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "after_savepoint_insert": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ],
+              [
+                6,
+                "zeta",
+                60
+              ]
+            ],
+            "row_count": 6,
+            "value_sum": 210
+          },
+          "after_savepoint_rollback": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "after_outer_commit": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "reopened": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "integrity_check": "ok",
+          "final_rows_sha256": "216b84a4a8809a38a0a796c9fdfef275a54e69f76ad3822302d57122118f2be0"
+        },
+        {
+          "seeded": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "before_savepoint_rollback": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "after_savepoint_insert": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ],
+              [
+                6,
+                "zeta",
+                60
+              ]
+            ],
+            "row_count": 6,
+            "value_sum": 210
+          },
+          "after_savepoint_rollback": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "after_outer_commit": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "reopened": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "integrity_check": "ok",
+          "final_rows_sha256": "216b84a4a8809a38a0a796c9fdfef275a54e69f76ad3822302d57122118f2be0"
+        }
+      ],
+      "runner_sha256": "08ad256ff132b3357975dfc77fd5cae7ed3b4eecee3c1b8fa7bf65fd79fd546c"
+    }
+  ]
+}

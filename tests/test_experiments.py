@@ -176,6 +176,66 @@ class SQLiteExperimentTests(unittest.TestCase):
         self.assertEqual(view.to_dict()["classification"]["result"], "valid")
         self.assertEqual(len(view.to_dict()["validation_records"]), 2)
 
+    def test_savepoint_partial_rollback_preserves_outer_work(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "savepoint-report.json"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SAVEPOINT_SCRIPT),
+                    "--expected-source-id",
+                    self.source_id(),
+                    "--repetitions",
+                    "2",
+                    "--output",
+                    str(output),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            report = json.loads(output.read_text(encoding="utf-8"))
+
+        self.assertEqual(report["kind"], "experiment")
+        self.assertEqual(report["metrics"]["inner_rows_before_savepoint_rollback"], 6)
+        self.assertEqual(report["metrics"]["rows_after_savepoint_rollback"], 5)
+        self.assertEqual(report["metrics"]["rows_after_outer_commit"], 5)
+        self.assertEqual(report["metrics"]["savepoint_rollback_checks_passed"], 2)
+        self.assertEqual(report["metrics"]["repetitions_consistent"], 1)
+        self.assertIn('"savepoint_rollback_checks_passed": 2', completed.stdout)
+        self.validate_evidence(self._savepoint_observation())
+        for result in report["artifacts"][0]["results"]:
+            self.assertEqual(
+                result["after_savepoint_rollback"], result["before_savepoint_rollback"]
+            )
+            self.assertEqual(result["reopened"], result["after_outer_commit"])
+
+    def test_recorded_savepoint_observation_and_math_view_are_valid(self) -> None:
+        observation = self._savepoint_observation()
+        self.validate_evidence(observation)
+        self.assertEqual(observation["result_boundary"]["canonical"], False)
+        self.assertEqual(observation["repetitions"], 3)
+        self.assertEqual(
+            observation["artifacts"][0]["digest"],
+            "sha256:2acf658d2c27584a049ff32fc3bd3459e90d77847154fba6aceaf0a63a04f91a",
+        )
+        view = json.loads(
+            (
+                ROOT / "data/mathviews/sqlite-savepoint-partial-rollback-mth-0164.json"
+            ).read_text(encoding="utf-8")
+        )
+        from mathen.mathviews import validate_math_view_contract
+
+        validate_math_view_contract(view, evidence_ids={observation["id"]})
+
+    @staticmethod
+    def _savepoint_observation() -> dict:
+        return json.loads(
+            (
+                ROOT / "data/experiments/g5-sqlite-savepoint-observation-mth-0164.json"
+            ).read_text(encoding="utf-8")
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
