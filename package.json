@@ -29,6 +29,7 @@
     "mcp": "cd apps/mcp && bun run start"
   },
   "devDependencies": {
+    "carryctx": "^0.11.6",
     "concurrently": "^9.2.1"
   },
   "patchedDependencies": {
