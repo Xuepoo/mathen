@@ -7,7 +7,13 @@ import {
   seedCoordinates,
   worldUnitsPerPixel,
 } from "./graph-viewport";
-import { applyView, expandOneHop, applyPin, type Pin } from "./graph-view";
+import {
+  applyView,
+  expandOneHop,
+  applyPin,
+  shortestPath,
+  type Pin,
+} from "./graph-view";
 import { movablePanel } from "./movable-panel";
 import { configureNavigation } from "./navigation-controls";
 import { centeredCamera } from "./graph-camera";
@@ -62,10 +68,10 @@ app.innerHTML = `
     <div id="graph" role="region" aria-label="Interactive force graph. Use Browse systems for a keyboard accessible list."></div>
     <div id="graph-names" aria-hidden="true"></div>
     <header class="topbar glass">
-      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">m<span>·</span></span><span>mathen<small>Architecture atlas</small></span></a>
+      <a class="brand" href="/"><img class="brand-logo" src="https://cdn.xuepoo.xyz/mathen/brand/logo.svg" alt="" onerror="this.onerror=null;this.src='/mathen-logo.svg'"><span>mathen<small>Architecture atlas</small></span></a>
       <div class="search-wrap">
         <label class="sr-only" for="search">Search systems, descriptions, or card scope</label>
-        <span class="search-icon" aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a system…" autocomplete="off" aria-controls="search-results"><kbd>/</kbd>
+         <span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="10.8" cy="10.8" r="6.7"></circle><path d="m16 16 5 5"></path></svg></span><input id="search" type="search" placeholder="Find a system…" autocomplete="off" aria-controls="search-results"><kbd>/</kbd>
         <div id="search-results" class="search-results glass" hidden></div>
       </div>
       <button id="catalog-open" class="quiet-button">Browse systems & discover <span aria-hidden="true">↗</span></button>
@@ -73,6 +79,7 @@ app.innerHTML = `
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.25c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.74.08-.74 1.2.08 1.84 1.23 1.84 1.23 1.07 1.83 2.8 1.3 3.48 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.38 1.23-3.22-.12-.3-.53-1.52.12-3.17 0 0 1-.32 3.3 1.23a11.4 11.4 0 0 1 6 0c2.3-1.55 3.3-1.23 3.3-1.23.65 1.65.24 2.87.12 3.17.76.84 1.23 1.91 1.23 3.22 0 4.62-2.8 5.64-5.48 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .5Z"/></svg>
       </a>
     </header>
+    <button id="fullscreen-toggle" class="fullscreen-toggle glass" aria-pressed="false" aria-keyshortcuts="F11" aria-label="Enter full screen" title="Enter full screen (F11)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path></svg><span>Full screen</span></button>
 
     <section class="graph-tools glass" aria-label="Graph controls">
       <div class="dimension-switch graph-mode-switch" role="group" aria-label="Graph mode"><button id="graph-systems" aria-pressed="true">Systems</button><button id="graph-models" aria-pressed="false">Math models</button></div>
@@ -180,6 +187,9 @@ const mobileViewport = window.matchMedia("(max-width: 700px)");
 let allNames = !mobileViewport.matches;
 let namesManuallySet = false;
 let mobileToolsOpen = false;
+let pathSelection: string[] = [];
+let pathNodes = new Set<string>();
+let pathEdges = new Set<string>();
 required("names").setAttribute("aria-pressed", String(allNames));
 required("names").textContent = allNames ? "Names: all" : "Names: focus";
 let detailRequest = 0;
@@ -413,8 +423,8 @@ function configureCamera() {
   );
   required("gesture-hint").textContent =
     dimensions === 2
-      ? "Drag space to pan. Drag a node to reshape its neighborhood. Scroll to zoom."
-      : "Drag a node to reshape its neighborhood. Drag space to orbit.";
+      ? "Drag space to pan · Ctrl-click two nodes for a shortest path · scroll to zoom."
+      : "Drag to orbit · Ctrl-click two nodes for a shortest path · scroll to zoom.";
 }
 
 async function createGraph() {
@@ -484,7 +494,12 @@ async function createGraph() {
     .warmupTicks(reducedMotion.matches ? 100 : 35)
     .cooldownTicks(paused ? 0 : 180)
     .cooldownTime(8000)
-    .onNodeClick((node) => selectNode(node.id))
+    .onNodeClick((node, event) => {
+      const pathClick = event.ctrlKey || event.metaKey;
+      if (pathClick) togglePathNode(node.id);
+      else clearPathSelection();
+      selectNode(node.id, !pathClick);
+    })
     .onNodeRightClick((node, event) => {
       event.preventDefault();
       selectNode(node.id);
@@ -594,6 +609,68 @@ function closeMobileTools() {
   required("mobile-tools").setAttribute("aria-expanded", "false");
   required("secondary-tools").classList.remove("is-open");
 }
+function updateFullscreenState(fullscreen: boolean) {
+  document
+    .querySelector<HTMLElement>(".explorer")
+    ?.classList.toggle("is-fullscreen", fullscreen);
+  const button = required<HTMLButtonElement>("fullscreen-toggle");
+  button.setAttribute("aria-pressed", String(fullscreen));
+  button.setAttribute(
+    "aria-label",
+    fullscreen ? "Exit full screen" : "Enter full screen",
+  );
+  button.title = fullscreen
+    ? "Exit full screen (F11 or Escape)"
+    : "Enter full screen (F11)";
+  button.querySelector("span")!.textContent = fullscreen
+    ? "Exit"
+    : "Full screen";
+  button.querySelector("svg")!.innerHTML = fullscreen
+    ? '<path d="M9 4H4v5M20 9V4h-5M15 20h5v-5M4 15v5h5"></path>'
+    : '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path>';
+}
+async function toggleFullscreen() {
+  if (document.fullscreenElement) return document.exitFullscreen();
+  return document.documentElement.requestFullscreen();
+}
+function syncFullscreenState() {
+  updateFullscreenState(Boolean(document.fullscreenElement));
+}
+function updatePathHighlight() {
+  pathNodes = new Set(pathSelection);
+  pathEdges = new Set();
+  if (pathSelection.length === 2) {
+    const path = shortestPath(visible, pathSelection[0], pathSelection[1]);
+    if (path) {
+      pathNodes = new Set(path.nodes);
+      pathEdges = path.edges;
+      required("simulation-status").textContent =
+        `Shortest path · ${path.edges.size} relation${path.edges.size === 1 ? "" : "s"}`;
+    } else
+      required("simulation-status").textContent =
+        "No path between selected nodes";
+  } else if (pathSelection.length === 1) {
+    required("simulation-status").textContent =
+      "Path endpoint selected · Ctrl-click another node";
+  }
+  updateStyles();
+}
+function togglePathNode(id: string) {
+  const index = pathSelection.indexOf(id);
+  if (index >= 0) pathSelection.splice(index, 1);
+  else {
+    pathSelection.push(id);
+    if (pathSelection.length > 2) pathSelection.shift();
+  }
+  updatePathHighlight();
+}
+function clearPathSelection() {
+  if (!pathSelection.length) return;
+  pathSelection = [];
+  pathNodes.clear();
+  pathEdges.clear();
+  updateStyles();
+}
 function openNodeMenu(id: string, x?: number, y?: number) {
   const node = graph?.graphData().nodes.find((item) => item.id === id);
   if (!node || !graph) return;
@@ -601,7 +678,7 @@ function openNodeMenu(id: string, x?: number, y?: number) {
   initialFitPending = false;
   menuOpener = document.getElementById("node-actions") ?? host;
   const point = graph.graph2ScreenCoords(node.x!, node.y!, node.z!);
-  nodeMenu.innerHTML = `<strong>${escapeHtml(node.name)}</strong><button role="menuitem" data-action="pin">${pins.has(id) ? "Unpin" : "Pin"}</button><button role="menuitem" data-action="expand">Expand 1 hop</button><button role="menuitem" data-action="hide">Hide from view</button><button role="menuitem" data-action="details">${node.type === "model" ? "View model metadata" : "View details"}</button><p>Expand adds actual neighbors outside the domain; relation filters and hidden nodes still apply.</p>`;
+  nodeMenu.innerHTML = `<strong>${escapeHtml(node.name)}</strong><button role="menuitem" data-action="path">${pathSelection.includes(id) ? "Remove path endpoint" : "Add path endpoint"}</button><button role="menuitem" data-action="pin">${pins.has(id) ? "Unpin" : "Pin"}</button><button role="menuitem" data-action="expand">Expand 1 hop</button><button role="menuitem" data-action="hide">Hide from view</button><button role="menuitem" data-action="details">${node.type === "model" ? "View model metadata" : "View details"}</button><p>Path endpoints use Ctrl-click or this menu. The shortest visible route is highlighted when two are selected.</p>`;
   nodeMenu.hidden = false;
   nodeMenu.style.left = `${Math.max(8, Math.min(x ?? point.x + 14, window.innerWidth - nodeMenu.offsetWidth - 8))}px`;
   nodeMenu.style.top = `${Math.max(8, Math.min(y ?? point.y, window.innerHeight - nodeMenu.offsetHeight - 8))}px`;
@@ -611,6 +688,9 @@ function openNodeMenu(id: string, x?: number, y?: number) {
       button.onclick = () => {
         closeNodeMenu();
         switch (button.dataset.action) {
+          case "path":
+            togglePathNode(id);
+            break;
           case "pin":
             if (pins.has(id)) pins.delete(id);
             else pins.set(id, { x: node.x!, y: node.y!, z: node.z! });
@@ -625,13 +705,13 @@ function openNodeMenu(id: string, x?: number, y?: number) {
               expandedNodes,
               graphMode === "models" ? "all" : relationSelect.value,
             );
-            updateGraph();
+            updateGraph(true);
             required("simulation-status").textContent =
               "Expanded actual neighbors · domain exceptions active";
             break;
           case "hide":
             hiddenNodes.add(id);
-            updateGraph();
+            updateGraph(true);
             required("restore-hidden").focus();
             break;
           case "details":
@@ -664,6 +744,7 @@ nodeMenu.addEventListener("keydown", (event) => {
 window.addEventListener("resize", () => {
   closeNodeMenu(false);
   updateLabels();
+  syncFullscreenState();
 });
 mobileViewport.addEventListener("change", ({ matches }) => {
   if (!namesManuallySet) {
@@ -674,6 +755,7 @@ mobileViewport.addEventListener("change", ({ matches }) => {
   updateLabels();
 });
 function nodeColor(node: SimulationNode) {
+  if (pathNodes.has(node.id)) return "#ffffff";
   const active =
     (!highlighted.size || highlighted.has(node.id)) &&
     (!searchMatches || searchMatches.has(node.id));
@@ -684,6 +766,7 @@ function nodeColor(node: SimulationNode) {
     : "#34404c";
 }
 function linkColor(link: SimulationLink) {
+  if (pathEdges.has(link.id)) return "#ffffff";
   if (selectedEdge?.id === link.id) return "#ffffff";
   if (
     highlighted.size &&
@@ -708,10 +791,18 @@ function updateStyles() {
   if (!graph) return;
   graph.nodeColor(nodeColor).linkColor(linkColor);
   // The engine rebuilds every link mesh when linkWidth is set, even on hover.
-  if (styledEdgeId !== selectedEdge?.id) {
-    styledEdgeId = selectedEdge?.id;
+  const pathKey = [...pathEdges].sort().join(",");
+  const styleKey = `${selectedEdge?.id ?? ""}|${pathKey}`;
+  if (styledEdgeId !== styleKey) {
+    styledEdgeId = styleKey;
     graph.linkWidth((link) =>
-      selectedEdge?.id === link.id ? 2.5 : link.type === "related" ? 0.45 : 1.1,
+      pathEdges.has(link.id)
+        ? 3.4
+        : selectedEdge?.id === link.id
+          ? 2.5
+          : link.type === "related"
+            ? 0.45
+            : 1.1,
     );
   }
   updateLabels();
@@ -727,10 +818,23 @@ function updateLabels() {
   ]);
 }
 
-function updateGraph() {
+function updateGraph(preserveView = false) {
   closeNodeMenu(false);
-  autoFit = true;
-  initialFitPending = true;
+  const preservedCamera =
+    preserveView && graph
+      ? {
+          position: { ...graph.camera().position },
+          target: {
+            ...(
+              graph.controls() as {
+                target: { x: number; y: number; z: number };
+              }
+            ).target,
+          },
+        }
+      : undefined;
+  autoFit = !preserveView;
+  initialFitPending = !preserveView;
   visible =
     graphMode === "models"
       ? filterModelGraph(
@@ -747,6 +851,9 @@ function updateGraph() {
   );
   if (selectedId && !visible.nodes.some((node) => node.id === selectedId))
     clearSelection();
+  pathSelection = pathSelection.filter((id) =>
+    visible.nodes.some((node) => node.id === id),
+  );
   selectedEdge = undefined;
   const next = modelSimulationData(visible);
   const old = new Map(graph?.graphData().nodes.map((node) => [node.id, node]));
@@ -767,7 +874,10 @@ function updateGraph() {
   labelAnchors.clear();
   linkAnchors.clear();
   graph?.graphData(next);
+  if (preservedCamera && graph)
+    graph.cameraPosition(preservedCamera.position, preservedCamera.target, 0);
   highlighted = selectedId ? neighborhood(visible, selectedId) : new Set();
+  updatePathHighlight();
   if (selectedId) renderNodeInspector(selectedId);
   else inspector.hidden = true;
   required("counts").textContent =
@@ -788,7 +898,7 @@ function updateGraph() {
     `Restore hidden (${hiddenNodes.size})`;
   renderCatalog();
   updateStyles();
-  if (!paused) reheat();
+  if (!preserveView && !paused) reheat();
   else graph?.cooldownTicks(0);
 }
 
@@ -897,8 +1007,13 @@ function renderScreenGeometry() {
       const y = ((source.y ?? 0) + (target.y ?? 0)) / 2;
       const z = ((source.z ?? 0) + (target.z ?? 0)) / 2;
       const depth = -(m[2] * x + m[6] * y + m[10] * z + m[14]);
-      const pixels =
-        selectedEdge?.id === link.id ? 3 : link.type === "related" ? 1.2 : 2;
+      const pixels = pathEdges.has(link.id)
+        ? 5
+        : selectedEdge?.id === link.id
+          ? 3
+          : link.type === "related"
+            ? 1.2
+            : 2;
       anchor.scale.x = anchor.scale.y =
         (pixels * worldUnitsPerPixel(depth, camera.fov, height)) /
         (2 * anchor.geometry.parameters.radiusTop);
@@ -919,6 +1034,7 @@ function reheat() {
 }
 function clearSelection() {
   closeNodeMenu(false);
+  clearPathSelection();
   selectedId = undefined;
   selectedEdge = undefined;
   highlighted.clear();
@@ -926,7 +1042,7 @@ function clearSelection() {
   required<HTMLButtonElement>("focus").disabled = true;
   updateStyles();
 }
-function selectNode(id: string) {
+function selectNode(id: string, center = true) {
   closeNodeMenu(false);
   closeMobileTools();
   selectedId = id;
@@ -941,7 +1057,12 @@ function selectNode(id: string) {
   const node = graph
     ?.graphData()
     .nodes.find((candidate) => candidate.id === id);
-  if (graph && node && [node.x, node.y, node.z].every(Number.isFinite)) {
+  if (
+    center &&
+    graph &&
+    node &&
+    [node.x, node.y, node.z].every(Number.isFinite)
+  ) {
     autoFit = false;
     initialFitPending = false;
     const controls = graph.controls() as {
@@ -1024,6 +1145,7 @@ function bindInspector() {
 }
 function selectEdge(edge: SimulationLink) {
   closeNodeMenu(false);
+  clearPathSelection();
   selectedEdge = edge;
   selectedId = undefined;
   highlighted = new Set([endpointId(edge.source), endpointId(edge.target)]);
@@ -1333,6 +1455,11 @@ document.addEventListener("pointerdown", (event) => {
     closeNodeMenu(false);
 });
 document.addEventListener("keydown", (event) => {
+  if (event.key === "F11") {
+    event.preventDefault();
+    void toggleFullscreen().catch(() => undefined);
+    return;
+  }
   if (event.key === "Escape" && !nodeMenu.hidden) {
     event.preventDefault();
     closeNodeMenu();
@@ -1373,19 +1500,25 @@ required("mobile-tools").onclick = () => {
   );
   required("secondary-tools").classList.toggle("is-open", mobileToolsOpen);
 };
+required("fullscreen-toggle").onclick = () =>
+  void toggleFullscreen().catch(() => undefined);
+document.addEventListener("fullscreenchange", () =>
+  updateFullscreenState(Boolean(document.fullscreenElement)),
+);
+syncFullscreenState();
 required("help-open").onclick = required("legend-open").onclick = () =>
   showDialog(helpDialog);
 domainSelect.onchange = () => {
   expandedNodes.clear();
-  updateGraph();
+  updateGraph(true);
 };
 relationSelect.onchange = () => {
   expandedNodes.clear();
-  updateGraph();
+  updateGraph(true);
 };
 required("restore-hidden").onclick = () => {
   hiddenNodes.clear();
-  updateGraph();
+  updateGraph(true);
 };
 required("fit").onclick = () => {
   autoFit = false;
