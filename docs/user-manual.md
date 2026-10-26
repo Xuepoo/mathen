@@ -5,7 +5,9 @@
 This manual explains the data contracts, storage layers, commands, and
 end-to-end workflow currently implemented by Mathen.
 
-Mathen has two related goals:
+Mathen is an evidence-bounded Architecture Exploration Methodology and
+research instrument, not an autonomous architecture generator. It has two
+related goals:
 
 1. Translate software systems into evidence-backed architecture models.
 2. Compare and eventually compose those models under explicit constraints.
@@ -14,6 +16,13 @@ The first goal is implemented today. Temporal evolution, communities, and
 architecture synthesis remain planned extensions. Current contracts also provide
 typed feature relations, composition proposals, and bounded candidate
 exploration while preserving evidence, version context, and draft boundaries.
+
+The research workflow is evidence → deterministic observation → microstructure
+→ contract → composition → experiment. Search, graph paths, and LLM drafts
+support discovery and review; they do not establish a typed relation, proof,
+compatibility, causality, originality, or architecture superiority. Contracts
+classify supplied model data, and experiments remain bounded by their recorded
+scope.
 
 ## 1. Concepts and status boundaries
 

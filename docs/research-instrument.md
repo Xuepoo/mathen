@@ -10,6 +10,37 @@ template. This document records the current research position and the
 questions that still require evidence. It is a research hypothesis and design
 direction, not a claim that the full loop has already been validated.
 
+## Position and method in one view
+
+Mathen is an evidence-bounded **Architecture Exploration Methodology**: a
+research instrument for moving from evidence about existing systems to
+reviewable, testable candidate structures. Its purpose is exploration and
+traceability, not autonomous architecture generation. The operative loop is:
+
+```text
+evidence
+  → deterministic observation
+  → architectural microstructure
+  → contract
+  → bounded composition
+  → prototype or experiment
+  → new evidence, counterexample, or negative knowledge
+```
+
+The arrows are not interchangeable transformations. Evidence is selected and
+scoped; observations are reproducible signals; microstructures are bounded
+interpretations; contracts make assumptions and checks explicit; compositions
+state conflicts and validation gaps; experiments measure behavior under a
+declared workload and environment. Human review can stop, narrow, reject, or
+redirect the loop at every stage.
+
+**Discovery** asks what a person or tool should inspect next: a lexical result,
+graph path, LLM suggestion, analogy, counterexample, or review question.
+**Synthesis** asks whether reviewed structures can be assembled under explicit
+constraints into a candidate worth prototyping. A discovery signal is not a
+synthesis result, and a synthesis candidate is not an implemented or superior
+architecture.
+
 ## The human–LLM complement
 
 Human researchers and language models contribute different capabilities:
@@ -19,7 +50,7 @@ Human researchers and language models contribute different capabilities:
 | Human researcher       | Problem reframing, curiosity, unusual questions, research direction, and final review           | Human insight is difficult to scale and is not automatically reproducible                              |
 | LLM                    | Broad cross-domain retrieval, local explanation, candidate abstractions, and candidate mappings | Output follows prompts and available evidence; it is not proof, a theorem, or an engineering guarantee |
 | Graph analysis         | Communities, centrality, paths, bridges, and structural positions                               | A graph metric describes the current projection, not intrinsic importance or truth                     |
-| Planned vector retrieval | Would provide semantic recall, terminology alignment, and distant candidate discovery | Similarity is a candidate signal, not a typed relation or compatibility result; no integration is currently implemented |
+| Retrieval (current lexical; planned vector) | Lexical retrieval provides explainable discovery; a future vector index could provide terminology alignment and distant candidates | Retrieval scores are candidate signals, not typed relations, compatibility, or proof; vector integration is not implemented |
 | Mathematical contracts | Deterministic checks, assumptions, laws, scope, and property classifications | A finite check validates supplied finite/model data, not the entire implementation |
 | Experiments            | Runtime behavior, counterexamples, failure modes, and new evidence                              | An experiment has a workload and scope; it does not automatically generalize                           |
 
@@ -46,6 +77,28 @@ does not become canonical knowledge without deliberate human review. The
 evidence-bounded protocol is described in
 [`llm-modeling.md`](llm-modeling.md). This document does not rely on an
 external decision-record identifier for provenance.
+
+### Replaceable extraction provenance
+
+An extraction or graph run must identify the stage that produced each
+candidate. The current replaceable model profile is recorded as:
+
+```text
+provider/model: openai/gpt-6-astra
+thinking level: high
+role: feature extraction and graph construction/annotation
+```
+
+This is extraction provenance, not an architecture authority or a claim about
+the model's superiority. Another provider or model may perform the same role
+when the evidence boundary, prompt/schema versions, deterministic inspection,
+and review protocol are held constant. A profile change creates a distinct
+run; it must not overwrite the earlier interpretation. Secret-safe sidecars
+should retain the model profile, input/evidence digest, source revision,
+inspection provenance, output digest, review status, and canonical status, but
+not API keys or other secret configuration. See
+[`llm-modeling.md`](llm-modeling.md) for the implemented protocol and
+provenance boundary.
 
 ## Why direct LLM architecture design is insufficient
 
@@ -98,6 +151,22 @@ Candidate composition remains `proven: false` until the relevant contracts,
 experiments, and review support a stronger claim. Similarity search must never
 silently create `uses`, `composes`, `refines`, `influenced-by`, or canonical
 feature relations.
+
+The same rule applies to every shortcut in the loop:
+
+```text
+similarity ≠ graph path ≠ typed relation ≠ proof
+          ≠ compatibility ≠ causality ≠ originality
+          ≠ architecture quality or superiority
+```
+
+A graph path is a path through the selected projection, not a causal history.
+A relation is valid only when its type and local evidence support that relation.
+A contract result classifies supplied model data; it does not prove omitted
+implementation behavior. An experiment supports only its declared system
+revision, workload, runtime conditions, scale, and failure boundary. No result
+may silently generalize from one deployment, lifecycle state, or scope to
+another.
 
 ## Representation bridges: the Cartesian analogy
 
@@ -221,6 +290,20 @@ The following questions should remain visible until evaluated:
 - Which graph/vector/LLM combinations improve validated candidate value rather
   than just graph density?
 
+The planned evaluation should also separate these questions operationally:
+
+- Does a human using the loop find more useful cross-community candidates, or
+  merely more candidates, than a direct search or direct LLM-design control?
+- Does explicit microstructure improve bridge precision, evidence locality,
+  scope preservation, and reviewer usefulness at a tolerable review cost?
+- Do contracts reject attractive but invalid or under-specified candidates, and
+  do they abstain when observations are missing rather than manufacture a
+  negative result?
+- Do prototypes or failure tests distinguish a useful transfer from a fluent,
+  non-predictive analogy? What counterexamples are discovered and retained?
+- Are findings stable across source revisions, model/provenance profiles,
+  graph projections, deployment origins, and lifecycle/scope partitions?
+
 ## Evaluation dimensions
 
 Mathen should evaluate this research instrument with separate metrics instead
@@ -241,6 +324,54 @@ graph/vector disagreement and complementarity
 The metrics require reviewed reference sets, explicit scopes, and documented
 limitations. A denser graph is not automatically a better graph. A more novel
 textual answer is not automatically a novel architecture.
+
+## Implemented evidence and future hypotheses
+
+The current repository supports evidence-linked cards and drafts, fixed-commit
+repository observations, modeling bundles, semantic validation, microstructure
+and mathematical-view contracts, bounded composition candidates, read-only
+graph/API/MCP projections, and a bounded lexical retrieval baseline. It does
+not implement autonomous synthesis, a semantic/vector index, theorem
+production, calibrated originality or quality scoring, or a general graph
+database.
+
+The retrieval boundary is intentionally empirical. The offline MTH-0150 pilot
+found equal Recall@5 for lexical and local vector candidates (10/12) and lower
+vector nDCG@5 (0.5464 versus 0.5579), with approximately 280.8 seconds of CPU
+document-embedding time. The larger MTH-0154 evaluation retains the lexical
+control and records unknown scope coverage rather than inventing a vector
+comparison. Therefore lexical retrieval remains the explainable baseline;
+embeddings and Vectorize remain a future research comparison gated by reviewed
+labels, scope/claim-type slices, false-link and abstention checks, latency, and
+cost. See [`mth-0150-retrieval-embedding-pilot.md`](mth-0150-retrieval-embedding-pilot.md),
+[`mth-0154-retrieval-evaluation.md`](mth-0154-retrieval-evaluation.md), and
+[`retrieval-extension-decision-mth-0147.md`](retrieval-extension-decision-mth-0147.md).
+
+Scope and lifecycle pilots reinforce the same boundary. The
+[`scope-context-contract.md`](scope-context-contract.md) keeps validity scope,
+workload, runtime conditions, scale, and failure conditions independent; the
+[`lifecycle-status-contract.md`](lifecycle-status-contract.md) keeps feature
+lifecycle separate from claim type and review status. Missing fields mean
+unknown or not recorded, not absence, currentness, compatibility, or failure.
+
+Small SQLite observations show how the experiment stage should be read. The
+transaction rollback observation and its follow-up savepoint observation are
+fixed, local, sequential protocols with explicit exclusions; they do not
+constitute a general recovery theorem or universal SQLite behavior. See
+[`g5-sqlite-transaction-experiment.md`](g5-sqlite-transaction-experiment.md).
+The related savepoint note, when present in the research artifact set, is
+similarly a detached observation rather than a canonical-card claim.
+
+Related internal review material includes the extraction/review boundary in
+[`review-extraction-pipeline.md`](review-extraction-pipeline.md), the
+scope/lifecycle contracts above, and the synthesis evaluation plan in
+[`mth-0118-synthesis-validation-benchmark.md`](mth-0118-synthesis-validation-benchmark.md).
+Supporting records include the [internal literature map](../paper/README.md),
+[replaceable extraction provenance profile](extraction-provenance.md),
+[review-queue audit](mth-0159-research-review-queue.md),
+and [SQLite savepoint observation](mth-0164-sqlite-savepoint-observation.md).
+These are commit-pinned research records, not a paper body, canonical card, or
+production claim.
 
 ## Current status and related work
 

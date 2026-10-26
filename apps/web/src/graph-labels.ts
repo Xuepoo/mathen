@@ -64,3 +64,24 @@ export function shouldShowLabel(options: {
     Boolean(options.searchMatches?.has(options.id))
   );
 }
+
+/** Keep model labels scannable on the canvas without changing their full names. */
+export function compactModelLabel(name: string, maxLength = 34): string {
+  const normalized = name.replace(/^(?:same title:\s*)+/i, "").trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, Math.max(1, maxLength - 1)).trimEnd()}…`;
+}
+
+export function displayNodeColor(options: {
+  baseColor: string;
+  selected?: boolean;
+  path?: boolean;
+  savedPathColor?: string;
+  dimmed?: boolean;
+}) {
+  if (options.selected) return "#ffffff";
+  if (options.savedPathColor) return options.savedPathColor;
+  if (options.path) return "#ffffff";
+  if (options.dimmed) return "#34404c";
+  return options.baseColor;
+}

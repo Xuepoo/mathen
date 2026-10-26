@@ -246,6 +246,44 @@ rows loaded into D1; the local filesystem MCP can read local artifacts under
 its explicit mode. A finite classification checks the supplied finite/model
 data, not the semantics of the source implementation.
 
+### Evidence status, pilots, and replaceable provenance
+
+The current retrieval evidence supports a lexical baseline, not a semantic
+index decision. The MTH-0150 offline pilot found equal Recall@5 for lexical and
+local vector candidates (10/12) and lower vector nDCG@5 (0.5464 versus 0.5579),
+with approximately 280.8 seconds of CPU document-embedding time. MTH-0154
+retains the lexical control and records missing scope coverage explicitly
+rather than inventing a vector comparison. Embeddings and Vectorize therefore
+remain future research hypotheses gated by reviewed labels, paraphrase and
+misleading-similarity slices, claim type, scope, false-link, abstention,
+latency, and cost measurements. See
+[`mth-0150-retrieval-embedding-pilot.md`](mth-0150-retrieval-embedding-pilot.md),
+[`mth-0154-retrieval-evaluation.md`](mth-0154-retrieval-evaluation.md), and
+[`retrieval-extension-decision-mth-0147.md`](retrieval-extension-decision-mth-0147.md).
+
+The scope and lifecycle pilots preserve separate unknowns: validity scope,
+workload, runtime conditions, scale, failure conditions, lifecycle state, claim
+type, and review status must not be inferred from names, graph paths, source
+similarity, or missing fields. The contracts are documented in
+[`scope-context-contract.md`](scope-context-contract.md) and
+[`lifecycle-status-contract.md`](lifecycle-status-contract.md). Small SQLite
+transaction and savepoint observations are fixed, local, sequential protocols
+with explicit exclusions; they are not general recovery theorems or universal
+SQLite claims. The transaction protocol is documented in
+[`g5-sqlite-transaction-experiment.md`](g5-sqlite-transaction-experiment.md).
+
+The current replaceable extraction profile is `openai/gpt-6-astra` with
+thinking level `high`, used for feature extraction and graph
+construction/annotation. This profile is provenance for a replaceable stage,
+not architectural authority. A model or provider change creates a distinct
+run with its own evidence/input digest, prompt and schema versions,
+deterministic inspection, output digest, review status, and canonical status.
+Secret values do not belong in the record. The evidence-bounded modeling
+workflow is described in [`llm-modeling.md`](llm-modeling.md); extraction and
+graph provenance, review-queue audits, the internal literature map, and newer
+SQLite observation notes remain supporting research records when present, not
+paper bodies or production claims.
+
 The narrative must also state what is *not* currently provided:
 
 - no automatic proof that an implementation satisfies a mathematical model;
@@ -264,6 +302,14 @@ The narrative must also state what is *not* currently provided:
 - no validated claim that the full evidence-to-experiment loop improves
   discovery, review time, or architecture quality. Those are experiments to
   design and measure.
+
+In particular, Mathen does not infer a relation, proof, compatibility,
+causality, historical influence, substitutability, originality, or architecture
+superiority from a similarity score, graph path, relation label without local
+evidence, finite contract result, LLM explanation, or fluent candidate. A
+candidate remains a bounded hypothesis until its evidence, scope, assumptions,
+review, and—where relevant—prototype or failure experiment support a stronger
+claim.
 
 The MTH-0118 planning document now has a small research-only implementation:
 [`docs/mth-0118-benchmark-harness.md`](mth-0118-benchmark-harness.md). Its
@@ -322,6 +368,21 @@ Suggested links are `docs/research-instrument.md`,
 `docs/temporal-composition-contract.md`, `docs/cross-domain-analogies.md`,
 `docs/negative-knowledge-contract.md`, `docs/llm-modeling.md`, and
 `docs/configuration.md`.
+
+Supporting records should remain linked as records, not presented as a paper or
+as automatic evidence of completion. The bounded retrieval pilot and larger
+control evaluation are [`mth-0150-retrieval-embedding-pilot.md`](mth-0150-retrieval-embedding-pilot.md)
+and [`mth-0154-retrieval-evaluation.md`](mth-0154-retrieval-evaluation.md).
+Scope and lifecycle boundaries are [`scope-context-contract.md`](scope-context-contract.md)
+and [`lifecycle-status-contract.md`](lifecycle-status-contract.md); the
+extraction boundary is [`review-extraction-pipeline.md`](review-extraction-pipeline.md).
+The [internal literature map](../paper/README.md),
+[replaceable extraction-provenance profile](extraction-provenance.md),
+[review-queue audit](mth-0159-research-review-queue.md),
+and [SQLite savepoint observation](mth-0164-sqlite-savepoint-observation.md)
+are separate supporting records. They must not be silently treated as
+canonical cards, drafts, relations, production resources, or paper-submission
+files.
 
 ## Scope and acceptance criteria for a future implementation
 

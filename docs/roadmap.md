@@ -51,9 +51,14 @@ still required for promotion to `data/systems/`.
 
 ## Phase 5: Architecture synthesis and validation
 
-- Express design goals and constraints as queries.
-- Generate candidate compositions with explicit conflicts and assumptions.
-- Validate candidates with prototypes, benchmarks, and failure tests.
+- Express design goals and constraints as reviewable queries.
+- Generate bounded composition candidates with explicit conflicts, assumptions,
+  provenance, and `proven: false` status.
+- Validate candidates with prototypes, benchmarks, and failure tests scoped to
+  a fixed system revision, workload, environment, and deployment origin.
+- Evaluate discovery separately from synthesis: retrieval and graph paths are
+  candidate-finding aids, not relations, proofs, compatibility, causality,
+  originality, or architecture-quality scores.
 
 The MTH-0118 planning document has a research-only harness for validating run
 manifests and computing deterministic pilot metrics:
@@ -68,6 +73,12 @@ test the resulting hypotheses. See
 [`research-instrument.md`](research-instrument.md) for the open questions and
 evaluation dimensions. Direct LLM output is never treated as proof or as
 automatic architectural novelty.
+
+The complete evidence → microstructure → contract → composition → experiment
+loop remains a research hypothesis. Planned evaluation must measure candidate
+recall, false links, evidence locality, scope/lifecycle preservation,
+abstention, contract rejection, counterexamples, reviewer effort, and validated
+usefulness rather than replacing these dimensions with one confidence score.
 
 ## Non-goals for the first milestone
 

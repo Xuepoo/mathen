@@ -1,5 +1,13 @@
 import { expect, test } from "bun:test";
-import { applyView, expandOneHop, applyPin, shortestPath } from "./graph-view";
+import {
+  applyView,
+  expandOneHop,
+  applyPin,
+  formatRouteText,
+  serializeExplorationPath,
+  shortestPath,
+  shortestRoute,
+} from "./graph-view";
 import type { ExplorerPayload } from "./model-data";
 
 const source: ExplorerPayload = {
@@ -47,4 +55,19 @@ test("shortest path explores relations in either direction with deterministic BF
   expect(result?.nodes).toEqual(["a", "b", "c"]);
   expect(result?.edges).toEqual(new Set(['edge-["a","b","uses"]', 'edge-["b","c","related"]']));
   expect(shortestPath(source, "a", "d")).toBeUndefined();
+});
+
+test("route formatting and export preserve ordered relation metadata", () => {
+  const route = shortestRoute(source, "a", "c");
+  expect(route?.edges.map((edge) => edge.type)).toEqual(["uses", "related"]);
+  expect(formatRouteText(route!, (id) => id.toUpperCase())).toContain(
+    'A --uses [edge-["a","b","uses"]]-- B',
+  );
+  expect(serializeExplorationPath(route!, (id) => id.toUpperCase()).claim).toContain(
+    "not a canonical relation",
+  );
+});
+
+test("route endpoints must be visible in the supplied graph", () => {
+  expect(shortestRoute(source, "a", "missing")).toBeUndefined();
 });

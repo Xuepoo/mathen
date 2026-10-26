@@ -1,0 +1,110 @@
+{
+  "schema_version": "1.0",
+  "id": "sqlite-savepoint-partial-rollback",
+  "family": "state_machine",
+  "question": "Which bounded transaction states are observed when SQLite rolls back to a savepoint while preserving outer transaction work?",
+  "carrier": {
+    "kind": "savepoint-transaction-state",
+    "description": "Finite states in the fixed one-connection savepoint protocol.",
+    "elements": ["seeded", "outer-row-added", "inner-row-added", "savepoint-rolled-back", "outer-committed", "reopened"]
+  },
+  "state_space": {
+    "states": ["seeded", "outer-row-added", "inner-row-added", "savepoint-rolled-back", "outer-committed", "reopened"],
+    "initial": ["seeded"],
+    "terminal": ["reopened"],
+    "description": "An outer transaction adds one row, a savepoint adds another row, rollback-to-savepoint removes only the inner row, and the outer transaction commits."
+  },
+  "operations": [],
+  "relations": [],
+  "transitions": [
+    {"id": "seed-to-outer-row", "name": "Add outer row", "source": "seeded", "target": "outer-row-added", "label": "begin transaction and insert fifth row", "system": "SQLite"},
+    {"id": "outer-to-inner-row", "name": "Add savepoint row", "source": "outer-row-added", "target": "inner-row-added", "label": "create savepoint and insert sixth row", "system": "SQLite"},
+    {"id": "inner-to-savepoint-rollback", "name": "Rollback savepoint", "source": "inner-row-added", "target": "savepoint-rolled-back", "label": "rollback to and release savepoint", "system": "SQLite"},
+    {"id": "savepoint-to-outer-commit", "name": "Commit outer transaction", "source": "savepoint-rolled-back", "target": "outer-committed", "label": "commit the outer transaction", "system": "SQLite"},
+    {"id": "outer-commit-to-reopened", "name": "Close and reopen", "source": "outer-committed", "target": "reopened", "label": "reopen database and compare rows", "system": "SQLite"}
+  ],
+  "laws_or_checks": [
+    {"id": "initial-state", "name": "Initial state", "description": "The protocol begins in the seeded state.", "check": "initial"},
+    {"id": "transition-closure", "name": "Transition closure", "description": "Declared transitions remain within the finite state carrier.", "check": "closure"}
+  ],
+  "assumptions": [
+    "The carrier is a bounded observational projection of one fixed savepoint protocol, not a complete SQLite transaction model.",
+    "The savepoint rollback is represented by the complete ordered row state before and after rollback.",
+    "No timing, concurrency, crash, durability, or performance conclusion is inferred."
+  ],
+  "validity_scope": {
+    "systems": ["SQLite"],
+    "versions": ["SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"],
+    "deployment_origins": ["local-process"],
+    "conditions": ["Linux x86_64", "SQLite default journal mode", "SQLite default synchronous mode", "one local connection", "three repetitions"],
+    "exclusions": ["explicit full-transaction rollback", "WAL reader snapshots", "concurrent writers", "nested savepoint contention", "process crash", "power loss", "durability", "performance"]
+  },
+  "claim_type": "inference",
+  "claim_status": "under-review",
+  "evidence_ids": ["g5-sqlite-savepoint-observation-mth-0164"],
+  "classification": {
+    "result": "valid",
+    "reason": "All declared transitions are closed over the finite state space and the protocol has an initial state.",
+    "checks": [{"id": "initial-state", "result": "pass"}, {"id": "transition-closure", "result": "pass"}]
+  },
+  "validation_records": [
+    {
+      "id": "g5-savepoint-observed",
+      "view_id": "sqlite-savepoint-partial-rollback",
+      "kind": "observed-result",
+      "basis": "experiment",
+      "claim_type": "inference",
+      "claim_status": "under-review",
+      "system": "SQLite",
+      "version": "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+      "scope": {
+        "systems": ["SQLite"],
+        "versions": ["SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"],
+        "deployment_origins": ["local-process"],
+        "conditions": ["Linux x86_64", "SQLite default journal mode", "SQLite default synchronous mode", "one local connection", "three repetitions"],
+        "exclusions": ["explicit full-transaction rollback", "WAL reader snapshots", "concurrent writers", "nested savepoint contention", "process crash", "power loss", "durability", "performance"]
+      },
+      "evidence_ids": ["g5-sqlite-savepoint-observation-mth-0164"],
+      "provenance": {
+        "run_id": "g5-sqlite-savepoint-mth-0164",
+        "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+        "protocol_digest": "sha256:08ad256ff132b3357975dfc77fd5cae7ed3b4eecee3c1b8fa7bf65fd79fd546c",
+        "recorded_at": "2026-10-27T00:00:00Z",
+        "runner": "mathen-local-experiment-runner",
+        "toolchain": {"python": "3.13.13", "sqlite": "3.50.4"}
+      },
+      "result": {"status": "observed", "summary": "Across three repetitions, rollback to the savepoint removed the sixth row while preserving the fifth row in the outer transaction, and the fifth row survived outer commit and reopen."},
+      "limitations": ["The result is bounded to one fixed dataset, three repetitions, one host, and one SQLite build.", "The protocol does not test crashes, power loss, WAL visibility, concurrent writers, durability, or performance."]
+    },
+    {
+      "id": "g5-savepoint-omitted-behavior-not-established",
+      "view_id": "sqlite-savepoint-partial-rollback",
+      "kind": "absence-of-evidence",
+      "basis": "absence-of-evidence",
+      "claim_type": "hypothesis",
+      "claim_status": "under-review",
+      "system": "SQLite",
+      "version": "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+      "scope": {
+        "systems": ["SQLite"],
+        "versions": ["SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"],
+        "deployment_origins": ["local-process"],
+        "conditions": ["fixed savepoint protocol"],
+        "exclusions": ["concurrent writers", "nested savepoint contention", "process crash", "power loss", "durability", "performance"]
+      },
+      "evidence_ids": ["g5-sqlite-savepoint-observation-mth-0164"],
+      "provenance": {
+        "run_id": "g5-sqlite-savepoint-mth-0164",
+        "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+        "protocol_digest": "sha256:08ad256ff132b3357975dfc77fd5cae7ed3b4eecee3c1b8fa7bf65fd79fd546c",
+        "recorded_at": "2026-10-27T00:00:00Z",
+        "runner": "mathen-local-experiment-runner",
+        "toolchain": {"python": "3.13.13", "sqlite": "3.50.4"}
+      },
+      "result": {"status": "not-established", "summary": "The bounded savepoint protocol did not establish behavior for concurrent, nested-contention, crash, durability, or performance conditions."},
+      "question": "Did this protocol establish behavior for omitted concurrency, failure, durability, or performance conditions?",
+      "what_not_established": "No result for those omitted conditions was established by this protocol.",
+      "limitations": ["This is an absence-of-evidence record, not a negative finding about SQLite.", "A dedicated protocol is required for each omitted condition."]
+    }
+  ]
+}
