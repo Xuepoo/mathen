@@ -58,6 +58,7 @@
       "items": { "type": "string", "minLength": 1 }
     },
     "validity_scope": { "$ref": "#/$defs/validityScope" },
+    "scope_context": { "$ref": "architecture-card.schema.json#/$defs/scopeContext" },
     "parameters": {
       "type": "object",
       "additionalProperties": { "type": "number" }

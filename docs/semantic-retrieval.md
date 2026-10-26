@@ -168,6 +168,17 @@ change) is:
   "claim_status": "accepted",
   "version_context": "1.4",
   "deployment_origins": ["local", "cloud"],
+  "scope_context": {
+    "validity_scope": {
+      "status": "unspecified",
+      "systems": [], "versions": [], "deployment_origins": [],
+      "conditions": [], "exclusions": [], "evidence_ids": []
+    },
+     "workload": { "status": "unspecified", "values": [], "evidence_ids": [] },
+     "runtime_conditions": { "status": "unspecified", "values": [], "evidence_ids": [] },
+     "scale": { "status": "unspecified", "values": [], "evidence_ids": [] },
+     "failure_conditions": { "status": "unspecified", "values": [], "evidence_ids": [] }
+  },
   "source_digest": "sha256:...",
   "source_ref": "data/systems/duckdb.json#features/embedded-execution",
   "evidence_ids": ["duckdb-why"]
@@ -177,6 +188,9 @@ change) is:
 `evidence_ids` is metadata for closure checking and display, not a substitute
 for the evidence records. Evidence records are resolved from the owning card
 and returned with the result where the existing API contract does so.
+`scope_context` is optional source metadata. If present, it is copied without
+normalization or inference and every non-`unspecified` dimension must close over
+the owning evidence bundle. An omitted dimension is not a negative finding.
 
 ### 3.4 Filters and scope semantics
 

@@ -13,13 +13,9 @@ test("feature relation evidence rejects evidence owned by another system", async
     "0004_feature_relations.sql",
     "0005_feature_relation_evidence_integrity.sql",
     "0006_graph_projection_metadata.sql",
+    "0007_evidence_scope_context.sql",
   ]) {
-    database.exec(
-      await readFile(
-        resolve(import.meta.dir, "../migrations", migration),
-        "utf8",
-      ),
-    );
+    database.exec(await readFile(resolve(import.meta.dir, "../migrations", migration), "utf8"));
   }
 
   database.exec(`
@@ -42,9 +38,7 @@ test("feature relation evidence rejects evidence owned by another system", async
   assert.throws(
     () =>
       database
-        .query(
-          "INSERT INTO feature_relation_evidence (relation_id, evidence_id) VALUES (?, ?)",
-        )
+        .query("INSERT INTO feature_relation_evidence (relation_id, evidence_id) VALUES (?, ?)")
         .run(1, "beta:architecture"),
     /feature relation evidence must belong to relation source system/,
   );
@@ -69,13 +63,9 @@ test("graph projection migration stores reviewed document metadata", async () =>
     "0004_feature_relations.sql",
     "0005_feature_relation_evidence_integrity.sql",
     "0006_graph_projection_metadata.sql",
+    "0007_evidence_scope_context.sql",
   ]) {
-    database.exec(
-      await readFile(
-        resolve(import.meta.dir, "../migrations", migration),
-        "utf8",
-      ),
-    );
+    database.exec(await readFile(resolve(import.meta.dir, "../migrations", migration), "utf8"));
   }
   database.exec(
     `INSERT INTO graph_documents (id, kind, name, document_json, source_path)
@@ -87,9 +77,29 @@ test("graph projection migration stores reviewed document metadata", async () =>
     .query("SELECT metadata_json FROM features WHERE id = 'feature'")
     .get() as { metadata_json: string };
   assert.equal(feature.metadata_json, '{"claim_status":"accepted"}');
-  const documents = database
-    .query("SELECT COUNT(*) AS count FROM graph_documents")
-    .get() as { count: number };
+  const documents = database.query("SELECT COUNT(*) AS count FROM graph_documents").get() as {
+    count: number;
+  };
   assert.equal(documents.count, 1);
+  database.close();
+});
+
+test("scope migration adds nullable metadata columns without backfill", async () => {
+  const database = new Database(":memory:");
+  for (const migration of [
+    "0001_initial.sql",
+    "0002_modeling_bundles.sql",
+    "0003_temporal_composition_contract.sql",
+    "0004_feature_relations.sql",
+    "0005_feature_relation_evidence_integrity.sql",
+    "0006_graph_projection_metadata.sql",
+    "0007_evidence_scope_context.sql",
+  ]) {
+    database.exec(await readFile(resolve(import.meta.dir, "../migrations", migration), "utf8"));
+  }
+  const systems = database.query("PRAGMA table_info(systems)").all() as Array<{ name: string }>;
+  const evidence = database.query("PRAGMA table_info(evidence)").all() as Array<{ name: string }>;
+  assert.ok(systems.some((column) => column.name === "scope_context_json"));
+  assert.ok(evidence.some((column) => column.name === "scope_context_json"));
   database.close();
 });

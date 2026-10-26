@@ -335,6 +335,36 @@ class MathematicalViewContractTests(unittest.TestCase):
         with self.assertRaisesRegex(CardValidationError, "mathematical view contract"):
             validate_card(card)
 
+    def test_contract_scope_context_is_optional_but_evidence_bounded(self) -> None:
+        value = self._fixture("math-view-valid.json")
+        value["scope_context"] = {
+            "validity_scope": {
+                "status": "unspecified",
+                "systems": [],
+                "versions": [],
+                "deployment_origins": [],
+                "conditions": [],
+                "exclusions": [],
+                "evidence_ids": [],
+            },
+            **{
+                field: {"status": "unspecified", "values": [], "evidence_ids": []}
+                for field in (
+                    "workload",
+                    "runtime_conditions",
+                    "scale",
+                    "failure_conditions",
+                )
+            },
+        }
+        model = MathematicalViewContract.from_dict(value, evidence_ids={"design-doc"})
+        self.assertEqual(model.to_dict()["scope_context"], value["scope_context"])
+        value["scope_context"]["workload"]["evidence_ids"] = ["missing"]
+        with self.assertRaisesRegex(
+            MathematicalViewValidationError, "unknown evidence"
+        ):
+            MathematicalViewContract.from_dict(value, evidence_ids={"design-doc"})
+
     @staticmethod
     def _fixture(name: str) -> dict:
         return json.loads((FIXTURES / name).read_text(encoding="utf-8"))

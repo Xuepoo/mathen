@@ -1,0 +1,68 @@
+{
+  "task": "MTH-0143",
+  "schema_version": 1,
+  "corpus": "data/systems/*.json",
+  "reviewed_only": true,
+  "mutation_performed": false,
+  "counts": {
+    "cards": 219,
+    "features": 830,
+    "mathematical_views": 608,
+    "evidence": 1531,
+    "temporal_context_cards": 14,
+    "version_context_cards": 219,
+    "experiment_evidence": 0
+  },
+  "existing_structured_scope": {
+    "cards": { "any_validity_scope": 0, "total": 219 },
+    "features": { "any_validity_scope": 0, "total": 830 },
+    "mathematical_views": { "any_validity_scope": 0, "total": 608 },
+    "evidence": { "any_scope_context": 0, "total": 1531 }
+  },
+  "scope_dimensions": {
+    "deployment_origin": { "specified": 0, "unknown": 0, "unspecified": 219 },
+    "workload": { "specified": 0, "unknown": 0, "unspecified": 219 },
+    "runtime_conditions": { "specified": 0, "unknown": 0, "unspecified": 219 },
+    "scale": { "specified": 0, "unknown": 0, "unspecified": 219 },
+    "failure_conditions": { "specified": 0, "unknown": 0, "unspecified": 219 }
+  },
+  "evidence_kind_counts": {
+    "source-code": 886,
+    "official-doc": 645
+  },
+  "interpretation": {
+    "absence_of_evidence_is_negative_finding": false,
+    "product_name_or_source_similarity_used_for_scope": false,
+    "canonical_cards_backfilled": false,
+    "graph_relations_inferred": false
+  },
+  "examples": [
+    {
+      "system": "duckdb",
+      "observation": "card prose mentions embedded deployment and analytical workloads",
+      "missing_scope": ["deployment_origin", "runtime_conditions", "scale", "failure_conditions"],
+      "negative_finding": false
+    },
+    {
+      "system": "firecracker",
+      "observation": "card prose mentions multi-tenant cloud workloads and resource density",
+      "missing_scope": ["deployment_origin", "workload_shape", "scale", "failure_conditions"],
+      "negative_finding": false
+    },
+    {
+      "system": "carryctx",
+      "observation": "card has documented local-first and zero-network feature claims",
+      "missing_scope": ["measured_workload", "scale", "runtime_conditions", "failure_conditions"],
+      "negative_finding": false
+    }
+  ],
+  "acceptance_metrics": [
+    "specified coverage by surface and dimension",
+    "unknown/unspecified/not-applicable counts reported separately",
+    "local evidence closure",
+    "claim type and status agreement",
+    "retrieval/benchmark source-digest and scope preservation",
+    "scope-filter abstention rate",
+    "independently reviewed false-link rate"
+  ]
+}

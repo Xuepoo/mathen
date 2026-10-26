@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .scope import ScopeContextValidationError, validate_scope_context
+
 MATHEMATICAL_VIEW_CONTRACT_VERSION = "1.0"
 CONTRACT_FAMILIES = frozenset(
     {
@@ -54,6 +56,7 @@ _TOP_LEVEL_FIELDS = {
     "laws_or_checks",
     "assumptions",
     "validity_scope",
+    "scope_context",
     "parameters",
     "claim_type",
     "claim_status",
@@ -99,6 +102,7 @@ class MathematicalViewContract:
     laws_or_checks: tuple[dict[str, Any], ...]
     assumptions: tuple[str, ...]
     validity_scope: dict[str, Any]
+    scope_context: dict[str, Any] | None
     parameters: dict[str, Any] | None
     claim_type: str
     claim_status: str
@@ -123,6 +127,7 @@ class MathematicalViewContract:
             laws_or_checks=tuple(copy.deepcopy(value["laws_or_checks"])),
             assumptions=tuple(value["assumptions"]),
             validity_scope=copy.deepcopy(value["validity_scope"]),
+            scope_context=copy.deepcopy(value.get("scope_context")),
             parameters=copy.deepcopy(value.get("parameters")),
             claim_type=value["claim_type"],
             claim_status=value["claim_status"],
@@ -150,6 +155,11 @@ class MathematicalViewContract:
             "laws_or_checks": [copy.deepcopy(item) for item in self.laws_or_checks],
             "assumptions": list(self.assumptions),
             "validity_scope": copy.deepcopy(self.validity_scope),
+            **(
+                {"scope_context": copy.deepcopy(self.scope_context)}
+                if self.scope_context is not None
+                else {}
+            ),
             **(
                 {"parameters": copy.deepcopy(self.parameters)}
                 if self.parameters is not None
@@ -253,6 +263,15 @@ def validate_math_view_contract(
         label, "assumptions", contract["assumptions"], allow_empty=True
     )
     _validate_scope(label, contract["validity_scope"])
+    if "scope_context" in contract:
+        try:
+            validate_scope_context(
+                contract["scope_context"],
+                evidence_ids=evidence_ids,
+                label=f"{label}.scope_context",
+            )
+        except ScopeContextValidationError as error:
+            raise MathematicalViewValidationError(str(error)) from error
     _validate_claim_fields(label, contract, "contract", evidence_ids)
     if "parameters" in contract:
         if not isinstance(contract["parameters"], dict):
