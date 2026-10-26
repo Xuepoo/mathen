@@ -103,6 +103,7 @@ test("corpus builder excludes records without closed evidence and preserves meta
         accessed: null,
         notes: null,
         scope_context_json: JSON.stringify(unspecifiedScopeContext()),
+        metadata_json: JSON.stringify({ observation_version: "1" }),
       },
     ],
   });
@@ -114,6 +115,7 @@ test("corpus builder excludes records without closed evidence and preserves meta
   assert.deepEqual(feature?.evidence_ids, ["architecture"]);
   assert.deepEqual(feature?.validity_scope, { deployment_origins: ["local"] });
   assert.deepEqual(feature?.evidence[0]?.scope_context, unspecifiedScopeContext());
+  assert.deepEqual(feature?.evidence[0]?.metadata, { observation_version: "1" });
   assert.match(feature?.source_digest ?? "", /^sha256:[0-9a-f]{64}$/);
 });
 

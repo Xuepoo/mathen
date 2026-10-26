@@ -97,6 +97,7 @@ type EvidenceRow = {
   uri: string;
   accessed: string | null;
   notes: string | null;
+  metadata_json?: string | null;
 };
 
 type FeatureRelationRow = {
@@ -440,7 +441,7 @@ app.get("/retrieval", async (c) => {
          FROM systems WHERE composition_json IS NOT NULL ORDER BY id LIMIT 5000`,
         ).all<RetrievalCompositionRow>(),
         c.env.DB.prepare(
-          "SELECT substr(id, length(system_id) + 2) AS id, system_id, kind, title, uri, accessed, notes, scope_context_json FROM evidence ORDER BY system_id, id LIMIT 20000",
+          "SELECT substr(id, length(system_id) + 2) AS id, system_id, kind, title, uri, accessed, notes, scope_context_json, metadata_json FROM evidence ORDER BY system_id, id LIMIT 20000",
         ).all<RetrievalEvidenceRow>(),
       ]);
     const documents = await buildRetrievalDocuments({
