@@ -6,10 +6,25 @@ Software architecture knowledge is usually stored as prose, diagrams, source
 code, and isolated papers. That makes it difficult to compare systems by
 transferable structure or to search for combinations of design properties.
 
-Mathen explores an intermediate representation between implementation and
-natural-language documentation. The representation records architecture
-claims in a form that can be reviewed by engineers, mapped to mathematical
-models, and later queried by tools.
+Mathen is an evidence-bounded Architecture Exploration Methodology and
+research instrument. It explores an intermediate representation between
+implementation and natural-language documentation: architecture claims are
+recorded in a form that can be reviewed by engineers, mapped to candidate
+mathematical models, and later queried by tools. It is not an autonomous
+architecture generator.
+
+The intended research loop is:
+
+```text
+evidence → deterministic observation → microstructure → contract
+         → bounded composition → prototype/experiment → new evidence
+```
+
+Discovery tools help select what to inspect; synthesis proposes a candidate
+under explicit constraints. Neither retrieval, graph traversal, LLM output,
+nor a finite contract result is proof of implementation semantics,
+compatibility, causality, originality, or architecture superiority. Human
+review and appropriately scoped experiments remain part of the method.
 
 ## Working hypothesis
 
@@ -50,6 +65,14 @@ The intended workflow is therefore:
 ```text
 evidence → candidate claims → architecture card → review → knowledge graph
 ```
+
+The current implementation supports evidence-linked cards, fixed-commit
+observations, constrained LLM drafts, contracts, bounded compositions, and
+read-only graph/API/MCP surfaces. Semantic/vector retrieval, autonomous
+synthesis, and validation that the complete loop improves architecture quality
+remain future hypotheses. The current lexical retrieval baseline and its
+negative embedding result are documented in
+[`research-instrument.md`](research-instrument.md).
 
 ## What counts as innovation
 
