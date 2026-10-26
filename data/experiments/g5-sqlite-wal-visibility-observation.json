@@ -1,0 +1,251 @@
+{
+  "id": "g5-sqlite-wal-visibility-observation-mth-0156",
+  "kind": "operational-observation",
+  "title": "SQLite WAL reader snapshot visibility \u2014 MTH-0156",
+  "uri": "https://sqlite.org/src/info/4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "protocol": "For each repetition, create a fresh SQLite database, enable WAL and FULL synchronous mode, commit a fixed four-row dataset, begin a reader transaction, commit one appended row from a writer connection, read again from the held reader snapshot, then start a fresh reader transaction and compare all observations across repetitions.",
+  "system_commit": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "environment": {
+    "os": "Linux",
+    "os_release": "7.3.0-4-cachyos",
+    "architecture": "x86_64",
+    "python": "3.13.13",
+    "sqlite": "3.50.4",
+    "sqlite_source_id": "2025-07-30 19:33:53 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+  },
+  "command": "uv run --offline python scripts/g5_sqlite_wal_visibility_experiment.py --expected-source-id 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3 --repetitions 3 --output data/experiments/g5-sqlite-wal-visibility-results.json",
+  "dataset": {
+    "name": "fixed-records-v1",
+    "rows": [
+      [
+        1,
+        "alpha",
+        10
+      ],
+      [
+        2,
+        "beta",
+        20
+      ],
+      [
+        3,
+        "gamma",
+        30
+      ],
+      [
+        4,
+        "delta",
+        40
+      ]
+    ],
+    "appended_row": [
+      5,
+      "epsilon",
+      50
+    ],
+    "schema": "records(id INTEGER PRIMARY KEY, name TEXT NOT NULL, value INTEGER NOT NULL)"
+  },
+  "repetitions": 3,
+  "metrics": {
+    "seed_rows": 4,
+    "snapshot_rows_during_writer_commit": 4,
+    "writer_rows_after_commit": 5,
+    "refreshed_reader_rows": 5,
+    "integrity_checks_passed": 3,
+    "snapshot_checks_passed": 3,
+    "refresh_checks_passed": 3,
+    "repetitions_consistent": 1
+  },
+  "artifacts": [
+    {
+      "id": "g5-wal-results-mth-0156",
+      "kind": "experiment-results",
+      "path": "data/experiments/g5-sqlite-wal-visibility-results.json",
+      "digest": "sha256:c29d6eded7b36f1584301b6287425344edddb9a584a9415f9ed4e662fd7d4a94"
+    },
+    {
+      "id": "g5-wal-runner-mth-0156",
+      "kind": "runner-source",
+      "path": "scripts/g5_sqlite_wal_visibility_experiment.py",
+      "digest": "sha256:c6182e6f9b87cb0c8e51530c607939ed1c6af6be235c9714b0174aab0ebf855f"
+    }
+  ],
+  "observation_version": "1",
+  "workload": {
+    "name": "fixed four-row SQLite records with two-connection WAL visibility protocol"
+  },
+  "conditions": {
+    "journal_mode": "WAL",
+    "synchronous_mode": "FULL",
+    "concurrency": "one reader transaction held while one writer commits, then reader refresh",
+    "failure_trigger": "none; this is a visibility observation",
+    "reader_boundary": "reader transaction starts before writer commit and is explicitly committed before refresh"
+  },
+  "provenance": {
+    "run_id": "g5-sqlite-wal-visibility-mth-0156",
+    "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+    "protocol_digest": "sha256:c6182e6f9b87cb0c8e51530c607939ed1c6af6be235c9714b0174aab0ebf855f",
+    "recorded_at": "2026-10-26T00:00:00Z",
+    "runner": "mathen-local-experiment-runner",
+    "toolchain": {
+      "python": "3.13.13",
+      "sqlite": "3.50.4",
+      "os": "7.3.0-4-cachyos"
+    }
+  },
+  "result_boundary": {
+    "canonical": false,
+    "promotion_requires_human_review": true,
+    "storage_scope": "research",
+    "limits": [
+      "one fixed four-row dataset and one appended row",
+      "three repetitions on one Linux host and one Python/SQLite build",
+      "two local connections and an explicitly bounded reader transaction",
+      "does not test rollback, process crash, power loss, checkpoint starvation, busy errors, durability, performance, or other journal modes",
+      "does not establish a general isolation, consistency, or snapshot theorem"
+    ]
+  },
+  "result": {
+    "status": "observed",
+    "summary": "Across three WAL repetitions, the reader's held transaction continued to report the four-row seed while the writer saw five rows after commit; after the reader transaction was ended and refreshed, it reported five rows.",
+    "measurements": [
+      {
+        "id": "seed_rows",
+        "value": 4,
+        "unit": "rows",
+        "status": "observed"
+      },
+      {
+        "id": "snapshot_rows_during_writer_commit",
+        "value": 4,
+        "unit": "rows",
+        "status": "observed"
+      },
+      {
+        "id": "writer_rows_after_commit",
+        "value": 5,
+        "unit": "rows",
+        "status": "observed"
+      },
+      {
+        "id": "refreshed_reader_rows",
+        "value": 5,
+        "unit": "rows",
+        "status": "observed"
+      },
+      {
+        "id": "integrity_checks_passed",
+        "value": 3,
+        "unit": "repetitions",
+        "status": "observed"
+      },
+      {
+        "id": "snapshot_checks_passed",
+        "value": 3,
+        "unit": "repetitions",
+        "status": "observed"
+      },
+      {
+        "id": "refresh_checks_passed",
+        "value": 3,
+        "unit": "repetitions",
+        "status": "observed"
+      },
+      {
+        "id": "repetitions_consistent",
+        "value": 1,
+        "unit": "boolean",
+        "status": "observed"
+      },
+      {
+        "id": "latency",
+        "value": null,
+        "unit": "milliseconds",
+        "status": "not-measured",
+        "notes": "Timing was not part of the protocol."
+      }
+    ]
+  },
+  "review": {
+    "status": "unreviewed",
+    "card_claim_refs": []
+  },
+  "scope_context": {
+    "validity_scope": {
+      "status": "specified",
+      "systems": [
+        "SQLite"
+      ],
+      "versions": [
+        "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+      ],
+      "deployment_origins": [
+        "local-process"
+      ],
+      "conditions": [
+        "Linux x86_64",
+        "WAL journal mode",
+        "FULL synchronous mode",
+        "two local connections"
+      ],
+      "exclusions": [
+        "crash",
+        "power loss",
+        "checkpoint starvation",
+        "other journal modes",
+        "performance"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-wal-visibility-observation-mth-0156"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "workload": {
+      "status": "specified",
+      "values": [
+        "fixed four-row records dataset",
+        "one appended row",
+        "three repetitions"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-wal-visibility-observation-mth-0156"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "runtime_conditions": {
+      "status": "specified",
+      "values": [
+        "CPython 3.13.13",
+        "SQLite 3.50.4",
+        "Linux 7.3.0-4-cachyos",
+        "WAL and FULL synchronous settings"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-wal-visibility-observation-mth-0156"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "scale": {
+      "status": "specified",
+      "values": [
+        "4 seed rows",
+        "5 final rows",
+        "3 repetitions",
+        "2 local connections"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-wal-visibility-observation-mth-0156"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "failure_conditions": {
+      "status": "unspecified",
+      "values": [],
+      "evidence_ids": []
+    }
+  }
+}
