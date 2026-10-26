@@ -39,7 +39,10 @@
     "boundaries": { "$ref": "#/$defs/boundaries" },
     "results": { "type": "array", "items": { "$ref": "#/$defs/queryResult" } },
     "metrics": { "$ref": "#/$defs/metrics" },
-    "result_boundary": { "$ref": "#/$defs/resultBoundary" }
+    "result_boundary": { "$ref": "#/$defs/resultBoundary" },
+    "evaluation_metadata": { "$ref": "#/$defs/evaluationMetadata" },
+    "comparison": { "$ref": "#/$defs/comparison" },
+    "decision": { "$ref": "#/$defs/decision" }
   },
   "$defs": {
     "id": { "type": "string", "minLength": 1 },
@@ -85,7 +88,8 @@
           "properties": {
             "repository_id": { "$ref": "#/$defs/id" },
             "commit": { "$ref": "#/$defs/id" },
-            "archive_digest": { "$ref": "#/$defs/digest" }
+            "archive_digest": { "$ref": "#/$defs/digest" },
+            "scope": { "$ref": "#/$defs/id" }
           },
           "anyOf": [
             { "required": ["commit"] },
@@ -119,7 +123,7 @@
         "source_ref": { "$ref": "#/$defs/id" },
         "source_digest": { "$ref": "#/$defs/digest" },
         "claim_type": { "$ref": "#/$defs/claimType" },
-        "claim_status": { "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"] },
+        "claim_status": { "type": ["string", "null"], "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated", null] },
         "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" },
         "validity_scope": { "$ref": "#/$defs/scope" },
         "scope_context": { "$ref": "architecture-card.schema.json#/$defs/scopeContext" }
@@ -143,7 +147,8 @@
         "id": { "$ref": "#/$defs/id" },
         "query_digest": { "$ref": "#/$defs/digest" },
         "question": { "type": "string", "minLength": 1, "maxLength": 1000 },
-        "scope": { "$ref": "#/$defs/scope" }
+        "scope": { "$ref": "#/$defs/scope" },
+        "slice_ids": { "$ref": "#/$defs/stringList" }
       }
     },
     "labels": {
@@ -304,7 +309,7 @@
         "name": { "type": "string", "minLength": 1 },
         "description": { "type": "string", "minLength": 1 },
         "claim_type": { "$ref": "#/$defs/claimType" },
-        "claim_status": { "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"] },
+        "claim_status": { "type": ["string", "null"], "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated", null] },
         "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" },
         "validity_scope": { "$ref": "#/$defs/scope" },
         "scope_context": { "$ref": "architecture-card.schema.json#/$defs/scopeContext" }
@@ -353,8 +358,73 @@
         "claim_type_accuracy": { "$ref": "#/$defs/metric" },
         "scope_completeness": { "$ref": "#/$defs/metric" },
         "false_link_rate": { "$ref": "#/$defs/metric" },
-        "abstention_rate": { "$ref": "#/$defs/metric" }
+        "abstention_rate": { "$ref": "#/$defs/metric" },
+        "slices": { "type": "array", "items": { "$ref": "#/$defs/sliceMetric" } },
+        "error_analysis": { "type": "array", "items": { "$ref": "#/$defs/errorRecord" } }
       }
+    },
+    "sliceMetric": {
+      "type": "object", "additionalProperties": false,
+      "required": ["slice_id", "query_count", "recall_at_k", "ndcg_at_k", "false_link_rate", "abstention_rate"],
+      "properties": {
+        "slice_id": { "$ref": "#/$defs/id" }, "query_count": { "type": "integer", "minimum": 0 },
+        "recall_at_k": { "type": "array", "items": { "$ref": "#/$defs/kMetric" } },
+        "ndcg_at_k": { "type": "array", "items": { "$ref": "#/$defs/kMetric" } },
+        "false_link_rate": { "$ref": "#/$defs/metric" }, "abstention_rate": { "$ref": "#/$defs/metric" }
+      }
+    },
+    "errorRecord": {
+      "type": "object", "additionalProperties": false,
+      "required": ["query_id", "category", "observed", "reviewer_note"],
+      "properties": { "query_id": { "$ref": "#/$defs/id" }, "category": { "enum": ["miss", "false-link", "scope-unknown", "abstention", "provider-error", "other"] }, "observed": { "type": "string", "minLength": 1 }, "reviewer_note": { "type": "string", "minLength": 1 } }
+    },
+    "evaluationMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_slices", "reviewer_labeling", "freshness_policy", "null_semantics", "operational_observations"],
+      "properties": {
+        "query_slices": { "type": "array", "items": { "$ref": "#/$defs/querySlice" }, "minItems": 1 },
+        "reviewer_labeling": { "type": "object", "additionalProperties": false, "required": ["label_source", "independent_reviewers", "disagreement_retained"], "properties": { "label_source": { "type": "string", "minLength": 1 }, "independent_reviewers": { "type": "integer", "minimum": 1 }, "disagreement_retained": { "type": "boolean" } } },
+        "freshness_policy": { "type": "string", "minLength": 1 },
+        "null_semantics": { "type": "string", "minLength": 1 },
+        "operational_observations": { "$ref": "#/$defs/operationalObservations" }
+      }
+    },
+    "querySlice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "query_ids"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "description": { "type": "string", "minLength": 1 }, "query_ids": { "$ref": "#/$defs/stringList" } }
+    },
+    "operationalObservations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latency_ms", "provider_errors", "cost"],
+      "properties": {
+        "latency_ms": { "$ref": "#/$defs/latency" },
+        "provider_errors": { "$ref": "#/$defs/providerErrors" },
+        "cost": { "$ref": "#/$defs/cost" }
+      }
+    },
+    "latency": {
+      "type": "object", "additionalProperties": false, "required": ["unit", "sample_count", "p50", "p95", "measurement_status"],
+      "properties": { "unit": { "const": "ms" }, "sample_count": { "type": "integer", "minimum": 0 }, "p50": { "type": ["number", "null"], "minimum": 0 }, "p95": { "type": ["number", "null"], "minimum": 0 }, "measurement_status": { "type": "string", "minLength": 1 } }
+    },
+    "providerErrors": {
+      "type": "object", "additionalProperties": false, "required": ["numerator", "denominator", "value", "measurement_status"],
+      "properties": { "numerator": { "type": "integer", "minimum": 0 }, "denominator": { "type": "integer", "minimum": 0 }, "value": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }, "measurement_status": { "type": "string", "minLength": 1 } }
+    },
+    "cost": {
+      "type": "object", "additionalProperties": false, "required": ["unit", "value", "measurement_status"],
+      "properties": { "unit": { "type": "string", "minLength": 1 }, "value": { "type": ["number", "null"], "minimum": 0 }, "measurement_status": { "type": "string", "minLength": 1 } }
+    },
+    "comparison": {
+      "type": "object", "additionalProperties": false, "required": ["control", "candidate", "candidate_results_status", "prior_pilot_reference"],
+      "properties": { "control": { "$ref": "#/$defs/id" }, "candidate": { "$ref": "#/$defs/id" }, "candidate_results_status": { "enum": ["not-run", "prior-pilot-only", "complete"] }, "prior_pilot_reference": { "type": ["string", "null"], "minLength": 1 } }
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "rationale", "production_change"],
+      "properties": { "outcome": { "enum": ["retain_lexical_baseline", "reconsider_after_gate", "insufficient_evidence"] }, "rationale": { "type": "string", "minLength": 1 }, "production_change": { "const": false } }
     },
     "kMetric": {
       "allOf": [

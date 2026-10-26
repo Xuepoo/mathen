@@ -32,6 +32,7 @@ from mathen.cli import validate_benchmark_command
 ROOT = Path(__file__).parents[1]
 FIXTURE = ROOT / "tests" / "fixtures" / "benchmark-run-valid.json"
 RETRIEVAL_FIXTURE = ROOT / "tests" / "fixtures" / "retrieval-evaluation-valid.json"
+RETRIEVAL_MTH_0154 = ROOT / "docs" / "audits" / "mth-0154-retrieval-evaluation.json"
 
 
 class BenchmarkManifestTests(unittest.TestCase):
@@ -292,6 +293,36 @@ class BenchmarkMetricTests(unittest.TestCase):
 
 
 class RetrievalEvaluationManifestTests(unittest.TestCase):
+    def test_mth_0154_artifact_contains_explicit_slices_and_prior_pilot_boundary(
+        self,
+    ) -> None:
+        value = json.loads(RETRIEVAL_MTH_0154.read_text(encoding="utf-8"))
+        validate_retrieval_evaluation_manifest(value)
+        self.assertEqual(len(value["query_set"]["queries"]), 48)
+        self.assertEqual(len(value["split"]["partitions"]["evaluation"]), 42)
+        self.assertEqual(len(value["split"]["partitions"]["holdout"]), 6)
+        self.assertEqual(
+            value["comparison"]["candidate_results_status"], "prior-pilot-only"
+        )
+        self.assertIsNone(
+            value["evaluation_metadata"]["operational_observations"]["latency_ms"][
+                "p50"
+            ]
+        )
+        self.assertEqual(value["decision"]["outcome"], "retain_lexical_baseline")
+
+    def test_retrieval_optional_operational_metric_requires_null_for_empty_denominator(
+        self,
+    ) -> None:
+        value = json.loads(RETRIEVAL_MTH_0154.read_text(encoding="utf-8"))
+        value["evaluation_metadata"]["operational_observations"]["provider_errors"][
+            "value"
+        ] = 0.0
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "value must be null"
+        ):
+            validate_retrieval_evaluation_manifest(value)
+
     def test_fixture_round_trips_and_digest_is_reproducible(self) -> None:
         schema = json.loads(
             (ROOT / "schemas" / "retrieval-evaluation-manifest.schema.json").read_text(
@@ -304,6 +335,8 @@ class RetrievalEvaluationManifestTests(unittest.TestCase):
         )
         self.assertIn("document", schema["$defs"]["result"]["required"])
         self.assertIn("provenance", schema["$defs"]["result"]["required"])
+        self.assertIn("evaluation_metadata", schema["properties"])
+        self.assertIn("slices", schema["$defs"]["metrics"]["properties"])
         value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
         validate_retrieval_evaluation_manifest(value)
         self.assertEqual(

@@ -97,6 +97,14 @@ quality, truth, compatibility, causality, or originality. The result boundary
 requires `canonical: false`, research/draft storage, human review before any
 promotion, and explicitly marks scores as neither truth nor compatibility.
 
+The MTH-0154 extension permits a deterministic query-slice table and error
+analysis records for paraphrase, misleading-similarity, claim-type, scope,
+freshness, and abstention slices. Operational observations are separate from
+discovery metrics: latency p50/p95, provider errors, and cost may be null when
+not measured. A null is not zero. A comparison may identify a candidate model
+as `prior-pilot-only`; prior observations must not be copied into a new run as
+if they were rerun results.
+
 ## Reproducibility and leakage checklist
 
 Before treating a manifest as an input to analysis, verify that:
