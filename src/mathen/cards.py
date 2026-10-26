@@ -9,6 +9,11 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+from .evidence import (
+    OBSERVATION_KINDS,
+    is_observation_record,
+    validate_observation_evidence,
+)
 from .mathviews import MathematicalViewValidationError, validate_math_view_contract
 from .scope import ScopeContextValidationError, validate_scope_context
 from .typed_composition import (
@@ -81,8 +86,16 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
     evidence = card["evidence"]
     if not isinstance(evidence, list) or not evidence:
         raise CardValidationError(f"{label}: evidence must be a non-empty list")
+    seen_evidence_ids: set[str] = set()
     for index, item in enumerate(evidence):
         _validate_evidence(label, index, item)
+        if isinstance(item, dict):
+            evidence_id = item.get("id")
+            if evidence_id in seen_evidence_ids:
+                raise CardValidationError(
+                    f"{label}: duplicate evidence id: {evidence_id}"
+                )
+            seen_evidence_ids.add(evidence_id)
     evidence_ids = {item.get("id") for item in evidence if isinstance(item, dict)}
     if "scope_context" in card:
         _validate_scope_context(
@@ -96,6 +109,15 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
                 item["scope_context"],
                 evidence_ids,
             )
+        if isinstance(item, dict) and is_observation_record(item):
+            try:
+                validate_observation_evidence(
+                    item,
+                    {item_id for item_id in evidence_ids if item_id},
+                    f"{label}: evidence[{index}]",
+                )
+            except ValueError as error:
+                raise CardValidationError(str(error)) from error
 
     feature_ids: set[str] = set()
     for feature in card["features"]:
@@ -148,6 +170,29 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
                 raise CardValidationError(
                     f"{label}: mathematical view contract is invalid: {error}"
                 ) from error
+
+    view_ids = {
+        view.get("model")
+        for view in card["mathematical_views"]
+        if isinstance(view, dict) and isinstance(view.get("model"), str)
+    }
+    for index, item in enumerate(evidence):
+        if not isinstance(item, dict) or not is_observation_record(item):
+            continue
+        review = item["review"]
+        if review["status"] != "reviewed":
+            continue
+        allowed_refs = {"card"}
+        allowed_refs.update(
+            f"feature:{feature_id}" for feature_id in feature_ids if feature_id
+        )
+        allowed_refs.update(f"view:{view_id}" for view_id in view_ids)
+        invalid_refs = set(review["card_claim_refs"]) - allowed_refs
+        if invalid_refs:
+            raise CardValidationError(
+                f"{label}: evidence[{index}].review has unknown card claim refs: "
+                f"{sorted(invalid_refs)}"
+            )
 
     for trade_off in card["trade_offs"]:
         if trade_off.get("feature_id") not in feature_ids:
@@ -393,6 +438,13 @@ def _validate_evidence(label: str, index: int, evidence: Any) -> None:
     if not isinstance(evidence, dict):
         raise CardValidationError(f"{label}: evidence[{index}] must be an object")
     if evidence.get("kind") != "experiment":
+        if evidence.get("kind") not in OBSERVATION_KINDS:
+            return
+        if evidence.get("observation_version") != "1":
+            raise CardValidationError(
+                f"{label}: evidence[{index}] observation kinds require "
+                "observation_version 1"
+            )
         return
 
     evidence_label = f"evidence[{index}]"
@@ -438,6 +490,8 @@ def _validate_evidence(label: str, index: int, evidence: Any) -> None:
             f"{label}: {evidence_label}.metrics must be an object"
         )
     for name, value in metrics.items():
+        if value is None and is_observation_record(evidence):
+            continue
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise CardValidationError(
                 f"{label}: {evidence_label}.metrics.{name} must be a number"

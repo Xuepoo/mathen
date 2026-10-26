@@ -331,6 +331,38 @@
               "artifacts"
             ]
           }
+        },
+        {
+          "if": {
+            "required": ["kind", "observation_version"],
+            "properties": {
+              "kind": { "enum": ["experiment", "benchmark", "fault-injection", "operational-observation", "counterexample", "negative-result"] }
+            }
+          },
+          "then": {
+            "required": ["protocol", "system_commit", "command", "dataset", "repetitions", "metrics", "artifacts", "observation_version", "workload", "environment", "conditions", "provenance", "result_boundary", "result", "review", "scope_context"]
+          }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "fault-injection" } } },
+          "then": { "required": ["failure"] }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "counterexample" } } },
+          "then": { "required": ["counterexample"] }
+        },
+        {
+          "if": { "required": ["kind"], "properties": { "kind": { "const": "negative-result" } } },
+          "then": { "required": ["negative_result"] }
+        },
+        {
+          "if": {
+            "required": ["kind"],
+            "properties": {
+              "kind": { "enum": ["benchmark", "fault-injection", "operational-observation", "counterexample", "negative-result"] }
+            }
+          },
+          "then": { "required": ["observation_version"] }
         }
       ],
       "properties": {
@@ -342,6 +374,11 @@
             "paper",
             "source-code",
             "experiment",
+            "benchmark",
+            "fault-injection",
+            "operational-observation",
+            "counterexample",
+            "negative-result",
             "secondary"
           ]
         },
@@ -378,12 +415,130 @@
             ]
           }
         },
+        "observation_version": { "const": "1" },
+        "workload": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "$ref": "#/$defs/metadataObject" }
+          ]
+        },
+        "conditions": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "$ref": "#/$defs/metadataObject" }
+          ]
+        },
+        "provenance": { "$ref": "#/$defs/observationProvenance" },
+        "result_boundary": { "$ref": "#/$defs/observationResultBoundary" },
+        "result": { "$ref": "#/$defs/observationResult" },
+        "review": { "$ref": "#/$defs/observationReview" },
+        "failure": { "$ref": "#/$defs/failureRecord" },
+        "counterexample": { "$ref": "#/$defs/counterexampleRecord" },
+        "negative_result": { "$ref": "#/$defs/negativeResultRecord" },
         "scope_context": { "$ref": "#/$defs/scopeContext" }
       }
     },
     "metadataObject": {
       "type": "object",
       "additionalProperties": true
+    },
+    "observationProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "source_revision", "protocol_digest", "recorded_at", "runner", "toolchain"],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "source_revision": { "type": "string", "minLength": 1 },
+        "protocol_digest": { "type": "string", "minLength": 1 },
+        "recorded_at": { "type": "string", "minLength": 1 },
+        "runner": { "type": "string", "minLength": 1 },
+        "toolchain": { "oneOf": [{ "type": "string", "minLength": 1 }, { "$ref": "#/$defs/metadataObject" }] }
+      }
+    },
+    "observationResultBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical", "promotion_requires_human_review", "storage_scope", "limits"],
+      "properties": {
+        "canonical": { "const": false },
+        "promotion_requires_human_review": { "const": true },
+        "storage_scope": { "enum": ["research", "draft"] },
+        "limits": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "observationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "summary", "measurements"],
+      "properties": {
+        "status": { "enum": ["observed", "not-observed", "inconclusive", "abstained", "failed"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "abstention_reason": { "type": "string", "minLength": 1 },
+        "measurements": { "type": "array", "items": { "$ref": "#/$defs/measurement" } }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "value", "unit", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._:-]*$" },
+        "value": { "type": ["number", "null"] },
+        "unit": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["observed", "not-observed", "not-measured", "abstained"] },
+        "notes": { "type": "string", "minLength": 1 }
+      }
+    },
+    "observationReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "card_claim_refs"],
+      "properties": {
+        "status": { "enum": ["unreviewed", "reviewed"] },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "reviewed_at": { "type": "string", "minLength": 1 },
+        "card_claim_refs": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "failureRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger", "observed_behavior", "boundary", "evidence_ids"],
+      "properties": {
+        "trigger": { "type": "string", "minLength": 1 },
+        "observed_behavior": { "type": "string", "minLength": 1 },
+        "boundary": { "type": "string", "minLength": 1 },
+        "evidence_ids": { "$ref": "#/$defs/evidenceIds" }
+      }
+    },
+    "counterexampleRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_claim", "condition", "observed_result", "implication", "evidence_ids"],
+      "properties": {
+        "target_claim": { "type": "string", "minLength": 1 },
+        "condition": { "type": "string", "minLength": 1 },
+        "observed_result": { "type": "string", "minLength": 1 },
+        "implication": { "type": "string", "minLength": 1 },
+        "evidence_ids": { "$ref": "#/$defs/evidenceIds" }
+      }
+    },
+    "negativeResultRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question", "result", "reason", "evidence_ids"],
+      "properties": {
+        "question": { "type": "string", "minLength": 1 },
+        "result": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "evidence_ids": { "$ref": "#/$defs/evidenceIds" }
+      }
+    },
+    "evidenceIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
     },
     "scopeContext": {
       "type": "object",
