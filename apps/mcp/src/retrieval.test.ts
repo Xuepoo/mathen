@@ -84,6 +84,18 @@ test("retrieval contract preserves all source metadata without promoting claims"
   );
 });
 
+test("retrieval scope context is explicit, evidence-local, and never inferred", () => {
+  const value = retrievalFixture();
+  (value.results[0].document as Record<string, unknown>).scope_context = unspecifiedScopeContext();
+  assert.deepEqual(normalizeRetrieval(value), value);
+
+  const invalid = retrievalFixture();
+  const document = invalid.results[0].document as Record<string, any>;
+  document.scope_context = unspecifiedScopeContext();
+  document.scope_context.workload.evidence_ids = ["missing"];
+  assert.throws(() => normalizeRetrieval(invalid), /Invalid retrieval response/);
+});
+
 test("retrieval arguments are bounded, allowlisted, encoded, and exclude drafts", () => {
   const params = retrievalParams({
     q: "  state & queues  ",
@@ -109,6 +121,24 @@ test("retrieval arguments are bounded, allowlisted, encoded, and exclude drafts"
     assert.throws(() => retrievalParams(args));
   }
 });
+
+function unspecifiedScopeContext() {
+  return {
+    validity_scope: {
+      status: "unspecified",
+      systems: [],
+      versions: [],
+      deployment_origins: [],
+      conditions: [],
+      exclusions: [],
+      evidence_ids: [],
+    },
+    workload: { status: "unspecified", values: [], evidence_ids: [] },
+    runtime_conditions: { status: "unspecified", values: [], evidence_ids: [] },
+    scale: { status: "unspecified", values: [], evidence_ids: [] },
+    failure_conditions: { status: "unspecified", values: [], evidence_ids: [] },
+  };
+}
 
 test("normalization preserves all four claim types and deterministic API rank order", () => {
   const value = retrievalFixture();

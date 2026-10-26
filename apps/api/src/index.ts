@@ -401,6 +401,7 @@ app.get("/retrieval", async (c) => {
       await Promise.all([
         c.env.DB.prepare(
           `SELECT id, name, version_context, summary, scope_json, temporal_context_json,
+                scope_context_json,
                 relations_json, composition_json, source_path
          FROM systems ORDER BY id LIMIT 5000`,
         ).all<RetrievalSystemRow>(),
@@ -439,7 +440,7 @@ app.get("/retrieval", async (c) => {
          FROM systems WHERE composition_json IS NOT NULL ORDER BY id LIMIT 5000`,
         ).all<RetrievalCompositionRow>(),
         c.env.DB.prepare(
-          "SELECT substr(id, length(system_id) + 2) AS id, system_id, kind, title, uri, accessed, notes FROM evidence ORDER BY system_id, id LIMIT 20000",
+          "SELECT substr(id, length(system_id) + 2) AS id, system_id, kind, title, uri, accessed, notes, scope_context_json FROM evidence ORDER BY system_id, id LIMIT 20000",
         ).all<RetrievalEvidenceRow>(),
       ]);
     const documents = await buildRetrievalDocuments({

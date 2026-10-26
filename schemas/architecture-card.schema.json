@@ -24,6 +24,7 @@
       "items": { "type": "string" },
       "minItems": 1
     },
+    "scope_context": { "$ref": "#/$defs/scopeContext" },
     "features": {
       "type": "array",
       "minItems": 1,
@@ -263,7 +264,8 @@
           "type": "array",
           "items": { "type": "string" },
           "minItems": 1
-        }
+        },
+        "scope_context": { "$ref": "#/$defs/scopeContext" }
       }
     },
     "mathematicalView": {
@@ -285,7 +287,8 @@
         "evidence_ids": { "type": "array", "items": { "type": "string" } },
         "contract": {
           "$ref": "architecture-mathematical-view.schema.json"
-        }
+        },
+        "scope_context": { "$ref": "#/$defs/scopeContext" }
       }
     },
     "tradeOff": {
@@ -374,12 +377,128 @@
               { "$ref": "#/$defs/metadataObject" }
             ]
           }
-        }
+        },
+        "scope_context": { "$ref": "#/$defs/scopeContext" }
       }
     },
     "metadataObject": {
       "type": "object",
       "additionalProperties": true
+    },
+    "scopeContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["validity_scope", "workload", "runtime_conditions", "scale", "failure_conditions"],
+      "properties": {
+        "validity_scope": { "$ref": "#/$defs/validityScopeDimension" },
+        "workload": { "$ref": "#/$defs/scopeDimension" },
+        "runtime_conditions": { "$ref": "#/$defs/scopeDimension" },
+        "scale": { "$ref": "#/$defs/scopeDimension" },
+        "failure_conditions": { "$ref": "#/$defs/scopeDimension" }
+      }
+    },
+    "scopeDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "values", "evidence_ids"],
+      "properties": {
+        "status": { "enum": ["specified", "unknown", "unspecified", "not-applicable"] },
+        "values": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "evidence_ids": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "notes": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "enum": ["specified", "unknown", "not-applicable"] } } },
+          "then": { "required": ["claim_type", "claim_status"], "properties": { "evidence_ids": { "minItems": 1 } } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "specified" } } },
+          "then": { "properties": { "values": { "minItems": 1 } } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "not-applicable" } } },
+          "then": { "required": ["notes"] }
+        },
+        {
+          "if": { "properties": { "status": { "const": "unspecified" } } },
+          "then": {
+            "properties": { "values": { "maxItems": 0 }, "evidence_ids": { "maxItems": 0 } },
+            "not": { "anyOf": [{ "required": ["claim_type"] }, { "required": ["claim_status"] }] }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["unknown", "not-applicable"] } } },
+          "then": { "properties": { "values": { "maxItems": 0 } } }
+        }
+      ]
+    },
+    "validityScopeDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "systems", "versions", "deployment_origins", "conditions", "exclusions", "evidence_ids"],
+      "properties": {
+        "status": { "enum": ["specified", "unknown", "unspecified", "not-applicable"] },
+        "systems": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "versions": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "deployment_origins": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "conditions": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "exclusions": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "evidence_ids": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "notes": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "enum": ["specified", "unknown", "not-applicable"] } } },
+          "then": { "required": ["claim_type", "claim_status"], "properties": { "evidence_ids": { "minItems": 1 } } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "specified" } } },
+          "then": {
+            "anyOf": [
+              { "properties": { "systems": { "minItems": 1 } } },
+              { "properties": { "versions": { "minItems": 1 } } },
+              { "properties": { "deployment_origins": { "minItems": 1 } } },
+              { "properties": { "conditions": { "minItems": 1 } } },
+              { "properties": { "exclusions": { "minItems": 1 } } }
+            ]
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "not-applicable" } } },
+          "then": { "required": ["notes"] }
+        },
+        {
+          "if": { "properties": { "status": { "const": "unspecified" } } },
+          "then": {
+            "properties": {
+              "systems": { "maxItems": 0 },
+              "versions": { "maxItems": 0 },
+              "deployment_origins": { "maxItems": 0 },
+              "conditions": { "maxItems": 0 },
+              "exclusions": { "maxItems": 0 },
+              "evidence_ids": { "maxItems": 0 }
+            },
+            "not": { "anyOf": [{ "required": ["claim_type"] }, { "required": ["claim_status"] }] }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["unknown", "not-applicable"] } } },
+          "then": {
+            "properties": {
+              "systems": { "maxItems": 0 },
+              "versions": { "maxItems": 0 },
+              "deployment_origins": { "maxItems": 0 },
+              "conditions": { "maxItems": 0 },
+              "exclusions": { "maxItems": 0 }
+            }
+          }
+        }
+      ]
     }
   }
 }

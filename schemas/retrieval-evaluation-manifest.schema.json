@@ -121,7 +121,8 @@
         "claim_type": { "$ref": "#/$defs/claimType" },
         "claim_status": { "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"] },
         "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" },
-        "validity_scope": { "$ref": "#/$defs/scope" }
+        "validity_scope": { "$ref": "#/$defs/scope" },
+        "scope_context": { "$ref": "architecture-card.schema.json#/$defs/scopeContext" }
       }
     },
     "querySet": {
@@ -305,7 +306,8 @@
         "claim_type": { "$ref": "#/$defs/claimType" },
         "claim_status": { "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"] },
         "evidence_ids": { "$ref": "#/$defs/nonEmptyStringList" },
-        "validity_scope": { "$ref": "#/$defs/scope" }
+        "validity_scope": { "$ref": "#/$defs/scope" },
+        "scope_context": { "$ref": "architecture-card.schema.json#/$defs/scopeContext" }
       }
     },
     "evidence": {

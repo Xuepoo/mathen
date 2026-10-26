@@ -383,6 +383,43 @@ class RetrievalEvaluationManifestTests(unittest.TestCase):
         ):
             validate_retrieval_evaluation_manifest(value)
 
+    def test_retrieval_scope_context_is_optional_but_validated_and_local(self) -> None:
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        document = value["corpus_snapshot"]["documents"][0]
+        unspecified = {
+            "validity_scope": {
+                "status": "unspecified",
+                "systems": [],
+                "versions": [],
+                "deployment_origins": [],
+                "conditions": [],
+                "exclusions": [],
+                "evidence_ids": [],
+            },
+            **{
+                field: {"status": "unspecified", "values": [], "evidence_ids": []}
+                for field in (
+                    "workload",
+                    "runtime_conditions",
+                    "scale",
+                    "failure_conditions",
+                )
+            },
+        }
+        document["scope_context"] = unspecified
+        value["corpus_snapshot"]["digest"] = retrieval_digest(
+            value["corpus_snapshot"]["documents"]
+        )
+        result_document = value["results"][0]["results"][0]["document"]
+        result_document["scope_context"] = unspecified
+        validate_retrieval_evaluation_manifest(value)
+
+        result_document["scope_context"]["workload"]["evidence_ids"] = ["missing"]
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "unknown evidence"
+        ):
+            validate_retrieval_evaluation_manifest(value)
+
     def test_retrieval_discovery_metrics_keep_bounded_denominators(self) -> None:
         relevance = {"q": {"a": 3, "b": 1}}
         ranked = {"q": ["b", "a"]}
