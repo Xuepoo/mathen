@@ -85,6 +85,26 @@ class SQLiteExperimentTests(unittest.TestCase):
             self.assertEqual(result["recovered"]["row_count"], 5)
             self.assertEqual(result["integrity_check"], "ok")
 
+    def test_mth0152_observation_evidence_is_valid(self) -> None:
+        report = json.loads(
+            (
+                ROOT
+                / "data/experiments/g5-sqlite-transaction-mth-0152-observation.json"
+            ).read_text(encoding="utf-8")
+        )
+        card = json.loads(
+            (ROOT / "data/systems/sqlite.json").read_text(encoding="utf-8")
+        )
+        validate_card(card)
+        self.assertIn(
+            report["id"],
+            {evidence["id"] for evidence in card["evidence"]},
+        )
+        self.assertEqual(report["observation_version"], "1")
+        self.assertEqual(report["result"]["status"], "observed")
+        self.assertEqual(report["metrics"]["repetitions_consistent"], 1)
+        self.assertFalse(report["result_boundary"]["canonical"])
+
     def test_wrong_source_id_is_rejected_without_writing_results(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "report.json"

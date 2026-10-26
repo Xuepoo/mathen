@@ -1,0 +1,231 @@
+{
+  "id": "g5-sqlite-transaction-observation-mth-0152",
+  "kind": "benchmark",
+  "title": "SQLite transaction rollback and post-rollback recovery — MTH-0152 rerun",
+  "uri": "https://sqlite.org/src/info/4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "protocol": "For each repetition, create a fresh SQLite database, commit a fixed four-row dataset, attempt a transaction that inserts a fifth row followed by a duplicate primary key, explicitly roll back after IntegrityError, then commit the fifth row in a new transaction. Check integrity, close and reopen, and compare all observations across repetitions.",
+  "system_commit": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "environment": {
+    "os": "Linux",
+    "os_release": "7.3.0-4-cachyos",
+    "architecture": "x86_64",
+    "python": "3.13.13",
+    "sqlite": "3.50.4",
+    "sqlite_source_id": "2025-07-30 19:33:53 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+  },
+  "command": "uv run --offline python scripts/g5_sqlite_transaction_experiment.py --expected-source-id 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3 --repetitions 3 --output data/experiments/g5-sqlite-transaction-mth-0152-results.json",
+  "dataset": {
+    "name": "fixed-records-v1",
+    "rows": [
+      [
+        1,
+        "alpha",
+        10
+      ],
+      [
+        2,
+        "beta",
+        20
+      ],
+      [
+        3,
+        "gamma",
+        30
+      ],
+      [
+        4,
+        "delta",
+        40
+      ]
+    ],
+    "schema": "records(id INTEGER PRIMARY KEY, name TEXT NOT NULL, value INTEGER NOT NULL)"
+  },
+  "repetitions": 3,
+  "metrics": {
+    "seed_rows": 4,
+    "seed_value_sum": 100,
+    "rollback_preserved_rows": 4,
+    "rollback_preserved_sum": 100,
+    "recovered_rows": 5,
+    "recovered_value_sum": 150,
+    "reopened_rows": 5,
+    "integrity_checks_passed": 3,
+    "rollback_checks_passed": 3,
+    "repetitions_consistent": 1
+  },
+  "artifacts": [
+    {
+      "id": "g5-json-mth-0152",
+      "kind": "observation-json",
+      "path": "data/experiments/g5-sqlite-transaction-mth-0152-results.json",
+      "digest": "sha256:f1f7dca8f9be82f25087d5c180c9bde8f9c19f74acf255c345a205ad72dfb29b"
+    },
+    {
+      "id": "g5-runner",
+      "kind": "runner-source",
+      "path": "scripts/g5_sqlite_transaction_experiment.py",
+      "digest": "sha256:ecfd47db059920cf08391558f5378abeb0e670dbfee1097528ac3f2af787f8de"
+    }
+  ],
+  "observation_version": "1",
+  "workload": {
+    "name": "fixed four-row SQLite records with sequential transaction rollback and recovery"
+  },
+  "conditions": {
+    "journal_mode": "SQLite default",
+    "synchronous_mode": "SQLite default",
+    "concurrency": "single connection and sequential reopen",
+    "failure_trigger": "duplicate primary key inside an explicit transaction"
+  },
+  "provenance": {
+    "run_id": "g5-sqlite-transaction-mth-0152",
+    "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+    "protocol_digest": "sha256:ecfd47db059920cf08391558f5378abeb0e670dbfee1097528ac3f2af787f8de",
+    "recorded_at": "2026-10-26T13:41:00Z",
+    "runner": "mathen-local-experiment-runner",
+    "toolchain": {
+      "python": "3.13.13",
+      "sqlite": "3.50.4",
+      "os": "7.3.0-4-cachyos"
+    }
+  },
+  "result_boundary": {
+    "canonical": false,
+    "promotion_requires_human_review": true,
+    "storage_scope": "research",
+    "limits": [
+      "one fixed five-row dataset",
+      "single connection and sequential reopen",
+      "explicit application rollback",
+      "does not test process crash power loss concurrent writers durability modes or performance"
+    ]
+  },
+  "result": {
+    "status": "observed",
+    "summary": "Across three repetitions the explicit rollback preserved the four committed seed rows, a subsequent transaction committed the fifth row, integrity checks passed, and the final rows survived close and reopen.",
+    "measurements": [
+      {
+        "id": "seed_rows",
+        "value": 4,
+        "unit": "rows",
+        "status": "observed"
+      },
+      {
+        "id": "rollback_preserved_rows",
+        "value": 4,
+        "unit": "rows",
+        "status": "observed"
+      },
+      {
+        "id": "recovered_rows",
+        "value": 5,
+        "unit": "rows",
+        "status": "observed"
+      },
+      {
+        "id": "integrity_checks_passed",
+        "value": 3,
+        "unit": "repetitions",
+        "status": "observed"
+      },
+      {
+        "id": "rollback_checks_passed",
+        "value": 3,
+        "unit": "repetitions",
+        "status": "observed"
+      },
+      {
+        "id": "repetitions_consistent",
+        "value": 1,
+        "unit": "boolean",
+        "status": "observed"
+      }
+    ]
+  },
+  "review": {
+    "status": "unreviewed",
+    "card_claim_refs": []
+  },
+  "scope_context": {
+    "validity_scope": {
+      "status": "specified",
+      "systems": [
+        "SQLite"
+      ],
+      "versions": [
+        "commit 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+      ],
+      "deployment_origins": [
+        "local-process"
+      ],
+      "conditions": [
+        "Linux x86_64",
+        "SQLite default journal and synchronous settings",
+        "single connection sequential protocol"
+      ],
+      "exclusions": [
+        "process crash",
+        "power failure",
+        "concurrent writers",
+        "other durability modes",
+        "performance"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-transaction-observation-mth-0152"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "workload": {
+      "status": "specified",
+      "values": [
+        "fixed four-row records dataset",
+        "sequential transaction rollback and recovery"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-transaction-observation-mth-0152"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "runtime_conditions": {
+      "status": "specified",
+      "values": [
+        "CPython 3.13.13",
+        "SQLite 3.50.4",
+        "Linux 7.3.0-4-cachyos",
+        "single connection and sequential reopen"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-transaction-observation-mth-0152"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "scale": {
+      "status": "specified",
+      "values": [
+        "4 seed rows",
+        "5 final rows",
+        "3 repetitions"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-transaction-observation-mth-0152"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "failure_conditions": {
+      "status": "specified",
+      "values": [
+        "duplicate primary-key insertion after a pending fifth-row insertion",
+        "explicit application rollback"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-transaction-observation-mth-0152"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    }
+  }
+}
