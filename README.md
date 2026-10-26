@@ -694,6 +694,7 @@ Mathen does not currently aim to:
 - [`docs/repository-catalog.md`](docs/repository-catalog.md) — repository
   analysis policy and catalog
 - [`docs/llm-modeling.md`](docs/llm-modeling.md) — constrained LLM modeling
+- [`docs/extraction-provenance.md`](docs/extraction-provenance.md) — replaceable model and graph provenance
 - [`docs/mcp.md`](docs/mcp.md) — read-only agent access
 - [`docs/hosting.md`](docs/hosting.md) — Cloudflare deployment boundary
 - [`docs/roadmap.md`](docs/roadmap.md) — staged implementation plan
