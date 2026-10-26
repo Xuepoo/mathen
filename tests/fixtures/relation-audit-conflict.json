@@ -1,0 +1,20 @@
+{
+  "source": "alpha",
+  "target": "beta",
+  "relations": [
+    {
+      "type": "uses",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["alpha-integration"]
+    },
+    {
+      "type": "resembles",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": ["alpha-comparison"]
+    }
+  ],
+  "expected_action": "abstain",
+  "reason": "A directed pair has incompatible proposed relation types; a reviewer must resolve evidence and choose one type before any canonical edit."
+}

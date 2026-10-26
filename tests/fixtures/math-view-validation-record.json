@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0",
+  "id": "release-order",
+  "family": "partial_order",
+  "question": "Which release prerequisites must precede a deployment?",
+  "carrier": {
+    "kind": "release",
+    "description": "Finite release stages in the documented pipeline.",
+    "elements": [
+      "build",
+      "test",
+      "deploy"
+    ]
+  },
+  "operations": [],
+  "relations": [
+    {
+      "id": "precedes",
+      "name": "Precedes",
+      "kind": "ordering",
+      "pairs": [
+        [
+          "build",
+          "build"
+        ],
+        [
+          "test",
+          "test"
+        ],
+        [
+          "deploy",
+          "deploy"
+        ],
+        [
+          "build",
+          "test"
+        ],
+        [
+          "test",
+          "deploy"
+        ],
+        [
+          "build",
+          "deploy"
+        ]
+      ]
+    }
+  ],
+  "transitions": [],
+  "laws_or_checks": [
+    {
+      "id": "order-laws",
+      "name": "Order laws",
+      "description": "The relation is reflexive, antisymmetric, and transitive.",
+      "check": "partial-order"
+    }
+  ],
+  "assumptions": [
+    "The listed stages are the complete carrier for this release workflow.",
+    "The relation describes prerequisites, not runtime scheduling guarantees."
+  ],
+  "validity_scope": {
+    "systems": [
+      "fixture-system"
+    ],
+    "versions": [
+      "2.x"
+    ],
+    "deployment_origins": [
+      "configured-origin"
+    ],
+    "conditions": [
+      "documented release pipeline"
+    ],
+    "exclusions": [
+      "emergency hotfix procedure"
+    ]
+  },
+  "claim_type": "inference",
+  "claim_status": "under-review",
+  "evidence_ids": [
+    "design-doc"
+  ],
+  "classification": {
+    "result": "valid",
+    "reason": "The declared relation is reflexive, antisymmetric, and transitive.",
+    "checks": [
+      {
+        "id": "order-laws",
+        "result": "pass"
+      }
+    ]
+  },
+  "validation_records": [
+    {
+      "id": "release-order-observed",
+      "view_id": "release-order",
+      "kind": "observed-result",
+      "basis": "experiment",
+      "claim_type": "inference",
+      "claim_status": "under-review",
+      "system": "fixture-system",
+      "version": "2.x",
+      "scope": {
+        "systems": [
+          "fixture-system"
+        ],
+        "versions": [
+          "2.x"
+        ],
+        "deployment_origins": [
+          "configured-origin"
+        ],
+        "conditions": [
+          "documented release pipeline"
+        ],
+        "exclusions": [
+          "emergency hotfix procedure"
+        ]
+      },
+      "evidence_ids": [
+        "design-doc"
+      ],
+      "provenance": {
+        "run_id": "run-a",
+        "source_revision": "commit-a",
+        "protocol_digest": "sha256:protocol",
+        "recorded_at": "2026-10-26T00:00:00Z",
+        "runner": "local-runner-1",
+        "toolchain": {
+          "python": "3.12"
+        }
+      },
+      "result": {
+        "status": "observed",
+        "summary": "The release stages occurred in the declared order."
+      },
+      "limitations": [
+        "One fixture workload",
+        "This result is not a theorem or proof of implementation behavior"
+      ]
+    }
+  ]
+}

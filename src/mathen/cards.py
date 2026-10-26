@@ -9,7 +9,13 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+from .evidence import (
+    OBSERVATION_KINDS,
+    is_observation_record,
+    validate_observation_evidence,
+)
 from .mathviews import MathematicalViewValidationError, validate_math_view_contract
+from .scope import ScopeContextValidationError, validate_scope_context
 from .typed_composition import (
     TypedCompositionValidationError,
     validate_typed_composition,
@@ -27,6 +33,13 @@ REQUIRED_TOP_LEVEL = {
 }
 CLAIM_TYPES = {"fact", "inference", "hypothesis", "analogy"}
 CLAIM_STATUSES = {"proposed", "under-review", "accepted", "rejected", "deprecated"}
+LIFECYCLE_STATUSES = {
+    "proposed",
+    "observed",
+    "reviewed",
+    "deprecated",
+    "superseded",
+}
 RELATION_TYPES = {"uses", "extends", "composes", "resembles", "influenced-by"}
 FEATURE_RELATION_TYPES = {
     "implements",
@@ -80,9 +93,38 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
     evidence = card["evidence"]
     if not isinstance(evidence, list) or not evidence:
         raise CardValidationError(f"{label}: evidence must be a non-empty list")
+    seen_evidence_ids: set[str] = set()
     for index, item in enumerate(evidence):
         _validate_evidence(label, index, item)
+        if isinstance(item, dict):
+            evidence_id = item.get("id")
+            if evidence_id in seen_evidence_ids:
+                raise CardValidationError(
+                    f"{label}: duplicate evidence id: {evidence_id}"
+                )
+            seen_evidence_ids.add(evidence_id)
     evidence_ids = {item.get("id") for item in evidence if isinstance(item, dict)}
+    if "scope_context" in card:
+        _validate_scope_context(
+            label, "scope_context", card["scope_context"], evidence_ids
+        )
+    for index, item in enumerate(evidence):
+        if isinstance(item, dict) and "scope_context" in item:
+            _validate_scope_context(
+                label,
+                f"evidence[{index}].scope_context",
+                item["scope_context"],
+                evidence_ids,
+            )
+        if isinstance(item, dict) and is_observation_record(item):
+            try:
+                validate_observation_evidence(
+                    item,
+                    {item_id for item_id in evidence_ids if item_id},
+                    f"{label}: evidence[{index}]",
+                )
+            except ValueError as error:
+                raise CardValidationError(str(error)) from error
 
     feature_ids: set[str] = set()
     for feature in card["features"]:
@@ -100,6 +142,14 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
         _check_evidence_ids(
             label, feature_id, feature.get("evidence_ids"), evidence_ids
         )
+        _validate_lifecycle(label, feature_id, feature.get("lifecycle"), evidence_ids)
+        if "scope_context" in feature:
+            _validate_scope_context(
+                label,
+                f"feature {feature_id}.scope_context",
+                feature["scope_context"],
+                evidence_ids,
+            )
 
     for view in card["mathematical_views"]:
         if not isinstance(view, dict):
@@ -114,6 +164,16 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
         _check_evidence_ids(
             label, view.get("model", "view"), view.get("evidence_ids"), evidence_ids
         )
+        _validate_lifecycle(
+            label, view.get("model", "view"), view.get("lifecycle"), evidence_ids
+        )
+        if "scope_context" in view:
+            _validate_scope_context(
+                label,
+                "mathematical view scope_context",
+                view["scope_context"],
+                evidence_ids,
+            )
         if "contract" in view:
             try:
                 validate_math_view_contract(view["contract"], evidence_ids=evidence_ids)
@@ -121,6 +181,29 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
                 raise CardValidationError(
                     f"{label}: mathematical view contract is invalid: {error}"
                 ) from error
+
+    view_ids = {
+        view.get("model")
+        for view in card["mathematical_views"]
+        if isinstance(view, dict) and isinstance(view.get("model"), str)
+    }
+    for index, item in enumerate(evidence):
+        if not isinstance(item, dict) or not is_observation_record(item):
+            continue
+        review = item["review"]
+        if review["status"] != "reviewed":
+            continue
+        allowed_refs = {"card"}
+        allowed_refs.update(
+            f"feature:{feature_id}" for feature_id in feature_ids if feature_id
+        )
+        allowed_refs.update(f"view:{view_id}" for view_id in view_ids)
+        invalid_refs = set(review["card_claim_refs"]) - allowed_refs
+        if invalid_refs:
+            raise CardValidationError(
+                f"{label}: evidence[{index}].review has unknown card claim refs: "
+                f"{sorted(invalid_refs)}"
+            )
 
     for trade_off in card["trade_offs"]:
         if trade_off.get("feature_id") not in feature_ids:
@@ -366,9 +449,25 @@ def _validate_evidence(label: str, index: int, evidence: Any) -> None:
     if not isinstance(evidence, dict):
         raise CardValidationError(f"{label}: evidence[{index}] must be an object")
     if evidence.get("kind") != "experiment":
+        if evidence.get("kind") not in OBSERVATION_KINDS:
+            return
+        if evidence.get("observation_version") != "1":
+            raise CardValidationError(
+                f"{label}: evidence[{index}] observation kinds require "
+                "observation_version 1"
+            )
         return
 
     evidence_label = f"evidence[{index}]"
+    if "scope_context" in evidence:
+        # Evidence scope describes the observation boundary.  It still cites
+        # the containing card's evidence IDs, so card-level closure is checked
+        # by validate_card after the evidence list has been collected.
+        scope = evidence["scope_context"]
+        if not isinstance(scope, dict):
+            raise CardValidationError(
+                f"{label}: {evidence_label}.scope_context must be an object"
+            )
     missing = [field for field in EXPERIMENT_REQUIRED_FIELDS if field not in evidence]
     if missing:
         raise CardValidationError(
@@ -402,6 +501,8 @@ def _validate_evidence(label: str, index: int, evidence: Any) -> None:
             f"{label}: {evidence_label}.metrics must be an object"
         )
     for name, value in metrics.items():
+        if value is None and is_observation_record(evidence):
+            continue
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise CardValidationError(
                 f"{label}: {evidence_label}.metrics.{name} must be a number"
@@ -424,6 +525,19 @@ def _validate_evidence(label: str, index: int, evidence: Any) -> None:
             )
 
 
+def _validate_scope_context(
+    label: str, field: str, value: Any, evidence_ids: set[str | None]
+) -> None:
+    try:
+        validate_scope_context(
+            value,
+            evidence_ids={item for item in evidence_ids if item is not None},
+            label=field,
+        )
+    except ScopeContextValidationError as error:
+        raise CardValidationError(f"{label}: {error}") from error
+
+
 def _check_claim_status(label: str, item_id: str, status: Any) -> None:
     if status not in CLAIM_STATUSES:
         raise CardValidationError(f"{label}: invalid {item_id} claim status")
@@ -432,6 +546,69 @@ def _check_claim_status(label: str, item_id: str, status: Any) -> None:
 def _check_optional_claim_status(label: str, item_id: str, status: Any) -> None:
     if status is not None:
         _check_claim_status(label, item_id, status)
+
+
+def _validate_lifecycle(
+    label: str,
+    item_id: str,
+    lifecycle: Any,
+    evidence_ids: set[str | None],
+) -> None:
+    """Validate explicit lifecycle metadata without deriving it from claims.
+
+    Lifecycle answers what was observed or reviewed about a record's evolution;
+    claim_type and claim_status remain independent epistemic/review fields.
+    """
+
+    if lifecycle is None:
+        return
+    lifecycle_label = f"{item_id} lifecycle"
+    lifecycle = _require_object(label, lifecycle_label, lifecycle)
+    allowed = {
+        "status",
+        "evidence_ids",
+        "claim_type",
+        "claim_status",
+        "superseded_by",
+        "notes",
+    }
+    unexpected = lifecycle.keys() - allowed
+    if unexpected:
+        raise CardValidationError(
+            f"{label}: {lifecycle_label} has unexpected fields: {sorted(unexpected)}"
+        )
+    status = lifecycle.get("status")
+    if status not in LIFECYCLE_STATUSES:
+        raise CardValidationError(f"{label}: invalid {lifecycle_label} status")
+    _check_evidence_ids(
+        label, lifecycle_label, lifecycle.get("evidence_ids"), evidence_ids
+    )
+    if lifecycle.get("claim_type") not in CLAIM_TYPES:
+        raise CardValidationError(f"{label}: invalid {lifecycle_label} claim type")
+    _check_claim_status(label, lifecycle_label, lifecycle.get("claim_status"))
+    if status in {"deprecated", "superseded"} and (
+        not isinstance(lifecycle.get("notes"), str) or not lifecycle["notes"].strip()
+    ):
+        raise CardValidationError(
+            f"{label}: {lifecycle_label} {status} status needs notes"
+        )
+    superseded_by = lifecycle.get("superseded_by")
+    if superseded_by is not None:
+        if status != "superseded":
+            raise CardValidationError(
+                f"{label}: {lifecycle_label}.superseded_by requires superseded status"
+            )
+        if (
+            not isinstance(superseded_by, list)
+            or not superseded_by
+            or not all(
+                isinstance(item, str) and ID_PATTERN.fullmatch(item)
+                for item in superseded_by
+            )
+        ):
+            raise CardValidationError(
+                f"{label}: {lifecycle_label}.superseded_by must be a list of ids"
+            )
 
 
 def _check_evidence_ids(

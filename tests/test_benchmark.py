@@ -192,6 +192,19 @@ class BenchmarkManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(BenchmarkManifestValidationError, "canonical"):
             validate_benchmark_manifest(value)
 
+    def test_optional_observation_evidence_is_local_and_stable(self) -> None:
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["observation_evidence_ids"] = ["source-evidence"]
+        validate_benchmark_manifest(value)
+
+        value["observation_evidence_ids"] = ["outside"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "local"):
+            validate_benchmark_manifest(value)
+
+        value["observation_evidence_ids"] = ["source-evidence", "source-evidence"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "unique"):
+            validate_benchmark_manifest(value)
+
     def test_manifest_rejects_missing_input_evidence_and_holdout_exposure(self) -> None:
         value = json.loads(FIXTURE.read_text(encoding="utf-8"))
         del value["input_evidence"]["systems:fixture-system"]
@@ -380,6 +393,43 @@ class RetrievalEvaluationManifestTests(unittest.TestCase):
         value["model"]["model_id"] = None
         with self.assertRaisesRegex(
             BenchmarkManifestValidationError, "supplied together"
+        ):
+            validate_retrieval_evaluation_manifest(value)
+
+    def test_retrieval_scope_context_is_optional_but_validated_and_local(self) -> None:
+        value = json.loads(RETRIEVAL_FIXTURE.read_text(encoding="utf-8"))
+        document = value["corpus_snapshot"]["documents"][0]
+        unspecified = {
+            "validity_scope": {
+                "status": "unspecified",
+                "systems": [],
+                "versions": [],
+                "deployment_origins": [],
+                "conditions": [],
+                "exclusions": [],
+                "evidence_ids": [],
+            },
+            **{
+                field: {"status": "unspecified", "values": [], "evidence_ids": []}
+                for field in (
+                    "workload",
+                    "runtime_conditions",
+                    "scale",
+                    "failure_conditions",
+                )
+            },
+        }
+        document["scope_context"] = unspecified
+        value["corpus_snapshot"]["digest"] = retrieval_digest(
+            value["corpus_snapshot"]["documents"]
+        )
+        result_document = value["results"][0]["results"][0]["document"]
+        result_document["scope_context"] = unspecified
+        validate_retrieval_evaluation_manifest(value)
+
+        result_document["scope_context"]["workload"]["evidence_ids"] = ["missing"]
+        with self.assertRaisesRegex(
+            BenchmarkManifestValidationError, "unknown evidence"
         ):
             validate_retrieval_evaluation_manifest(value)
 

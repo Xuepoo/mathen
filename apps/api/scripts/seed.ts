@@ -6,6 +6,7 @@ type Card = {
   name: string;
   version_context?: string;
   temporal_context?: Record<string, unknown>;
+  scope_context?: Record<string, unknown>;
   relations?: Array<Record<string, unknown>>;
   feature_relations?: FeatureRelation[];
   composition?: Record<string, unknown>;
@@ -18,7 +19,9 @@ type Card = {
     category: string;
     claim_type: string;
     claim_status?: string;
+    lifecycle?: Record<string, unknown>;
     validity_scope?: Record<string, unknown>;
+    scope_context?: Record<string, unknown>;
     description: string;
     benefits?: string[];
     costs?: string[];
@@ -31,7 +34,9 @@ type Card = {
     assumptions: string[];
     claim_type: string;
     claim_status?: string;
+    lifecycle?: Record<string, unknown>;
     validity_scope?: Record<string, unknown>;
+    scope_context?: Record<string, unknown>;
     contract?: Record<string, unknown>;
     evidence_ids: string[];
   }>;
@@ -47,6 +52,7 @@ type Card = {
     uri: string;
     accessed?: string;
     notes?: string;
+    scope_context?: Record<string, unknown>;
   }>;
 };
 
@@ -201,6 +207,7 @@ function toStatements(card: Card) {
       name: card.name,
       version_context: card.version_context ?? null,
       temporal_context_json: card.temporal_context ? JSON.stringify(card.temporal_context) : null,
+      scope_context_json: card.scope_context ? JSON.stringify(card.scope_context) : null,
       relations_json: card.relations ? JSON.stringify(card.relations) : null,
       composition_json: card.composition ? JSON.stringify(card.composition) : null,
       summary: card.summary,
@@ -208,13 +215,14 @@ function toStatements(card: Card) {
       related_systems_json: JSON.stringify(card.related_systems ?? []),
       source_path: `data/systems/${card.id}.json`,
     }),
-    ...card.evidence.map((item) =>
+    ...card.evidence.map(({ scope_context, ...item }) =>
       insert("evidence", {
         system_id: card.id,
         ...item,
         id: evidenceKey(card.id, item.id),
         accessed: item.accessed ?? null,
         notes: item.notes ?? null,
+        scope_context_json: scope_context ? JSON.stringify(scope_context) : null,
       }),
     ),
     ...card.features.map((feature) =>
@@ -293,7 +301,9 @@ function toGraphDocumentStatement(document: {
 function featureMetadata(feature: Card["features"][number]) {
   return {
     ...(feature.claim_status ? { claim_status: feature.claim_status } : {}),
+    ...(feature.lifecycle ? { lifecycle: feature.lifecycle } : {}),
     ...(feature.validity_scope ? { validity_scope: feature.validity_scope } : {}),
+    ...(feature.scope_context ? { scope_context: feature.scope_context } : {}),
   };
 }
 
@@ -301,7 +311,9 @@ function viewMetadata(systemId: string, view: Card["mathematical_views"][number]
   return {
     id: view.id ?? stableViewId(systemId, view.model, view.question),
     ...(view.claim_status ? { claim_status: view.claim_status } : {}),
+    ...(view.lifecycle ? { lifecycle: view.lifecycle } : {}),
     ...(view.validity_scope ? { validity_scope: view.validity_scope } : {}),
+    ...(view.scope_context ? { scope_context: view.scope_context } : {}),
     ...(view.contract ? { contract: view.contract } : {}),
   };
 }

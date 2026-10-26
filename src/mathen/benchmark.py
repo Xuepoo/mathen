@@ -17,6 +17,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from .scope import ScopeContextValidationError, validate_scope_context
+
 BENCHMARK_MANIFEST_SCHEMA_VERSION = "1.1"
 RETRIEVAL_EVALUATION_MANIFEST_SCHEMA_VERSION = "1.0"
 CLAIM_TYPES = frozenset({"fact", "inference", "hypothesis", "analogy"})
@@ -528,7 +530,7 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
         "result_boundary",
         "outcome",
     }
-    _allowed("manifest", value, required)
+    _allowed("manifest", value, required | {"observation_evidence_ids"})
     missing = required - value.keys()
     if missing:
         raise BenchmarkManifestValidationError(f"missing fields: {sorted(missing)}")
@@ -605,6 +607,23 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
             "evidence_bundle.evidence_ids must be unique"
         )
     evidence_set = set(evidence_ids)
+    observation_evidence_ids = value.get("observation_evidence_ids")
+    if observation_evidence_ids is not None:
+        observation_evidence_ids = _string_list(
+            value, "observation_evidence_ids", "manifest"
+        )
+        if not observation_evidence_ids:
+            raise BenchmarkManifestValidationError(
+                "observation_evidence_ids must not be empty when supplied"
+            )
+        if len(set(observation_evidence_ids)) != len(observation_evidence_ids):
+            raise BenchmarkManifestValidationError(
+                "observation_evidence_ids must be unique"
+            )
+        if not set(observation_evidence_ids).issubset(evidence_set):
+            raise BenchmarkManifestValidationError(
+                "observation_evidence_ids must be local to evidence_bundle"
+            )
 
     inputs = value["input_ids"]
     _object("input_ids", inputs)
@@ -732,7 +751,14 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
     _allowed(
         "deployment",
         deployment,
-        {"origin", "version", "conditions", "exclusions", "workload"},
+        {
+            "origin",
+            "version",
+            "conditions",
+            "exclusions",
+            "workload",
+            "scope_context",
+        },
     )
     for field in ("origin", "version"):
         _text(deployment, field, "deployment")
@@ -743,6 +769,10 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
     ):
         raise BenchmarkManifestValidationError(
             "deployment.workload must be a string or null"
+        )
+    if "scope_context" in deployment:
+        _validate_scope_context(
+            deployment["scope_context"], "deployment.scope_context", evidence_set
         )
 
     randomness = value["randomness"]
@@ -1130,6 +1160,7 @@ def _validate_retrieval_document(document: Any, label: str) -> None:
             "claim_status",
             "evidence_ids",
             "validity_scope",
+            "scope_context",
         },
     )
     for field in ("id", "source_ref"):
@@ -1143,6 +1174,12 @@ def _validate_retrieval_document(document: Any, label: str) -> None:
         raise BenchmarkManifestValidationError(f"{label}.claim_status is invalid")
     _non_empty_string_list(document, "evidence_ids", label)
     _validate_scope(document.get("validity_scope"), f"{label}.validity_scope")
+    if "scope_context" in document:
+        _validate_scope_context(
+            document["scope_context"],
+            f"{label}.scope_context",
+            set(document["evidence_ids"]),
+        )
 
 
 def _validate_scope(scope: Any, label: str) -> None:
@@ -1156,6 +1193,13 @@ def _validate_scope(scope: Any, label: str) -> None:
         _text(scope, "version_context", label)
     for field in ("deployment_origins", "conditions", "exclusions"):
         _string_list(scope, field, label)
+
+
+def _validate_scope_context(value: Any, label: str, evidence_ids: set[str]) -> None:
+    try:
+        validate_scope_context(value, evidence_ids=evidence_ids, label=label)
+    except ScopeContextValidationError as error:
+        raise BenchmarkManifestValidationError(str(error)) from error
 
 
 def _validate_retrieval_query(query: Any, label: str) -> None:
@@ -1530,6 +1574,7 @@ def _validate_retrieval_result(
             "claim_status",
             "evidence_ids",
             "validity_scope",
+            "scope_context",
         },
     )
     _text(document, "id", f"{label}.document")
@@ -1549,9 +1594,21 @@ def _validate_retrieval_result(
             f"{label}.evidence_ids must preserve local corpus evidence closure"
         )
     _validate_scope(document.get("validity_scope"), f"{label}.document.validity_scope")
+    if "scope_context" in document:
+        _validate_scope_context(
+            document["scope_context"],
+            f"{label}.document.scope_context",
+            document_evidence[document["id"]],
+        )
     corpus_document = document_metadata[document["id"]]
-    for field in ("record_kind", "claim_type", "claim_status", "validity_scope"):
-        if document[field] != corpus_document[field]:
+    for field in (
+        "record_kind",
+        "claim_type",
+        "claim_status",
+        "validity_scope",
+        "scope_context",
+    ):
+        if document.get(field) != corpus_document.get(field):
             raise BenchmarkManifestValidationError(
                 f"{label}.document.{field} does not match corpus"
             )

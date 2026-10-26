@@ -45,6 +45,7 @@ export type RetrievalEvidence = {
   uri: string;
   accessed?: string | null;
   notes?: string | null;
+  scope_context?: Record<string, unknown>;
 };
 
 export type RetrievalDocument = {
@@ -58,8 +59,10 @@ export type RetrievalDocument = {
   text: string;
   claim_type?: string;
   claim_status?: string;
+  lifecycle?: Record<string, unknown>;
   version_context?: string | null;
   validity_scope?: Record<string, unknown>;
+  scope_context?: Record<string, unknown>;
   evidence_ids: string[];
   evidence: RetrievalEvidence[];
   source_ref: string;
@@ -74,6 +77,7 @@ export type RetrievalSystemRow = {
   summary: string;
   scope_json: string;
   temporal_context_json: string | null;
+  scope_context_json?: string | null;
   relations_json: string | null;
   composition_json: string | null;
   source_path: string;
@@ -132,7 +136,10 @@ export type RetrievalCompositionRow = {
   composition_json: string;
 };
 
-export type RetrievalEvidenceRow = RetrievalEvidence & { system_id: string };
+export type RetrievalEvidenceRow = RetrievalEvidence & {
+  system_id: string;
+  scope_context_json?: string | null;
+};
 
 export type RetrievalResult = {
   rank: number;
@@ -171,6 +178,12 @@ export async function buildRetrievalDocuments(input: {
     });
     evidenceBySystem.set(row.system_id, byId);
   }
+  for (const row of input.evidence) {
+    const byId = evidenceBySystem.get(row.system_id);
+    const evidence = byId?.get(row.id);
+    const scopeContext = parseScopeContext(row.scope_context_json, new Set(byId?.keys()));
+    if (evidence && scopeContext) evidence.scope_context = scopeContext;
+  }
   const systems = new Map(input.systems.map((system) => [system.id, system]));
   const documents: RetrievalDocument[] = [];
   const add = async (document: Omit<RetrievalDocument, "source_digest">) => {
@@ -189,6 +202,7 @@ export async function buildRetrievalDocuments(input: {
     ).sort();
     const evidence = resolveEvidence(evidenceBySystem.get(system.id), evidenceIds);
     if (evidenceIds.length === 0 || evidence.length !== evidenceIds.length) continue;
+    const systemScopeContext = parseScopeContext(system.scope_context_json, new Set(evidenceIds));
     const document = {
       id: `system:${system.id}:summary`,
       record_kind: "system" as const,
@@ -201,6 +215,7 @@ export async function buildRetrievalDocuments(input: {
       claim_status: typeof temporal.claim_status === "string" ? temporal.claim_status : undefined,
       version_context: system.version_context,
       ...(validityScope ? { validity_scope: validityScope } : {}),
+      ...(systemScopeContext ? { scope_context: systemScopeContext } : {}),
       evidence_ids: evidenceIds,
     };
     await add({
@@ -214,6 +229,7 @@ export async function buildRetrievalDocuments(input: {
       claim_status: document.claim_status,
       version_context: system.version_context,
       validity_scope: validityScope,
+      scope_context: systemScopeContext,
       evidence_ids: evidenceIds,
       evidence,
       source_ref: `${system.source_path}#summary`,
@@ -298,6 +314,7 @@ export async function buildRetrievalDocuments(input: {
     const system = systems.get(row.system_id);
     if (!system || evidenceIds.length === 0 || evidence.length !== evidenceIds.length) continue;
     const scope = recordValue(metadata.validity_scope);
+    const scopeContext = parseScopeContext(metadata.scope_context, new Set(evidenceIds));
     const document = {
       id: `system:${row.system_id}:feature:${row.id}`,
       record_kind: "feature" as const,
@@ -310,8 +327,10 @@ export async function buildRetrievalDocuments(input: {
       costs: parseJsonArray(row.costs_json),
       claim_type: row.claim_type,
       ...(typeof metadata.claim_status === "string" ? { claim_status: metadata.claim_status } : {}),
+      ...(recordValue(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
       version_context: system.version_context,
       ...(scope ? { validity_scope: scope } : {}),
+      ...(scopeContext ? { scope_context: scopeContext } : {}),
       evidence_ids: evidenceIds,
     };
     await add({
@@ -331,8 +350,10 @@ export async function buildRetrievalDocuments(input: {
       ),
       claim_type: row.claim_type,
       claim_status: typeof metadata.claim_status === "string" ? metadata.claim_status : undefined,
+      lifecycle: recordValue(metadata.lifecycle),
       version_context: system.version_context,
       validity_scope: scope,
+      scope_context: scopeContext,
       evidence_ids: evidenceIds,
       evidence,
       source_ref: `${system.source_path}#features/${row.id}`,
@@ -346,6 +367,7 @@ export async function buildRetrievalDocuments(input: {
     const system = systems.get(row.system_id);
     if (!system || evidenceIds.length === 0 || evidence.length !== evidenceIds.length) continue;
     const scope = recordValue(metadata.validity_scope);
+    const scopeContext = parseScopeContext(metadata.scope_context, new Set(evidenceIds));
     const viewId =
       typeof metadata.id === "string" || typeof metadata.id === "number" ? metadata.id : row.id;
     const document = {
@@ -359,8 +381,10 @@ export async function buildRetrievalDocuments(input: {
       assumptions: parseJsonArray(row.assumptions_json),
       claim_type: row.claim_type,
       ...(typeof metadata.claim_status === "string" ? { claim_status: metadata.claim_status } : {}),
+      ...(recordValue(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
       version_context: system.version_context,
       ...(scope ? { validity_scope: scope } : {}),
+      ...(scopeContext ? { scope_context: scopeContext } : {}),
       evidence_ids: evidenceIds,
     };
     await add({
@@ -372,8 +396,10 @@ export async function buildRetrievalDocuments(input: {
       text: renderText(system, "view", row.model, row.question, row.assumptions_json),
       claim_type: row.claim_type,
       claim_status: typeof metadata.claim_status === "string" ? metadata.claim_status : undefined,
+      lifecycle: recordValue(metadata.lifecycle),
       version_context: system.version_context,
       validity_scope: scope,
+      scope_context: scopeContext,
       evidence_ids: evidenceIds,
       evidence,
       source_ref: `${system.source_path}#mathematical_views/${viewId}`,
@@ -391,6 +417,7 @@ export async function buildRetrievalDocuments(input: {
       continue;
     const featureMetadata = parseRecord(feature.metadata_json);
     const validityScope = recordValue(featureMetadata.validity_scope);
+    const scopeContext = parseScopeContext(featureMetadata.scope_context, new Set(evidenceIds));
     const document = {
       id: `system:${row.system_id}:tradeoff:${row.feature_id}`,
       record_kind: "trade_off" as const,
@@ -404,8 +431,10 @@ export async function buildRetrievalDocuments(input: {
       ...(typeof featureMetadata.claim_status === "string"
         ? { claim_status: featureMetadata.claim_status }
         : {}),
+      ...(recordValue(featureMetadata.lifecycle) ? { lifecycle: featureMetadata.lifecycle } : {}),
       version_context: system.version_context,
       ...(validityScope ? { validity_scope: validityScope } : {}),
+      ...(scopeContext ? { scope_context: scopeContext } : {}),
       evidence_ids: evidenceIds,
     };
     await add({
@@ -425,8 +454,10 @@ export async function buildRetrievalDocuments(input: {
       claim_type: feature.claim_type,
       claim_status:
         typeof featureMetadata.claim_status === "string" ? featureMetadata.claim_status : undefined,
+      lifecycle: recordValue(featureMetadata.lifecycle),
       version_context: system.version_context,
       validity_scope: validityScope,
+      scope_context: scopeContext,
       evidence_ids: evidenceIds,
       evidence,
       source_ref: `${system.source_path}#trade_offs/${row.feature_id}`,
@@ -664,6 +695,135 @@ function parseJsonArray(value: string | null): unknown[] {
 function parseRecord(value: string | null): Record<string, unknown> {
   const parsed = parseJson(value);
   return recordValue(parsed) ?? {};
+}
+
+function parseOptionalRecord(
+  value: string | null | undefined,
+): Record<string, unknown> | undefined {
+  if (!value) return undefined;
+  const parsed = parseRecord(value);
+  return Object.keys(parsed).length ? parsed : undefined;
+}
+
+function parseScopeContext(
+  value: unknown,
+  evidenceIds: Set<string>,
+): Record<string, unknown> | undefined {
+  const parsed = typeof value === "string" ? parseOptionalRecord(value) : recordValue(value);
+  if (!parsed) return undefined;
+  const fields = [
+    "validity_scope",
+    "workload",
+    "runtime_conditions",
+    "scale",
+    "failure_conditions",
+  ];
+  if (
+    Object.keys(parsed).length !== fields.length ||
+    fields.some((field) => !Object.hasOwn(parsed, field)) ||
+    !validValidityScope(parsed.validity_scope, evidenceIds) ||
+    fields.slice(1).some((field) => !validScopeDimension(parsed[field], evidenceIds))
+  )
+    return undefined;
+  return parsed;
+}
+
+function validValidityScope(value: unknown, evidenceIds: Set<string>): boolean {
+  if (!recordValue(value)) return false;
+  const scope = recordValue(value)!;
+  const required = [
+    "status",
+    "systems",
+    "versions",
+    "deployment_origins",
+    "conditions",
+    "exclusions",
+    "evidence_ids",
+  ];
+  if (
+    Object.keys(scope).some(
+      (field) =>
+        !required.includes(field) && !["claim_type", "claim_status", "notes"].includes(field),
+    ) ||
+    required.some((field) => !Object.hasOwn(scope, field)) ||
+    !["specified", "unknown", "unspecified", "not-applicable"].includes(String(scope.status))
+  )
+    return false;
+  if (!required.slice(1).every((field) => isStringArray(scope[field]))) return false;
+  if (!localScopeEvidence(scope, evidenceIds)) return false;
+  if (scope.status === "unspecified") {
+    return (
+      !Object.hasOwn(scope, "claim_type") &&
+      !Object.hasOwn(scope, "claim_status") &&
+      required.slice(1).every((field) => stringArray(scope[field]).length === 0)
+    );
+  }
+  if (scope.status === "unknown" && scope.claim_type === "analogy") return false;
+  return (
+    validClaimFields(scope) &&
+    (scope.status === "specified"
+      ? required.slice(1, 6).some((field) => stringArray(scope[field]).length > 0)
+      : required.slice(1, 6).every((field) => stringArray(scope[field]).length === 0)) &&
+    (scope.status !== "not-applicable" ||
+      (typeof scope.notes === "string" && scope.notes.trim().length > 0))
+  );
+}
+
+function validScopeDimension(value: unknown, evidenceIds: Set<string>): boolean {
+  const dimension = recordValue(value);
+  if (
+    !dimension ||
+    !["status", "values", "evidence_ids"].every((field) => Object.hasOwn(dimension, field))
+  )
+    return false;
+  if (
+    !Object.keys(dimension).every((field) =>
+      ["status", "values", "evidence_ids", "claim_type", "claim_status", "notes"].includes(field),
+    )
+  )
+    return false;
+  if (!["specified", "unknown", "unspecified", "not-applicable"].includes(String(dimension.status)))
+    return false;
+  const values = stringArray(dimension.values);
+  const cited = stringArray(dimension.evidence_ids);
+  if (
+    !isStringArray(dimension.values) ||
+    !isStringArray(dimension.evidence_ids) ||
+    !localScopeEvidence(dimension, evidenceIds)
+  )
+    return false;
+  if (dimension.status === "unspecified")
+    return (
+      values.length === 0 &&
+      cited.length === 0 &&
+      !Object.hasOwn(dimension, "claim_type") &&
+      !Object.hasOwn(dimension, "claim_status")
+    );
+  return (
+    validClaimFields(dimension) &&
+    (dimension.status === "specified" ? values.length > 0 : values.length === 0) &&
+    (dimension.status !== "not-applicable" ||
+      (typeof dimension.notes === "string" && dimension.notes.trim().length > 0))
+  );
+}
+
+function validClaimFields(value: Record<string, unknown>): boolean {
+  return (
+    ["fact", "inference", "hypothesis", "analogy"].includes(String(value.claim_type)) &&
+    ["proposed", "under-review", "accepted", "rejected", "deprecated"].includes(
+      String(value.claim_status),
+    ) &&
+    stringArray(value.evidence_ids).length > 0
+  );
+}
+
+function localScopeEvidence(value: Record<string, unknown>, evidenceIds: Set<string>): boolean {
+  const cited = stringArray(value.evidence_ids);
+  return isStringArray(value.evidence_ids) && cited.every((id) => evidenceIds.has(id));
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
 function recordValue(value: unknown): Record<string, unknown> | undefined {

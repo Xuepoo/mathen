@@ -1,0 +1,167 @@
+{
+  "decision_id": "MTH-0147",
+  "task": "Evaluate embeddings and Vectorize for evidence-bounded retrieval",
+  "as_of": "2026-10-26",
+  "decision": "no_change",
+  "scope": {
+    "production_changes": false,
+    "similarity_boundary": "discovery_only",
+    "canonical_source": "d1"
+  },
+  "corpus": {
+    "source": "data/systems/*.json",
+    "reviewed_only": true,
+    "snapshot_commit": "e822d51",
+    "snapshot_digest": "sha256:38edc60cdf28e918ca0a35da9e36df986e71743a83aae8be97fc9a49066269be",
+    "counts": {
+      "cards": 219,
+      "features": 830,
+      "views": 608,
+      "trade_offs": 824,
+      "evidence": 1531,
+      "eligible_documents": 2481
+    },
+    "evidence_closure": {
+      "missing_references": 0,
+      "records_with_local_evidence": 2481,
+      "evidence_kinds": { "source-code": 886, "official-doc": 645 }
+    },
+    "scope_metadata": {
+      "cards_with_any_scope_context": 0,
+      "evidence_with_scope_context": 0,
+      "specified_dimensions": 0,
+      "interpretation": "absence_is_not_a_negative_finding"
+    },
+    "freshness": {
+      "evidence_accessed": 1527,
+      "evidence_missing_accessed": 4,
+      "policy": "record immutable source revision and accessed-date distribution; do not infer freshness from similarity"
+    }
+  },
+  "criteria": [
+    {
+      "name": "corpus_size",
+      "observation": "2481 eligible atomic documents at the snapshot",
+      "consequence": "pilot is technically feasible but scale does not mandate vectors"
+    },
+    {
+      "name": "evidence_closure",
+      "observation": "1531 evidence records and zero audited missing references",
+      "consequence": "retain D1 hydration and measure evidence locality"
+    },
+    {
+      "name": "scope_metadata",
+      "observation": "zero specified scope dimensions and zero evidence scope contexts",
+      "consequence": "block scope-sensitive rollout and require unknown/abstention slices"
+    },
+    {
+      "name": "claim_types",
+      "observation": "features and views contain fact, inference, hypothesis, and analogy records",
+      "consequence": "stratify claim discipline; similarity cannot upgrade claims"
+    },
+    {
+      "name": "freshness",
+      "observation": "1527 of 1531 evidence records have accessed dates; source versions are heterogeneous",
+      "consequence": "freeze and digest every experiment; define stale policy"
+    },
+    {
+      "name": "privacy",
+      "observation": "query text may be sensitive and provider policy is unselected",
+      "consequence": "no external provider transfer before retention/training review"
+    },
+    {
+      "name": "cost_latency",
+      "observation": "lexical has no embedding/index cost and vector p50/p95 is unmeasured",
+      "consequence": "require explicit budget and Worker-like latency evidence"
+    },
+    {
+      "name": "explainability",
+      "observation": "lexical overlap is inspectable while vector similarity is uncalibrated",
+      "consequence": "show score kind, source, evidence, scope, and abstention"
+    },
+    {
+      "name": "existing_metrics",
+      "observation": "MTH-0134 defines discovery metrics but no populated lexical/vector comparison exists",
+      "consequence": "no vector benefit claim until a valid gated manifest"
+    }
+  ],
+  "options": [
+    {
+      "id": "bounded_lexical_baseline",
+      "status": "chosen",
+      "rationale": "Explainable, provider-neutral, low cost, and already preserves evidence-bounded D1 hydration."
+    },
+    {
+      "id": "offline_provider_neutral_vectors",
+      "status": "research_only",
+      "rationale": "Safest first test of representation value without production data egress."
+    },
+    {
+      "id": "cloudflare_vectorize",
+      "status": "deferred",
+      "rationale": "Managed adapter is plausible only after model, privacy, cost, latency, and evaluation gates pass."
+    },
+    {
+      "id": "external_managed_vector_service",
+      "status": "deferred",
+      "rationale": "Provider retention, credentials, outage, and egress risks are currently unverified."
+    },
+    {
+      "id": "workers_ai_plus_vectorize",
+      "status": "deferred",
+      "rationale": "Model availability, dimensions, throughput, and request-path safety are unverified."
+    },
+    {
+      "id": "hybrid_lexical_vector",
+      "status": "research_only",
+      "rationale": "Compare complementarity only with explicit ablation and false-link gates."
+    }
+  ],
+  "experiment_gate": {
+    "status": "not_started",
+    "entry_gates": [
+      "freeze an immutable reviewed corpus and evidence bundle digest",
+      "validate local evidence closure and exclude drafts/private artifacts/held-out negatives",
+      "construct terminology, record-kind, claim-type, scope, freshness, and misleading-similarity query slices",
+      "obtain independent reviewer labels with disagreement retained",
+      "declare provider/model, representation, dimensions, metric, privacy, retention, and cost before vector run"
+    ],
+    "acceptance_gates": [
+      "macro nDCG@10 improves by at least 0.05 or paraphrase recall@10 improves by at least 0.10 versus lexical",
+      "evidence locality, scope completeness, and claim-type accuracy do not drop by more than 0.02 each",
+      "false-link rate does not rise by more than 0.02 overall or 0.05 in any claim-type stratum",
+      "held-out negative knowledge remains excluded and unknown/scope-mismatch abstention is explicit and no worse than lexical",
+      "p50/p95 latency, provider errors, storage/build cost, privacy, explainability, and rollback budgets are approved"
+    ],
+    "required_metrics": [
+      "recall@k",
+      "nDCG@k",
+      "evidence_locality",
+      "claim_type_accuracy",
+      "scope_completeness",
+      "false_link_rate",
+      "abstention_rate",
+      "p50_p95_latency",
+      "provider_error_rate",
+      "index_build_cost"
+    ],
+    "boundary": "research_only_no_production_resource"
+  },
+  "rollback": {
+    "strategy": "versioned_index_atomic_pointer_rollback",
+    "trigger_conditions": [
+      "source or evidence digest mismatch",
+      "missing evidence, draft/private metadata, or failed hydration",
+      "provider outage, budget breach, or privacy incident",
+      "failed evaluation/read smoke test or unexplained false-link increase"
+    ],
+    "canonical_data_untouched": true
+  },
+  "unresolved_questions": [
+    "Which model meets language mix, privacy, retention, cost, and latency requirements?",
+    "Can reviewers label enough paraphrase and misleading-similarity queries with sparse scope metadata?",
+    "What freshness policy applies to missing accessed dates and historical commits?",
+    "Is a local experiment sufficient, or is disposable Vectorize latency evidence required?",
+    "Who owns publication, active-pointer auditing, and rollback?"
+  ]
+}

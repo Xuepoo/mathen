@@ -401,6 +401,7 @@ app.get("/retrieval", async (c) => {
       await Promise.all([
         c.env.DB.prepare(
           `SELECT id, name, version_context, summary, scope_json, temporal_context_json,
+                scope_context_json,
                 relations_json, composition_json, source_path
          FROM systems ORDER BY id LIMIT 5000`,
         ).all<RetrievalSystemRow>(),
@@ -439,7 +440,7 @@ app.get("/retrieval", async (c) => {
          FROM systems WHERE composition_json IS NOT NULL ORDER BY id LIMIT 5000`,
         ).all<RetrievalCompositionRow>(),
         c.env.DB.prepare(
-          "SELECT substr(id, length(system_id) + 2) AS id, system_id, kind, title, uri, accessed, notes FROM evidence ORDER BY system_id, id LIMIT 20000",
+          "SELECT substr(id, length(system_id) + 2) AS id, system_id, kind, title, uri, accessed, notes, scope_context_json FROM evidence ORDER BY system_id, id LIMIT 20000",
         ).all<RetrievalEvidenceRow>(),
       ]);
     const documents = await buildRetrievalDocuments({
@@ -906,6 +907,7 @@ export function serializeFeature(feature: FeatureRow) {
     benefits: parseJson<string[]>(feature.benefits_json, []),
     costs: parseJson<string[]>(feature.costs_json, []),
     evidence_ids: parseJsonArray<string>(feature.evidence_ids_json),
+    ...(isRecord(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
     ...(Object.keys(metadata).length ? { metadata } : {}),
   };
 }
@@ -1066,6 +1068,7 @@ function relationMetadata(value: Record<string, unknown>) {
     ...(isRecord(value.validity_scope) ? { validity_scope: value.validity_scope } : {}),
     ...(isRecord(value.provenance) ? { provenance: value.provenance } : {}),
     ...(isRecord(value.discovery) ? { discovery: value.discovery } : {}),
+    ...(isRecord(value.lifecycle) ? { lifecycle: value.lifecycle } : {}),
   };
 }
 

@@ -102,6 +102,7 @@ test("corpus builder excludes records without closed evidence and preserves meta
         uri: "https://example.test/architecture",
         accessed: null,
         notes: null,
+        scope_context_json: JSON.stringify(unspecifiedScopeContext()),
       },
     ],
   });
@@ -112,7 +113,32 @@ test("corpus builder excludes records without closed evidence and preserves meta
   const feature = documents.find((document) => document.record_kind === "feature");
   assert.deepEqual(feature?.evidence_ids, ["architecture"]);
   assert.deepEqual(feature?.validity_scope, { deployment_origins: ["local"] });
+  assert.deepEqual(feature?.evidence[0]?.scope_context, unspecifiedScopeContext());
   assert.match(feature?.source_digest ?? "", /^sha256:[0-9a-f]{64}$/);
+});
+
+test("corpus builder ignores malformed evidence scope metadata rather than inventing it", async () => {
+  const documents = await buildRetrievalDocuments({
+    systems: [],
+    features: [],
+    views: [],
+    tradeOffs: [],
+    relations: [],
+    compositions: [],
+    evidence: [
+      {
+        id: "scope-evidence",
+        system_id: "alpha",
+        kind: "official-doc",
+        title: "Scope",
+        uri: "https://example.test/scope",
+        accessed: null,
+        notes: null,
+        scope_context_json: JSON.stringify({ workload: "not synthesized" }),
+      },
+    ],
+  });
+  assert.deepEqual(documents, []);
 });
 
 function documentFixture(
@@ -138,5 +164,23 @@ function documentFixture(
     source_ref: `data/systems/${id}.json#feature`,
     source_digest: "sha256:test",
     document: { id, name },
+  };
+}
+
+function unspecifiedScopeContext() {
+  return {
+    validity_scope: {
+      status: "unspecified",
+      systems: [],
+      versions: [],
+      deployment_origins: [],
+      conditions: [],
+      exclusions: [],
+      evidence_ids: [],
+    },
+    workload: { status: "unspecified", values: [], evidence_ids: [] },
+    runtime_conditions: { status: "unspecified", values: [], evidence_ids: [] },
+    scale: { status: "unspecified", values: [], evidence_ids: [] },
+    failure_conditions: { status: "unspecified", values: [], evidence_ids: [] },
   };
 }

@@ -159,7 +159,8 @@
         "version": { "type": "string", "minLength": 1 },
         "conditions": { "$ref": "#/$defs/stringList" },
         "exclusions": { "$ref": "#/$defs/stringList" },
-        "workload": { "type": ["string", "null"] }
+        "workload": { "type": ["string", "null"] },
+        "scope_context": { "$ref": "architecture-card.schema.json#/$defs/scopeContext" }
       }
     },
     "randomness": {
@@ -247,6 +248,10 @@
         },
         "reason": { "type": "string", "minLength": 1 }
       }
+    },
+    "observation_evidence_ids": {
+      "$ref": "#/$defs/nonEmptyStringList",
+      "uniqueItems": true
     }
   },
   "$defs": {

@@ -18,6 +18,9 @@ export const RETRIEVAL_STATUSES = [
   "rejected",
   "deprecated",
 ] as const;
+const SCOPE_STATES = ["specified", "unknown", "unspecified", "not-applicable"] as const;
+const SCOPE_CLAIMS = new Set(RETRIEVAL_CLAIMS);
+const SCOPE_STATUSES = new Set(RETRIEVAL_STATUSES);
 
 export type RetrievalArguments = {
   q: string;
@@ -55,8 +58,10 @@ export type RetrievalResponse = {
       evidence_ids: string[];
       claim_type?: string;
       claim_status?: string;
+      lifecycle?: Record<string, unknown>;
       version_context?: string | null;
       validity_scope?: Record<string, unknown>;
+      scope_context?: Record<string, unknown>;
     };
     evidence: Array<{
       id: string;
@@ -65,6 +70,7 @@ export type RetrievalResponse = {
       uri: string;
       accessed?: string | null;
       notes?: string | null;
+      scope_context?: Record<string, unknown>;
     }>;
     provenance: {
       source_ref: string;
@@ -200,7 +206,15 @@ export function normalizeRetrieval(value: unknown, limit = RETRIEVAL_LIMIT): Ret
       !RETRIEVAL_STATUSES.includes(document.claim_status as (typeof RETRIEVAL_STATUSES)[number])
     )
       return invalid();
+    if (document.lifecycle !== undefined && !validLifecycle(document.lifecycle, new Set(document.evidence_ids)))
+      return invalid();
     if (document.validity_scope !== undefined && !record(document.validity_scope)) return invalid();
+    if (
+      document.scope_context !== undefined &&
+      (!record(document.scope_context) ||
+        !validScopeContext(document.scope_context, new Set(document.evidence_ids)))
+    )
+      return invalid();
     if (
       document.version_context !== undefined &&
       document.version_context !== null &&
@@ -218,6 +232,14 @@ export function normalizeRetrieval(value: unknown, limit = RETRIEVAL_LIMIT): Ret
     const evidenceIds = new Set(result.evidence.map((item) => item.id));
     if (document.evidence_ids.some((id) => !evidenceIds.has(id)) || ids.has(document.id as string))
       return invalid();
+    if (
+      result.evidence.some(
+        (item) =>
+          "scope_context" in item &&
+          (!record(item.scope_context) || !validScopeContext(item.scope_context, evidenceIds)),
+      )
+    )
+      return invalid();
     ids.add(document.id as string);
   }
   return structuredClone(value) as RetrievalResponse;
@@ -228,4 +250,101 @@ function record(value: unknown): value is Record<string, unknown> {
 }
 function strings(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function validScopeContext(value: Record<string, unknown>, evidenceIds: Set<string>): boolean {
+  const fields = [
+    "validity_scope",
+    "workload",
+    "runtime_conditions",
+    "scale",
+    "failure_conditions",
+  ];
+  return (
+    Object.keys(value).length === fields.length &&
+    fields.every((field) => field in value) &&
+    validValidityScope(value.validity_scope, evidenceIds) &&
+    fields.slice(1).every((field) => validScopeDimension(value[field], evidenceIds))
+  );
+}
+
+function validValidityScope(value: unknown, evidenceIds: Set<string>): boolean {
+  if (!record(value)) return false;
+  const required = [
+    "status",
+    "systems",
+    "versions",
+    "deployment_origins",
+    "conditions",
+    "exclusions",
+    "evidence_ids",
+  ];
+  if (
+    !required.every((field) => field in value) ||
+    !SCOPE_STATES.includes(value.status as (typeof SCOPE_STATES)[number])
+  )
+    return false;
+  const lists = required.slice(1).every((field) => strings(value[field]));
+  if (!lists || !localScopeEvidence(value, evidenceIds)) return false;
+  if (value.status === "unspecified")
+    return (
+      !("claim_type" in value) &&
+      !("claim_status" in value) &&
+      required.slice(1).every((field) => !(value[field] as string[]).length)
+    );
+  if (!validClaimFields(value)) return false;
+  if (
+    value.status !== "specified" &&
+    required.slice(1, 6).some((field) => (value[field] as string[]).length)
+  )
+    return false;
+  if (value.status === "not-applicable" && (typeof value.notes !== "string" || !value.notes.trim()))
+    return false;
+  return (
+    value.status !== "specified" ||
+    required.slice(1, 6).some((field) => (value[field] as string[]).length)
+  );
+}
+
+function validScopeDimension(value: unknown, evidenceIds: Set<string>): boolean {
+  if (!record(value) || !strings(value.values) || !strings(value.evidence_ids)) return false;
+  if (!SCOPE_STATES.includes(value.status as (typeof SCOPE_STATES)[number])) return false;
+  if (!localScopeEvidence(value, evidenceIds)) return false;
+  if (value.status === "unspecified")
+    return (
+      !value.values.length &&
+      !value.evidence_ids.length &&
+      !("claim_type" in value) &&
+      !("claim_status" in value)
+    );
+  if (!validClaimFields(value)) return false;
+  if (value.status !== "specified" && value.values.length) return false;
+  if (value.status === "not-applicable" && (typeof value.notes !== "string" || !value.notes.trim()))
+    return false;
+  return value.status !== "specified" || value.values.length > 0;
+}
+
+function validClaimFields(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.claim_type === "string" &&
+    SCOPE_CLAIMS.has(value.claim_type as (typeof RETRIEVAL_CLAIMS)[number]) &&
+    typeof value.claim_status === "string" &&
+    SCOPE_STATUSES.has(value.claim_status as (typeof RETRIEVAL_STATUSES)[number])
+  );
+}
+
+function validLifecycle(value: unknown, evidenceIds: Set<string>): boolean {
+  if (!record(value)) return false;
+  const status = value.status;
+  if (!['proposed', 'observed', 'reviewed', 'deprecated', 'superseded'].includes(String(status))) return false;
+  if (!strings(value.evidence_ids) || !value.evidence_ids.length || value.evidence_ids.some((id) => !evidenceIds.has(id))) return false;
+  if (!['fact', 'inference', 'hypothesis', 'analogy'].includes(String(value.claim_type))) return false;
+  if (!['proposed', 'under-review', 'accepted', 'rejected', 'deprecated'].includes(String(value.claim_status))) return false;
+  if ((status === 'deprecated' || status === 'superseded') && (typeof value.notes !== 'string' || !value.notes.trim())) return false;
+  if (value.superseded_by !== undefined && (status !== 'superseded' || !strings(value.superseded_by) || !value.superseded_by.length)) return false;
+  return Object.keys(value).every((key) => ['status', 'evidence_ids', 'claim_type', 'claim_status', 'superseded_by', 'notes'].includes(key));
+}
+
+function localScopeEvidence(value: Record<string, unknown>, evidenceIds: Set<string>): boolean {
+  return strings(value.evidence_ids) && value.evidence_ids.every((id) => evidenceIds.has(id));
 }
