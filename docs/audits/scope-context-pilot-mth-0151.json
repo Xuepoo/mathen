@@ -1,0 +1,67 @@
+{
+  "task": "MTH-0151",
+  "schema_version": 1,
+  "corpus": "data/systems/*.json",
+  "selected_cards": [
+    "airflow",
+    "carryctx",
+    "firecracker",
+    "kafka",
+    "kubernetes",
+    "postgresql",
+    "sqlite"
+  ],
+  "reviewed_only": true,
+  "mutation_performed": true,
+  "mutation_scope": "card-level scope_context only; features, mathematical views, evidence records, drafts, and relations were not modified",
+  "source_revision": "dfbf1bb52b4b7fadee598dad05998ff28ae465b2",
+  "counts": {
+    "cards_updated": 7,
+    "features_updated": 0,
+    "mathematical_views_updated": 0,
+    "evidence_records_updated": 0
+  },
+  "dimensions": {
+    "validity_scope": {
+      "specified": 7,
+      "unknown": 0,
+      "unspecified": 0,
+      "not-applicable": 0
+    },
+    "workload": {
+      "specified": 7,
+      "unknown": 0,
+      "unspecified": 0,
+      "not-applicable": 0
+    },
+    "runtime_conditions": {
+      "specified": 7,
+      "unknown": 0,
+      "unspecified": 0,
+      "not-applicable": 0
+    },
+    "scale": {
+      "specified": 0,
+      "unknown": 0,
+      "unspecified": 7,
+      "not-applicable": 0
+    },
+    "failure_conditions": {
+      "specified": 4,
+      "unknown": 0,
+      "unspecified": 3,
+      "not-applicable": 0
+    }
+  },
+  "evidence_boundary": {
+    "all_scope_evidence_ids_local": true,
+    "source_code_or_official_doc_only": true,
+    "experiment_evidence_added": false,
+    "measured_scale_claimed": false,
+    "deployment_origin_claimed": false,
+    "claim_types_upgraded": false,
+    "relations_inferred": false,
+    "drafts_modified": false
+  },
+  "interpretation": "Specified dimensions record documented architecture boundaries at cited revisions; they do not establish measured performance, universal capacity, production failure rates, or behavior outside the cited conditions. Unspecified scale and failure dimensions remain absence of a recorded claim, not negative findings."
+}

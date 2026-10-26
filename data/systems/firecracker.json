@@ -92,5 +92,61 @@
       ],
       "notes": "Both are virtual machine monitors, but Firecracker deliberately narrows the device model while QEMU provides broad machine and device emulation; this is a structural comparison, not reuse or equivalence."
     }
-  ]
+  ],
+  "scope_context": {
+  "validity_scope": {
+    "status": "specified",
+    "systems": [
+      "AWS Firecracker"
+    ],
+    "versions": [
+      "design documentation at the cited revision boundary"
+    ],
+    "deployment_origins": [],
+    "conditions": [
+      "cited Firecracker design documentation"
+    ],
+    "exclusions": [
+      "claims outside the cited revision and documentation boundary"
+    ],
+    "evidence_ids": [
+      "firecracker-design"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "workload": {
+    "status": "specified",
+    "values": [
+      "multi-tenant cloud workloads",
+      "microVM execution"
+    ],
+    "evidence_ids": [
+      "firecracker-design"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "runtime_conditions": {
+    "status": "specified",
+    "values": [
+      "KVM-backed event-driven VMM on a Linux host"
+    ],
+    "evidence_ids": [
+      "firecracker-design"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "scale": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  },
+  "failure_conditions": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  }
+}
 }

@@ -500,5 +500,78 @@
       ],
       "notes": "Both systems make durable, inspectable execution state and lifecycle transitions explicit: CarryCtx records project tasks, dependencies, sessions, progress, and checkpoints, while Temporal records workflow execution history and replay-relevant transitions. This is a bounded structural analogy, not implementation reuse, equivalence, or historical influence."
     }
-  ]
+  ],
+  "scope_context": {
+  "validity_scope": {
+    "status": "specified",
+    "systems": [
+      "CarryCtx"
+    ],
+    "versions": [
+      "carryctx-cli commit 4ba349da5e9f20471b87b451900f0d155d84da02; carryctx-docs commit d27e1800f5359dc9d77211fd84de40dba8de3a01"
+    ],
+    "deployment_origins": [],
+    "conditions": [
+      "fixed CarryCtx CLI and documentation revisions"
+    ],
+    "exclusions": [
+      "claims outside the cited revision and documentation boundary"
+    ],
+    "evidence_ids": [
+      "carryctx-cli-fixed-commit",
+      "carryctx-readme-fixed",
+      "carryctx-zero-network-doc"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "workload": {
+    "status": "specified",
+    "values": [
+      "local project lifecycle state",
+      "task dependency and handoff coordination",
+      "validated local snapshot exchange"
+    ],
+    "evidence_ids": [
+      "carryctx-readme-fixed",
+      "carryctx-lifecycle-doc",
+      "carryctx-state-transport-doc"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "runtime_conditions": {
+    "status": "specified",
+    "values": [
+      "local SQLite project state",
+      "Git-aware workspace integration",
+      "zero-network core boundary"
+    ],
+    "evidence_ids": [
+      "carryctx-database-source",
+      "carryctx-git-backend-source",
+      "carryctx-zero-network-doc"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "scale": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  },
+  "failure_conditions": {
+    "status": "specified",
+    "values": [
+      "guarded lifecycle transitions and conflict-aware local state merge"
+    ],
+    "evidence_ids": [
+      "carryctx-task-source",
+      "carryctx-merge-source",
+      "carryctx-merge-design-doc"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  }
+}
 }
