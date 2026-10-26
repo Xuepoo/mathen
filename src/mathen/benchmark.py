@@ -261,7 +261,7 @@ def validate_retrieval_evaluation_manifest(value: Mapping[str, Any]) -> None:
     _allowed(
         "corpus_snapshot.source_revision",
         revision,
-        {"repository_id", "commit", "archive_digest"},
+        {"repository_id", "commit", "archive_digest", "scope"},
     )
     _text(revision, "repository_id", "corpus_snapshot.source_revision")
     if "commit" in revision:

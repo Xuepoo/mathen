@@ -844,8 +844,11 @@ def main() -> None:
             "source_revision": {
                 "repository_id": "mathen",
                 "commit": subprocess.check_output(
-                    ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+                    ["git", "log", "-1", "--format=%H", "--", "data/systems"],
+                    cwd=ROOT,
+                    text=True,
                 ).strip(),
+                "scope": "data/systems corpus snapshot",
             },
             "digest": digest(snapshot_documents),
             "documents": snapshot_documents,

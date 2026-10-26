@@ -31,7 +31,7 @@
   },
   "corpus_snapshot": {
     "corpus": "canonical_cards",
-    "digest": "sha256:f29de96a7fee3706c9b5d1d0623b84a17e3d852caf337d47cd9f1f1beb5eff5a",
+    "digest": "sha256:4f50785061b65236aac42a762dd128adb3b8e3236f4843a3199d09e098279541",
     "documents": [
       {
         "claim_status": null,
@@ -42,7 +42,7 @@
         ],
         "id": "system:airflow:feature:dag-dependency-graph",
         "record_kind": "feature",
-        "source_digest": "sha256:700db0e63199c439dfa01bb4937e3e2f88ad070cf662f05c24213704336bd076",
+        "source_digest": "sha256:05460b6f7eb2e19a5925738e8c6be9a80d0a8718cb541e99e0e2ed88bc2121eb",
         "source_ref": "data/systems/airflow.json#features/dag-dependency-graph",
         "validity_scope": {
           "conditions": [],
@@ -115,7 +115,7 @@
         ],
         "id": "system:airflow:summary",
         "record_kind": "system",
-        "source_digest": "sha256:94b57576885b70068eae9794432dbec431b39182ba2dd865e14a2e69a1365c88",
+        "source_digest": "sha256:f5a402be66c43319859866ebe1fd70496b186cdf66ffd4733a2ec0798db59cfd",
         "source_ref": "data/systems/airflow.json#summary",
         "validity_scope": {
           "conditions": [],
@@ -205,7 +205,7 @@
         ],
         "id": "system:airflow:view:5",
         "record_kind": "view",
-        "source_digest": "sha256:2a1ca391348b4f54dac5facd8f43e42af047526d1b038a30e2b400afa91dd9cf",
+        "source_digest": "sha256:efc73ae0d5a443ed2cf1a0b3af4f7d6f0e5496f5884b08b6d98467137e0ff0a2",
         "source_ref": "data/systems/airflow.json#mathematical_views/5",
         "validity_scope": {
           "conditions": [],
@@ -3609,7 +3609,7 @@
         ],
         "id": "system:carryctx:feature:guarded-task-lifecycle",
         "record_kind": "feature",
-        "source_digest": "sha256:d19db60a2d6096a0e3c83d7c2d7160c4697fc8f7ca3c163dc2551dbd56064e80",
+        "source_digest": "sha256:6836ed859f5912df0e297d4dea1333d6e2c299d369b7a577a982100709e92e34",
         "source_ref": "data/systems/carryctx.json#features/guarded-task-lifecycle",
         "validity_scope": {
           "conditions": [],
@@ -3726,7 +3726,7 @@
         ],
         "id": "system:carryctx:summary",
         "record_kind": "system",
-        "source_digest": "sha256:f1e24c330645a2a58701529fb518caed75c682aaec00019aef8f12c8047455c3",
+        "source_digest": "sha256:0f4e4df13355bc464db034ff1f7c132f09b404713cc624df92224c2973f917b5",
         "source_ref": "data/systems/carryctx.json#summary",
         "validity_scope": {
           "conditions": [],
@@ -3879,7 +3879,7 @@
         ],
         "id": "system:carryctx:view:195",
         "record_kind": "view",
-        "source_digest": "sha256:a506b7709ab032b2627bddc8447b1efbf67d9813a36a6275c7bfee29c8c2a17b",
+        "source_digest": "sha256:70f18368c9b8c5d9884f2855a0a565675deae07d7da941b5069c8c514e8aff24",
         "source_ref": "data/systems/carryctx.json#mathematical_views/195",
         "validity_scope": {
           "conditions": [],
@@ -10968,7 +10968,7 @@
         ],
         "id": "system:firecracker:feature:minimal-machine-model",
         "record_kind": "feature",
-        "source_digest": "sha256:506b0b0650940aafe7ca0f3fb00cc18a91d4a85112a9684e5d4aae3a3f1a71db",
+        "source_digest": "sha256:5d7a5b632fca131a0837fa1eb122f873cebdea405d4a25079c98fb4b236c3e69",
         "source_ref": "data/systems/firecracker.json#features/minimal-machine-model",
         "validity_scope": {
           "conditions": [],
@@ -10985,7 +10985,7 @@
         ],
         "id": "system:firecracker:summary",
         "record_kind": "system",
-        "source_digest": "sha256:b41abe059b613dd83bc2c01be97787d0826403786eef7b646f87ec0c1df175c6",
+        "source_digest": "sha256:270d27228f54a0605425887c395fdd794065de63eba2b60af473577478feb0fb",
         "source_ref": "data/systems/firecracker.json#summary",
         "validity_scope": {
           "conditions": [],
@@ -11036,7 +11036,7 @@
         ],
         "id": "system:firecracker:view:581",
         "record_kind": "view",
-        "source_digest": "sha256:85ece37349833b4e02cc571ff8b6812084e93ad196a645f2b616ad8b02b3602a",
+        "source_digest": "sha256:183d289a60d884ddfc4d980bdb6dee2099ffc2d05b9059c6655275cf33fd6e94",
         "source_ref": "data/systems/firecracker.json#mathematical_views/581",
         "validity_scope": {
           "conditions": [],
@@ -17428,7 +17428,7 @@
         ],
         "id": "system:kafka:feature:retained-replayable-events",
         "record_kind": "feature",
-        "source_digest": "sha256:ce28c3d5f65fd6ed93ec2b7bb8edd690fe8db433f9b947755707787d86f5e250",
+        "source_digest": "sha256:490088113073feb9a9b9517e5097b71bb0105593ef3c28be0a1af4a29c79ef77",
         "source_ref": "data/systems/kafka.json#features/retained-replayable-events",
         "validity_scope": {
           "conditions": [],
@@ -17463,7 +17463,7 @@
         ],
         "id": "system:kafka:summary",
         "record_kind": "system",
-        "source_digest": "sha256:3e2ff6233f542ada108b0f149fe09663668eadf0cd4c5e0fe236259919a693bf",
+        "source_digest": "sha256:5f033d46456929dfd59264acbb7bd68699d2a3f914e869330b54042ad06cd0a9",
         "source_ref": "data/systems/kafka.json#summary",
         "validity_scope": {
           "conditions": [],
@@ -17633,7 +17633,7 @@
         ],
         "id": "system:kafka:view:923",
         "record_kind": "view",
-        "source_digest": "sha256:8a183558b4f1130b9b0d41f53f267120f53d74168329e5b42c18d95b68661a87",
+        "source_digest": "sha256:a24b8ec7b3d6e79f59836a7dfe5cf40217909382df617be824b06f4ba3e0d1ca",
         "source_ref": "data/systems/kafka.json#mathematical_views/923",
         "validity_scope": {
           "conditions": [],
@@ -18774,7 +18774,7 @@
         ],
         "id": "system:kubernetes:feature:controller-reconciliation-loops",
         "record_kind": "feature",
-        "source_digest": "sha256:13cd9686cbb59363d33f05e35f835566dfbd16c9f0118f56e4cde45418476e20",
+        "source_digest": "sha256:5032015190775c777a80a5f2adf2624dc2ffbb5171d5424eedf033163d21f656",
         "source_ref": "data/systems/kubernetes.json#features/controller-reconciliation-loops",
         "validity_scope": {
           "conditions": [],
@@ -18850,7 +18850,7 @@
         ],
         "id": "system:kubernetes:summary",
         "record_kind": "system",
-        "source_digest": "sha256:e3f33dd9cec533b79bee696b35e590c9833e36cebe9ab96a47bf28a2b7a8b18f",
+        "source_digest": "sha256:fbdc9c5f2c79e2976389e930d9605b97e15a2e5796f7d7a6076056db3529065c",
         "source_ref": "data/systems/kubernetes.json#summary",
         "validity_scope": {
           "conditions": [],
@@ -18940,7 +18940,7 @@
         ],
         "id": "system:kubernetes:view:997",
         "record_kind": "view",
-        "source_digest": "sha256:56eeebfd96098b2c000eb2f5f0e51ccf640cb13d006c56cf584c5da07ee613e4",
+        "source_digest": "sha256:20d3b42213a770fade861b7d5348072e52775a42581abba8954b0c74ff54a312",
         "source_ref": "data/systems/kubernetes.json#mathematical_views/997",
         "validity_scope": {
           "conditions": [],
@@ -29287,7 +29287,7 @@
         ],
         "id": "system:postgresql:feature:transaction-scoped-retry-boundary",
         "record_kind": "feature",
-        "source_digest": "sha256:b20d343b876e8b37c6df2d125e643180478b6524c9d44256fe4811793cec6ee8",
+        "source_digest": "sha256:011cee23b9609db1ffa1a0bbbdd40941709133dbb4fae518ec9d070ccbd72edc",
         "source_ref": "data/systems/postgresql.json#features/transaction-scoped-retry-boundary",
         "validity_scope": {
           "conditions": [],
@@ -29308,7 +29308,7 @@
         ],
         "id": "system:postgresql:summary",
         "record_kind": "system",
-        "source_digest": "sha256:0cb20e873c1deb65d7b60b4eab50d5a8d8d6ee0c8250ffbbb074314f4e845cd0",
+        "source_digest": "sha256:31b4dd246de110380a6a23178cea333d1be489d5c8358af5fe44bc8bea41df30",
         "source_ref": "data/systems/postgresql.json#summary",
         "validity_scope": {
           "conditions": [],
@@ -29429,7 +29429,7 @@
         ],
         "id": "system:postgresql:view:1554",
         "record_kind": "view",
-        "source_digest": "sha256:707833b7733e97f097adc00a80e8f826a1640deeef226fccd9d92bfd8f8369ce",
+        "source_digest": "sha256:4255f9f55b69a0268d3f90932395073ae79b252aff25c4a332b7a4bc2a902e2b",
         "source_ref": "data/systems/postgresql.json#mathematical_views/1554",
         "validity_scope": {
           "conditions": [],
@@ -35806,7 +35806,7 @@
         ],
         "id": "system:sqlite:feature:journal-based-atomic-commit",
         "record_kind": "feature",
-        "source_digest": "sha256:0fa25f9953370ac3efd8a9b8c092fb0b96b4e973fc87c7a87d6c2d7c8630c4ea",
+        "source_digest": "sha256:ce789bd4922df17b3404bec8ce5066a40d47ab9b3ac8b698816438370756bbca",
         "source_ref": "data/systems/sqlite.json#features/journal-based-atomic-commit",
         "validity_scope": {
           "conditions": [],
@@ -35906,6 +35906,7 @@
         "claim_status": null,
         "claim_type": "fact",
         "evidence_ids": [
+          "g5-sqlite-transaction-observation-mth-0152",
           "sqlite-appropriate-uses",
           "sqlite-architecture",
           "sqlite-atomic-commit",
@@ -35914,7 +35915,7 @@
         ],
         "id": "system:sqlite:summary",
         "record_kind": "system",
-        "source_digest": "sha256:539de37e4a18008e4e99cd271a92ebed5978e1803524bf43f24bcfd6d8e1ec01",
+        "source_digest": "sha256:532d901afcd08c6fd665be9302598b41f2518942c2fd09da20d9e9f2a208f7db",
         "source_ref": "data/systems/sqlite.json#summary",
         "validity_scope": {
           "conditions": [],
@@ -36082,12 +36083,13 @@
         "claim_status": null,
         "claim_type": "inference",
         "evidence_ids": [
+          "g5-sqlite-transaction-observation-mth-0152",
           "sqlite-atomic-commit",
           "sqlite-wal"
         ],
         "id": "system:sqlite:view:1911",
         "record_kind": "view",
-        "source_digest": "sha256:b3bd7cdb276e0bdef671f6a27956823c257d9c5c3d8938cdc0b280c000c23c9d",
+        "source_digest": "sha256:0d4ec440854358da225a5dbdea26f874f51ea21736e0b03b9a4cc85b13233e81",
         "source_ref": "data/systems/sqlite.json#mathematical_views/1911",
         "validity_scope": {
           "conditions": [],
@@ -36135,12 +36137,13 @@
         "claim_status": null,
         "claim_type": "hypothesis",
         "evidence_ids": [
+          "g5-sqlite-transaction-observation-mth-0152",
           "sqlite-atomic-commit",
           "sqlite-wal"
         ],
         "id": "system:sqlite:view:1914",
         "record_kind": "view",
-        "source_digest": "sha256:9bfa4078961d353b117173cba452845291db5104dd2feb0796ca5de66e289e63",
+        "source_digest": "sha256:053ab787144b4fe3084b6c14c1a742b8379ce0ee68cf796c4fd2f8e1c4015f81",
         "source_ref": "data/systems/sqlite.json#mathematical_views/1914",
         "validity_scope": {
           "conditions": [],
@@ -46818,8 +46821,9 @@
     "id": "canonical-cards-2026-10-26",
     "reviewed_only": true,
     "source_revision": {
-      "commit": "c0a34014bf63d77a022e8616bfb478c03658bf95",
-      "repository_id": "mathen"
+      "commit": "714546e0c4e87fe7d5e9618a64d34052317b4eef",
+      "repository_id": "mathen",
+      "scope": "data/systems corpus snapshot"
     }
   },
   "decision": {
@@ -46944,7 +46948,7 @@
     }
   },
   "evidence_bundle": {
-    "digest": "sha256:2e6fdd2679a1e017a6fa1be000ed55f45b17fe035f225e3ccfbf0e32c1993ed2",
+    "digest": "sha256:ded0451317b51b8ac4d90aa8b510306ea386f083b3b5906e3190051f8f20c4c7",
     "evidence_ids": [
       "airflow-architecture-doc",
       "airflow-executor-doc",
@@ -47363,6 +47367,7 @@
       "freebsd-jail-source",
       "freebsd-jails-doc",
       "freebsd-kernel-source",
+      "g5-sqlite-transaction-observation-mth-0152",
       "gcc-back-ends",
       "gcc-fixed-source",
       "gcc-front-ends",
@@ -53530,7 +53535,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:8a183558b4f1130b9b0d41f53f267120f53d74168329e5b42c18d95b68661a87",
+            "source_digest": "sha256:a24b8ec7b3d6e79f59836a7dfe5cf40217909382df617be824b06f4ba3e0d1ca",
             "source_ref": "data/systems/kafka.json#mathematical_views/923"
           },
           "rank": 1,
@@ -54058,7 +54063,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:2a1ca391348b4f54dac5facd8f43e42af047526d1b038a30e2b400afa91dd9cf",
+            "source_digest": "sha256:efc73ae0d5a443ed2cf1a0b3af4f7d6f0e5496f5884b08b6d98467137e0ff0a2",
             "source_ref": "data/systems/airflow.json#mathematical_views/5"
           },
           "rank": 4,
@@ -54312,7 +54317,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:13cd9686cbb59363d33f05e35f835566dfbd16c9f0118f56e4cde45418476e20",
+            "source_digest": "sha256:5032015190775c777a80a5f2adf2624dc2ffbb5171d5424eedf033163d21f656",
             "source_ref": "data/systems/kubernetes.json#features/controller-reconciliation-loops"
           },
           "rank": 1,
@@ -54402,7 +54407,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:e3f33dd9cec533b79bee696b35e590c9833e36cebe9ab96a47bf28a2b7a8b18f",
+            "source_digest": "sha256:fbdc9c5f2c79e2976389e930d9605b97e15a2e5796f7d7a6076056db3529065c",
             "source_ref": "data/systems/kubernetes.json#summary"
           },
           "rank": 3,
@@ -57990,7 +57995,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:707833b7733e97f097adc00a80e8f826a1640deeef226fccd9d92bfd8f8369ce",
+            "source_digest": "sha256:4255f9f55b69a0268d3f90932395073ae79b252aff25c4a332b7a4bc2a902e2b",
             "source_ref": "data/systems/postgresql.json#mathematical_views/1554"
           },
           "rank": 6,
@@ -59176,7 +59181,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:8a183558b4f1130b9b0d41f53f267120f53d74168329e5b42c18d95b68661a87",
+            "source_digest": "sha256:a24b8ec7b3d6e79f59836a7dfe5cf40217909382df617be824b06f4ba3e0d1ca",
             "source_ref": "data/systems/kafka.json#mathematical_views/923"
           },
           "rank": 5,
@@ -61333,7 +61338,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:2a1ca391348b4f54dac5facd8f43e42af047526d1b038a30e2b400afa91dd9cf",
+            "source_digest": "sha256:efc73ae0d5a443ed2cf1a0b3af4f7d6f0e5496f5884b08b6d98467137e0ff0a2",
             "source_ref": "data/systems/airflow.json#mathematical_views/5"
           },
           "rank": 9,
@@ -63152,7 +63157,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:506b0b0650940aafe7ca0f3fb00cc18a91d4a85112a9684e5d4aae3a3f1a71db",
+            "source_digest": "sha256:5d7a5b632fca131a0837fa1eb122f873cebdea405d4a25079c98fb4b236c3e69",
             "source_ref": "data/systems/firecracker.json#features/minimal-machine-model"
           },
           "rank": 7,
@@ -66204,7 +66209,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:a506b7709ab032b2627bddc8447b1efbf67d9813a36a6275c7bfee29c8c2a17b",
+            "source_digest": "sha256:70f18368c9b8c5d9884f2855a0a565675deae07d7da941b5069c8c514e8aff24",
             "source_ref": "data/systems/carryctx.json#mathematical_views/195"
           },
           "rank": 3,
@@ -66368,7 +66373,7 @@
           ],
           "provenance": {
             "retrieval_method": "bounded_lexical_baseline",
-            "source_digest": "sha256:d19db60a2d6096a0e3c83d7c2d7160c4697fc8f7ca3c163dc2551dbd56064e80",
+            "source_digest": "sha256:6836ed859f5912df0e297d4dea1333d6e2c299d369b7a577a982100709e92e34",
             "source_ref": "data/systems/carryctx.json#features/guarded-task-lifecycle"
           },
           "rank": 7,

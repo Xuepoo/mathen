@@ -13,6 +13,11 @@ evidence bundle are included in the digest-checked manifest. No vectors,
 model payloads, prompts, secrets, provider bindings, or Vectorize resources are
 written.
 
+The recorded source revision is scoped to the `data/systems` corpus snapshot,
+not to the evaluator's own commit. This keeps repeated runs stable when the
+benchmark implementation or documentation changes without changing the
+reviewed corpus.
+
 The query set contains 48 manually authored architecture-discovery questions:
 42 reviewer-rubric labels for evaluation and six held-out unknown or
 negative-knowledge queries. The evaluation queries are split into explicit
