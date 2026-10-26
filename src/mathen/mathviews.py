@@ -42,6 +42,38 @@ CLAIM_TYPES = frozenset({"fact", "inference", "hypothesis", "analogy"})
 CLAIM_STATUSES = frozenset(
     {"proposed", "under-review", "accepted", "rejected", "deprecated"}
 )
+VALIDATION_RECORD_KINDS = frozenset(
+    {
+        "observed-result",
+        "failed-prediction",
+        "counterexample",
+        "invariant",
+        "negative-knowledge",
+        "absence-of-evidence",
+    }
+)
+VALIDATION_RECORD_BASES = frozenset(
+    {
+        "experiment",
+        "observation",
+        "source-analysis",
+        "deterministic-check",
+        "absence-of-evidence",
+    }
+)
+VALIDATION_RESULT_STATUSES = frozenset(
+    {
+        "observed",
+        "failed",
+        "counterexample",
+        "invariant-under-conditions",
+        "not-established",
+    }
+)
+_BROAD_VALIDATION_LANGUAGE = re.compile(
+    r"\b(?:all|any|every|always|never|none|universally|in\s+every)\b",
+    re.IGNORECASE,
+)
 _ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _TOP_LEVEL_FIELDS = {
     "schema_version",
@@ -62,6 +94,7 @@ _TOP_LEVEL_FIELDS = {
     "claim_status",
     "evidence_ids",
     "classification",
+    "validation_records",
 }
 _REQUIRED_TOP_LEVEL_FIELDS = {
     "schema_version",
@@ -108,6 +141,7 @@ class MathematicalViewContract:
     claim_status: str
     evidence_ids: tuple[str, ...]
     classification: dict[str, Any]
+    validation_records: tuple[dict[str, Any], ...] | None = None
 
     @classmethod
     def from_dict(
@@ -133,6 +167,11 @@ class MathematicalViewContract:
             claim_status=value["claim_status"],
             evidence_ids=tuple(value["evidence_ids"]),
             classification=copy.deepcopy(value["classification"]),
+            validation_records=(
+                tuple(copy.deepcopy(value["validation_records"]))
+                if "validation_records" in value
+                else None
+            ),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -169,6 +208,15 @@ class MathematicalViewContract:
             "claim_status": self.claim_status,
             "evidence_ids": list(self.evidence_ids),
             "classification": copy.deepcopy(self.classification),
+            **(
+                {
+                    "validation_records": [
+                        copy.deepcopy(item) for item in self.validation_records
+                    ]
+                }
+                if self.validation_records is not None
+                else {}
+            ),
         }
 
 
@@ -304,6 +352,10 @@ def validate_math_view_contract(
             f"{label}: classification checks are inconsistent with deterministic checks"
         )
     _validate_family_references(label, contract, ids)
+    if "validation_records" in contract:
+        _validate_validation_records(
+            label, contract["validation_records"], contract, evidence_ids
+        )
 
 
 def _validate_carrier(label: str, value: Any) -> None:
@@ -555,6 +607,221 @@ def _validate_scope(label: str, value: Any) -> None:
             f"validity_scope.{field}",
             value[field],
             allow_empty=field == "exclusions",
+        )
+
+
+def _validate_validation_records(
+    label: str,
+    values: Any,
+    contract: dict[str, Any],
+    evidence_ids: set[str] | None,
+) -> None:
+    if not isinstance(values, list):
+        raise MathematicalViewValidationError(
+            f"{label}: validation_records must be a list"
+        )
+    seen: set[str] = set()
+    for index, value in enumerate(values):
+        item_label = f"{label}.validation_records[{index}]"
+        if not isinstance(value, dict):
+            raise MathematicalViewValidationError(f"{item_label} must be an object")
+        required = {
+            "id",
+            "view_id",
+            "kind",
+            "basis",
+            "claim_type",
+            "claim_status",
+            "system",
+            "version",
+            "scope",
+            "evidence_ids",
+            "provenance",
+            "result",
+            "limitations",
+        }
+        allowed = required | {
+            "target_claim",
+            "condition",
+            "observed_result",
+            "implication",
+            "negative_claim",
+            "what_not_established",
+            "question",
+        }
+        missing = required - value.keys()
+        if missing:
+            raise MathematicalViewValidationError(
+                f"{item_label} missing fields: {sorted(missing)}"
+            )
+        unexpected = value.keys() - allowed
+        if unexpected:
+            raise MathematicalViewValidationError(
+                f"{item_label} has unexpected fields: {sorted(unexpected)}"
+            )
+        _require_id(item_label, "id", value["id"])
+        if value["id"] in seen:
+            raise MathematicalViewValidationError(
+                f"{label}: duplicate validation record id: {value['id']}"
+            )
+        seen.add(value["id"])
+        _require_id(item_label, "view_id", value["view_id"])
+        if value["view_id"] != contract["id"]:
+            raise MathematicalViewValidationError(
+                f"{item_label}.view_id must equal mathematical view id"
+            )
+        if value["kind"] not in VALIDATION_RECORD_KINDS:
+            raise MathematicalViewValidationError(f"{item_label}.kind is invalid")
+        if value["basis"] not in VALIDATION_RECORD_BASES:
+            raise MathematicalViewValidationError(f"{item_label}.basis is invalid")
+        if value["claim_type"] not in CLAIM_TYPES:
+            raise MathematicalViewValidationError(f"{item_label}.claim_type is invalid")
+        if value["claim_status"] not in CLAIM_STATUSES:
+            raise MathematicalViewValidationError(
+                f"{item_label}.claim_status is invalid"
+            )
+        for field in ("system", "version"):
+            _require_string(item_label, field, value[field])
+        _validate_scope(item_label, value["scope"])
+        if value["system"] not in value["scope"]["systems"]:
+            raise MathematicalViewValidationError(
+                f"{item_label}.system must be listed in scope.systems"
+            )
+        if value["version"] not in value["scope"]["versions"]:
+            raise MathematicalViewValidationError(
+                f"{item_label}.version must be listed in scope.versions"
+            )
+        _validate_record_evidence_ids(item_label, value["evidence_ids"], evidence_ids)
+        _validate_record_provenance(item_label, value["provenance"])
+        result = value["result"]
+        if not isinstance(result, dict):
+            raise MathematicalViewValidationError(
+                f"{item_label}.result must be an object"
+            )
+        if set(result) != {"status", "summary"}:
+            raise MathematicalViewValidationError(
+                f"{item_label}.result must contain only status and summary"
+            )
+        expected_status = {
+            "observed-result": "observed",
+            "failed-prediction": "failed",
+            "counterexample": "counterexample",
+            "invariant": "invariant-under-conditions",
+            "negative-knowledge": "not-established",
+            "absence-of-evidence": "not-established",
+        }[value["kind"]]
+        if result.get("status") != expected_status:
+            raise MathematicalViewValidationError(
+                f"{item_label}.result.status must be {expected_status!r}"
+            )
+        _require_string(item_label, "result.summary", result.get("summary"))
+        _validate_string_list(
+            item_label, "limitations", value["limitations"], allow_empty=False
+        )
+        for field in (
+            "target_claim",
+            "condition",
+            "observed_result",
+            "implication",
+            "negative_claim",
+            "what_not_established",
+            "question",
+        ):
+            if field in value:
+                _require_string(item_label, field, value[field])
+        for field in ("negative_claim", "what_not_established", "implication"):
+            if field in value and _BROAD_VALIDATION_LANGUAGE.search(value[field]):
+                raise MathematicalViewValidationError(
+                    f"{item_label}.{field} contains broad universal language; "
+                    "state a bounded result"
+                )
+        required_by_kind = {
+            "failed-prediction": {"target_claim", "condition", "observed_result"},
+            "counterexample": {
+                "target_claim",
+                "condition",
+                "observed_result",
+                "implication",
+            },
+            "invariant": {"condition"},
+            "negative-knowledge": {"negative_claim", "what_not_established"},
+            "absence-of-evidence": {"question", "what_not_established"},
+        }
+        missing_details = required_by_kind.get(value["kind"], set()) - value.keys()
+        if missing_details:
+            raise MathematicalViewValidationError(
+                f"{item_label} missing bounded detail fields: {sorted(missing_details)}"
+            )
+        if (
+            value["kind"] == "absence-of-evidence"
+            and value["basis"] != "absence-of-evidence"
+        ):
+            raise MathematicalViewValidationError(
+                f"{item_label}.basis must be absence-of-evidence"
+            )
+        if value["basis"] == "absence-of-evidence" and value["kind"] not in {
+            "absence-of-evidence",
+            "negative-knowledge",
+        }:
+            raise MathematicalViewValidationError(
+                f"{item_label}: absence-of-evidence basis is only valid for "
+                "negative knowledge"
+            )
+
+
+def _validate_record_evidence_ids(
+    label: str, references: Any, evidence_ids: set[str] | None
+) -> None:
+    if (
+        not isinstance(references, list)
+        or not references
+        or not all(isinstance(reference, str) and reference for reference in references)
+    ):
+        raise MathematicalViewValidationError(
+            f"{label}.evidence_ids must be a non-empty list"
+        )
+    if len(set(references)) != len(references):
+        raise MathematicalViewValidationError(
+            f"{label}.evidence_ids contains duplicates"
+        )
+    if evidence_ids is not None:
+        unknown = set(references) - evidence_ids
+        if unknown:
+            raise MathematicalViewValidationError(
+                f"{label} references unknown evidence ids: {sorted(unknown)}"
+            )
+
+
+def _validate_record_provenance(label: str, value: Any) -> None:
+    if not isinstance(value, dict):
+        raise MathematicalViewValidationError(f"{label}.provenance must be an object")
+    required = {
+        "run_id",
+        "source_revision",
+        "protocol_digest",
+        "recorded_at",
+        "runner",
+        "toolchain",
+    }
+    if set(value) != required:
+        raise MathematicalViewValidationError(
+            f"{label}.provenance must contain exactly {sorted(required)}"
+        )
+    for field in (
+        "run_id",
+        "source_revision",
+        "protocol_digest",
+        "recorded_at",
+        "runner",
+    ):
+        _require_string(label, f"provenance.{field}", value[field])
+    if (
+        not isinstance(value["toolchain"], (str, dict))
+        or (isinstance(value["toolchain"], str) and not value["toolchain"])
+        or (isinstance(value["toolchain"], dict) and not value["toolchain"])
+    ):
+        raise MathematicalViewValidationError(
+            f"{label}.provenance.toolchain must be a non-empty string or object"
         )
 
 
