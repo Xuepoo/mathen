@@ -1,0 +1,237 @@
+{
+  "schema_version": "1.0",
+  "id": "sqlite-wal-snapshot-visibility",
+  "family": "state_machine",
+  "question": "Which bounded reader states are observed when a SQLite WAL writer commits while a reader transaction is held?",
+  "carrier": {
+    "kind": "wal-reader-state",
+    "description": "Finite reader and writer visibility states in the fixed two-connection protocol.",
+    "elements": [
+      "seeded",
+      "reader-held",
+      "writer-committed",
+      "reader-refreshed"
+    ]
+  },
+  "state_space": {
+    "states": [
+      "seeded",
+      "reader-held",
+      "writer-committed",
+      "reader-refreshed"
+    ],
+    "initial": [
+      "seeded"
+    ],
+    "terminal": [
+      "reader-refreshed"
+    ],
+    "description": "A writer commits one appended row while a reader transaction remains open; the reader then ends its transaction and refreshes."
+  },
+  "operations": [],
+  "relations": [],
+  "transitions": [
+    {
+      "id": "seed-to-reader-held",
+      "name": "Begin reader snapshot",
+      "source": "seeded",
+      "target": "reader-held",
+      "label": "reader begins transaction over four seed rows",
+      "system": "SQLite"
+    },
+    {
+      "id": "reader-held-to-writer-committed",
+      "name": "Commit writer append",
+      "source": "reader-held",
+      "target": "writer-committed",
+      "label": "writer commits fifth row while reader remains open",
+      "system": "SQLite"
+    },
+    {
+      "id": "writer-committed-to-reader-refreshed",
+      "name": "Refresh reader transaction",
+      "source": "writer-committed",
+      "target": "reader-refreshed",
+      "label": "reader commits held transaction and begins a new one",
+      "system": "SQLite"
+    }
+  ],
+  "laws_or_checks": [
+    {
+      "id": "initial-state",
+      "name": "Initial state",
+      "description": "The protocol begins in the seeded state.",
+      "check": "initial"
+    },
+    {
+      "id": "transition-closure",
+      "name": "Transition closure",
+      "description": "Declared transitions remain within the finite state carrier.",
+      "check": "closure"
+    }
+  ],
+  "assumptions": [
+    "The carrier is a bounded observational projection of one fixed WAL protocol, not a complete SQLite transaction model.",
+    "The reader-held state is represented by its four-row query result before and after the writer commit.",
+    "Null timing measurements and untested failure conditions do not imply zero latency or absence of failures."
+  ],
+  "validity_scope": {
+    "systems": [
+      "SQLite"
+    ],
+    "versions": [
+      "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+    ],
+    "deployment_origins": [
+      "local-process"
+    ],
+    "conditions": [
+      "Linux x86_64",
+      "WAL journal mode",
+      "FULL synchronous mode",
+      "two local connections"
+    ],
+    "exclusions": [
+      "rollback",
+      "process crash",
+      "power loss",
+      "checkpoint starvation",
+      "other journal modes",
+      "performance"
+    ]
+  },
+  "claim_type": "inference",
+  "claim_status": "under-review",
+  "evidence_ids": [
+    "g5-sqlite-wal-visibility-observation-mth-0156"
+  ],
+  "classification": {
+    "result": "valid",
+    "reason": "All declared transitions are closed over the finite state space and the protocol has an initial state.",
+    "checks": [
+      {
+        "id": "initial-state",
+        "result": "pass"
+      },
+      {
+        "id": "transition-closure",
+        "result": "pass"
+      }
+    ]
+  },
+  "validation_records": [
+    {
+      "id": "g5-wal-visibility-observed",
+      "view_id": "sqlite-wal-snapshot-visibility",
+      "kind": "observed-result",
+      "basis": "experiment",
+      "claim_type": "inference",
+      "claim_status": "under-review",
+      "system": "SQLite",
+      "version": "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+      "scope": {
+        "systems": [
+          "SQLite"
+        ],
+        "versions": [
+          "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+        ],
+        "deployment_origins": [
+          "local-process"
+        ],
+        "conditions": [
+          "Linux x86_64",
+          "WAL journal mode",
+          "FULL synchronous mode",
+          "two local connections"
+        ],
+        "exclusions": [
+          "rollback",
+          "process crash",
+          "power loss",
+          "checkpoint starvation",
+          "other journal modes",
+          "performance"
+        ]
+      },
+      "evidence_ids": [
+        "g5-sqlite-wal-visibility-observation-mth-0156"
+      ],
+      "provenance": {
+        "run_id": "g5-sqlite-wal-visibility-mth-0156",
+        "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+        "protocol_digest": "sha256:c6182e6f9b87cb0c8e51530c607939ed1c6af6be235c9714b0174aab0ebf855f",
+        "recorded_at": "2026-10-26T00:00:00Z",
+        "runner": "mathen-local-experiment-runner",
+        "toolchain": {
+          "python": "3.13.13",
+          "sqlite": "3.50.4"
+        }
+      },
+      "result": {
+        "status": "observed",
+        "summary": "In three repetitions, the held reader continued to see four rows during the writer's five-row committed state, and a newly begun reader transaction saw five rows."
+      },
+      "limitations": [
+        "The result is bounded to one fixed dataset, three repetitions, one host, and one SQLite build.",
+        "The result does not test crashes, power loss, checkpoint behavior, busy handling, durability, or performance."
+      ]
+    },
+    {
+      "id": "g5-wal-failure-behavior-not-established",
+      "view_id": "sqlite-wal-snapshot-visibility",
+      "kind": "absence-of-evidence",
+      "basis": "absence-of-evidence",
+      "claim_type": "hypothesis",
+      "claim_status": "under-review",
+      "system": "SQLite",
+      "version": "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+      "scope": {
+        "systems": [
+          "SQLite"
+        ],
+        "versions": [
+          "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+        ],
+        "deployment_origins": [
+          "local-process"
+        ],
+        "conditions": [
+          "fixed WAL visibility protocol"
+        ],
+        "exclusions": [
+          "rollback",
+          "process crash",
+          "power loss",
+          "checkpoint starvation",
+          "other journal modes",
+          "performance"
+        ]
+      },
+      "evidence_ids": [
+        "g5-sqlite-wal-visibility-observation-mth-0156"
+      ],
+      "provenance": {
+        "run_id": "g5-sqlite-wal-visibility-mth-0156",
+        "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+        "protocol_digest": "sha256:c6182e6f9b87cb0c8e51530c607939ed1c6af6be235c9714b0174aab0ebf855f",
+        "recorded_at": "2026-10-26T00:00:00Z",
+        "runner": "mathen-local-experiment-runner",
+        "toolchain": {
+          "python": "3.13.13",
+          "sqlite": "3.50.4"
+        }
+      },
+      "result": {
+        "status": "not-established",
+        "summary": "The bounded WAL visibility protocol did not establish rollback, crash, power-loss, checkpoint, busy, durability, or performance behavior."
+      },
+      "question": "Did this protocol establish behavior for untested failure, durability, checkpoint, or performance conditions?",
+      "what_not_established": "No result for those untested conditions was established by this protocol.",
+      "limitations": [
+        "This is an absence-of-evidence record, not a negative finding about SQLite.",
+        "A dedicated protocol is required for each omitted condition."
+      ]
+    }
+  ]
+}

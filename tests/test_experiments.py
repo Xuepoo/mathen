@@ -8,9 +8,12 @@ import unittest
 from pathlib import Path
 
 from mathen.cards import validate_card
+from mathen.evidence import ObservationEvidence
+from mathen.mathviews import load_math_view_contract
 
 ROOT = Path(__file__).parents[1]
 SCRIPT = ROOT / "scripts" / "g5_sqlite_transaction_experiment.py"
+WAL_SCRIPT = ROOT / "scripts" / "g5_sqlite_wal_visibility_experiment.py"
 
 
 class SQLiteExperimentTests(unittest.TestCase):
@@ -123,6 +126,55 @@ class SQLiteExperimentTests(unittest.TestCase):
             self.assertNotEqual(completed.returncode, 0)
             self.assertIn("SQLite source ID differs", completed.stderr)
             self.assertFalse(output.exists())
+
+    def test_wal_visibility_observation_is_reproducible_and_bounded(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "report.json"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(WAL_SCRIPT),
+                    "--expected-source-id",
+                    self.source_id(),
+                    "--repetitions",
+                    "2",
+                    "--output",
+                    str(output),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            report = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(
+            report["environment"]["sqlite_source_id"].split()[-1], self.source_id()
+        )
+        self.assertEqual(report["metrics"]["snapshot_rows_during_writer_commit"], 4)
+        self.assertEqual(report["metrics"]["writer_rows_after_commit"], 5)
+        self.assertEqual(report["metrics"]["refreshed_reader_rows"], 5)
+        self.assertEqual(report["metrics"]["snapshot_checks_passed"], 2)
+        self.assertEqual(report["metrics"]["refresh_checks_passed"], 2)
+        self.assertEqual(report["metrics"]["repetitions_consistent"], 1)
+        self.assertIn('"snapshot_checks_passed": 2', completed.stdout)
+
+    def test_recorded_wal_observation_and_standalone_view_validate(self) -> None:
+        observation_path = (
+            ROOT / "data/experiments/g5-sqlite-wal-visibility-observation.json"
+        )
+        observation = json.loads(observation_path.read_text(encoding="utf-8"))
+        card = json.loads(
+            (ROOT / "data/systems/sqlite.json").read_text(encoding="utf-8")
+        )
+        card["evidence"].append(observation)
+        ObservationEvidence.from_dict(
+            observation, {item["id"] for item in card["evidence"]}
+        )
+        validate_card(card)
+
+        view_path = ROOT / "data/mathviews/sqlite-wal-snapshot-visibility-mth-0156.json"
+        view = load_math_view_contract(view_path)
+        self.assertEqual(view.to_dict()["classification"]["result"], "valid")
+        self.assertEqual(len(view.to_dict()["validation_records"]), 2)
 
 
 if __name__ == "__main__":
