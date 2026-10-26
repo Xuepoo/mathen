@@ -192,6 +192,19 @@ class BenchmarkManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(BenchmarkManifestValidationError, "canonical"):
             validate_benchmark_manifest(value)
 
+    def test_optional_observation_evidence_is_local_and_stable(self) -> None:
+        value = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        value["observation_evidence_ids"] = ["source-evidence"]
+        validate_benchmark_manifest(value)
+
+        value["observation_evidence_ids"] = ["outside"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "local"):
+            validate_benchmark_manifest(value)
+
+        value["observation_evidence_ids"] = ["source-evidence", "source-evidence"]
+        with self.assertRaisesRegex(BenchmarkManifestValidationError, "unique"):
+            validate_benchmark_manifest(value)
+
     def test_manifest_rejects_missing_input_evidence_and_holdout_exposure(self) -> None:
         value = json.loads(FIXTURE.read_text(encoding="utf-8"))
         del value["input_evidence"]["systems:fixture-system"]

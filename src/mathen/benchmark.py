@@ -530,7 +530,7 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
         "result_boundary",
         "outcome",
     }
-    _allowed("manifest", value, required)
+    _allowed("manifest", value, required | {"observation_evidence_ids"})
     missing = required - value.keys()
     if missing:
         raise BenchmarkManifestValidationError(f"missing fields: {sorted(missing)}")
@@ -607,6 +607,23 @@ def validate_benchmark_manifest(value: Mapping[str, Any]) -> None:
             "evidence_bundle.evidence_ids must be unique"
         )
     evidence_set = set(evidence_ids)
+    observation_evidence_ids = value.get("observation_evidence_ids")
+    if observation_evidence_ids is not None:
+        observation_evidence_ids = _string_list(
+            value, "observation_evidence_ids", "manifest"
+        )
+        if not observation_evidence_ids:
+            raise BenchmarkManifestValidationError(
+                "observation_evidence_ids must not be empty when supplied"
+            )
+        if len(set(observation_evidence_ids)) != len(observation_evidence_ids):
+            raise BenchmarkManifestValidationError(
+                "observation_evidence_ids must be unique"
+            )
+        if not set(observation_evidence_ids).issubset(evidence_set):
+            raise BenchmarkManifestValidationError(
+                "observation_evidence_ids must be local to evidence_bundle"
+            )
 
     inputs = value["input_ids"]
     _object("input_ids", inputs)

@@ -248,6 +248,10 @@
         },
         "reason": { "type": "string", "minLength": 1 }
       }
+    },
+    "observation_evidence_ids": {
+      "$ref": "#/$defs/nonEmptyStringList",
+      "uniqueItems": true
     }
   },
   "$defs": {
