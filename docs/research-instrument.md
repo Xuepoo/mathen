@@ -366,10 +366,10 @@ Related internal review material includes the extraction/review boundary in
 [`review-extraction-pipeline.md`](review-extraction-pipeline.md), the
 scope/lifecycle contracts above, and the synthesis evaluation plan in
 [`mth-0118-synthesis-validation-benchmark.md`](mth-0118-synthesis-validation-benchmark.md).
-Supporting records include the [internal literature map](https://github.com/Xuepoo/mathen/blob/bfa5840/paper/README.md),
-[replaceable extraction provenance profile](https://github.com/Xuepoo/mathen/blob/33a9fb6/docs/extraction-provenance.md),
-[review-queue audit](https://github.com/Xuepoo/mathen/blob/d261ea1/docs/mth-0159-research-review-queue.md),
-and [SQLite savepoint observation](https://github.com/Xuepoo/mathen/blob/c978a2f/docs/mth-0164-sqlite-savepoint-observation.md).
+Supporting records include the [internal literature map](../paper/README.md),
+[replaceable extraction provenance profile](extraction-provenance.md),
+[review-queue audit](mth-0159-research-review-queue.md),
+and [SQLite savepoint observation](mth-0164-sqlite-savepoint-observation.md).
 These are commit-pinned research records, not a paper body, canonical card, or
 production claim.
 

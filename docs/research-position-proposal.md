@@ -376,10 +376,10 @@ and [`mth-0154-retrieval-evaluation.md`](mth-0154-retrieval-evaluation.md).
 Scope and lifecycle boundaries are [`scope-context-contract.md`](scope-context-contract.md)
 and [`lifecycle-status-contract.md`](lifecycle-status-contract.md); the
 extraction boundary is [`review-extraction-pipeline.md`](review-extraction-pipeline.md).
-The [internal literature map](https://github.com/Xuepoo/mathen/blob/bfa5840/paper/README.md),
-[replaceable extraction-provenance profile](https://github.com/Xuepoo/mathen/blob/33a9fb6/docs/extraction-provenance.md),
-[review-queue audit](https://github.com/Xuepoo/mathen/blob/d261ea1/docs/mth-0159-research-review-queue.md),
-and [SQLite savepoint observation](https://github.com/Xuepoo/mathen/blob/c978a2f/docs/mth-0164-sqlite-savepoint-observation.md)
+The [internal literature map](../paper/README.md),
+[replaceable extraction-provenance profile](extraction-provenance.md),
+[review-queue audit](mth-0159-research-review-queue.md),
+and [SQLite savepoint observation](mth-0164-sqlite-savepoint-observation.md)
 are separate supporting records. They must not be silently treated as
 canonical cards, drafts, relations, production resources, or paper-submission
 files.
