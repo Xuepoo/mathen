@@ -1,0 +1,210 @@
+{
+  "task": "MTH-0153",
+  "schema_version": 1,
+  "corpus": "data/systems/*.json",
+  "selected_cards": [
+    "airflow",
+    "carryctx",
+    "firecracker",
+    "kafka",
+    "kubernetes",
+    "postgresql",
+    "sqlite"
+  ],
+  "mutation_performed": false,
+  "counts": {
+    "cards_selected": 7,
+    "features_selected": 39,
+    "mathematical_views_selected": 28,
+    "lifecycle_records": 14,
+    "lifecycle_records_by_surface": {
+      "features": 7,
+      "mathematical_views": 7
+    }
+  },
+  "statuses_by_surface": {
+    "features": {
+      "observed": 7,
+      "unknown/not-recorded": 32
+    },
+    "mathematical_views": {
+      "proposed": 7,
+      "unknown/not-recorded": 21
+    }
+  },
+  "lifecycle_records": [
+    {
+      "card_id": "airflow",
+      "surface": "features",
+      "record_id": "dag-dependency-graph",
+      "status": "observed",
+      "evidence_ids": [
+        "airflow-architecture-doc",
+        "airflow-source-commit"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    {
+      "card_id": "airflow",
+      "surface": "mathematical_views",
+      "record_id": "DAG readiness relation",
+      "status": "proposed",
+      "evidence_ids": [
+        "airflow-architecture-doc",
+        "airflow-source-commit"
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed"
+    },
+    {
+      "card_id": "carryctx",
+      "surface": "features",
+      "record_id": "guarded-task-lifecycle",
+      "status": "observed",
+      "evidence_ids": [
+        "carryctx-task-source",
+        "carryctx-lifecycle-doc"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    {
+      "card_id": "carryctx",
+      "surface": "mathematical_views",
+      "record_id": "Guarded project lifecycle transition system",
+      "status": "proposed",
+      "evidence_ids": [
+        "carryctx-task-source",
+        "carryctx-lifecycle-doc"
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed"
+    },
+    {
+      "card_id": "firecracker",
+      "surface": "features",
+      "record_id": "minimal-machine-model",
+      "status": "observed",
+      "evidence_ids": [
+        "firecracker-design"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    {
+      "card_id": "firecracker",
+      "surface": "mathematical_views",
+      "record_id": "Layered isolation boundary",
+      "status": "proposed",
+      "evidence_ids": [
+        "firecracker-design"
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed"
+    },
+    {
+      "card_id": "kafka",
+      "surface": "features",
+      "record_id": "retained-replayable-events",
+      "status": "observed",
+      "evidence_ids": [
+        "kafka-introduction"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    {
+      "card_id": "kafka",
+      "surface": "mathematical_views",
+      "record_id": "Replayable event transition system",
+      "status": "proposed",
+      "evidence_ids": [
+        "kafka-introduction"
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed"
+    },
+    {
+      "card_id": "kubernetes",
+      "surface": "features",
+      "record_id": "controller-reconciliation-loops",
+      "status": "observed",
+      "evidence_ids": [
+        "kubernetes-controller-doc",
+        "kubernetes-controller-source"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    {
+      "card_id": "kubernetes",
+      "surface": "mathematical_views",
+      "record_id": "Distributed feedback control system",
+      "status": "proposed",
+      "evidence_ids": [
+        "kubernetes-controller-doc",
+        "kubernetes-controller-source"
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed"
+    },
+    {
+      "card_id": "postgresql",
+      "surface": "features",
+      "record_id": "transaction-scoped-retry-boundary",
+      "status": "observed",
+      "evidence_ids": [
+        "postgresql-transaction-isolation"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    {
+      "card_id": "postgresql",
+      "surface": "mathematical_views",
+      "record_id": "Session and process transition system",
+      "status": "proposed",
+      "evidence_ids": [
+        "postgresql-architecture"
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed"
+    },
+    {
+      "card_id": "sqlite",
+      "surface": "features",
+      "record_id": "journal-based-atomic-commit",
+      "status": "observed",
+      "evidence_ids": [
+        "sqlite-atomic-commit"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    {
+      "card_id": "sqlite",
+      "surface": "mathematical_views",
+      "record_id": "Crash-recovery transition system",
+      "status": "proposed",
+      "evidence_ids": [
+        "sqlite-atomic-commit",
+        "sqlite-wal"
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed"
+    }
+  ],
+  "absence_of_evidence_boundaries": {
+    "unsupported_selected_records_remain_unknown": true,
+    "features_without_lifecycle": 32,
+    "mathematical_views_without_lifecycle": 21,
+    "cards_outside_pilot_included": false,
+    "status_not_inferred_from_claim_type": true,
+    "status_not_inferred_from_claim_status": true,
+    "status_not_inferred_from_source_kind": true,
+    "status_not_inferred_from_popularity_graph_version_name_or_similarity": true,
+    "missing_lifecycle_is_unknown_not_recorded": true,
+    "no_deprecated_or_superseded_status_asserted": true
+  }
+}

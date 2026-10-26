@@ -13,7 +13,14 @@
       "description": "Airflow represents a workflow as a directed acyclic graph of tasks, where dependencies define the order in which task instances become eligible to run.",
       "benefits": ["Makes workflow ordering and fan-in/fan-out explicit", "Supports repeated runs of the same workflow definition"],
       "costs": ["The acyclic model cannot directly represent unbounded cyclic control flow", "Complex dependency graphs increase scheduling and operational complexity"],
-      "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"]
+      "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"],
+      "lifecycle": {
+        "status": "observed",
+        "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"],
+        "claim_type": "fact",
+        "claim_status": "under-review",
+        "notes": "The fixed official documentation and source directly record DAG task dependencies and readiness behavior for the cited Airflow revision."
+      }
     },
     {
       "id": "scheduler-metadata-state",
@@ -52,7 +59,14 @@
       "question": "How do task dependency edges and prior task-instance states determine which task instances are eligible for execution?",
       "assumptions": ["The workflow graph is acyclic for each modeled DAG", "Trigger rules and mapped-task details are abstracted into an eligibility predicate", "A DAG run has a stable definition while the predicate is evaluated"],
       "claim_type": "inference",
-      "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"]
+      "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"],
+      "lifecycle": {
+        "status": "proposed",
+        "evidence_ids": ["airflow-architecture-doc", "airflow-source-commit"],
+        "claim_type": "inference",
+        "claim_status": "proposed",
+        "notes": "Candidate lifecycle model proposed from the cited DAG and scheduler evidence; trigger-rule and mapped-task assumptions remain outside this bounded assertion."
+      }
     },
     {
       "model": "Metadata-mediated scheduler transition system",

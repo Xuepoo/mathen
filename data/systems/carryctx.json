@@ -58,7 +58,14 @@
         "The lifecycle constrains workflows outside its transition policy",
         "Dependency and completion policy can reject an executable command"
       ],
-      "evidence_ids": ["carryctx-task-source", "carryctx-lifecycle-doc"]
+      "evidence_ids": ["carryctx-task-source", "carryctx-lifecycle-doc"],
+      "lifecycle": {
+        "status": "observed",
+        "evidence_ids": ["carryctx-task-source", "carryctx-lifecycle-doc"],
+        "claim_type": "fact",
+        "claim_status": "under-review",
+        "notes": "The fixed CarryCtx task source and lifecycle documentation directly record explicit task states and guarded transitions for the cited revision."
+      }
     },
     {
       "id": "durable-collaboration-records",
@@ -191,7 +198,14 @@
       ],
       "claim_type": "inference",
       "claim_status": "proposed",
-      "evidence_ids": ["carryctx-task-source", "carryctx-lifecycle-doc"]
+      "evidence_ids": ["carryctx-task-source", "carryctx-lifecycle-doc"],
+      "lifecycle": {
+        "status": "proposed",
+        "evidence_ids": ["carryctx-task-source", "carryctx-lifecycle-doc"],
+        "claim_type": "inference",
+        "claim_status": "proposed",
+        "notes": "Candidate lifecycle model proposed from the cited task transition and guard documentation; external scheduling and human judgment remain explicit assumptions."
+      }
     },
     {
       "model": "Append-only event-sourced audit projection",

@@ -131,7 +131,14 @@
       ],
       "evidence_ids": [
         "postgresql-transaction-isolation"
-      ]
+      ],
+      "lifecycle": {
+        "status": "observed",
+        "evidence_ids": ["postgresql-transaction-isolation"],
+        "claim_type": "fact",
+        "claim_status": "under-review",
+        "notes": "The fixed official transaction-isolation documentation directly records abort-and-retry behavior after serialization failure; the assertion is bounded to the cited documentation boundary."
+      }
     }
   ],
   "mathematical_views": [
@@ -146,7 +153,14 @@
       "claim_type": "inference",
       "evidence_ids": [
         "postgresql-architecture"
-      ]
+      ],
+      "lifecycle": {
+        "status": "proposed",
+        "evidence_ids": ["postgresql-architecture"],
+        "claim_type": "inference",
+        "claim_status": "proposed",
+        "notes": "Candidate lifecycle model proposed from the cited client/server architecture; the source supports the documented process boundary, not formal transition-system validation."
+      }
     },
     {
       "model": "MVCC visibility relation",

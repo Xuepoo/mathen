@@ -18,7 +18,14 @@
       "description": "A Firecracker process encapsulates one microVM and exposes a deliberately limited set of emulated and paravirtualized devices.",
       "benefits": ["Reduces device-model complexity and attack surface"],
       "costs": ["Provides less general hardware compatibility than a full VMM"],
-      "evidence_ids": ["firecracker-design"]
+      "evidence_ids": ["firecracker-design"],
+      "lifecycle": {
+        "status": "observed",
+        "evidence_ids": ["firecracker-design"],
+        "claim_type": "fact",
+        "claim_status": "under-review",
+        "notes": "The cited Firecracker design document directly records the deliberately limited device model; no release or currentness claim is made beyond that document."
+      }
     },
     {
       "id": "kvm-event-driven-vmm",
@@ -44,7 +51,14 @@
         "The reduced device model is sufficient for the target workloads"
       ],
       "claim_type": "inference",
-      "evidence_ids": ["firecracker-design"]
+      "evidence_ids": ["firecracker-design"],
+      "lifecycle": {
+        "status": "proposed",
+        "evidence_ids": ["firecracker-design"],
+        "claim_type": "inference",
+        "claim_status": "proposed",
+        "notes": "Candidate lifecycle model proposed from the cited design document; the source supports the stated architecture, not a formal isolation proof."
+      }
     },
     {
       "model": "Resource-constrained concurrent state machine",

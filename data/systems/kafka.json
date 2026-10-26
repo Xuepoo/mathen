@@ -49,7 +49,14 @@
       ],
       "evidence_ids": [
         "kafka-introduction"
-      ]
+      ],
+      "lifecycle": {
+        "status": "observed",
+        "evidence_ids": ["kafka-introduction"],
+        "claim_type": "fact",
+        "claim_status": "under-review",
+        "notes": "The cited official Kafka introduction directly records retention independent of consumer reads and repeated processing; the assertion is bounded to that documentation."
+      }
     },
     {
       "id": "producer-consumer-decoupling",
@@ -197,7 +204,14 @@
       "claim_type": "inference",
       "evidence_ids": [
         "kafka-introduction"
-      ]
+      ],
+      "lifecycle": {
+        "status": "proposed",
+        "evidence_ids": ["kafka-introduction"],
+        "claim_type": "inference",
+        "claim_status": "proposed",
+        "notes": "Candidate lifecycle model proposed from the cited retention and replay documentation; the source does not establish a formal transition system or unbounded replay."
+      }
     },
     {
       "model": "Replicated log refinement",
