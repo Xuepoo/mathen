@@ -86,7 +86,7 @@ test("graph projection migration stores reviewed document metadata", async () =>
   database.close();
 });
 
-test("scope migration adds nullable metadata columns without backfill", async () => {
+test("metadata migrations add nullable scope and evidence metadata columns", async () => {
   const database = new Database(":memory:");
   for (const migration of [
     "0001_initial.sql",

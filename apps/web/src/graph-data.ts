@@ -5,6 +5,7 @@ export type SystemSummary = {
   summary: string;
   scope: string[];
   related_systems: string[];
+  scope_context?: Record<string, unknown>;
 };
 
 export type GraphNode = { id: string; name: string; type: "system" };

@@ -81,4 +81,37 @@ describe("renderDetail", () => {
     expect(html).not.toContain('href="https://token:secret@example.com/source"');
     expect(html).toContain("(non-web source)");
   });
+
+  test("displays propagated scope, lifecycle, validation, and observation metadata", () => {
+    const html = renderDetail(
+      {
+        ...system,
+        scope_context: { workload: { status: "specified" } },
+        features: [{ ...system.features[0], lifecycle: { status: "observed" } }],
+        mathematical_views: [
+          {
+            model: "State machine",
+            question: "How?",
+            assumptions: [],
+            claim_type: "inference",
+            evidence_ids: ["experiment-1"],
+            lifecycle: { status: "reviewed" },
+            contract: { validation_records: [{ id: "validation-1" }] },
+          },
+        ],
+        evidence: [
+          {
+            ...system.evidence[0],
+            scope_context: { workload: { status: "specified" } },
+            metadata: { observation_version: "1" },
+          },
+        ],
+      },
+      graph,
+    );
+    expect(html).toContain("Scope context");
+    expect(html).toContain("Lifecycle");
+    expect(html).toContain("Validation records: 1");
+    expect(html).toContain("observation_version");
+  });
 });

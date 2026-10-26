@@ -27,6 +27,8 @@ export type Evidence = {
   uri: string;
   accessed?: string;
   notes?: string;
+  scope_context?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 };
 
 export type Feature = {
@@ -40,6 +42,8 @@ export type Feature = {
   evidence_ids: string[];
   claim_status?: string;
   validity_scope?: Record<string, unknown>;
+  lifecycle?: Record<string, unknown>;
+  scope_context?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
 };
 
@@ -63,6 +67,7 @@ export type ArchitectureCard = {
   name: string;
   summary: string;
   scope: string[];
+  scope_context?: Record<string, unknown>;
   features: Feature[];
   mathematical_views: Array<Record<string, unknown>>;
   trade_offs: Array<Record<string, unknown>>;
@@ -79,6 +84,7 @@ export type SystemSummary = Pick<
   ArchitectureCard,
   "id" | "name" | "summary" | "version_context"
 > & {
+  scope_context?: Record<string, unknown>;
   status: "reviewed" | "reviewed-or-draft";
 };
 
@@ -392,6 +398,7 @@ export class ApiBackend implements Backend {
         name: requiredString(card.name, "name", "/api/systems"),
         summary: requiredString(card.summary, "summary", "/api/systems"),
         version_context: optionalString(card.version_context),
+        scope_context: optionalRecord(card.scope_context),
         status: "reviewed" as const,
       };
     });
@@ -567,6 +574,7 @@ function normalizeCard(value: unknown): ArchitectureCard {
     name: requiredString(card.name, "name", "/api/systems/:id"),
     summary: requiredString(card.summary, "summary", "/api/systems/:id"),
     scope: stringArray(card.scope),
+    scope_context: optionalRecord(card.scope_context),
     features: Array.isArray(card.features) ? card.features.map(normalizeFeature) : [],
     mathematical_views: Array.isArray(card.mathematical_views)
       ? card.mathematical_views.map((view) => asRecord(view))
@@ -678,6 +686,9 @@ function normalizeFeature(value: unknown): Feature {
     benefits: stringArray(feature.benefits),
     costs: stringArray(feature.costs),
     evidence_ids: stringArray(feature.evidence_ids),
+    lifecycle: optionalRecord(feature.lifecycle),
+    validity_scope: optionalRecord(feature.validity_scope),
+    scope_context: optionalRecord(feature.scope_context),
     metadata: optionalRecord(feature.metadata),
   };
 }
@@ -724,6 +735,8 @@ function normalizeEvidence(value: unknown): Evidence {
   const evidence = asRecord(value);
   const accessed = optionalString(evidence.accessed);
   const notes = optionalString(evidence.notes);
+  const scopeContext = optionalRecord(evidence.scope_context);
+  const metadata = optionalRecord(evidence.metadata);
   return {
     id: requiredString(evidence.id, "id", "/api/systems/:id"),
     kind: requiredString(evidence.kind, "kind", "/api/systems/:id"),
@@ -731,6 +744,8 @@ function normalizeEvidence(value: unknown): Evidence {
     uri: requiredString(evidence.uri, "uri", "/api/systems/:id"),
     ...(accessed ? { accessed } : {}),
     ...(notes ? { notes } : {}),
+    ...(scopeContext ? { scope_context: scopeContext } : {}),
+    ...(metadata ? { metadata } : {}),
   };
 }
 

@@ -1,6 +1,7 @@
 import type { GraphPayload, SystemSummary } from "./graph-data";
 
 export type SystemDetail = SystemSummary & {
+  scope_context?: Record<string, unknown>;
   features: Array<{
     id: string;
     name: string;
@@ -10,6 +11,10 @@ export type SystemDetail = SystemSummary & {
     benefits: string[];
     costs: string[];
     evidence_ids: string[];
+    lifecycle?: Record<string, unknown>;
+    validity_scope?: Record<string, unknown>;
+    scope_context?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
   }>;
   mathematical_views: Array<{
     model: string;
@@ -17,6 +22,11 @@ export type SystemDetail = SystemSummary & {
     assumptions: string[];
     claim_type: string;
     evidence_ids: string[];
+    lifecycle?: Record<string, unknown>;
+    validity_scope?: Record<string, unknown>;
+    scope_context?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
+    contract?: Record<string, unknown>;
   }>;
   trade_offs?: Array<{ feature_id: string; benefits: string[]; costs: string[] }>;
   feature_relations?: Array<{
@@ -35,8 +45,10 @@ export type SystemDetail = SystemSummary & {
     title: string;
     uri: string;
     kind: string;
-    accessed?: string;
-    notes?: string;
+    accessed?: string | null;
+    notes?: string | null;
+    scope_context?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
   }>;
 };
 
@@ -88,10 +100,10 @@ export function renderDetail(system: SystemDetail, graph: GraphPayload) {
   return `<article class="architecture-card">
     <p class="detail-lead">${escapeHtml(system.summary)}</p>
     ${system.version_context ? `<p class="muted">${escapeHtml(system.version_context)}</p>` : ""}
-    <h3>Card scope</h3><div class="tag-row">${system.scope.map((scope) => `<span>${escapeHtml(scope)}</span>`).join("")}</div>
+     <h3>Card scope</h3><div class="tag-row">${system.scope.map((scope) => `<span>${escapeHtml(scope)}</span>`).join("")}</div>${system.scope_context ? `<p class="muted">Scope context: ${escapeHtml(JSON.stringify(system.scope_context))}</p>` : ""}
     <div class="detail-metrics"><span><strong>${system.features.length}</strong> features</span><span><strong>${system.mathematical_views.length}</strong> views</span><span><strong>${system.evidence.length}</strong> sources</span></div>
-    <section class="detail-section"><p class="eyebrow">Transferable structure</p><h3>Reusable features</h3>${system.features.map((feature) => `<article class="content-card"><div class="feature-meta"><span>${escapeHtml(feature.category)}</span><span>${escapeHtml(feature.claim_type)}</span></div><h4>${escapeHtml(feature.name)}</h4><p>${escapeHtml(feature.description)}</p><details><summary>Benefits and costs</summary><h5>Benefits</h5><ul>${list(feature.benefits)}</ul><h5>Costs</h5><ul>${list(feature.costs)}</ul></details>${pills(feature.evidence_ids)}</article>`).join("") || `<p>No reusable features recorded.</p>`}</section>
-    <section class="detail-section"><p class="eyebrow">Candidate mathematical views</p><h3>Mathematical views</h3>${system.mathematical_views.map((view) => `<article class="content-card"><span class="claim-type">${escapeHtml(view.claim_type)}</span><h4>${escapeHtml(view.model)}</h4><p>${escapeHtml(view.question)}</p><details><summary>Assumptions (${view.assumptions.length})</summary><ul>${list(view.assumptions)}</ul></details>${pills(view.evidence_ids)}</article>`).join("") || `<p>No mathematical views recorded.</p>`}</section>
+     <section class="detail-section"><p class="eyebrow">Transferable structure</p><h3>Reusable features</h3>${system.features.map((feature) => `<article class="content-card"><div class="feature-meta"><span>${escapeHtml(feature.category)}</span><span>${escapeHtml(feature.claim_type)}</span></div><h4>${escapeHtml(feature.name)}</h4><p>${escapeHtml(feature.description)}</p>${feature.lifecycle ? `<p class="muted">Lifecycle: ${escapeHtml(JSON.stringify(feature.lifecycle))}</p>` : ""}<details><summary>Benefits and costs</summary><h5>Benefits</h5><ul>${list(feature.benefits)}</ul><h5>Costs</h5><ul>${list(feature.costs)}</ul></details>${pills(feature.evidence_ids)}</article>`).join("") || `<p>No reusable features recorded.</p>`}</section>
+     <section class="detail-section"><p class="eyebrow">Candidate mathematical views</p><h3>Mathematical views</h3>${system.mathematical_views.map((view) => `<article class="content-card"><span class="claim-type">${escapeHtml(view.claim_type)}</span><h4>${escapeHtml(view.model)}</h4><p>${escapeHtml(view.question)}</p>${view.lifecycle ? `<p class="muted">Lifecycle: ${escapeHtml(JSON.stringify(view.lifecycle))}</p>` : ""}${view.contract?.validation_records ? `<p class="muted">Validation records: ${Array.isArray(view.contract.validation_records) ? view.contract.validation_records.length : 0}</p>` : ""}<details><summary>Assumptions (${view.assumptions.length})</summary><ul>${list(view.assumptions)}</ul></details>${pills(view.evidence_ids)}</article>`).join("") || `<p>No mathematical views recorded.</p>`}</section>
     ${system.trade_offs?.length ? `<section class="detail-section"><h3>Trade-offs</h3>${system.trade_offs.map((tradeOff) => `<article class="content-card"><h4>${escapeHtml(system.features.find((feature) => feature.id === tradeOff.feature_id)?.name ?? tradeOff.feature_id)}</h4><h5>Benefits</h5><ul>${list(tradeOff.benefits)}</ul><h5>Costs</h5><ul>${list(tradeOff.costs)}</ul></article>`).join("")}</section>` : ""}
     <section class="detail-section"><p class="eyebrow">Feature relationships</p><h3>Feature relations (${featureRelations.length})</h3>${
       featureRelations
@@ -112,6 +124,6 @@ export function renderDetail(system: SystemDetail, graph: GraphPayload) {
         })
         .join("") || `<p>No relations recorded in the graph.</p>`
     }</section>
-     <section class="detail-section"><p class="eyebrow">Primary sources</p><h3>Evidence trail</h3><ol class="evidence-list">${system.evidence.map((item) => `<li class="${item.kind === "experiment" ? "evidence-experiment" : ""}"><span class="evidence-kind eyebrow">${item.kind === "experiment" ? "Experiment" : escapeHtml(item.kind)}</span>${safeHref(item.uri) ? `<a href="${safeHref(item.uri)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)} ↗</a>` : `<span>${escapeHtml(item.title)} (non-web source)</span>`}<small>${escapeHtml(item.id)}${item.accessed ? ` · accessed ${escapeHtml(item.accessed)}` : ""}</small>${item.notes ? `<p>${escapeHtml(item.notes)}</p>` : ""}</li>`).join("")}</ol></section>
+     <section class="detail-section"><p class="eyebrow">Primary sources</p><h3>Evidence trail</h3><ol class="evidence-list">${system.evidence.map((item) => `<li class="${item.kind === "experiment" ? "evidence-experiment" : ""}"><span class="evidence-kind eyebrow">${item.kind === "experiment" ? "Experiment" : escapeHtml(item.kind)}</span>${safeHref(item.uri) ? `<a href="${safeHref(item.uri)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)} ↗</a>` : `<span>${escapeHtml(item.title)} (non-web source)</span>`}<small>${escapeHtml(item.id)}${item.accessed ? ` · accessed ${escapeHtml(item.accessed)}` : ""}</small>${item.notes ? `<p>${escapeHtml(item.notes)}</p>` : ""}${item.scope_context ? `<p class="muted">Scope context: ${escapeHtml(JSON.stringify(item.scope_context))}</p>` : ""}${item.metadata ? `<p class="muted">Metadata: ${escapeHtml(JSON.stringify(item.metadata))}</p>` : ""}</li>`).join("")}</ol></section>
   </article>`;
 }
