@@ -198,7 +198,8 @@ def git_worktree_inventory(
     inventory: list[dict[str, Any]] = []
     root = root.resolve()
     for record in records:
-        path = Path(str(record["path"])).expanduser()
+        raw_path = str(record["path"])
+        path = Path(raw_path).expanduser()
         resolved = path.resolve(strict=False)
         exists = path.exists()
         managed_item = managed_by_path.get(str(resolved))
@@ -226,7 +227,9 @@ def git_worktree_inventory(
             labels.append("dirty")
         inventory.append(
             {
-                "path": str(path),
+                # Preserve Git's displayed path for operator-facing output;
+                # use resolved_path for all cross-platform comparisons.
+                "path": raw_path,
                 "resolved_path": str(resolved),
                 "head": record.get("head"),
                 "branch": record.get("branch"),
@@ -461,7 +464,7 @@ def cleanup_orchestration(
     outbox = cleanup_audit(requests)
     inventory = git_worktree_inventory(root, state.get("worktrees", []))
     inventory_by_path = {
-        str(Path(item["resolved_path"])): item
+        str(Path(item["resolved_path"]).resolve(strict=False)): item
         for item in inventory
         if item.get("resolved_path")
     }
