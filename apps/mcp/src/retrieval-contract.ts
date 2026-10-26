@@ -62,6 +62,7 @@ export type RetrievalResponse = {
       version_context?: string | null;
       validity_scope?: Record<string, unknown>;
       scope_context?: Record<string, unknown>;
+      contract?: Record<string, unknown>;
     };
     evidence: Array<{
       id: string;
@@ -71,6 +72,7 @@ export type RetrievalResponse = {
       accessed?: string | null;
       notes?: string | null;
       scope_context?: Record<string, unknown>;
+      metadata?: Record<string, unknown>;
     }>;
     provenance: {
       source_ref: string;
@@ -206,8 +208,12 @@ export function normalizeRetrieval(value: unknown, limit = RETRIEVAL_LIMIT): Ret
       !RETRIEVAL_STATUSES.includes(document.claim_status as (typeof RETRIEVAL_STATUSES)[number])
     )
       return invalid();
-    if (document.lifecycle !== undefined && !validLifecycle(document.lifecycle, new Set(document.evidence_ids)))
+    if (
+      document.lifecycle !== undefined &&
+      !validLifecycle(document.lifecycle, new Set(document.evidence_ids))
+    )
       return invalid();
+    if (document.contract !== undefined && !record(document.contract)) return invalid();
     if (document.validity_scope !== undefined && !record(document.validity_scope)) return invalid();
     if (
       document.scope_context !== undefined &&
@@ -228,6 +234,8 @@ export function normalizeRetrieval(value: unknown, limit = RETRIEVAL_LIMIT): Ret
           ["id", "kind", "title", "uri"].every((key) => typeof item[key] === "string"),
       )
     )
+      return invalid();
+    if (result.evidence.some((item) => "metadata" in item && !record(item.metadata)))
       return invalid();
     const evidenceIds = new Set(result.evidence.map((item) => item.id));
     if (document.evidence_ids.some((id) => !evidenceIds.has(id)) || ids.has(document.id as string))
@@ -336,13 +344,37 @@ function validClaimFields(value: Record<string, unknown>): boolean {
 function validLifecycle(value: unknown, evidenceIds: Set<string>): boolean {
   if (!record(value)) return false;
   const status = value.status;
-  if (!['proposed', 'observed', 'reviewed', 'deprecated', 'superseded'].includes(String(status))) return false;
-  if (!strings(value.evidence_ids) || !value.evidence_ids.length || value.evidence_ids.some((id) => !evidenceIds.has(id))) return false;
-  if (!['fact', 'inference', 'hypothesis', 'analogy'].includes(String(value.claim_type))) return false;
-  if (!['proposed', 'under-review', 'accepted', 'rejected', 'deprecated'].includes(String(value.claim_status))) return false;
-  if ((status === 'deprecated' || status === 'superseded') && (typeof value.notes !== 'string' || !value.notes.trim())) return false;
-  if (value.superseded_by !== undefined && (status !== 'superseded' || !strings(value.superseded_by) || !value.superseded_by.length)) return false;
-  return Object.keys(value).every((key) => ['status', 'evidence_ids', 'claim_type', 'claim_status', 'superseded_by', 'notes'].includes(key));
+  if (!["proposed", "observed", "reviewed", "deprecated", "superseded"].includes(String(status)))
+    return false;
+  if (
+    !strings(value.evidence_ids) ||
+    !value.evidence_ids.length ||
+    value.evidence_ids.some((id) => !evidenceIds.has(id))
+  )
+    return false;
+  if (!["fact", "inference", "hypothesis", "analogy"].includes(String(value.claim_type)))
+    return false;
+  if (
+    !["proposed", "under-review", "accepted", "rejected", "deprecated"].includes(
+      String(value.claim_status),
+    )
+  )
+    return false;
+  if (
+    (status === "deprecated" || status === "superseded") &&
+    (typeof value.notes !== "string" || !value.notes.trim())
+  )
+    return false;
+  if (
+    value.superseded_by !== undefined &&
+    (status !== "superseded" || !strings(value.superseded_by) || !value.superseded_by.length)
+  )
+    return false;
+  return Object.keys(value).every((key) =>
+    ["status", "evidence_ids", "claim_type", "claim_status", "superseded_by", "notes"].includes(
+      key,
+    ),
+  );
 }
 
 function localScopeEvidence(value: Record<string, unknown>, evidenceIds: Set<string>): boolean {

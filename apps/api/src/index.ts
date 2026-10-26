@@ -75,6 +75,7 @@ type SystemRow = {
   summary: string;
   scope_json: string;
   related_systems_json: string;
+  scope_context_json?: string | null;
   source_path: string;
 };
 
@@ -97,6 +98,7 @@ type EvidenceRow = {
   uri: string;
   accessed: string | null;
   notes: string | null;
+  scope_context_json?: string | null;
   metadata_json?: string | null;
 };
 
@@ -365,7 +367,7 @@ app.get("/systems", async (c) => {
   const pattern = `%${query}%`;
   const result = await c.env.DB.prepare(
     `SELECT id, name, version_context, summary, scope_json, related_systems_json,
-            temporal_context_json, relations_json, composition_json, source_path
+            temporal_context_json, scope_context_json, relations_json, composition_json, source_path
      FROM systems
      WHERE (?1 = '' OR id LIKE ?2 OR name LIKE ?2 OR summary LIKE ?2)
      ORDER BY name, id
@@ -503,7 +505,7 @@ async function sha256QueryDigest(query: string): Promise<string> {
 app.get("/systems/:id", async (c) => {
   const system = await c.env.DB.prepare(
     `SELECT id, name, version_context, summary, scope_json, related_systems_json,
-               temporal_context_json, relations_json, composition_json, source_path
+               temporal_context_json, scope_context_json, relations_json, composition_json, source_path
      FROM systems WHERE id = ?1`,
   )
     .bind(c.req.param("id"))
@@ -559,7 +561,8 @@ app.get("/systems/:id", async (c) => {
         costs_json: string;
       }>(),
     c.env.DB.prepare(
-      `SELECT substr(id, length(system_id) + 2) AS id, kind, title, uri, accessed, notes
+      `SELECT substr(id, length(system_id) + 2) AS id, kind, title, uri, accessed, notes,
+                     scope_context_json, metadata_json
        FROM evidence WHERE system_id = ?1 ORDER BY id`,
     )
       .bind(system.id)
@@ -574,14 +577,8 @@ app.get("/systems/:id", async (c) => {
       ...serializeSystem(system),
       features: features.results.map(serializeFeature),
       mathematical_views: views.results.map((view) => ({
-        id: view.id,
+        ...serializeMathematicalView(view),
         key: modelViewKey(system.id, view.model, view.question),
-        model: view.model,
-        question: view.question,
-        assumptions: parseJson<string[]>(view.assumptions_json, []),
-        claim_type: view.claim_type,
-        metadata: parseJson<Record<string, unknown>>(view.metadata_json, {}),
-        evidence_ids: parseJsonArray<string>(view.evidence_ids_json),
       })),
       trade_offs: tradeOffs.results.map((tradeOff) => ({
         id: tradeOff.id,
@@ -589,7 +586,7 @@ app.get("/systems/:id", async (c) => {
         benefits: parseJson<string[]>(tradeOff.benefits_json, []),
         costs: parseJson<string[]>(tradeOff.costs_json, []),
       })),
-      evidence: evidence.results,
+      evidence: evidence.results.map(serializeEvidence),
       feature_relations: featureRelations.results.map(serializeFeatureRelation),
     },
   });
@@ -891,6 +888,9 @@ function serializeSystem(system: SystemRow) {
     scope: parseJson<string[]>(system.scope_json, []),
     related_systems: parseJson<string[]>(system.related_systems_json, []),
     temporal_context: parseJson<Record<string, unknown> | null>(system.temporal_context_json, null),
+    ...(parseJson<Record<string, unknown> | null>(system.scope_context_json ?? null, null)
+      ? { scope_context: parseJson<Record<string, unknown>>(system.scope_context_json ?? null, {}) }
+      : {}),
     relations: parseJson<Array<Record<string, unknown>>>(system.relations_json, []),
     composition: parseJson<Record<string, unknown> | null>(system.composition_json, null),
     source_path: system.source_path,
@@ -909,6 +909,58 @@ export function serializeFeature(feature: FeatureRow) {
     costs: parseJson<string[]>(feature.costs_json, []),
     evidence_ids: parseJsonArray<string>(feature.evidence_ids_json),
     ...(isRecord(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
+    ...(isRecord(metadata.validity_scope) ? { validity_scope: metadata.validity_scope } : {}),
+    ...(isRecord(metadata.scope_context) ? { scope_context: metadata.scope_context } : {}),
+    ...(Object.keys(metadata).length ? { metadata } : {}),
+  };
+}
+
+export function serializeMathematicalView(view: {
+  id: number;
+  model: string;
+  question: string;
+  assumptions_json: string;
+  claim_type: string;
+  metadata_json?: string;
+  evidence_ids_json: string;
+}) {
+  const metadata = parseJson<Record<string, unknown>>(view.metadata_json ?? null, {});
+  return {
+    id: view.id,
+    model: view.model,
+    question: view.question,
+    assumptions: parseJson<string[]>(view.assumptions_json, []),
+    claim_type: view.claim_type,
+    evidence_ids: parseJsonArray<string>(view.evidence_ids_json),
+    ...(Object.keys(metadata).length ? { metadata } : {}),
+    ...viewMetadataFields(view.metadata_json),
+  };
+}
+
+function viewMetadataFields(metadataJson: string | null | undefined) {
+  const metadata = parseJson<Record<string, unknown>>(metadataJson ?? null, {});
+  return {
+    ...(isRecord(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
+    ...(isRecord(metadata.validity_scope) ? { validity_scope: metadata.validity_scope } : {}),
+    ...(isRecord(metadata.scope_context) ? { scope_context: metadata.scope_context } : {}),
+    ...(isRecord(metadata.contract) ? { contract: metadata.contract } : {}),
+  };
+}
+
+export function serializeEvidence(evidence: EvidenceRow) {
+  const scopeContext = parseJson<Record<string, unknown> | null>(
+    evidence.scope_context_json ?? null,
+    null,
+  );
+  const metadata = parseJson<Record<string, unknown>>(evidence.metadata_json ?? null, {});
+  return {
+    id: evidence.id,
+    kind: evidence.kind,
+    title: evidence.title,
+    uri: evidence.uri,
+    accessed: evidence.accessed,
+    notes: evidence.notes,
+    ...(scopeContext ? { scope_context: scopeContext } : {}),
     ...(Object.keys(metadata).length ? { metadata } : {}),
   };
 }
@@ -951,27 +1003,6 @@ function featureRelationQuery(where: string, limit = "") {
           ORDER BY fr.source_system_id, fr.source_feature_id,
                    fr.target_system_id, fr.target_feature_id, fr.type
           ${limit}`;
-}
-
-export function serializeMathematicalView(view: {
-  id: number;
-  model: string;
-  question: string;
-  assumptions_json: string;
-  claim_type: string;
-  metadata_json?: string;
-  evidence_ids_json: string;
-}) {
-  const metadata = parseJson<Record<string, unknown>>(view.metadata_json ?? null, {});
-  return {
-    id: view.id,
-    model: view.model,
-    question: view.question,
-    assumptions: parseJson<string[]>(view.assumptions_json, []),
-    claim_type: view.claim_type,
-    evidence_ids: parseJsonArray<string>(view.evidence_ids_json),
-    ...(Object.keys(metadata).length ? { metadata } : {}),
-  };
 }
 
 function parseJson<T>(value: string | null, fallback: T): T {

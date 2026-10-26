@@ -72,7 +72,7 @@ test("corpus builder excludes records without closed evidence and preserves meta
         benefits_json: "[]",
         costs_json: "[]",
         metadata_json:
-          '{"claim_status":"accepted","validity_scope":{"deployment_origins":["local"]}}',
+          '{"claim_status":"accepted","validity_scope":{"deployment_origins":["local"]},"contract":{"validation_records":[{"id":"validation-1"}]}}',
         evidence_ids_json: '["architecture"]',
       },
       {
@@ -116,6 +116,7 @@ test("corpus builder excludes records without closed evidence and preserves meta
   assert.deepEqual(feature?.validity_scope, { deployment_origins: ["local"] });
   assert.deepEqual(feature?.evidence[0]?.scope_context, unspecifiedScopeContext());
   assert.deepEqual(feature?.evidence[0]?.metadata, { observation_version: "1" });
+  assert.deepEqual(feature?.contract, { validation_records: [{ id: "validation-1" }] });
   assert.match(feature?.source_digest ?? "", /^sha256:[0-9a-f]{64}$/);
 });
 

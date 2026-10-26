@@ -130,13 +130,15 @@ export function renderRetrievalState(state: RetrievalState): string {
       return `<li><article class="content-card"><p class="eyebrow">#${result.rank} · ${text(document.record_kind)} · ${text(document.system_id)}</p><h3>${text(document.name)}</h3><p>${text(document.description)}</p><dl>
        <dt>Claim type / review status</dt><dd>${text(document.claim_type)} / ${text(document.claim_status)}</dd>
        <dt>Lifecycle status</dt><dd>${text(document.lifecycle)}</dd>
+       <dt>Mathematical-view contract</dt><dd>${text(document.contract)}</dd>
       <dt>Discovery ranking · score_kind</dt><dd>${result.score} · ${text(result.score_kind)} (uncalibrated)</dd>
       <dt>Version context</dt><dd>${text(document.version_context)}</dd>
-      <dt>Validity / deployment scope (not universal applicability)</dt><dd>${text(document.validity_scope)}</dd>
+       <dt>Validity / deployment scope (not universal applicability)</dt><dd>${text(document.validity_scope)}</dd>
+       <dt>Scope context</dt><dd>${text(document.scope_context)}</dd>
       <dt>Evidence IDs · source-local links</dt><dd>${document.evidence_ids
         .map((id) => {
           const item = evidence.get(id)!;
-          return `${evidenceLink(item.uri, `${id} · ${item.title}`)} <small>(${text(item.kind)}${item.accessed ? ` · accessed ${text(item.accessed)}` : ""}${item.notes ? ` · ${text(item.notes)}` : ""})</small>`;
+          return `${evidenceLink(item.uri, `${id} · ${item.title}`)} <small>(${text(item.kind)}${item.accessed ? ` · accessed ${text(item.accessed)}` : ""}${item.notes ? ` · ${text(item.notes)}` : ""}${item.scope_context ? ` · scope ${text(item.scope_context)}` : ""}${item.metadata ? ` · metadata ${text(item.metadata)}` : ""})</small>`;
         })
         .join("<br>")}</dd>
       <dt>Source / provenance</dt><dd>${text(provenance.source_ref)}<br>${text(provenance.source_digest)}<br>${text(provenance.retrieval_method)}</dd>

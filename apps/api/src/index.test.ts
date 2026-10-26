@@ -9,6 +9,7 @@ import {
   serializeFeature,
   serializeFeatureRelation,
   serializeMathematicalView,
+  serializeEvidence,
 } from "./index.js";
 
 test("hosted MCP uses the /api prefix on any deployment origin", async () => {
@@ -291,6 +292,83 @@ test("serializes feature and mathematical-view evidence references", () => {
       assumptions: ["single process"],
       claim_type: "inference",
       evidence_ids: ["architecture"],
+    },
+  );
+});
+
+test("serializes scoped lifecycle, view-contract, and observation evidence metadata", () => {
+  const scopeContext = { workload: { status: "specified" } };
+  const lifecycle = { status: "observed", evidence_ids: ["architecture"] };
+  assert.deepEqual(
+    serializeFeature({
+      id: "embedded",
+      name: "Embedded execution",
+      category: "execution-model",
+      claim_type: "fact",
+      description: "Runs in-process.",
+      benefits_json: "[]",
+      costs_json: "[]",
+      evidence_ids_json: '["architecture"]',
+      metadata_json: JSON.stringify({ lifecycle, scope_context: scopeContext }),
+    }),
+    {
+      id: "embedded",
+      name: "Embedded execution",
+      category: "execution-model",
+      claim_type: "fact",
+      description: "Runs in-process.",
+      benefits: [],
+      costs: [],
+      evidence_ids: ["architecture"],
+      lifecycle,
+      scope_context: scopeContext,
+      metadata: { lifecycle, scope_context: scopeContext },
+    },
+  );
+  const contract = { validation_records: [{ id: "validation-1" }] };
+  assert.deepEqual(
+    serializeMathematicalView({
+      id: 1,
+      model: "state machine",
+      question: "How?",
+      assumptions_json: "[]",
+      claim_type: "inference",
+      evidence_ids_json: '["architecture"]',
+      metadata_json: JSON.stringify({ lifecycle, scope_context: scopeContext, contract }),
+    }),
+    {
+      id: 1,
+      model: "state machine",
+      question: "How?",
+      assumptions: [],
+      claim_type: "inference",
+      evidence_ids: ["architecture"],
+      metadata: { lifecycle, scope_context: scopeContext, contract },
+      lifecycle,
+      scope_context: scopeContext,
+      contract,
+    },
+  );
+  assert.deepEqual(
+    serializeEvidence({
+      id: "architecture",
+      kind: "benchmark",
+      title: "Observed run",
+      uri: "https://example.test/run",
+      accessed: null,
+      notes: null,
+      scope_context_json: JSON.stringify(scopeContext),
+      metadata_json: JSON.stringify({ observation_version: "1", result: { status: "observed" } }),
+    }),
+    {
+      id: "architecture",
+      kind: "benchmark",
+      title: "Observed run",
+      uri: "https://example.test/run",
+      accessed: null,
+      notes: null,
+      scope_context: scopeContext,
+      metadata: { observation_version: "1", result: { status: "observed" } },
     },
   );
 });

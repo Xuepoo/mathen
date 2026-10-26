@@ -21,6 +21,8 @@ export type ModelViewMetadata = {
   evidence_ids: string[];
   claim_status?: string;
   validity_scope?: Record<string, unknown>;
+  lifecycle?: Record<string, unknown>;
+  scope_context?: Record<string, unknown>;
   contract?: Record<string, unknown>;
 };
 
@@ -366,6 +368,8 @@ function toMetadata(row: ModelViewRow, key: string): ModelViewMetadata {
     evidence_ids: stringArray(row.evidence_ids_json),
     ...(typeof metadata.claim_status === "string" ? { claim_status: metadata.claim_status } : {}),
     ...(isRecord(metadata.validity_scope) ? { validity_scope: metadata.validity_scope } : {}),
+    ...(isRecord(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
+    ...(isRecord(metadata.scope_context) ? { scope_context: metadata.scope_context } : {}),
     ...(isRecord(metadata.contract) ? { contract: metadata.contract } : {}),
   };
 }

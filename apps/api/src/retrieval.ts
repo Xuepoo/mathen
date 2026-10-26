@@ -64,6 +64,7 @@ export type RetrievalDocument = {
   version_context?: string | null;
   validity_scope?: Record<string, unknown>;
   scope_context?: Record<string, unknown>;
+  contract?: Record<string, unknown>;
   evidence_ids: string[];
   evidence: RetrievalEvidence[];
   source_ref: string;
@@ -332,6 +333,7 @@ export async function buildRetrievalDocuments(input: {
       claim_type: row.claim_type,
       ...(typeof metadata.claim_status === "string" ? { claim_status: metadata.claim_status } : {}),
       ...(recordValue(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
+      ...(recordValue(metadata.contract) ? { contract: metadata.contract } : {}),
       version_context: system.version_context,
       ...(scope ? { validity_scope: scope } : {}),
       ...(scopeContext ? { scope_context: scopeContext } : {}),
@@ -355,6 +357,7 @@ export async function buildRetrievalDocuments(input: {
       claim_type: row.claim_type,
       claim_status: typeof metadata.claim_status === "string" ? metadata.claim_status : undefined,
       lifecycle: recordValue(metadata.lifecycle),
+      contract: recordValue(metadata.contract),
       version_context: system.version_context,
       validity_scope: scope,
       scope_context: scopeContext,
@@ -386,6 +389,7 @@ export async function buildRetrievalDocuments(input: {
       claim_type: row.claim_type,
       ...(typeof metadata.claim_status === "string" ? { claim_status: metadata.claim_status } : {}),
       ...(recordValue(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
+      ...(recordValue(metadata.contract) ? { contract: metadata.contract } : {}),
       version_context: system.version_context,
       ...(scope ? { validity_scope: scope } : {}),
       ...(scopeContext ? { scope_context: scopeContext } : {}),
@@ -401,6 +405,7 @@ export async function buildRetrievalDocuments(input: {
       claim_type: row.claim_type,
       claim_status: typeof metadata.claim_status === "string" ? metadata.claim_status : undefined,
       lifecycle: recordValue(metadata.lifecycle),
+      contract: recordValue(metadata.contract),
       version_context: system.version_context,
       validity_scope: scope,
       scope_context: scopeContext,
