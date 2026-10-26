@@ -50,7 +50,7 @@ specific dataflow analogy; the graph counts below are authoritative.
 
 ### Graph effect
 
-Before this pass the reviewed graph had 154 nodes, 4 typed relations, 228
+Before this historical pass the reviewed graph had 154 nodes, 4 typed relations, 228
 valid legacy `related_systems` edges, and 45 combined isolates. After the card
 edits it has 154 nodes, 33 typed relations, 228 valid legacy edges, 261 total
 directed edges, and 20 combined isolates (the legacy edge set was unchanged).

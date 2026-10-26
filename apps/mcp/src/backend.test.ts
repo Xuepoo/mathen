@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { test } from "node:test";
-import { ApiBackend } from "./backend.js";
+import { tmpdir } from "node:os";
+import { resolve } from "node:path";
+import { ApiBackend, FilesystemBackend } from "./backend.js";
 
 test("API backend accepts a deployment origin or its /api base URL", async () => {
   for (const baseUrl of [
@@ -18,75 +21,205 @@ test("API backend accepts a deployment origin or its /api base URL", async () =>
   }
 });
 
+test("filesystem and hosted graph backends preserve the same projection shape", async () => {
+  const root = await mkdtemp(resolve(tmpdir(), "mathen-graph-parity-"));
+  try {
+    await mkdir(resolve(root, "data/systems"), { recursive: true });
+    const card = {
+      id: "alpha",
+      name: "Alpha",
+      summary: "Alpha",
+      scope: [],
+      features: [
+        {
+          id: "state",
+          name: "State",
+          category: "behavior",
+          claim_type: "fact",
+          claim_status: "accepted",
+          validity_scope: { deployment_origins: ["local"] },
+          description: "State",
+          evidence_ids: [],
+        },
+      ],
+      mathematical_views: [
+        {
+          model: "State machine",
+          question: "How?",
+          assumptions: ["finite"],
+          claim_type: "inference",
+          claim_status: "under-review",
+          validity_scope: { deployment_origins: ["local"] },
+          contract: { family: "state_machine" },
+          evidence_ids: [],
+        },
+      ],
+      relations: [
+        {
+          target: "beta",
+          type: "uses",
+          claim_type: "fact",
+          claim_status: "proposed",
+          evidence_ids: ["architecture"],
+          notes: "Explicit relation.",
+          validity_scope: { deployment_origins: ["local"] },
+        },
+        { target: "missing", type: "resembles" },
+      ],
+      trade_offs: [],
+      evidence: [],
+    };
+    await writeFile(resolve(root, "data/systems/alpha.json"), JSON.stringify(card));
+    await writeFile(
+      resolve(root, "data/systems/beta.json"),
+      JSON.stringify({
+        id: "beta",
+        name: "Beta",
+        summary: "Beta",
+        scope: [],
+        features: [],
+        mathematical_views: [],
+        trade_offs: [],
+        evidence: [],
+      }),
+    );
+    const filesystem = await new FilesystemBackend(root).getLayeredGraph("local");
+    const hosted = await new ApiBackend(
+      "https://api.example.test",
+      async () =>
+        new Response(JSON.stringify({ data: filesystem }), {
+          headers: { "content-type": "application/json" },
+        }),
+    ).getLayeredGraph("local");
+    assert.deepEqual(hosted, filesystem);
+    assert.deepEqual(
+      filesystem.edges.find((edge) => edge.type === "uses"),
+      {
+        source: "system:alpha",
+        target: "system:beta",
+        type: "uses",
+        claim_type: "fact",
+        claim_status: "proposed",
+        evidence_ids: ["architecture"],
+        notes: "Explicit relation.",
+        metadata: { validity_scope: { deployment_origins: ["local"] } },
+      },
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("filesystem graph projection validates standalone documents before reading them", async () => {
+  const root = await mkdtemp(resolve(tmpdir(), "mathen-invalid-graph-doc-"));
+  try {
+    await mkdir(resolve(root, "data/systems"), { recursive: true });
+    await mkdir(resolve(root, "data/analogies"), { recursive: true });
+    await writeFile(
+      resolve(root, "data/analogies/invalid.json"),
+      JSON.stringify({ id: "invalid", name: "Invalid" }),
+    );
+    await assert.rejects(
+      new FilesystemBackend(root).getLayeredGraph(),
+      /Invalid data\/analogies|missing fields|invalid/i,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("API backend reads and normalizes the reviewed layered projection", async () => {
+  let requestUrl = "";
+  const backend = new ApiBackend("https://api.example.test", async (input) => {
+    requestUrl = String(input);
+    return jsonResponse({
+      data: {
+        schema_version: "1.0",
+        origin: "local analysis",
+        nodes: [
+          {
+            id: "system:alpha",
+            layer: "system",
+            kind: "architecture-card",
+            label: "Alpha",
+            metadata: {
+              claim_type: "fact",
+              evidence_ids: ["architecture"],
+              proven: false,
+              non_equivalence: { statement: "not equal" },
+            },
+          },
+        ],
+        edges: [],
+      },
+    });
+  });
+  const graph = await backend.getLayeredGraph("local analysis");
+  assert.match(requestUrl, /\/api\/graph\/layers\?origin=local%20analysis$/);
+  assert.equal(graph.nodes[0]?.metadata.proven, false);
+  assert.deepEqual(graph.nodes[0]?.metadata.non_equivalence, {
+    statement: "not equal",
+  });
+});
+
 test("API backend calls the Hono endpoints and preserves MCP result records", async () => {
   const requests: Array<{ url: string; init?: RequestInit }> = [];
-  const backend = new ApiBackend(
-    "https://api.example.test",
-    async (input, init) => {
-      requests.push({ url: String(input), init });
-      const url = String(input);
-      if (url.includes("/systems/duckdb")) {
-        return jsonResponse({
-          data: {
-            id: "duckdb",
-            name: "DuckDB",
-            summary: "Analytical database",
-            scope: ["analytics"],
-            features: [],
-            mathematical_views: [],
-            trade_offs: [],
-            evidence: [],
-            temporal_context: { version: "2.0", claim_status: "accepted" },
-            relations: [{ type: "extends", target: "base-system" }],
-            feature_relations: [
-              {
-                source_feature_id: "embedded",
-                target_system_id: "base-system",
-                target_feature_id: "embedded",
-                type: "resembles",
-                claim_type: "analogy",
-                claim_status: "proposed",
-                evidence_ids: ["architecture"],
-              },
-            ],
-            composition: { inputs: [{ system_id: "base-system" }] },
-          },
-        });
-      }
-      if (url.includes("/features?")) {
-        return jsonResponse({
-          data: [
+  const backend = new ApiBackend("https://api.example.test", async (input, init) => {
+    requests.push({ url: String(input), init });
+    const url = String(input);
+    if (url.includes("/systems/duckdb")) {
+      return jsonResponse({
+        data: {
+          id: "duckdb",
+          name: "DuckDB",
+          summary: "Analytical database",
+          scope: ["analytics"],
+          features: [],
+          mathematical_views: [],
+          trade_offs: [],
+          evidence: [],
+          temporal_context: { version: "2.0", claim_status: "accepted" },
+          relations: [{ type: "extends", target: "base-system" }],
+          feature_relations: [
             {
-              system_id: "duckdb",
-              system_name: "DuckDB",
-              id: "embedded",
-              name: "Embedded",
-              category: "deployment-model",
-              claim_type: "fact",
-              description: "Runs in process",
-              benefits: [],
-              costs: [],
+              source_feature_id: "embedded",
+              target_system_id: "base-system",
+              target_feature_id: "embedded",
+              type: "resembles",
+              claim_type: "analogy",
+              claim_status: "proposed",
+              evidence_ids: ["architecture"],
             },
           ],
-        });
-      }
+          composition: { inputs: [{ system_id: "base-system" }] },
+        },
+      });
+    }
+    if (url.includes("/features?")) {
       return jsonResponse({
         data: [
-          { id: "duckdb", name: "DuckDB", summary: "Analytical database" },
+          {
+            system_id: "duckdb",
+            system_name: "DuckDB",
+            id: "embedded",
+            name: "Embedded",
+            category: "deployment-model",
+            claim_type: "fact",
+            description: "Runs in process",
+            benefits: [],
+            costs: [],
+          },
         ],
       });
-    },
-  );
+    }
+    return jsonResponse({
+      data: [{ id: "duckdb", name: "DuckDB", summary: "Analytical database" }],
+    });
+  });
 
   const systems = await backend.listSystems(false);
   const card = await backend.getSystem("duckdb", false);
-  const features = await backend.searchFeatures(
-    "embedded",
-    "deployment-model",
-    "fact",
-    false,
-    10,
-  );
+  const features = await backend.searchFeatures("embedded", "deployment-model", "fact", false, 10);
 
   assert.equal(systems[0]?.id, "duckdb");
   assert.equal(card?.name, "DuckDB");
@@ -94,16 +227,14 @@ test("API backend calls the Hono endpoints and preserves MCP result records", as
   assert.equal(card?.relations?.[0]?.type, "extends");
   assert.equal(card?.feature_relations?.[0]?.target_system_id, "base-system");
   assert.equal(
-    (card?.composition?.inputs as Array<{ system_id: string }> | undefined)?.[0]
-      ?.system_id,
+    (card?.composition?.inputs as Array<{ system_id: string }> | undefined)?.[0]?.system_id,
     "base-system",
   );
   assert.equal(features[0]?.feature.name, "Embedded");
   assert.match(requests[0]?.url ?? "", /\/api\/systems$/);
   assert.match(requests[2]?.url ?? "", /claim_type=fact/);
   assert.equal(
-    requests[0]?.init?.headers &&
-      new Headers(requests[0].init.headers).get("accept"),
+    requests[0]?.init?.headers && new Headers(requests[0].init.headers).get("accept"),
     "application/json",
   );
 });
@@ -180,14 +311,7 @@ test("API backend lists bounded feature relations and preserves empty data", asy
     jsonResponse({ data: [] }),
   );
   assert.deepEqual(
-    await emptyBackend.listFeatureRelations(
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      false,
-      20,
-    ),
+    await emptyBackend.listFeatureRelations(undefined, undefined, undefined, undefined, false, 20),
     [],
   );
 });
@@ -202,10 +326,7 @@ test("API backend reads modeling bundles and rejects drafts explicitly", async (
 
   const bundle = await backend.getModelingBundle("duckdb");
   assert.deepEqual(bundle, { contract_version: 1, system: { id: "duckdb" } });
-  await assert.rejects(
-    backend.listSystems(true),
-    /include_drafts is unavailable/,
-  );
+  await assert.rejects(backend.listSystems(true), /include_drafts is unavailable/);
 });
 
 test("API backend reports request timeouts without exposing the URL", async () => {

@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
 from mathen.repositories import load_manifest
 
-MODELING_CONTRACT_VERSION = 1
+MODELING_CONTRACT_VERSION = 2
+LLM_RESEARCH_PROTOCOL_VERSION = "mth-0112-v1"
+CROSS_DOMAIN_ANALOGY_SCHEMA_VERSION = "1.0"
+NEGATIVE_KNOWLEDGE_SCHEMA_VERSION = "1.0"
 
 
 class ModelingBundleError(RuntimeError):
@@ -177,7 +181,153 @@ def build_modeling_bundle(
                     "with later documentation marked as current-doc context?",
                 ],
             },
+            "mathematical_view_contract": {
+                "schema": "schemas/architecture-mathematical-view.schema.json",
+                "version": "1.0",
+                "optional_mapping": {
+                    "model": (
+                        "contract.family and contract carrier/operations/relations"
+                    ),
+                    "question": "contract.question",
+                    "assumptions": "contract.assumptions",
+                    "claim_type": "contract.claim_type",
+                    "claim_status": "contract.claim_status",
+                    "evidence_ids": "contract.evidence_ids",
+                },
+                "families": [
+                    "graph",
+                    "dag",
+                    "partial_order",
+                    "state_machine",
+                    "algebraic",
+                    "semilattice",
+                    "monotone_system",
+                    "refinement",
+                    "simulation",
+                    "bisimulation",
+                    "cost",
+                    "complexity",
+                    "queueing",
+                    "reliability",
+                ],
+                "required_dimensions": [
+                    "carrier",
+                    "operations",
+                    "relations",
+                    "transitions",
+                    "laws_or_checks",
+                    "assumptions",
+                    "validity_scope",
+                    "evidence_ids",
+                    "claim_type",
+                    "claim_status",
+                    "classification",
+                ],
+                "classification_rule": (
+                    "Classification is a deterministic finite-data consistency result: "
+                    "valid means the supplied checks pass, invalid means a check "
+                    "fails, and undetermined means the evidence or representation "
+                    "is insufficient. "
+                    "No classification is a formal proof."
+                ),
+            },
             "required_claim_types": ["fact", "inference", "hypothesis", "analogy"],
+            "claim_protocol": {
+                "required_fields": [
+                    "claim_type",
+                    "claim_status",
+                    "evidence_ids",
+                ],
+                "uncertainty_rule": (
+                    "When evidence is incomplete, state the uncertainty and its "
+                    "scope; use hypothesis or analogy rather than upgrading the "
+                    "claim to fact."
+                ),
+                "disagreement_rule": (
+                    "Record conflicting evidence or reviewer disagreement as an "
+                    "unresolved note in the protocol record; do not silently "
+                    "select a consensus claim."
+                ),
+                "analogy_rule": (
+                    "A cross-domain resemblance is a candidate abstraction only. "
+                    "Label it analogy, name the shared structure and boundary, "
+                    "and do not imply equivalence, dependency, composition, or "
+                    "historical influence without direct evidence."
+                ),
+            },
+            "cross_domain_analogy_mapping": {
+                "schema_version": CROSS_DOMAIN_ANALOGY_SCHEMA_VERSION,
+                "schema": "schemas/cross-domain-analogy.schema.json",
+                "required_dimensions": [
+                    "source_domain",
+                    "target_domain",
+                    "source_concepts",
+                    "target_concepts",
+                    "mapping_type",
+                    "scale",
+                    "shared_properties",
+                    "preserved_properties",
+                    "non_preserved_properties",
+                    "scope",
+                    "counterexamples",
+                    "non_equivalence",
+                    "claim_type",
+                    "claim_status",
+                    "evidence",
+                ],
+                "boundary": (
+                    "Use a standalone analogy mapping for cross-domain resemblance. "
+                    "Do not turn it into a canonical relation or claim equivalence, "
+                    "dependency, composition, substitutability, proof, or historical "
+                    "influence."
+                ),
+                "evidence_rule": (
+                    "Every mapping claim must cite evidence already present in the "
+                    "mapping; unknown evidence remains unknown or out of scope."
+                ),
+            },
+            "typed_composition_semantics": {
+                "schema": "schemas/architecture-typed-composition.schema.json",
+                "boundary": (
+                    "Use explicit requires/provides/consumes, adapters, boundaries, "
+                    "property effects, pre/postconditions, resources, failures, "
+                    "examples, counterexamples, uncertainty, and disagreement. "
+                    "Preserve discovery method/provenance and cross-community "
+                    "source-target paths; never infer compatibility from names, "
+                    "vectors, graph position, or LLM interpretation. Keep proven "
+                    "false until a contract or experiment validates the candidate."
+                ),
+            },
+            "negative_knowledge": {
+                "schema_version": NEGATIVE_KNOWLEDGE_SCHEMA_VERSION,
+                "schema": "schemas/architecture-negative-knowledge.schema.json",
+                "boundary": (
+                    "Use a standalone review artifact for invalid compositions, "
+                    "misleading similarities, scope violations, failed hypotheses, "
+                    "falsified experiments, retractions, and supersession. Never "
+                    "overwrite or promote canonical cards automatically."
+                ),
+                "required_dimensions": [
+                    "kind",
+                    "negative_claim",
+                    "bounded",
+                    "scope",
+                    "counterexamples",
+                    "claim_type",
+                    "claim_status",
+                    "evidence_ids",
+                ],
+                "examples": [
+                    "append-only != immutable",
+                    "replication != consensus",
+                    "snapshot != transaction isolation",
+                    "reconciliation != convergence proof",
+                ],
+                "universal_claim_rule": (
+                    "A counterexample limits a claim in its declared scope; it is "
+                    "not evidence for a universal claim or evidence of absence."
+                ),
+            },
             "evidence_rules": [
                 "Do not promote a path name or file count into a semantic fact.",
                 "Every feature and mathematical view must cite evidence IDs.",
@@ -200,6 +350,52 @@ def build_modeling_bundle(
                 "schema": "schemas/architecture-card.schema.json",
                 "destination": "data/drafts/<system-id>.json",
                 "status": "draft; requires human review before data/systems promotion",
+                "canonical_boundary": (
+                    "Automated output is never canonical and never proof. A human "
+                    "reviewer must check evidence, claim type, uncertainty, and "
+                    "disagreement before deliberate promotion."
+                ),
+            },
+            "evaluation": {
+                "dimensions": [
+                    "breadth",
+                    "citation_quality",
+                    "error_rate",
+                    "reviewer_usefulness",
+                ],
+                "recording_rule": (
+                    "Evaluate a batch against a reviewed reference or reviewer "
+                    "audit; report each dimension separately rather than reducing "
+                    "quality to one confidence score."
+                ),
+            },
+        },
+        "research_protocol": {
+            "version": LLM_RESEARCH_PROTOCOL_VERSION,
+            "provenance": {
+                "provider": "record the provider name, not a secret",
+                "model": "record the exact model identifier",
+                "prompt_sha256": "record the rendered prompt digest",
+                "evidence_bundle_sha256": "record the input bundle digest",
+                "source_revision": "record system.commit and provenance",
+            },
+            "reproducibility": {
+                "secret_safe": True,
+                "rule": (
+                    "Never store API keys, authorization headers, or raw secret-"
+                    "bearing configuration in bundles, prompts, drafts, or run "
+                    "records."
+                ),
+            },
+            "review": {
+                "required_before_canonical": True,
+                "review_record": [
+                    "reviewer",
+                    "reviewed_at",
+                    "decision",
+                    "uncertainties",
+                    "disagreements",
+                ],
             },
         },
     }
@@ -216,6 +412,54 @@ def render_modeling_prompt(bundle: dict[str, Any]) -> str:
         "evidence, guarantees, or historical influence.\n\n"
         f"MODEL PREPARATION BUNDLE:\n{payload}\n"
     )
+
+
+def protocol_run_record(
+    bundle: dict[str, Any],
+    prompt: str,
+    *,
+    provider: str,
+    model: str,
+) -> dict[str, Any]:
+    """Build a secret-free provenance record for one modeling attempt.
+
+    The record intentionally contains hashes rather than prompt or evidence
+    contents. It can be stored beside an unreviewed draft without becoming a
+    second source of claims.
+    """
+
+    system = bundle.get("system")
+    if not isinstance(system, dict):
+        raise ModelingBundleError("modeling bundle has no system metadata")
+    return {
+        "protocol_version": LLM_RESEARCH_PROTOCOL_VERSION,
+        "system_id": system.get("id"),
+        "source_revision": {
+            "commit": system.get("commit"),
+            "provenance": system.get("provenance"),
+        },
+        "provider": provider,
+        "model": model,
+        "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        "evidence_bundle_sha256": hashlib.sha256(
+            json.dumps(
+                bundle, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+            ).encode("utf-8")
+        ).hexdigest(),
+        "secret_safe": True,
+        "review": {
+            "status": "pending",
+            "canonical_promotion": "human review required",
+            "uncertainties": [],
+            "disagreements": [],
+        },
+        "evaluation": {
+            "breadth": None,
+            "citation_quality": None,
+            "error_rate": None,
+            "reviewer_usefulness": None,
+        },
+    }
 
 
 def write_modeling_prompts(bundle_paths: list[Path], prompt_dir: Path) -> list[Path]:

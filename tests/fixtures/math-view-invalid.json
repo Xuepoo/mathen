@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "id": "invalid-release-order",
+  "family": "dag",
+  "question": "Does the release dependency graph remain acyclic?",
+  "carrier": {
+    "kind": "release",
+    "description": "A deliberately cyclic fixture.",
+    "elements": ["build", "deploy"]
+  },
+  "operations": [],
+  "relations": [
+    {
+      "id": "depends-on",
+      "name": "Depends on",
+      "kind": "dependency",
+      "pairs": [
+        ["build", "deploy"],
+        ["deploy", "build"]
+      ]
+    }
+  ],
+  "transitions": [],
+  "laws_or_checks": [
+    {
+      "id": "acyclic",
+      "name": "Acyclic",
+      "description": "No directed cycle is allowed.",
+      "check": "acyclic"
+    }
+  ],
+  "assumptions": ["The carrier contains every dependency node."],
+  "validity_scope": {
+    "systems": ["fixture-system"],
+    "versions": ["2.x"],
+    "deployment_origins": ["configured-origin"],
+    "conditions": ["static dependency extraction"],
+    "exclusions": []
+  },
+  "claim_type": "hypothesis",
+  "claim_status": "proposed",
+  "evidence_ids": ["design-doc"],
+  "classification": {
+    "result": "invalid",
+    "reason": "The declared directed relation contains a cycle.",
+    "checks": [{ "id": "acyclic", "result": "fail" }]
+  }
+}

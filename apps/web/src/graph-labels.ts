@@ -46,3 +46,21 @@ export function createLabelPool<Item extends { id: string }, Resource>(options: 
     },
   };
 }
+
+export function shouldShowLabel(options: {
+  id: string;
+  allNames: boolean;
+  mobile: boolean;
+  selectedId?: string;
+  hoveredId?: string;
+  highlighted: Set<string>;
+  searchMatches?: Set<string>;
+}) {
+  return (
+    options.allNames ||
+    options.id === options.selectedId ||
+    options.id === options.hoveredId ||
+    (!options.mobile && options.highlighted.has(options.id)) ||
+    Boolean(options.searchMatches?.has(options.id))
+  );
+}

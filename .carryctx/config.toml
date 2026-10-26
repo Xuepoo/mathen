@@ -47,9 +47,5 @@ verbose = false
 
 [verification]
 commands = [
-  "bun run check",
-  "bun run build",
-  "ruff format --check .",
-  "ruff check .",
-  "uv run python -m unittest discover -s tests -v"
+  "uv run python scripts/carryctx_lifecycle.py verify --profile full"
 ]

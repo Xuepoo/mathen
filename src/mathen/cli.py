@@ -10,6 +10,14 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from . import __version__
+from .analogies import AnalogyValidationError, discover_analogies, load_analogy
+from .benchmark import (
+    BenchmarkManifestValidationError,
+    discover_benchmark_manifests,
+    discover_retrieval_evaluation_manifests,
+    load_benchmark_manifest,
+    load_retrieval_evaluation_manifest,
+)
 from .cards import (
     CardValidationError,
     discover_cards,
@@ -29,10 +37,26 @@ from .config import (
 from .data_sync import SyncError, sync_reviewed_cards
 from .data_sync import status as sync_status
 from .llm import LLMModelError, client_from_environment, model_bundles
+from .mathviews import (
+    MathematicalViewValidationError,
+    discover_math_view_contracts,
+    load_math_view_contract,
+)
+from .microstructures import (
+    MicrostructureValidationError,
+    discover_microstructures,
+    load_microstructure,
+)
 from .modeling import (
     ModelingBundleError,
     build_modeling_bundles,
     write_modeling_prompts,
+)
+from .negative_knowledge import (
+    NegativeKnowledgeValidationError,
+    discover_negative_knowledge,
+    load_negative_knowledge,
+    validate_negative_knowledge_collection,
 )
 from .relation_candidates import (
     RelationCandidateError,
@@ -54,6 +78,39 @@ def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
 
     validate = subparsers.add_parser("validate", help="validate architecture cards")
     validate.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
+
+    microstructure = subparsers.add_parser(
+        "validate-microstructures", help="validate architecture microstructures"
+    )
+    microstructure.add_argument(
+        "path", nargs="?", type=Path, default=Path("data/microstructures")
+    )
+    analogy = subparsers.add_parser(
+        "validate-analogies", help="validate cross-domain analogy mappings"
+    )
+    analogy.add_argument("path", nargs="?", type=Path, default=Path("data/analogies"))
+    negative_knowledge = subparsers.add_parser(
+        "validate-negative-knowledge",
+        help="validate evidence-bounded negative-knowledge records",
+    )
+    negative_knowledge.add_argument(
+        "path", nargs="?", type=Path, default=Path("data/negative-knowledge")
+    )
+    benchmark = subparsers.add_parser(
+        "validate-benchmark", help="validate research benchmark run manifests"
+    )
+    benchmark.add_argument("path", nargs="?", type=Path, default=Path("data/benchmark"))
+    retrieval_benchmark = subparsers.add_parser(
+        "validate-retrieval-evaluation",
+        help="validate research-only retrieval evaluation manifests",
+    )
+    retrieval_benchmark.add_argument(
+        "path", nargs="?", type=Path, default=Path("data/benchmark/retrieval")
+    )
+    mathview = subparsers.add_parser(
+        "validate-mathviews", help="validate mathematical-view contracts"
+    )
+    mathview.add_argument("path", nargs="?", type=Path, default=Path("data/mathviews"))
 
     listing = subparsers.add_parser("list", help="list architecture cards")
     listing.add_argument("path", nargs="?", type=Path, default=config.paths.cards_dir)
@@ -196,6 +253,18 @@ def main() -> int:
             return mcp_command(args, config)
         if args.command == "validate":
             return validate_command(args.path, config)
+        if args.command == "validate-microstructures":
+            return validate_microstructures_command(args.path)
+        if args.command == "validate-analogies":
+            return validate_analogies_command(args.path)
+        if args.command == "validate-negative-knowledge":
+            return validate_negative_knowledge_command(args.path)
+        if args.command == "validate-benchmark":
+            return validate_benchmark_command(args.path)
+        if args.command == "validate-retrieval-evaluation":
+            return validate_retrieval_evaluation_command(args.path)
+        if args.command == "validate-mathviews":
+            return validate_mathviews_command(args.path)
         if args.command == "list":
             return list_command(args.path)
         if args.command == "show":
@@ -242,6 +311,11 @@ def main() -> int:
         ModelingBundleError,
         RepositoryAnalysisError,
         RelationCandidateError,
+        MicrostructureValidationError,
+        AnalogyValidationError,
+        NegativeKnowledgeValidationError,
+        BenchmarkManifestValidationError,
+        MathematicalViewValidationError,
     ) as error:
         print(f"ERROR: {error}")
         return 1
@@ -264,6 +338,87 @@ def validate_command(path: Path, config: MathenConfig | None = None) -> int:
         validate_card_collection(
             loaded_cards, require_feature_relation_targets=not is_drafts
         )
+    return 0
+
+
+def validate_microstructures_command(path: Path) -> int:
+    """Validate all standalone microstructures at ``path``."""
+
+    paths = discover_microstructures(path)
+    if not paths:
+        print(f"No microstructures found in {path}; nothing to validate")
+        return 0
+    for microstructure_path in paths:
+        load_microstructure(microstructure_path)
+        print(f"valid  {microstructure_path}")
+    return 0
+
+
+def validate_analogies_command(path: Path) -> int:
+    """Validate all standalone cross-domain analogy mappings at ``path``."""
+
+    paths = discover_analogies(path)
+    if not paths:
+        print(f"No analogies found in {path}; nothing to validate")
+        return 0
+    for analogy_path in paths:
+        load_analogy(analogy_path)
+        print(f"valid  {analogy_path}")
+    return 0
+
+
+def validate_negative_knowledge_command(path: Path) -> int:
+    """Validate standalone evidence-bounded negative-knowledge records."""
+
+    paths = discover_negative_knowledge(path)
+    if not paths:
+        print(f"No negative-knowledge records found in {path}; nothing to validate")
+        return 0
+    records = []
+    for record_path in paths:
+        records.append(load_negative_knowledge(record_path))
+    validate_negative_knowledge_collection(records)
+    for record_path in paths:
+        print(f"valid  {record_path}")
+    return 0
+
+
+def validate_benchmark_command(path: Path) -> int:
+    """Validate research-only benchmark run manifests."""
+
+    paths = discover_benchmark_manifests(path)
+    if not paths:
+        print(f"No benchmark manifests found in {path}; nothing to validate")
+        return 0
+    for manifest_path in paths:
+        load_benchmark_manifest(manifest_path)
+        print(f"valid  {manifest_path}")
+    return 0
+
+
+def validate_retrieval_evaluation_command(path: Path) -> int:
+    """Validate research-only retrieval evaluation manifests."""
+
+    paths = discover_retrieval_evaluation_manifests(path)
+    if not paths:
+        print(f"No retrieval evaluation manifests found in {path}; nothing to validate")
+        return 0
+    for manifest_path in paths:
+        load_retrieval_evaluation_manifest(manifest_path)
+        print(f"valid  {manifest_path}")
+    return 0
+
+
+def validate_mathviews_command(path: Path) -> int:
+    """Validate standalone evidence-bounded mathematical-view contracts."""
+
+    paths = discover_math_view_contracts(path)
+    if not paths:
+        print(f"No mathematical-view contracts found in {path}; nothing to validate")
+        return 0
+    for contract_path in paths:
+        load_math_view_contract(contract_path)
+        print(f"valid  {contract_path}")
     return 0
 
 
@@ -384,7 +539,12 @@ def model_command(
         api_key_env=str(provider.get("api_key_env", llm.api_key_env)),
     )
     for path in model_bundles(
-        bundle_dir, output_dir, client, system_ids or None, overwrite=force
+        bundle_dir,
+        output_dir,
+        client,
+        system_ids or None,
+        overwrite=force,
+        provider=llm.provider,
     ):
         print(f"draft  {path}")
     return 0

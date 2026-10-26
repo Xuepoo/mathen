@@ -1,0 +1,177 @@
+{
+  "schema_version": "1.0",
+  "id": "reaction-network-gene-regulation",
+  "name": "Reaction-network and gene-regulation structural analogy",
+  "summary": "A bounded comparison of network motifs that transfer as structural language, not as biochemical identity.",
+  "source_domain": {
+    "name": "chemistry",
+    "description": "Chemical reaction networks with species, reactions, and rate-dependent flows.",
+    "claim_type": "fact",
+    "claim_status": "under-review",
+    "evidence_ids": ["chemistry-paper"]
+  },
+  "target_domain": {
+    "name": "biology",
+    "description": "Gene-regulatory networks with genes, regulatory interactions, and expression states.",
+    "claim_type": "fact",
+    "claim_status": "under-review",
+    "evidence_ids": ["biology-paper"]
+  },
+  "source_concepts": [
+    {
+      "id": "reaction-node",
+      "name": "reaction node",
+      "description": "A reaction event connecting input and output species.",
+      "role": "transformation",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "evidence_ids": ["chemistry-paper"]
+    },
+    {
+      "id": "species-state",
+      "name": "species state",
+      "description": "A concentration or presence state for a chemical species.",
+      "role": "state variable",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "evidence_ids": ["chemistry-paper"]
+    }
+  ],
+  "target_concepts": [
+    {
+      "id": "regulatory-event",
+      "name": "regulatory event",
+      "description": "A regulatory interaction that changes expression activity.",
+      "role": "transformation",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "evidence_ids": ["biology-paper"]
+    },
+    {
+      "id": "expression-state",
+      "name": "expression state",
+      "description": "An expression level or activity state for a gene.",
+      "role": "state variable",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "evidence_ids": ["biology-paper"]
+    }
+  ],
+  "correspondences": [
+    {
+      "id": "transformation-correspondence",
+      "source_concept_ids": ["reaction-node"],
+      "target_concept_ids": ["regulatory-event"],
+      "relation": "role-level resemblance",
+      "rationale": "Both can be represented as directed transformations in a network model.",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": ["chemistry-paper", "biology-paper"]
+    },
+    {
+      "id": "state-correspondence",
+      "source_concept_ids": ["species-state"],
+      "target_concept_ids": ["expression-state"],
+      "relation": "state-variable resemblance",
+      "rationale": "Both expose a domain-specific state variable whose value can change over time.",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": ["chemistry-paper", "biology-paper"]
+    }
+  ],
+  "mapping_type": "structural",
+  "scale": {
+    "source": "reaction-network motif",
+    "target": "gene-regulatory network motif",
+    "description": "Network-motif scale; this does not map individual molecules to individual genes.",
+    "claim_type": "analogy",
+    "claim_status": "proposed",
+    "evidence_ids": ["chemistry-paper", "biology-paper"]
+  },
+  "shared_properties": [
+    {
+      "id": "directed-network",
+      "name": "directed interaction structure",
+      "description": "Nodes and directed interactions can describe local influence or transformation structure.",
+      "boundary": "graph representation only",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": ["chemistry-paper", "biology-paper"]
+    }
+  ],
+  "preserved_properties": [
+    {
+      "id": "local-connectivity",
+      "name": "local connectivity",
+      "description": "The comparison preserves adjacency and direction as a question for motif analysis.",
+      "boundary": "qualitative graph topology",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": ["chemistry-paper", "biology-paper"]
+    }
+  ],
+  "non_preserved_properties": [
+    {
+      "id": "mechanistic-law",
+      "name": "mechanistic law",
+      "description": "Chemical kinetics and transcriptional regulation do not share the same parameters or governing laws.",
+      "boundary": "quantitative dynamics",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "evidence_ids": ["chemistry-paper", "biology-paper"]
+    }
+  ],
+  "scope": {
+    "source_versions": ["reviewed reaction-network notation"],
+    "target_versions": ["reviewed gene-regulation notation"],
+    "deployment_origins": ["local-analysis", "configured-research-origin"],
+    "conditions": ["motif-level graph comparison", "evidence cited per claim"],
+    "exclusions": [
+      "parameter transfer",
+      "causal equivalence",
+      "historical influence"
+    ],
+    "claim_type": "analogy",
+    "claim_status": "proposed",
+    "evidence_ids": ["chemistry-paper", "biology-paper"]
+  },
+  "counterexamples": [
+    {
+      "id": "rate-counterexample",
+      "description": "A matching directed motif can have different rate laws, feedback delays, and stochasticity.",
+      "implication": "Do not infer a shared simulation or prediction from the graph resemblance.",
+      "claim_type": "analogy",
+      "claim_status": "proposed",
+      "evidence_ids": ["chemistry-paper", "biology-paper"]
+    }
+  ],
+  "non_equivalence": {
+    "statement": "The source and target concepts are not the same entities or mechanisms.",
+    "reasons": [
+      "Different material substrates",
+      "Different causal and temporal semantics",
+      "Different measurement units"
+    ],
+    "substitutability": "not-substitutable",
+    "claim_type": "analogy",
+    "claim_status": "proposed",
+    "evidence_ids": ["chemistry-paper", "biology-paper"]
+  },
+  "claim_type": "analogy",
+  "claim_status": "proposed",
+  "evidence_ids": ["chemistry-paper", "biology-paper"],
+  "evidence": [
+    {
+      "id": "chemistry-paper",
+      "kind": "paper",
+      "title": "Chemical reaction network analysis",
+      "uri": "https://example.test/chemistry-reaction-networks"
+    },
+    {
+      "id": "biology-paper",
+      "kind": "paper",
+      "title": "Gene regulatory network motifs",
+      "uri": "https://example.test/biology-gene-regulation"
+    }
+  ]
+}

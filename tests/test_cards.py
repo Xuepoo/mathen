@@ -420,7 +420,7 @@ class CardValidationTests(unittest.TestCase):
         draft = {"id": "fixture", "features": [], "evidence": []}
         bundle = build_modeling_bundle(spec, analysis, draft)
         self.assertEqual(bundle["system"]["commit"], "c" * 40)
-        self.assertEqual(bundle["contract_version"], 1)
+        self.assertEqual(bundle["contract_version"], 2)
         self.assertIn("Architecture Card JSON", render_modeling_prompt(bundle))
 
     def test_llm_model_rejects_evidence_not_in_bundle(self) -> None:
@@ -450,6 +450,8 @@ class CardValidationTests(unittest.TestCase):
             )
             self.assertEqual(written, [output_dir / "fixture.json"])
             self.assertEqual(json.loads(written[0].read_text())["id"], "fixture")
+            self.assertTrue((output_dir / "fixture.protocol.json").is_file())
+            self.assertEqual(len(discover_cards(output_dir)), 1)
 
     def test_llm_model_refuses_systems_output(self) -> None:
         bundle = self._modeling_fixture()

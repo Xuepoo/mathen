@@ -1,0 +1,283 @@
+{
+  "manifest_kind": "retrieval_evaluation",
+  "schema_version": "1.0",
+  "evaluation_id": "fixture-retrieval-evaluation",
+  "protocol_version": "mth-0134-v1",
+  "benchmark_version": "mth-0118-retrieval-pilot-1",
+  "corpus_snapshot": {
+    "id": "fixture-corpus",
+    "corpus": "canonical_cards",
+    "reviewed_only": true,
+    "source_revision": {
+      "repository_id": "fixture-repository",
+      "commit": "0123456789abcdef"
+    },
+    "documents": [
+      {
+        "id": "system:fixture-system:summary",
+        "record_kind": "system",
+        "source_ref": "data/systems/fixture-system.json#summary",
+        "source_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "claim_type": "fact",
+        "claim_status": "accepted",
+        "evidence_ids": [
+          "fixture-evidence"
+        ],
+        "validity_scope": {
+          "version_context": "1.0",
+          "deployment_origins": [
+            "local"
+          ],
+          "conditions": [
+            "controlled"
+          ],
+          "exclusions": [
+            "production"
+          ]
+        }
+      }
+    ],
+    "digest": "sha256:23eac2581a03439940d146bdfda69cc20ca112420e1787e3c67a8ec033850541"
+  },
+  "query_set": {
+    "id": "fixture-queries",
+    "queries": [
+      {
+        "id": "q-embedded",
+        "question": "Which reviewed record describes embedded execution?",
+        "scope": {
+          "version_context": "1.0",
+          "deployment_origins": [
+            "local"
+          ],
+          "conditions": [
+            "controlled"
+          ],
+          "exclusions": [
+            "production"
+          ]
+        },
+        "query_digest": "sha256:d4bc812dda4cd1340b09c3b69cb437d1477938c31b24fb665ce5c02dfff5f624"
+      },
+      {
+        "id": "q-negative",
+        "question": "Which reviewed record should be inspected for a held-out boundary?",
+        "scope": {
+          "version_context": "1.0",
+          "deployment_origins": [
+            "local"
+          ],
+          "conditions": [
+            "controlled"
+          ],
+          "exclusions": [
+            "production"
+          ]
+        },
+        "query_digest": "sha256:6ca763e4b916a6930c4eeb8b70214a7d54c35f15a0a175eaf9a2cf89de975235"
+      }
+    ],
+    "digest": "sha256:83e30a0b5b566838b64ee6f126976880ece2f3f58da28324be71a8ff37a39264"
+  },
+  "labels": {
+    "relevance": [
+      {
+        "query_id": "q-embedded",
+        "document_id": "system:fixture-system:summary",
+        "grade": 3,
+        "claim_type": "fact",
+        "evidence_ids": [
+          "fixture-evidence"
+        ],
+        "evidence_locality": "local",
+        "scope_match": "match",
+        "label_source": "reviewer-fixture"
+      }
+    ],
+    "holdout": [
+      {
+        "id": "holdout-negative-1",
+        "query_id": "q-negative",
+        "document_id": "negative:unsupported-link",
+        "kind": "negative-knowledge",
+        "reason": "Known misleading similarity retained only for held-out discovery checks.",
+        "candidate_generation_excluded": true,
+        "claim_type": "hypothesis",
+        "evidence_ids": [
+          "fixture-evidence"
+        ]
+      }
+    ]
+  },
+  "split": {
+    "strategy": "fixed-reviewed-query-split",
+    "partitions": {
+      "train": [],
+      "evaluation": [
+        "q-embedded"
+      ],
+      "holdout": [
+        "q-negative"
+      ]
+    },
+    "holdout_query_ids": [
+      "q-negative"
+    ],
+    "candidate_generation_exclusions": [
+      "holdout-negative-1"
+    ],
+    "temporal_cutoff": null,
+    "leakage_controls": [
+      "holdout labels withheld from candidate generation"
+    ],
+    "digest": "sha256:a009a69dd736e32f64d3181e256885d468bbbc9117c1020db21d99040763bcfb"
+  },
+  "method": {
+    "name": "fixture-vector",
+    "baseline": "vector",
+    "retrieval_method": "vector"
+  },
+  "model": {
+    "provider": "fixture-provider",
+    "model_id": "fixture-model-v1",
+    "representation_version": "canonical-record-v1",
+    "dimensions": 3,
+    "metric": "cosine",
+    "prompt_digest": null
+  },
+  "boundaries": {
+    "negative_knowledge": {
+      "excluded_from_corpus": true,
+      "excluded_from_candidate_generation": true
+    },
+    "novelty": {
+      "reference_window": "fixture-reference-window",
+      "dimensions": [
+        "topology",
+        "composition",
+        "constraints",
+        "behavior",
+        "deployment",
+        "historical"
+      ],
+      "aggregate_score_allowed": false
+    },
+    "analogy": {
+      "non_equivalence_required": true,
+      "historical_influence_requires_direct_evidence": true,
+      "substitutability_not_implied": true
+    }
+  },
+  "results": [
+    {
+      "query_id": "q-embedded",
+      "abstained": false,
+      "abstention_reason": null,
+      "results": [
+        {
+          "rank": 1,
+          "score": 0.8,
+          "score_kind": "embedding_similarity",
+          "document": {
+            "id": "system:fixture-system:summary",
+            "record_kind": "system",
+            "claim_type": "fact",
+            "claim_status": "accepted",
+            "evidence_ids": [
+              "fixture-evidence"
+            ],
+            "validity_scope": {
+              "version_context": "1.0",
+              "deployment_origins": [
+                "local"
+              ],
+              "conditions": [
+                "controlled"
+              ],
+              "exclusions": [
+                "production"
+              ]
+            }
+          },
+          "evidence": [
+            {
+              "id": "fixture-evidence",
+              "kind": "source",
+              "title": "Fixture evidence",
+              "uri": "https://example.invalid/fixture"
+            }
+          ],
+          "provenance": {
+            "source_ref": "data/systems/fixture-system.json#summary",
+            "source_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "retrieval_method": "vector"
+          }
+        }
+      ]
+    },
+    {
+      "query_id": "q-negative",
+      "abstained": true,
+      "abstention_reason": "held-out negative-knowledge query",
+      "results": []
+    }
+  ],
+  "metrics": {
+    "recall_at_k": [
+      {
+        "k": 1,
+        "numerator": 1,
+        "denominator": 1,
+        "value": 1.0
+      }
+    ],
+    "ndcg_at_k": [
+      {
+        "k": 1,
+        "numerator": 1.0,
+        "denominator": 1,
+        "value": 1.0
+      }
+    ],
+    "evidence_locality": {
+      "numerator": 1,
+      "denominator": 1,
+      "value": 1.0
+    },
+    "claim_type_accuracy": {
+      "numerator": 1,
+      "denominator": 1,
+      "value": 1.0
+    },
+    "scope_completeness": {
+      "numerator": 1,
+      "denominator": 1,
+      "value": 1.0
+    },
+    "false_link_rate": {
+      "numerator": 0,
+      "denominator": 1,
+      "value": 0.0
+    },
+    "abstention_rate": {
+      "numerator": 1,
+      "denominator": 2,
+      "value": 0.5
+    }
+  },
+  "result_boundary": {
+    "canonical": false,
+    "storage_scope": "research",
+    "promotion_requires_human_review": true,
+    "discovery_only": true,
+    "score_is_truth": false,
+    "score_is_compatibility": false
+  },
+  "evidence_bundle": {
+    "id": "fixture-evidence-bundle",
+    "digest": "sha256:6fede4435acf24ac92211ea44e322faad5281ff247048cba28e6f330830889d4",
+    "evidence_ids": [
+      "fixture-evidence"
+    ]
+  }
+}

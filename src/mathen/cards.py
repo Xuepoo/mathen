@@ -9,6 +9,12 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+from .mathviews import MathematicalViewValidationError, validate_math_view_contract
+from .typed_composition import (
+    TypedCompositionValidationError,
+    validate_typed_composition,
+)
+
 REQUIRED_TOP_LEVEL = {
     "id",
     "name",
@@ -96,6 +102,10 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
         )
 
     for view in card["mathematical_views"]:
+        if not isinstance(view, dict):
+            raise CardValidationError(
+                f"{label}: every mathematical view must be an object"
+            )
         if view.get("claim_type") not in CLAIM_TYPES:
             raise CardValidationError(f"{label}: invalid mathematical view claim type")
         _check_optional_claim_status(
@@ -104,6 +114,13 @@ def validate_card(card: dict[str, Any], path: Path | None = None) -> None:
         _check_evidence_ids(
             label, view.get("model", "view"), view.get("evidence_ids"), evidence_ids
         )
+        if "contract" in view:
+            try:
+                validate_math_view_contract(view["contract"], evidence_ids=evidence_ids)
+            except MathematicalViewValidationError as error:
+                raise CardValidationError(
+                    f"{label}: mathematical view contract is invalid: {error}"
+                ) from error
 
     for trade_off in card["trade_offs"]:
         if trade_off.get("feature_id") not in feature_ids:
@@ -328,6 +345,15 @@ def _validate_composition(
     _check_evidence_ids(
         label, "composition", composition.get("evidence_ids"), evidence_ids
     )
+    if "typed_semantics" in composition:
+        try:
+            validate_typed_composition(
+                composition["typed_semantics"], evidence_ids=evidence_ids
+            )
+        except TypedCompositionValidationError as error:
+            raise CardValidationError(
+                f"{label}: typed composition semantics are invalid: {error}"
+            ) from error
 
 
 def _require_object(label: str, field: str, value: Any) -> dict[str, Any]:
@@ -421,6 +447,8 @@ def _check_evidence_ids(
 
 
 def discover_cards(root: Path) -> list[Path]:
-    """Return cards in deterministic order."""
+    """Return Architecture Cards, excluding protocol audit sidecars."""
 
-    return sorted(root.glob("*.json"))
+    return sorted(
+        path for path in root.glob("*.json") if not path.name.endswith(".protocol.json")
+    )

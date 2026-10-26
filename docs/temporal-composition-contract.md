@@ -68,6 +68,58 @@ are allowed for these categories so that a known absence is distinguishable
 from an omitted contract. `validation_gaps` is optional for compatibility with
 composition records written before this field existed.
 
+## Typed composition semantics (additive 1.0 slice)
+
+`composition.typed_semantics` is an optional, evidence-bounded interface
+contract. It is defined by
+[`schemas/architecture-typed-composition.schema.json`](../schemas/architecture-typed-composition.schema.json)
+and checked by `mathen.typed_composition`. It does not replace the fields
+above, and old cards remain valid.
+
+The typed slice makes explicit:
+
+- component `requires`, `provides`, and `consumes` obligations;
+- declared adapters and inside/outside boundaries (never adapters inferred from
+  names, vectors, graph position, or LLM prose);
+- property effects: `shared`, `preserves`, `refines`, `weakens`, `strengthens`,
+  and `unverified`;
+- composition preconditions and postconditions;
+- resource effects, failure modes, typed conflict claims, deterministic conflict
+  explanations, and unresolved requirements;
+- worked `examples`, `counterexamples`, `uncertainties`, and `disagreements`.
+
+Typed candidates must retain `proven: false`. `validity_scope` includes systems,
+versions, configurable deployment origins, conditions, and exclusions. Discovery
+metadata records method, provenance, source and target communities, and the
+cross-community path. This preserves the distinction between discovery and
+validation: graphs and vectors expose candidate paths, LLMs retrieve/explain or
+propose mappings, while contracts and experiments validate. A distant
+cross-community candidate is valid input to review, not evidence of
+compatibility.
+
+The Python adapter is `adapt_typed_composition`; bounded exploration is
+`solve_typed_compositions`. The adapter retains the complete validated contract
+alongside each solver-compatible component specification, including top-level
+claims, discovery provenance, evidence, and `proven: false`; it does not reduce
+those claims to component capability fields. Both consume only explicitly
+declared typed fields. They return review candidates and never promote a card,
+execute a component, or claim a compatibility proof.
+
+Call `spec.composition_semantics.to_dict()` on an adapted
+`TypedFeatureSpec` to retrieve a detached copy of that complete contract.
+
+### Migration guidance
+
+Existing cards need no migration. To adopt the slice, add
+`composition.typed_semantics` alongside the existing composition fields, copy
+only evidence-backed component interfaces into `components`, and keep the
+legacy `constraints`, `preserved_properties`, `conflicts`, and
+`validation_gaps` until reviewers have migrated their workflows. Put discovery
+signals in `discovery` and unresolved interpretations in `uncertainties` or
+`disagreements`; do not encode a graph/vector/LLM candidate as a validated
+relation. Canonical cards remain under `data/systems/`; drafts and generated
+typed candidates stay under configured draft locations.
+
 ## Validation and storage boundary
 
 The JSON Schema defines shape and controlled vocabularies. Python semantic

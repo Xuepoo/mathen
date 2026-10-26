@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "id": "release-order",
+  "family": "partial_order",
+  "question": "Which release prerequisites must precede a deployment?",
+  "carrier": {
+    "kind": "release",
+    "description": "Finite release stages in the documented pipeline.",
+    "elements": ["build", "test", "deploy"]
+  },
+  "operations": [],
+  "relations": [
+    {
+      "id": "precedes",
+      "name": "Precedes",
+      "kind": "ordering",
+      "pairs": [
+        ["build", "build"],
+        ["test", "test"],
+        ["deploy", "deploy"],
+        ["build", "test"],
+        ["test", "deploy"],
+        ["build", "deploy"]
+      ]
+    }
+  ],
+  "transitions": [],
+  "laws_or_checks": [
+    {
+      "id": "order-laws",
+      "name": "Order laws",
+      "description": "The relation is reflexive, antisymmetric, and transitive.",
+      "check": "partial-order"
+    }
+  ],
+  "assumptions": [
+    "The listed stages are the complete carrier for this release workflow.",
+    "The relation describes prerequisites, not runtime scheduling guarantees."
+  ],
+  "validity_scope": {
+    "systems": ["fixture-system"],
+    "versions": ["2.x"],
+    "deployment_origins": ["configured-origin"],
+    "conditions": ["documented release pipeline"],
+    "exclusions": ["emergency hotfix procedure"]
+  },
+  "claim_type": "inference",
+  "claim_status": "under-review",
+  "evidence_ids": ["design-doc"],
+  "classification": {
+    "result": "valid",
+    "reason": "The declared relation is reflexive, antisymmetric, and transitive.",
+    "checks": [{ "id": "order-laws", "result": "pass" }]
+  }
+}

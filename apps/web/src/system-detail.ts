@@ -50,9 +50,11 @@ function escapeHtml(value: string) {
 function safeHref(value: string) {
   try {
     const url = new URL(value);
-    return ["https:", "http:"].includes(url.protocol) ? escapeHtml(url.href) : "#";
+    return ["https:", "http:"].includes(url.protocol) && !url.username && !url.password
+      ? escapeHtml(url.href)
+      : undefined;
   } catch {
-    return "#";
+    return undefined;
   }
 }
 function list(items: string[]) {
@@ -70,7 +72,9 @@ export function renderDetail(system: SystemDetail, graph: GraphPayload) {
       .map((id) => {
         const item = evidence.get(id);
         return item
-          ? `<a href="${safeHref(item.uri)}" target="_blank" rel="noreferrer">${escapeHtml(id)} ↗</a>`
+          ? safeHref(item.uri)
+            ? `<a href="${safeHref(item.uri)}" target="_blank" rel="noopener noreferrer">${escapeHtml(id)} ↗</a>`
+            : `<span>${escapeHtml(id)} (non-web source)</span>`
           : `<span>${escapeHtml(id)}</span>`;
       })
       .join("")}</div>`;
@@ -86,13 +90,15 @@ export function renderDetail(system: SystemDetail, graph: GraphPayload) {
     <h3>Card scope</h3><div class="tag-row">${system.scope.map((scope) => `<span>${escapeHtml(scope)}</span>`).join("")}</div>
     <div class="detail-metrics"><span><strong>${system.features.length}</strong> features</span><span><strong>${system.mathematical_views.length}</strong> views</span><span><strong>${system.evidence.length}</strong> sources</span></div>
     <section class="detail-section"><p class="eyebrow">Transferable structure</p><h3>Reusable features</h3>${system.features.map((feature) => `<article class="content-card"><div class="feature-meta"><span>${escapeHtml(feature.category)}</span><span>${escapeHtml(feature.claim_type)}</span></div><h4>${escapeHtml(feature.name)}</h4><p>${escapeHtml(feature.description)}</p><details><summary>Benefits and costs</summary><h5>Benefits</h5><ul>${list(feature.benefits)}</ul><h5>Costs</h5><ul>${list(feature.costs)}</ul></details>${pills(feature.evidence_ids)}</article>`).join("") || `<p>No reusable features recorded.</p>`}</section>
-    <section class="detail-section"><p class="eyebrow">Formal lenses</p><h3>Mathematical views</h3>${system.mathematical_views.map((view) => `<article class="content-card"><span class="claim-type">${escapeHtml(view.claim_type)}</span><h4>${escapeHtml(view.model)}</h4><p>${escapeHtml(view.question)}</p><details><summary>Assumptions (${view.assumptions.length})</summary><ul>${list(view.assumptions)}</ul></details>${pills(view.evidence_ids)}</article>`).join("") || `<p>No mathematical views recorded.</p>`}</section>
+    <section class="detail-section"><p class="eyebrow">Candidate mathematical views</p><h3>Mathematical views</h3>${system.mathematical_views.map((view) => `<article class="content-card"><span class="claim-type">${escapeHtml(view.claim_type)}</span><h4>${escapeHtml(view.model)}</h4><p>${escapeHtml(view.question)}</p><details><summary>Assumptions (${view.assumptions.length})</summary><ul>${list(view.assumptions)}</ul></details>${pills(view.evidence_ids)}</article>`).join("") || `<p>No mathematical views recorded.</p>`}</section>
     ${system.trade_offs?.length ? `<section class="detail-section"><h3>Trade-offs</h3>${system.trade_offs.map((tradeOff) => `<article class="content-card"><h4>${escapeHtml(system.features.find((feature) => feature.id === tradeOff.feature_id)?.name ?? tradeOff.feature_id)}</h4><h5>Benefits</h5><ul>${list(tradeOff.benefits)}</ul><h5>Costs</h5><ul>${list(tradeOff.costs)}</ul></article>`).join("")}</section>` : ""}
     <section class="detail-section"><p class="eyebrow">Feature relationships</p><h3>Feature relations (${featureRelations.length})</h3>${
       featureRelations
         .map((relation) => {
-          const sourceFeature = featureNames.get(relation.source_feature_id) ?? relation.source_feature_id;
-          const targetSystem = nodeNames.get(relation.target_system_id) ?? relation.target_system_id;
+          const sourceFeature =
+            featureNames.get(relation.source_feature_id) ?? relation.source_feature_id;
+          const targetSystem =
+            nodeNames.get(relation.target_system_id) ?? relation.target_system_id;
           return `<article class="content-card feature-relation"><div class="feature-meta"><span>${escapeHtml(relationLabel(relation.type))}</span><span>${escapeHtml([relation.claim_type, relation.claim_status].filter(Boolean).join(" · "))}</span></div><p class="relation-direction"><strong>${escapeHtml(system.name)}</strong> · ${escapeHtml(sourceFeature)} <span aria-hidden="true">→</span> <strong>${escapeHtml(targetSystem)}</strong> · ${escapeHtml(relation.target_feature_id)}</p>${relation.notes ? `<p>${escapeHtml(relation.notes)}</p>` : ""}${pills(relation.evidence_ids ?? [])}</article>`;
         })
         .join("") || `<p>No feature relations recorded.</p>`
@@ -105,6 +111,6 @@ export function renderDetail(system: SystemDetail, graph: GraphPayload) {
         })
         .join("") || `<p>No relations recorded in the graph.</p>`
     }</section>
-    <section class="detail-section"><p class="eyebrow">Primary sources</p><h3>Evidence trail</h3><ol class="evidence-list">${system.evidence.map((item) => `<li class="${item.kind === "experiment" ? "evidence-experiment" : ""}"><span class="evidence-kind eyebrow">${item.kind === "experiment" ? "Experiment" : escapeHtml(item.kind)}</span><a href="${safeHref(item.uri)}" target="_blank" rel="noreferrer">${escapeHtml(item.title)} ↗</a><small>${escapeHtml(item.id)}${item.accessed ? ` · accessed ${escapeHtml(item.accessed)}` : ""}</small>${item.notes ? `<p>${escapeHtml(item.notes)}</p>` : ""}</li>`).join("")}</ol></section>
+     <section class="detail-section"><p class="eyebrow">Primary sources</p><h3>Evidence trail</h3><ol class="evidence-list">${system.evidence.map((item) => `<li class="${item.kind === "experiment" ? "evidence-experiment" : ""}"><span class="evidence-kind eyebrow">${item.kind === "experiment" ? "Experiment" : escapeHtml(item.kind)}</span>${safeHref(item.uri) ? `<a href="${safeHref(item.uri)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)} ↗</a>` : `<span>${escapeHtml(item.title)} (non-web source)</span>`}<small>${escapeHtml(item.id)}${item.accessed ? ` · accessed ${escapeHtml(item.accessed)}` : ""}</small>${item.notes ? `<p>${escapeHtml(item.notes)}</p>` : ""}</li>`).join("")}</ol></section>
   </article>`;
 }

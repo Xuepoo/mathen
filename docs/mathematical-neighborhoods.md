@@ -33,6 +33,9 @@ source-local evidence IDs.
             "question": "How does execution transition?",
             "assumptions": ["..."],
             "claim_type": "inference",
+            "claim_status": "under-review",
+            "validity_scope": { "versions": ["1.0"] },
+            "contract": { "schema_version": "1.0", "family": "state_machine" },
             "evidence_ids": ["source-local-id"]
           }
         ]
@@ -46,7 +49,10 @@ Each system/model pair has one edge. Multiple views are aggregated in that
 edge's `metadata` list. The edge's `claim_type: inference` describes only the
 classification/grouping operation; each view keeps its own original
 `claim_type`. Evidence IDs are copied from the view and remain local to its
-source card.
+source card. When present, `claim_status`, `validity_scope`, and the complete
+optional `contract` are copied too. These fields are descriptive metadata for
+inspection; the projection does not reclassify the view or evaluate its
+contract.
 
 ## Conservative families
 

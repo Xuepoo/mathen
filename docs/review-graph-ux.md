@@ -43,7 +43,8 @@ globally installed Playwright package. Screenshots captured during review:
 
 - Chromium viewport: `1440 × 900`.
 - The graph canvas occupies the complete viewport: `1440 × 900`.
-- The graph loaded with `154 systems / 232 relations`.
+- The graph loaded with `154 systems / 232 relations` in this historical UI
+  review; these are not current repository inventory counts.
 - Initial graph readiness was approximately `3.1 s` after navigation in the
   first run and approximately `4.0–4.4 s` on subsequent runs.
 - The screenshot shows the graph as the dominant surface, with compact floating
@@ -79,10 +80,11 @@ globally installed Playwright package. Screenshots captured during review:
 - Searching `Temporal` produced one result, selected the Temporal node, showed
   the Data navigation group, and enabled Focus.
 - The selected Temporal inspector reported one visible relation.
-- The catalog drawer reported all `154 systems` and included Temporal.
+- The catalog drawer reported all `154 systems` and included Temporal in this
+  historical UI review; the checked-in tree now contains 219 cards.
 - The selected Temporal card initially displayed `Card scope loading on demand`.
   The page also displayed `System summaries unavailable. Search by name or open
-  a card for its actual scope.` with a Retry summaries action.
+ a card for its actual scope.` with a Retry summaries action.
 - Direct API checks show the pagination response does not advance:
 
   ```text
@@ -127,7 +129,8 @@ globally installed Playwright package. Screenshots captured during review:
 ### Drawer Escape and focus — pass
 
 - Opening Browse systems created a modal dialog containing all `154` catalog
-  items.
+  items in this historical UI review; the current checked-in tree contains 219
+  cards.
 - Escape closed the catalog and restored focus to `#catalog-open`.
 - Escape also closed the Help dialog and restored focus to `#help-open`.
 - The catalog drawer is keyboard-oriented and exposes ordinary buttons for Read
@@ -169,7 +172,7 @@ globally installed Playwright package. Screenshots captured during review:
 ## Blockers for acceptance
 
 1. Fix the reproducible `TypeError: Cannot read properties of undefined
-   (reading 'x')` during graph interaction/drag.
+(reading 'x')` during graph interaction/drag.
 2. Fix `/api/systems` pagination so offsets advance; currently the UI cannot
    load complete summaries and shows a metadata-unavailable notice.
 3. Provide the requested model filter and its data/API contract, or document a

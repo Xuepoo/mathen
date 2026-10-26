@@ -4,10 +4,15 @@ export function lazyModule<T>(load: () => Promise<T>): () => Promise<T> {
   return () => {
     if (pending) return pending;
 
-    pending = load().catch((error: unknown) => {
+    try {
+      pending = load().catch((error: unknown) => {
+        pending = undefined;
+        throw error;
+      });
+    } catch (error) {
       pending = undefined;
-      throw error;
-    });
+      return Promise.reject(error);
+    }
     return pending;
   };
 }

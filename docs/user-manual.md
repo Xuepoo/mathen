@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Mathen User Manual
 
 This manual explains the data contracts, storage layers, commands, and
@@ -37,11 +39,66 @@ data/modeling/      fixed-commit LLM evidence bundles
 Only `data/systems/` is canonical. LLM output must remain under a draft
 directory and cannot overwrite reviewed cards.
 
-The current canonical tree contains 219 reviewed cards. The representative
+### 1.1 Public MVP orientation
+
+The public starting point is [mathen.xuepoo.xyz](https://mathen.xuepoo.xyz).
+The browser opens a reviewed systems graph and lets you search the card
+catalog, inspect a system, switch to mathematical model neighborhoods, and
+follow explicit relations. The current UI uses `/api/graph` and
+`/api/graph/models` for the graph and loads card details from
+`/api/systems/:id`; it does not expose drafts.
+
+Use these terms while exploring:
+
+- **System:** a product or project represented by one reviewed card at a stated
+  version or context.
+- **Layer:** a typed projection of records, for example `system`, `property`,
+  `mathematical-contract`, `composition`, `microstructure`, or `analogy`.
+  Layers separate record kinds; they do not assert that every visible node is
+  equivalent or connected by an inferred relation.
+- **Property:** a reusable feature attached to a system, with a category,
+  claim type, description, and evidence IDs. A property is not a promise that
+  another system can provide it under the same conditions.
+- **Mathematical contract/view:** a candidate model tied to a question and
+  assumptions. It preserves claim type and evidence so a reader can inspect
+  the boundary. It is not an automatic formal proof of implementation
+  behavior.
+
+For a quick first visit: open the site, use **Browse systems** to find a
+familiar card, inspect one feature and its source evidence, switch to **Math
+models** and read a model's question and assumptions, then follow one typed
+relation to another card. Graph position, navigation groups, and edge layout
+are for exploration; they do not add evidence.
+
+### 1.2 Evidence, claims, and discovery signals
+
+Read the cited evidence first, then the claim label. `fact` means directly
+supported by the cited source; `inference` means an abstraction derived from
+facts; `hypothesis` means a proposal requiring validation; and `analogy` means
+a bounded comparison rather than formal equivalence. A composition record or
+mathematical view can be useful while still remaining a hypothesis.
+
+Search and graph navigation are discovery aids. The first retrieval
+implementation is a bounded lexical baseline over reviewed records; it is not
+embedding or semantic/vector search. Its score is an uncalibrated
+review-priority signal only. It does not establish truth, evidence,
+compatibility, causality, originality, substitutability, or historical
+influence. `GET /api/retrieval` and the `search_semantic` MCP tool preserve
+claim labels, evidence, scope, and provenance, but only become available on a
+hosted site after that deployment has been made and read back. If the public
+deployment has not announced them, use the lexical system routes and
+graph/card UI instead; do not infer hosted availability from source code.
+
+There are no formal mobile performance metrics in this manual. Small-screen
+and touch use should be judged from real user feedback and improved as that
+feedback arrives.
+
+The checked-in canonical tree contains 219 reviewed cards. The representative
 repository manifest contains 62 entries, all of which currently have matching
 canonical cards; it is a subset of the canonical tree. MTH-0092 added the
 canonical `bun`, `haskell`, `quickjs`, and `tokio` cards, but did not add those
-IDs to the representative manifest.
+IDs to the representative manifest. These are repository counts, not a
+guarantee that a deployed D1 database has been seeded with the same rows.
 
 ## 2. Schema inventory
 
@@ -137,6 +194,17 @@ Each evidence item contains:
 | `notes`    | no       | Scope, excerpt, or provenance notes                                  |
 
 Every feature and mathematical view must reference existing evidence IDs.
+
+Standalone mathematical-view contracts can be checked without loading cards:
+
+```bash
+uv run mathen validate-mathviews data/mathviews
+```
+
+This command validates one JSON file or each top-level JSON file in a
+directory using the same mathematical-view loader and validator. An absent or
+empty directory succeeds as a no-op. Card-local evidence references remain
+bounded by the containing card when a contract is embedded there.
 
 The optional `feature_relations` array is owned by the source card. Each item
 references a source feature in that card, a target system and feature, a
@@ -447,20 +515,29 @@ consumers.
 The Hono Worker uses the `/api` base path. Successful responses use a
 `{"data": ...}` envelope.
 
-| Endpoint                                                                           | Purpose                                                                 |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `GET /api/health`                                                                  | Worker health and environment                                           |
-| `GET /api/systems?query=&limit=&offset=`                                           | Search reviewed system summaries in stable name/id order                |
-| `GET /api/systems/:id`                                                             | Retrieve one reviewed card projection                                   |
-| `GET /api/features?query=&category=&claim_type=&limit=`                            | Search reviewed features                                                |
-| `GET /api/feature-relations?system_id=&feature_id=&target_system_id=&type=&limit=` | Search reviewed feature relations                                       |
-| `GET /api/compositions?input_system=&claim_status=&limit=`                         | Search reviewed composition proposals, including cited evidence records |
-| `GET /api/modeling/:id`                                                            | Retrieve one fixed-commit modeling bundle                               |
-| `GET /api/graph`                                                                   | Return current system nodes and valid typed or legacy edges             |
-| `GET /api/graph/models`                                                            | Return a navigational system-to-mathematical-model projection           |
+| Endpoint                                                                           | Purpose                                                                   |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `GET /api/health`                                                                  | Worker health and environment                                             |
+| `GET /api/systems?query=&limit=&offset=`                                           | Search reviewed system summaries in stable name/id order                  |
+| `GET /api/systems/:id`                                                             | Retrieve one reviewed card projection                                     |
+| `GET /api/features?query=&category=&claim_type=&limit=`                            | Search reviewed features                                                  |
+| `GET /api/feature-relations?system_id=&feature_id=&target_system_id=&type=&limit=` | Search reviewed feature relations                                         |
+| `GET /api/compositions?input_system=&claim_status=&limit=`                         | Search reviewed composition proposals, including cited evidence records   |
+| `GET /api/modeling/:id`                                                            | Retrieve one fixed-commit modeling bundle                                 |
+| `GET /api/graph`                                                                   | Return current system nodes and valid typed or legacy edges               |
+| `GET /api/graph/layers?origin=`                                                    | Return the reviewed layered graph, optionally scoped by deployment origin |
+| `GET /api/graph/models`                                                            | Return a navigational system-to-mathematical-model projection             |
+| `GET /api/retrieval?q=&limit=&record_kind=...`                                     | Bounded lexical discovery over hydrated reviewed records                  |
 
 The current API is read-only. It does not expose draft cards or provide review,
 promotion, or synthesis writes.
+
+All successful API reads use the `{"data": ...}` envelope. Errors are returned
+as error objects with an HTTP status. Hosted browser requests use the same
+origin; clients must not expose a deployment-specific API URL or secret in
+browser code. Retrieval is a bounded lexical baseline, not semantic/vector
+search. Its availability is deployment-specific: source implementation and
+local tests do not prove that a hosted deployment has received the route.
 
 System searches default to 50 results, with a maximum page size of 100. Use
 `offset` (default 0) to read subsequent pages with the same query. Browser
@@ -493,19 +570,22 @@ normalized model title, and question; changing those fields changes the key.
 
 The stdio MCP server provides the same read boundary to agents:
 
-| Tool                     | Inputs                                                                                    | Result                                                              |
-| ------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `list_systems`           | optional `include_drafts`                                                                 | System summaries                                                    |
-| `get_system`             | `system_id`, optional `include_drafts`                                                    | One Architecture Card                                               |
-| `search_features`        | `query`, optional `category`, `claim_type`, `include_drafts`, `limit`                     | Matching reusable features                                          |
-| `list_feature_relations` | optional `system_id`, `feature_id`, `target_system_id`, `type`, `include_drafts`, `limit` | Matching evidence-backed feature relations                          |
-| `list_compositions`      | optional `input_system`, `claim_status`, `include_drafts`, `limit`                        | Matching reviewed composition proposals with cited evidence records |
-| `get_modeling_bundle`    | `system_id`                                                                               | Fixed-commit modeling bundle                                        |
+| Tool                     | Inputs                                                                  | Result                                                              |
+| ------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `get_layered_graph`      | optional `origin`                                                       | Reviewed layered graph projection                                   |
+| `list_systems`           | none                                                                    | Reviewed system summaries                                           |
+| `get_system`             | `system_id`                                                             | One reviewed Architecture Card                                      |
+| `search_features`        | `query`, optional `category`, `claim_type`, `limit`                     | Matching reusable features                                          |
+| `list_feature_relations` | optional `system_id`, `feature_id`, `target_system_id`, `type`, `limit` | Matching evidence-backed feature relations                          |
+| `list_compositions`      | optional `input_system`, `claim_status`, `limit`                        | Matching reviewed composition proposals with cited evidence records |
+| `get_modeling_bundle`    | `system_id`                                                             | Fixed-commit modeling bundle                                        |
 
-Without `MATHEN_API_URL`, the server uses the local filesystem. With
-`MATHEN_API_URL`, reviewed system, feature, and bundle reads use the Hono/D1
-API. Draft visibility is filesystem-only and API mode rejects
-`include_drafts=true`.
+Without `MATHEN_API_URL`, the server uses the local filesystem. Filesystem mode
+can include drafts for internal backend queries when explicitly requested, but
+the registered stdio tools expose reviewed records only. With `MATHEN_API_URL`,
+reviewed system, feature, relation, composition, graph, and bundle reads use
+the Hono/D1 API; API mode rejects draft inclusion because the hosted API is
+reviewed-only.
 
 `list_feature_relations` reads source-card-owned, evidence-backed directed
 relations. Its filters select the source system or feature, target system, and
@@ -579,8 +659,9 @@ bun run db:reset:local
 ```
 
 The seed script reads reviewed cards from `data/systems/` and fixed bundles from
-`data/modeling/`, generates deterministic SQL, applies both D1 migrations, and
-loads the relational projection.
+`data/modeling/`, generates deterministic SQL, applies the D1 migrations, and
+loads the relational projection. It does not load drafts, benchmark manifests,
+or other research fixtures.
 
 ### Step 7: Browse through the API or MCP
 
@@ -596,6 +677,16 @@ Then use the browser at `http://localhost:5173`, the API at
 ```bash
 MATHEN_API_URL=http://localhost:8787/api bun run mcp
 ```
+
+### Step 8: Provide reviewed evidence
+
+Open an issue or pull request with the source URI, version or commit, scope,
+claim type, assumptions, and evidence IDs. Work in `data/drafts/` while a card
+is being prepared; run validation and request human review before adding an
+accepted card to `data/systems/`. Do not overwrite canonical cards from an
+automated analysis, and do not treat a draft as public API/MCP content. The
+hosted API and MCP currently provide reads only; authenticated review and
+promotion writes are not available.
 
 ## 13. Recommended development loop
 

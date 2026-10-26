@@ -13,5 +13,7 @@ apps/api/.wrangler/
 .carryctx/config.local.toml
 .worktrees/
 .cache/
+carryctx-snapshots/
+*.carryctx-snapshot
 data/analyses/
 data/modeling/prompts/

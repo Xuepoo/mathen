@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # Mathen
 
 Mathen is an evidence-backed, temporal knowledge graph for software
@@ -38,11 +40,228 @@ makes it difficult to answer questions such as:
 Mathen makes these questions machine-readable without reducing architecture to
 ungrounded labels or a single oversimplified definition.
 
+## The research position
+
+Mathen investigates whether a reviewed bridge between evidence, architectural
+microstructure, and checkable contracts can make cross-domain comparison and
+architecture synthesis more useful and more falsifiable. It is an
+evidence-backed intermediate representation for studying reusable software
+architecture—not a system that reduces a product to one essence, asks an LLM to
+invent a final architecture, or treats similarity as proof.
+
+The intended workflow is a loop, not an `LLM in → architecture out` pipeline:
+
+```text
+evidence
+  → deterministic observation
+  → reviewed architectural microstructure
+  → mathematical or interface contract
+  → bounded composition candidate
+  → candidate macro-architecture
+  → prototype, benchmark, or failure experiment
+  → new evidence, counterexample, or negative knowledge
+  ↺ human review and question reformulation
+```
+
+Each step has a bounded meaning:
+
+1. **Evidence** starts with source code, fixed revisions, design documents,
+   papers, benchmarks, protocol specifications, or reproducible operational
+   observations. Provenance, version, and deployment origin remain visible.
+2. **Deterministic observation** records reproducible signals such as tracked
+   paths, language counts, build markers, and navigation hints. These guide
+   review; they do not establish semantic architecture facts by themselves.
+3. **Microstructure** is a reusable unit at an explicit scale—primitive,
+   mechanism, subsystem, system, or ecosystem—with possible states, events,
+   boundaries, resources, and failures. It is an evidence-linked candidate,
+   not an automatic promotion to a reviewed card.
+4. **Contract** makes carriers, operations, interfaces, assumptions, checks,
+   and failure modes explicit where the data permits. A finite `valid` result
+   means that the supplied model data passed the check; it does not prove that
+   the implementation has the modeled semantics. Missing data remains
+   `undetermined`.
+5. **Composition** records inputs, roles, constraints, preserved or weakened
+   properties, conflicts, assumptions, and validation gaps. Composition
+   candidates remain `proven: false`; names, vector similarity, graph
+   position, or LLM prose cannot silently create compatibility claims.
+6. **Macro-architecture** is a design hypothesis assembled under a workload,
+   deployment boundary, and constraints. It is not canonical merely because
+   its parts are documented.
+7. **Experiment** means a bounded prototype, benchmark, property test, fault
+   injection, or failure test with its protocol and scope retained. Results
+   can strengthen, narrow, reject, or leave a candidate undetermined.
+
+### Who does what
+
+These participants and mechanisms are complementary, not interchangeable:
+
+| Role | Contribution | Boundary |
+| --- | --- | --- |
+| Human researcher | Reframes questions and reviews claims | Judgment is not automatically reproducible |
+| Deterministic tooling | Records fixed-revision observations | Signals guide review; they are not semantic claims |
+| LLM | Explains evidence and drafts abstractions | It is not proof or an architecture authority |
+| Graph analysis | Exposes typed paths and neighborhoods | Position is not truth, causality, or compatibility |
+| Planned vector retrieval | Would recover terminology variants | Similarity is not a typed relation; no integration is currently implemented |
+| Contracts and microstructures | Make scope and checks explicit | Contracts cannot validate omitted behavior |
+| Experiments and failure tests | Measure behavior and counterexamples | Results are deployment-scoped |
+
+```text
+vector similarity ≠ graph position ≠ LLM interpretation
+                ≠ contract classification ≠ runtime compatibility
+                ≠ historical influence
+```
+
+### Reading cross-domain comparisons
+
+Mathen uses `fact`, `inference`, `hypothesis`, and `analogy` to keep evidence
+and interpretation separate. Chemistry and biology can provide a bounded
+analogy: a reaction network and a gene-regulation network may share a
+qualitative directed-motif question, but they do not thereby share parameters,
+substrates, governing laws, units, causal semantics, or historical influence.
+**A representation can transfer a question about connectivity without
+transferring the mechanism that produces the behavior.**
+
+Materials science is an analogy for the explanatory term *microstructure*:
+phases, defects, interfaces, and conditions can illustrate why bounded
+structures and properties matter. Software does not thereby acquire crystal
+structure, thermodynamic laws, constitutive equations, scale invariance, or
+material-property predictions. Taxonomy is likewise a controlled vocabulary
+for retrieval and review, not a discovery of natural kinds or complete,
+mutually exclusive classes. A taxonomic resemblance does not establish
+dependency, lineage, compatibility, or historical influence. Every published
+analogy should state its scale, shared and non-preserved properties, exclusions,
+evidence, and at least one counterexample.
+
+### Discovery, novelty, and current limits
+
+Here, **discovery** initially means that a search or researcher surfaced a
+candidate path, mapping, counterexample, or question not previously recorded
+in the current dataset. It does not mean that Mathen created a new fact,
+established historical influence, or generated a useful architecture. Novelty
+must be scoped to topology, a composition boundary, constraints, behavior,
+trade-offs, deployment context, or merely wording. A cross-community path,
+larger graph, vector neighbor, or fluent LLM proposal is not evidence of
+architectural originality. A stronger claim needs a defined reference set,
+source review, explicit scope, and—when usefulness or behavior is claimed—a
+prototype or experiment. See the open evaluation questions in
+[`docs/research-instrument.md`](docs/research-instrument.md).
+
+The current implementation provides reviewed, evidence-linked cards; fixed-
+commit analysis and modeling bundles; deterministic repository observations;
+an evidence-bounded OpenAI-compatible LLM adapter that writes drafts and
+protocol sidecars; scale-aware microstructure documents; finite mathematical
+view classifications for supplied model data; bounded composition candidates;
+analogy and negative-knowledge records; a bounded lexical retrieval baseline;
+and D1-backed API/browser/MCP boundaries. Optional, rebuildable semantic/vector
+retrieval remains planned architecture, not a current implementation. It does
+**not** automatically prove
+implementation semantics, produce theorems, promote LLM output or analogies,
+guarantee graph/vector recall or compatibility, assign calibrated originality
+or quality scores, infer historical influence, replace source review and
+experiments, or demonstrate that the full loop improves architecture quality.
+The graph projection and novelty benchmark work remain future research; see
+the planning references for [MTH-0117](https://github.com/Xuepoo/mathen/issues/47)
+and [MTH-0118](https://github.com/Xuepoo/mathen/issues/48).
+
+### Deployment and provenance boundary
+
+A deployment hostname is not part of Mathen's research identity. Validity
+scope should record versions, conditions, exclusions, and applicable
+`deployment_origins`; an origin says where a claim was evaluated or accessed,
+not that it is true. D1 remains the structured source of truth while semantic
+indexes are rebuildable. Browser requests use the deployment's same-origin
+`/api` boundary, while MCP and synchronization origins are configured through
+`MATHEN_API_URL`, `MATHEN_MCP_URL`, `MATHEN_SYNC_SOURCE`, and related settings
+described in [`docs/configuration.md`](docs/configuration.md). OpenAI-compatible
+LLM endpoints are also explicit configuration, and secrets stay outside URLs
+and checked-in research records.
+
+The detailed contracts and boundaries are documented in the
+[`research position proposal`](docs/research-position-proposal.md),
+[`microstructure ontology`](docs/microstructure-ontology.md),
+[`mathematical-view contracts`](docs/mathematical-view-contracts.md),
+[`temporal composition contract`](docs/temporal-composition-contract.md),
+[`cross-domain analogies`](docs/cross-domain-analogies.md), and
+[`negative-knowledge contract`](docs/negative-knowledge-contract.md).
+
 ## Project status
 
 This repository is a research prototype. Architecture Cards are structured,
 evidence-backed models, not automatic formal proofs of the corresponding
 implementations.
+
+## Public MVP: start here
+
+Open the hosted browser at **[mathen.xuepoo.xyz](https://mathen.xuepoo.xyz)**.
+It opens the reviewed architecture atlas. If the deployment asks for a
+Cloudflare access check, complete it in the browser; this is separate from the
+read-only MCP service token described in [`docs/mcp.md`](docs/mcp.md).
+
+### A five-minute exploration
+
+1. **Minute 1 — orient:** leave **Systems** selected and use **Fit** to frame
+   the graph. The graph is a navigation view of reviewed records; position,
+   distance, and layout are not semantic scores.
+2. **Minute 2 — find a card:** use **Find a system…** or **Browse systems**.
+   Search a familiar system such as SQLite, DuckDB, Git, or PostgreSQL, then
+   choose **Read card**.
+3. **Minute 3 — inspect evidence:** read the card summary and scope, then open
+   a feature. Check its `fact`, `inference`, `hypothesis`, or `analogy` label
+   and follow its evidence IDs to the linked source.
+4. **Minute 4 — compare views:** return to the atlas, select **Math models**,
+   and open a model family. Read its question, assumptions, claim label, and
+   source-card evidence. A model view is a candidate contract, not a theorem.
+5. **Minute 5 — follow a relation:** select a system, choose a typed relation
+   or a navigation group, and open a neighboring card. Treat the edge as the
+   stated, evidence-backed relation only; a navigation group is not a
+   dependency or compatibility claim.
+
+The browser uses the reviewed graph and card routes currently implemented by
+the Worker (`/api/graph`, `/api/graph/models`, `/api/systems`, and
+`/api/systems/:id`). Touch and small-screen use are supported as part of the
+current UI; mobile optimization will follow real user feedback rather than a
+claimed performance metric.
+
+### How to read the atlas
+
+- A **system** is a product or project represented by one reviewed
+  Architecture Card at a stated version or context.
+- A **property** is a reusable feature recorded on a system, such as a storage
+  or execution structure. The graph layer copies the card's property and its
+  claim metadata; it does not invent properties from names or proximity.
+- A **layer** is a typed projection such as system, property,
+  mathematical-contract, composition, microstructure, or analogy. Layers make
+  different kinds of records visible without turning them into one kind of
+  claim.
+- A **mathematical contract/view** states a question, assumptions, candidate
+  model, claim type, and evidence. It describes what can be checked about the
+  supplied model data; it does not prove that an implementation has those
+  semantics.
+- A **fact** is directly supported by cited evidence. An **inference** is an
+  abstraction derived from supported facts. A **hypothesis** needs validation.
+  An **analogy** is a bounded comparison, not formal equivalence, causality,
+  or historical influence.
+
+Always distinguish the source evidence from an interpretation. A graph edge,
+model label, composition candidate, or retrieval ranking can help you decide
+what to inspect next; none is evidence by itself. The bounded lexical
+`GET /api/retrieval` route and hosted `search_semantic` MCP tool are read-only
+discovery aids when present in a deployment. Their scores are uncalibrated
+ranking signals over reviewed records—not truth, compatibility, causality,
+originality, or proof. Semantic/vector retrieval is not implemented. Verify a
+deployment's route and response before assuming it has received the retrieval
+commits; source code alone is not a deployment claim.
+
+### Contribute evidence safely
+
+Start with a focused issue or pull request in the
+[Mathen repository](https://github.com/Xuepoo/mathen). Add primary sources,
+version context, scope, assumptions, counterexamples, and evidence IDs to a
+draft or proposed card. Validate it, request review, and only then place an
+accepted card under `data/systems/`. Generated cards remain under
+`data/drafts/` or `data/drafts/llm/`; do not overwrite or promote them
+automatically. The hosted API and MCP are read-only and do not accept card
+submissions.
 
 Source code and the browser client are available in the
 [Mathen GitHub repository](https://github.com/Xuepoo/mathen).
@@ -204,6 +423,14 @@ An LLM proposes abstractions and comparisons; deterministic tools provide
 provenance and observations; schema and semantic validation constrain output;
 human review decides what becomes canonical.
 
+Mathen also studies this as a human–LLM research instrument: LLMs provide broad
+cross-domain retrieval and candidate explanations, while humans provide
+problem reformulation, curiosity-driven exploration, and final review. Graphs,
+vectors, mathematical contracts, and experiments have separate roles in the
+loop. This is an open research direction, not a claim that direct LLM output
+is architectural novelty or proof. See
+[`docs/research-instrument.md`](docs/research-instrument.md).
+
 ## Current implementation
 
 The repository currently provides:
@@ -228,13 +455,30 @@ The repository currently provides:
   service-token API access, and per-IP limits;
 - explicit separation between reviewed cards, drafts, and modeling evidence.
 
-The canonical tree currently contains 219 reviewed cards. The representative
-repository manifest contains 62 entries, all with matching canonical cards.
+These implementation and repository-artifact statements do not imply a
+populated deployment or a public data surface. Schemas, validators, fixtures,
+and sample benchmark manifests can be present and runnable without loading
+their contents into D1. The API and hosted MCP expose only reviewed rows
+seeded into the configured D1 database; the local filesystem MCP can inspect
+repository artifacts for internal filesystem-mode calls; registered MCP tools
+expose reviewed records only.
+The research-only
+MTH-0118 harness is documented in
+[`docs/mth-0118-benchmark-harness.md`](docs/mth-0118-benchmark-harness.md); it
+validates supplied manifests and metrics but does not run the benchmark or
+publish results.
+
+The checked-in canonical tree currently contains 219 reviewed cards. The
+representative repository manifest contains 62 entries, all with matching
+canonical cards; the four additional canonical cards `bun`, `haskell`, `quickjs`,
+and `tokio` are not manifest entries. These counts are repository snapshots, not
+claims about a deployed database.
 
 The current knowledge graph is intentionally relational and small. D1 is the
-canonical structured store. Vectorize is an optional rebuildable semantic
-index, and a dedicated graph database remains a future adapter rather than a
-first-milestone dependency.
+canonical structured store. Vectorize is documented as a planned, optional
+rebuildable semantic index; no Vectorize integration is currently implemented.
+A dedicated graph database remains a future adapter rather than a first-
+milestone dependency.
 
 ## Quick start: Python card tooling
 
@@ -331,14 +575,17 @@ The local API runs at `http://localhost:8787` and the Vite client runs at
 `http://localhost:5173`. The Vite development server proxies `/api` requests
 to the Worker.
 
-The application deliberately uses D1 as the source of truth. Vectorize is an
-optional search index and is not required for local structured browsing. A
-local MCP server exposes read-only system, feature, and modeling-bundle tools;
+The application deliberately uses D1 as the source of truth. Vectorize is a
+planned optional search index and is not required for local structured
+browsing. A local MCP server exposes read-only system, feature, and modeling-
+bundle tools;
 see [`docs/mcp.md`](docs/mcp.md). Set `MATHEN_API_URL=http://localhost:8787/api`
 to make it read reviewed data and modeling bundles through the Hono/D1 API;
-without that variable it uses the local filesystem. A future hosted MCP server
-can call the same API and submit reviewed Architecture Cards generated from a
-local repository.
+without that variable it uses the local filesystem. The hosted MCP transport is
+already available as a reviewed-only, authenticated read surface at the
+configured deployment's `/api/mcp` route; it does not accept card submissions.
+Draft review and promotion remain a filesystem/manual workflow until an
+authenticated write API exists.
 
 Run the standard checks:
 
@@ -410,8 +657,8 @@ The project is developed in stages:
 1. **Representation and evidence:** stabilize Architecture Cards and review
    rules.
 2. **Assisted extraction:** turn fixed-commit evidence into constrained drafts.
-3. **Application and retrieval:** provide D1, API, browser, semantic search,
-   and MCP access.
+3. **Application and retrieval:** provide D1, API, browser, planned semantic
+   search, and MCP access.
 4. **Temporal and relational graph:** model versions, evolution, communities,
    composition, constraints, and evidence lineage.
 5. **Architecture synthesis:** query requirements, generate candidate

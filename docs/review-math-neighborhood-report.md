@@ -3,7 +3,10 @@
 ## Scope and method
 
 This is an audit of the reviewed snapshot at `fb40053` (`feat(data): expand
-reviewed architecture graph to 154 systems`). The unit of reference below is a
+reviewed architecture graph to 154 systems`), not a current inventory. The
+checked-in canonical tree now contains 219 cards and 608 mathematical views;
+the counts below remain reproducible only for that historical snapshot. The
+unit of reference below is a
 deterministic view ID of the form `<card-id>#mv-<1-based position>`; these IDs
 are report-local navigation identifiers, since the card schema does not assign
 an ID field to a mathematical view.

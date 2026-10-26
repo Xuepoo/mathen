@@ -17,16 +17,22 @@ type Card = {
     name: string;
     category: string;
     claim_type: string;
+    claim_status?: string;
+    validity_scope?: Record<string, unknown>;
     description: string;
     benefits?: string[];
     costs?: string[];
     evidence_ids: string[];
   }>;
   mathematical_views: Array<{
+    id?: string | number;
     model: string;
     question: string;
     assumptions: string[];
     claim_type: string;
+    claim_status?: string;
+    validity_scope?: Record<string, unknown>;
+    contract?: Record<string, unknown>;
     evidence_ids: string[];
   }>;
   trade_offs: Array<{
@@ -65,20 +71,21 @@ const featureRelationTypes = new Set([
   "resembles",
 ]);
 const claimTypes = new Set(["fact", "inference", "hypothesis", "analogy"]);
-const claimStatuses = new Set([
-  "proposed",
-  "under-review",
-  "accepted",
-  "rejected",
-  "deprecated",
-]);
+const claimStatuses = new Set(["proposed", "under-review", "accepted", "rejected", "deprecated"]);
 
 const root = resolve(import.meta.dir, "../../../data/systems");
 const modelingRoot = resolve(import.meta.dir, "../../../data/modeling");
+const analogyRoot = resolve(import.meta.dir, "../../../data/analogies");
+const microstructureRoot = resolve(import.meta.dir, "../../../data/microstructures");
 const output = resolve(import.meta.dir, "../.wrangler/generated-seed.sql");
 const mode = process.argv.includes("--remote") ? "--remote" : "--local";
 const cards = await loadCards();
 const modelingBundles = await loadModelingBundles();
+await validateGraphDocuments();
+const graphDocuments = [
+  ...(await loadGraphDocuments(analogyRoot, "analogy")),
+  ...(await loadGraphDocuments(microstructureRoot, "microstructure")),
+];
 
 await mkdir(resolve(import.meta.dir, "../.wrangler"), { recursive: true });
 
@@ -94,53 +101,39 @@ const statements = [
   "DELETE FROM evidence;",
   "DELETE FROM systems;",
   "DELETE FROM modeling_bundles;",
+  "DELETE FROM graph_documents;",
   ...cards.flatMap(toStatements),
   ...cards.flatMap(toFeatureRelationStatements),
   ...modelingBundles.map(toModelingBundleStatement),
+  ...graphDocuments.map(toGraphDocumentStatement),
 ];
 
 await writeFile(output, `${statements.join("\n")}\n`, "utf8");
-const childProcess = Bun.spawn(
-  ["wrangler", "d1", "execute", "mathen-db", mode, "--file", output],
-  {
-    cwd: resolve(import.meta.dir, ".."),
-    stdout: "inherit",
-    stderr: "inherit",
-  },
-);
+const childProcess = Bun.spawn(["wrangler", "d1", "execute", "mathen-db", mode, "--file", output], {
+  cwd: resolve(import.meta.dir, ".."),
+  stdout: "inherit",
+  stderr: "inherit",
+});
 const exitCode = await childProcess.exited;
 if (exitCode !== 0) {
   throw new Error(`Wrangler seed command failed with exit code ${exitCode}`);
 }
 
 async function loadCards() {
-  const files = (await readdir(root))
-    .filter((file) => file.endsWith(".json"))
-    .sort();
+  const files = (await readdir(root)).filter((file) => file.endsWith(".json")).sort();
   return Promise.all(
-    files.map(
-      async (file) =>
-        JSON.parse(await readFile(resolve(root, file), "utf8")) as Card,
-    ),
+    files.map(async (file) => JSON.parse(await readFile(resolve(root, file), "utf8")) as Card),
   );
 }
 
 async function loadModelingBundles() {
-  const files = (await readdir(modelingRoot))
-    .filter((file) => file.endsWith(".json"))
-    .sort();
+  const files = (await readdir(modelingRoot)).filter((file) => file.endsWith(".json")).sort();
   return Promise.all(
     files.map(async (file) => {
-      const bundle = JSON.parse(
-        await readFile(resolve(modelingRoot, file), "utf8"),
-      ) as {
+      const bundle = JSON.parse(await readFile(resolve(modelingRoot, file), "utf8")) as {
         system?: { id?: string; commit?: string; provenance?: string };
       };
-      if (
-        !bundle.system?.id ||
-        !bundle.system.commit ||
-        !bundle.system.provenance
-      ) {
+      if (!bundle.system?.id || !bundle.system.commit || !bundle.system.provenance) {
         throw new Error(`Invalid modeling bundle: ${file}`);
       }
       return {
@@ -154,19 +147,62 @@ async function loadModelingBundles() {
   );
 }
 
+async function loadGraphDocuments(directory: string, kind: "microstructure" | "analogy") {
+  let files: string[];
+  try {
+    files = (await readdir(directory)).filter((file) => file.endsWith(".json")).sort();
+  } catch (error) {
+    if (isMissingDirectory(error)) return [];
+    throw error;
+  }
+  return Promise.all(
+    files.map(async (file) => {
+      const document = JSON.parse(await readFile(resolve(directory, file), "utf8")) as {
+        id?: unknown;
+        name?: unknown;
+      };
+      if (typeof document.id !== "string" || typeof document.name !== "string") {
+        throw new Error(`Invalid ${kind} document: ${file}`);
+      }
+      return {
+        id: document.id,
+        kind,
+        name: document.name,
+        document_json: JSON.stringify(document),
+        source_path: `data/${kind === "analogy" ? "analogies" : "microstructures"}/${file}`,
+      };
+    }),
+  );
+}
+
+async function validateGraphDocuments() {
+  await Promise.all([
+    runValidator("validate-microstructures", microstructureRoot),
+    runValidator("validate-analogies", analogyRoot),
+  ]);
+}
+
+async function runValidator(command: string, path: string) {
+  const childProcess = Bun.spawn(["uv", "run", "mathen", command, path], {
+    cwd: resolve(import.meta.dir, "../../.."),
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  const exitCode = await childProcess.exited;
+  if (exitCode !== 0) {
+    throw new Error(`Document validation failed: ${command} ${path}`);
+  }
+}
+
 function toStatements(card: Card) {
   const statements = [
     insert("systems", {
       id: card.id,
       name: card.name,
       version_context: card.version_context ?? null,
-      temporal_context_json: card.temporal_context
-        ? JSON.stringify(card.temporal_context)
-        : null,
+      temporal_context_json: card.temporal_context ? JSON.stringify(card.temporal_context) : null,
       relations_json: card.relations ? JSON.stringify(card.relations) : null,
-      composition_json: card.composition
-        ? JSON.stringify(card.composition)
-        : null,
+      composition_json: card.composition ? JSON.stringify(card.composition) : null,
       summary: card.summary,
       scope_json: JSON.stringify(card.scope),
       related_systems_json: JSON.stringify(card.related_systems ?? []),
@@ -191,6 +227,7 @@ function toStatements(card: Card) {
         description: feature.description,
         benefits_json: JSON.stringify(feature.benefits ?? []),
         costs_json: JSON.stringify(feature.costs ?? []),
+        metadata_json: JSON.stringify(featureMetadata(feature)),
       }),
     ),
     ...card.features.flatMap((feature) =>
@@ -209,6 +246,7 @@ function toStatements(card: Card) {
         question: view.question,
         assumptions_json: JSON.stringify(view.assumptions),
         claim_type: view.claim_type,
+        metadata_json: JSON.stringify(viewMetadata(card.id, view)),
       }),
       ...view.evidence_ids.map(
         (evidence_id) =>
@@ -240,6 +278,42 @@ function toModelingBundleStatement(bundle: {
   source_path: string;
 }) {
   return insert("modeling_bundles", bundle);
+}
+
+function toGraphDocumentStatement(document: {
+  id: string;
+  kind: "microstructure" | "analogy";
+  name: string;
+  document_json: string;
+  source_path: string;
+}) {
+  return insert("graph_documents", document);
+}
+
+function featureMetadata(feature: Card["features"][number]) {
+  return {
+    ...(feature.claim_status ? { claim_status: feature.claim_status } : {}),
+    ...(feature.validity_scope ? { validity_scope: feature.validity_scope } : {}),
+  };
+}
+
+function viewMetadata(systemId: string, view: Card["mathematical_views"][number]) {
+  return {
+    id: view.id ?? stableViewId(systemId, view.model, view.question),
+    ...(view.claim_status ? { claim_status: view.claim_status } : {}),
+    ...(view.validity_scope ? { validity_scope: view.validity_scope } : {}),
+    ...(view.contract ? { contract: view.contract } : {}),
+  };
+}
+
+function stableViewId(systemId: string, model: string, question: string) {
+  return `view:${encodeURIComponent(
+    JSON.stringify([
+      systemId.trim(),
+      model.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase(),
+      question.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase(),
+    ]),
+  )}`;
 }
 
 function toFeatureRelationStatements(card: Card) {
@@ -283,44 +357,28 @@ function validateFeatureRelation(card: Card, relation: FeatureRelation) {
     ["target_system_id", relation.target_system_id],
     ["target_feature_id", relation.target_feature_id],
   ] as const) {
-    if (!value)
-      throw new Error(
-        `Invalid feature relation in ${card.id}: ${field} is required`,
-      );
+    if (!value) throw new Error(`Invalid feature relation in ${card.id}: ${field} is required`);
   }
   if (!featureRelationTypes.has(relation.type)) {
     throw new Error(`Invalid feature relation in ${card.id}: type is invalid`);
   }
   if (!claimTypes.has(relation.claim_type)) {
-    throw new Error(
-      `Invalid feature relation in ${card.id}: claim_type is invalid`,
-    );
+    throw new Error(`Invalid feature relation in ${card.id}: claim_type is invalid`);
   }
   if (!claimStatuses.has(relation.claim_status)) {
-    throw new Error(
-      `Invalid feature relation in ${card.id}: claim_status is invalid`,
-    );
+    throw new Error(`Invalid feature relation in ${card.id}: claim_status is invalid`);
   }
-  if (
-    !Array.isArray(relation.evidence_ids) ||
-    relation.evidence_ids.length === 0
-  ) {
-    throw new Error(
-      `Invalid feature relation in ${card.id}: evidence_ids is required`,
-    );
+  if (!Array.isArray(relation.evidence_ids) || relation.evidence_ids.length === 0) {
+    throw new Error(`Invalid feature relation in ${card.id}: evidence_ids is required`);
   }
   const evidenceIds = new Set(card.evidence.map((evidence) => evidence.id));
   for (const evidenceId of relation.evidence_ids) {
     if (!evidenceIds.has(evidenceId)) {
-      throw new Error(
-        `Invalid feature relation in ${card.id}: unknown evidence ${evidenceId}`,
-      );
+      throw new Error(`Invalid feature relation in ${card.id}: unknown evidence ${evidenceId}`);
     }
   }
   if (relation.notes !== undefined && typeof relation.notes !== "string") {
-    throw new Error(
-      `Invalid feature relation in ${card.id}: notes must be a string`,
-    );
+    throw new Error(`Invalid feature relation in ${card.id}: notes must be a string`);
   }
 }
 
@@ -330,9 +388,7 @@ function evidenceKey(systemId: string, evidenceId: string) {
 
 function insert(table: string, values: Record<string, unknown>) {
   const columns = Object.keys(values);
-  const encoded = columns
-    .map((column) => `${quoteIdentifier(column)}`)
-    .join(", ");
+  const encoded = columns.map((column) => `${quoteIdentifier(column)}`).join(", ");
   const data = columns.map((column) => quote(values[column])).join(", ");
   return `INSERT INTO ${quoteIdentifier(table)} (${encoded}) VALUES (${data});`;
 }
@@ -345,4 +401,12 @@ function quote(value: unknown) {
   if (value === null) return "NULL";
   if (typeof value === "number") return String(value);
   return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+function isMissingDirectory(error: unknown): boolean {
+  return isRecord(error) && error.code === "ENOENT";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

@@ -1,0 +1,36 @@
+schema_version = 1
+
+# CarryCtx v0.12 supports one ordered [verification].commands list. Named
+# profiles are a Mathen repository policy consumed by scripts/carryctx_lifecycle.py;
+# they are deliberately kept in a separate file until CarryCtx has a native
+# profile/completion-hook contract.
+
+[profiles.python]
+commands = [
+  "uv run mathen validate",
+  "uv run python -m unittest discover -s tests -v",
+  "uv run ruff format --check .",
+  "uv run ruff check .",
+]
+
+[profiles.typescript]
+commands = [
+  "bun run check",
+  "bun run test:api",
+  "bun run test:web",
+  "bun test apps/mcp/src/backend.test.ts apps/mcp/src/compositions.test.ts",
+  "bun run build",
+]
+
+[profiles.full]
+commands = [
+  "uv run mathen validate",
+  "uv run python -m unittest discover -s tests -v",
+  "uv run ruff format --check .",
+  "uv run ruff check .",
+  "bun run check",
+  "bun run test:api",
+  "bun run test:web",
+  "bun test apps/mcp/src/backend.test.ts apps/mcp/src/compositions.test.ts",
+  "bun run build",
+]

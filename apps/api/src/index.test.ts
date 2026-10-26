@@ -12,10 +12,7 @@ import {
 } from "./index.js";
 
 test("hosted MCP uses the /api prefix on any deployment origin", async () => {
-  for (const origin of [
-    "https://preview.example.test",
-    "http://localhost:8787",
-  ]) {
+  for (const origin of ["https://preview.example.test", "http://localhost:8787"]) {
     const response = await app.request(
       `${origin}/api/mcp`,
       { method: "POST" },
@@ -134,6 +131,46 @@ test("hosted MCP requires its bearer token and stays read-only", async () => {
   assert.equal(authorized.status, 200);
   const body = (await authorized.json()) as { jsonrpc: string };
   assert.equal(body.jsonrpc, "2.0");
+  assert.match(authorized.headers.get("x-request-id") ?? "", /^[0-9a-f-]{36}$/);
+});
+
+test("hosted MCP applies configured origin and request limits", async () => {
+  const env = {
+    DB: {} as D1Database,
+    APP_ENV: "production",
+    ASSETS: {} as Fetcher,
+    API_ACCESS_TOKEN: "service-token",
+    MCP_ALLOWED_ORIGINS: "https://client.example",
+    MCP_RATE_LIMIT_PER_MINUTE: "1",
+  };
+  const request = (origin: string, ip: string) =>
+    app.request(
+      "/api/mcp",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer service-token",
+          Origin: origin,
+          "CF-Connecting-IP": ip,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+      },
+      env,
+    );
+
+  const allowed = await request("https://client.example", "mcp-test-limit");
+  assert.equal(allowed.status, 200);
+  assert.equal(allowed.headers.get("access-control-allow-origin"), "https://client.example");
+  const limited = await request("https://client.example", "mcp-test-limit");
+  assert.equal(limited.status, 429);
+  assert.equal(limited.headers.get("retry-after"), "60");
+  const denied = await request("https://other.example", "mcp-test-origin");
+  assert.equal(denied.status, 403);
+  assert.deepEqual(await denied.json(), {
+    error: "MCP origin is not allowed",
+    code: "origin_denied",
+  });
 });
 
 test("artifact route rejects traversal before accessing R2", async () => {
@@ -514,6 +551,11 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
                 question: "How does work move?",
                 assumptions_json: '["workers poll"]',
                 claim_type: "inference",
+                metadata_json: JSON.stringify({
+                  claim_status: "under-review",
+                  validity_scope: { versions: ["1.0"] },
+                  contract: { schema_version: "1.0", family: "state_machine" },
+                }),
                 evidence_ids_json: '["temporal-task-queues"]',
               },
               {
@@ -577,6 +619,9 @@ test("GET /api/graph/models projects reviewed mathematical views", async () => {
       assumptions: ["workers poll"],
       claim_type: "inference",
       evidence_ids: ["temporal-task-queues"],
+      claim_status: "under-review",
+      validity_scope: { versions: ["1.0"] },
+      contract: { schema_version: "1.0", family: "state_machine" },
     },
   );
 });
@@ -634,6 +679,258 @@ test("system detail view keys match graph identity across database ids", async (
   assert.equal(body.data.mathematical_views[0]?.claim_type, "hypothesis");
   assert.deepEqual(body.data.mathematical_views[0]?.evidence_ids, ["architecture"]);
   assert.deepEqual(body.data.feature_relations, []);
+});
+
+test("GET /api/graph/layers preserves D1 document and view metadata", async () => {
+  const document = {
+    id: "loop",
+    name: "Loop",
+    claim_type: "inference",
+    claim_status: "accepted",
+    validity_scope: { deployment_origins: ["local"] },
+    operations: [{ id: "repeat" }],
+  };
+  const db = {
+    prepare(sql: string) {
+      return {
+        all<T>() {
+          if (sql.includes("FROM graph_documents"))
+            return Promise.resolve({
+              results: [
+                {
+                  id: "loop",
+                  kind: "microstructure",
+                  name: "Loop",
+                  document_json: JSON.stringify(document),
+                },
+              ] as T[],
+            });
+          return Promise.resolve({
+            results: [
+              {
+                id: "alpha",
+                name: "Alpha",
+                scope_json: "[]",
+                relations_json: JSON.stringify([
+                  {
+                    target: "beta",
+                    type: "uses",
+                    claim_type: "fact",
+                    claim_status: "proposed",
+                    evidence_ids: ["alpha-doc"],
+                    notes: "Explicit relation.",
+                    validity_scope: { deployment_origins: ["local"] },
+                  },
+                ]),
+                composition_json: null,
+                features_json: JSON.stringify([
+                  {
+                    id: "state",
+                    name: "State",
+                    category: "behavior",
+                    claim_type: "fact",
+                    description: "State",
+                    evidence_ids: [],
+                    metadata_json: JSON.stringify({ claim_status: "accepted" }),
+                  },
+                ]),
+                views_json: JSON.stringify([
+                  {
+                    id: 1,
+                    model: "State machine",
+                    question: "How?",
+                    assumptions: [],
+                    claim_type: "inference",
+                    evidence_ids: [],
+                    metadata_json: JSON.stringify({
+                      id: "stable-view",
+                      claim_status: "under-review",
+                      contract: { family: "state_machine" },
+                    }),
+                  },
+                ]),
+              },
+              {
+                id: "beta",
+                name: "Beta",
+                scope_json: "[]",
+                relations_json: "[]",
+                composition_json: null,
+                features_json: "[]",
+                views_json: "[]",
+              },
+            ] as T[],
+          });
+        },
+      };
+    },
+  } as unknown as D1Database;
+  const response = await app.request(
+    "/api/graph/layers?origin=local",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as {
+    data: {
+      nodes: Array<{ id: string; metadata: Record<string, unknown> }>;
+      edges: Array<Record<string, unknown>>;
+    };
+  };
+  assert.deepEqual(Object.keys(body), ["data"]);
+  assert.deepEqual(
+    body.data.nodes.find((node) => node.id === "microstructure:loop")?.metadata.payload,
+    document,
+  );
+  assert.equal(
+    body.data.nodes.find((node) => node.id === "property:alpha:state")?.metadata.claim_status,
+    "accepted",
+  );
+  assert.deepEqual(
+    body.data.nodes.find((node) => node.id === "math:alpha:stable-view")?.metadata.contract,
+    { family: "state_machine" },
+  );
+  assert.deepEqual(
+    body.data.edges.find((edge) => edge.type === "uses"),
+    {
+      source: "system:alpha",
+      target: "system:beta",
+      type: "uses",
+      claim_type: "fact",
+      claim_status: "proposed",
+      evidence_ids: ["alpha-doc"],
+      notes: "Explicit relation.",
+      metadata: { validity_scope: { deployment_origins: ["local"] } },
+    },
+  );
+});
+
+test("GET /api/retrieval returns a reviewed-only envelope and request ID", async () => {
+  const db = {
+    prepare(sql: string) {
+      return {
+        all<T>() {
+          let results: unknown[] = [];
+          if (sql.includes("FROM systems")) {
+            results = [
+              {
+                id: "alpha",
+                name: "Alpha",
+                version_context: "1.0",
+                summary: "Embedded execution",
+                scope_json: '["execution"]',
+                temporal_context_json: null,
+                relations_json: "[]",
+                composition_json: null,
+                source_path: "data/systems/alpha.json",
+              },
+            ];
+          } else if (sql.includes("FROM features")) {
+            results = [
+              {
+                id: "embedded",
+                system_id: "alpha",
+                system_name: "Alpha",
+                name: "Embedded execution",
+                category: "deployment",
+                claim_type: "fact",
+                description: "Runs in the host process.",
+                benefits_json: "[]",
+                costs_json: "[]",
+                metadata_json: '{"claim_status":"accepted"}',
+                evidence_ids_json: '["architecture"]',
+              },
+            ];
+          } else if (sql.includes("FROM evidence")) {
+            results = [
+              {
+                id: "architecture",
+                system_id: "alpha",
+                kind: "official-doc",
+                title: "Architecture",
+                uri: "https://example.test/architecture",
+                accessed: null,
+                notes: null,
+              },
+            ];
+          }
+          return Promise.resolve({ results: results as T[] });
+        },
+      };
+    },
+  } as unknown as D1Database;
+
+  const response = await app.request(
+    "/api/retrieval?q=embedded+execution&record_kind=feature",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("x-request-id") ?? "", /^[0-9a-f-]{36}$/);
+  const body = (await response.json()) as {
+    data: {
+      index: { method: string; corpus: string };
+      results: Array<{ document: { id: string } }>;
+    };
+  };
+  assert.deepEqual(Object.keys(body), ["data"]);
+  assert.equal(body.data.index.method, "bounded_lexical_baseline");
+  assert.equal(body.data.index.corpus, "canonical_cards");
+  assert.deepEqual(
+    body.data.results.map((result) => result.document.id),
+    ["system:alpha:feature:embedded"],
+  );
+});
+
+test("GET /api/retrieval rejects malformed requests and reports unavailable D1", async () => {
+  const invalid = await app.request(
+    "/api/retrieval?q=x&limit=0",
+    {},
+    { DB: {} as D1Database, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+  assert.equal(invalid.status, 400);
+  assert.equal(((await invalid.json()) as { code: string }).code, "invalid_request");
+
+  const unavailable = await app.request(
+    "/api/retrieval?q=x",
+    {},
+    {
+      DB: {
+        prepare() {
+          throw new Error("D1 unavailable");
+        },
+      } as unknown as D1Database,
+      APP_ENV: "test",
+      ASSETS: {} as Fetcher,
+    },
+  );
+  assert.equal(unavailable.status, 503);
+  assert.equal(((await unavailable.json()) as { code: string }).code, "semantic_index_unavailable");
+  assert.match(unavailable.headers.get("x-request-id") ?? "", /^[0-9a-f-]{36}$/);
+});
+
+test("GET /api/retrieval distinguishes an empty verified corpus", async () => {
+  const db = {
+    prepare() {
+      return {
+        all<T>() {
+          return Promise.resolve({ results: [] as T[] });
+        },
+      };
+    },
+  } as unknown as D1Database;
+  const response = await app.request(
+    "/api/retrieval?q=anything",
+    {},
+    { DB: db, APP_ENV: "test", ASSETS: {} as Fetcher },
+  );
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as {
+    data: { index: { status: string }; results: unknown[]; warnings: string[] };
+  };
+  assert.equal(body.data.index.status, "empty");
+  assert.deepEqual(body.data.results, []);
+  assert.deepEqual(body.data.warnings, ["empty_index"]);
 });
 
 function systemRow(index: number) {

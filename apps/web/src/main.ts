@@ -1,13 +1,19 @@
 import "./style.css";
 import type { ForceGraph3DInstance } from "3d-force-graph";
-import { createLabelPool } from "./graph-labels";
+import { createLabelPool, shouldShowLabel } from "./graph-labels";
 import { lazyModule } from "./lazy-module";
 import {
   frameNodes,
   seedCoordinates,
   worldUnitsPerPixel,
 } from "./graph-viewport";
-import { applyView, expandOneHop, applyPin, type Pin } from "./graph-view";
+import {
+  applyView,
+  expandOneHop,
+  applyPin,
+  shortestPath,
+  type Pin,
+} from "./graph-view";
 import { movablePanel } from "./movable-panel";
 import { configureNavigation } from "./navigation-controls";
 import { centeredCamera } from "./graph-camera";
@@ -33,6 +39,7 @@ import {
   type SimulationNode,
 } from "./model-data";
 import { renderDetail, type SystemDetail } from "./system-detail";
+import { mountRetrieval } from "./retrieval";
 
 type TurnstileWidget = {
   render: (
@@ -61,35 +68,39 @@ app.innerHTML = `
     <div id="graph" role="region" aria-label="Interactive force graph. Use Browse systems for a keyboard accessible list."></div>
     <div id="graph-names" aria-hidden="true"></div>
     <header class="topbar glass">
-      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">m<span>·</span></span><span>mathen<small>Architecture atlas</small></span></a>
+      <a class="brand" href="/"><img class="brand-logo" src="https://cdn.xuepoo.xyz/mathen/brand/logo.svg" alt="" onerror="this.onerror=null;this.src='/mathen-logo.svg'"><span>mathen<small>Architecture atlas</small></span></a>
       <div class="search-wrap">
         <label class="sr-only" for="search">Search systems, descriptions, or card scope</label>
-        <span class="search-icon" aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Find a system…" autocomplete="off" aria-controls="search-results"><kbd>/</kbd>
+         <span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="10.8" cy="10.8" r="6.7"></circle><path d="m16 16 5 5"></path></svg></span><input id="search" type="search" placeholder="Find a system…" autocomplete="off" aria-controls="search-results"><kbd>/</kbd>
         <div id="search-results" class="search-results glass" hidden></div>
       </div>
-      <button id="catalog-open" class="quiet-button">Browse systems <span aria-hidden="true">↗</span></button>
+      <button id="catalog-open" class="quiet-button">Browse systems & discover <span aria-hidden="true">↗</span></button>
       <a class="github-link" href="https://github.com/Xuepoo/mathen" target="_blank" rel="noopener noreferrer" aria-label="Mathen on GitHub" title="Mathen on GitHub">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.25c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.74.08-.74 1.2.08 1.84 1.23 1.84 1.23 1.07 1.83 2.8 1.3 3.48 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.38 1.23-3.22-.12-.3-.53-1.52.12-3.17 0 0 1-.32 3.3 1.23a11.4 11.4 0 0 1 6 0c2.3-1.55 3.3-1.23 3.3-1.23.65 1.65.24 2.87.12 3.17.76.84 1.23 1.91 1.23 3.22 0 4.62-2.8 5.64-5.48 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .5Z"/></svg>
       </a>
     </header>
+    <button id="fullscreen-toggle" class="fullscreen-toggle glass" aria-pressed="false" aria-keyshortcuts="F11" aria-label="Enter full screen" title="Enter full screen (F11)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path></svg><span>Full screen</span></button>
 
     <section class="graph-tools glass" aria-label="Graph controls">
       <div class="dimension-switch graph-mode-switch" role="group" aria-label="Graph mode"><button id="graph-systems" aria-pressed="true">Systems</button><button id="graph-models" aria-pressed="false">Math models</button></div>
       <div class="dimension-switch" role="group" aria-label="Graph dimensions"><button id="mode-2" aria-pressed="true">2D</button><button id="mode-3" aria-pressed="false">3D</button></div>
-      <span class="tool-divider"></span>
-      <button id="fit" title="Fit all visible nodes">Fit</button>
-      <button id="names" aria-pressed="true" title="Toggle all names or highlighted names">Names: all</button>
-      <button id="focus" disabled title="Focus selected node and its neighbors">Focus</button>
-      <button id="pause" aria-pressed="false">Pause forces</button>
-      <button id="reheat" title="Restart the force simulation">Reheat</button>
-      <button id="reset" title="Clear filters and restore the overview">Reset</button>
-      <button id="restore-hidden" hidden>Restore hidden</button>
+       <button id="mobile-tools" class="mobile-tools-toggle" aria-expanded="false" aria-controls="secondary-tools">More</button>
+       <div id="secondary-tools" class="secondary-tools">
+         <span class="tool-divider"></span>
+         <button id="fit" title="Fit all visible nodes">Fit</button>
+         <button id="names" aria-pressed="true" title="Toggle all names or focused names">Names: all</button>
+         <button id="focus" disabled title="Focus selected node and its neighbors">Focus</button>
+         <button id="pause" aria-pressed="false">Pause forces</button>
+         <button id="reheat" title="Restart the force simulation">Reheat</button>
+         <button id="reset" title="Clear filters and restore the overview">Reset</button>
+         <button id="restore-hidden" hidden>Restore hidden</button>
+       </div>
     </section>
 
     <aside class="filters glass" aria-label="Navigation filters">
       <label for="domain">Navigation group</label><select id="domain"><option value="all">All domains</option>${domains.map((domain) => `<option value="${domain.id}">${domain.name}</option>`).join("")}</select>
       <label for="relation">Relation type</label><select id="relation"><option value="all">All relations</option></select>
-      <button id="help-open" class="text-button">How to explore <span aria-hidden="true">?</span></button>
+      <button id="help-open" class="text-button">Research position · explore <span aria-hidden="true">?</span></button>
     </aside>
 
     <div id="state" class="state-panel glass" role="status"><span class="state-orbit" aria-hidden="true"></span><h1>Connecting the atlas</h1><p>Loading reviewed systems and their relationships…</p></div>
@@ -107,9 +118,9 @@ app.innerHTML = `
       <div class="map-key glass"><div id="counts" class="map-counts" aria-live="polite">Loading graph…</div><div class="edge-key"><span><i class="typed-line"></i>Typed relation</span><span><i class="legacy-line"></i>Legacy related</span></div><button id="legend-open" class="text-button">Node colors · navigation groups</button><span id="simulation-status" class="simulation-status" aria-live="polite">Preparing layout</span></div>
     </footer>
   </main>
-  <dialog id="catalog-dialog" class="drawer" aria-labelledby="catalog-title"><div class="dialog-header"><div><p class="eyebrow">Keyboard explorer</p><h2 id="catalog-title">Browse systems</h2></div><button data-close aria-label="Close system catalog">✕</button></div><div class="catalog-search"><label for="catalog-search">Search the complete atlas</label><input id="catalog-search" type="search" placeholder="Name, description, or card scope…"></div><p id="catalog-count" class="muted"></p><div id="catalog-list" class="catalog-list"></div></dialog>
+  <dialog id="catalog-dialog" class="drawer" aria-labelledby="catalog-title"><div class="dialog-header"><div><p class="eyebrow">Keyboard explorer</p><h2 id="catalog-title">Browse systems & discover</h2></div><button data-close aria-label="Close system catalog">✕</button></div><section id="retrieval" class="retrieval" aria-label="Reviewed record discovery"></section><div class="catalog-search"><label for="catalog-search">Browse systems by name, description, or card scope</label><input id="catalog-search" type="search" placeholder="Name, description, or card scope…"></div><p id="catalog-count" class="muted"></p><div id="catalog-list" class="catalog-list"></div></dialog>
   <dialog id="detail-dialog" class="drawer detail-drawer" aria-labelledby="detail-title"><div class="dialog-header"><div><p class="eyebrow">Reviewed architecture card</p><h2 id="detail-title">System details</h2></div><button data-close aria-label="Close architecture card">✕</button></div><div id="detail-content"></div></dialog>
-  <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title"><div class="dialog-header"><h2 id="help-title">Explore the atlas</h2><button data-close aria-label="Close exploration guide">✕</button></div><p>Drag any node: spring forces pull connected systems along with it. Scroll or pinch to zoom. Drag the background to pan in 2D or orbit in 3D.</p><p>Select a system to highlight its neighbors, then open its architecture card for features, mathematical views, trade-offs, and source evidence. Select a line to inspect the relation and its claim metadata.</p><p>Pause forces holds the layout while keeping navigation and selection available. Reheat lets the layout settle again. Focus frames the selected neighborhood; Reset restores all systems.</p><h3>Navigation groups</h3><p>Node colors and the domain filter are broad browsing categories. They are independent of evidence-backed card scope and do not imply a relationship.</p><div class="domain-legend">${domains.map((domain) => `<span><i style="--domain-color:${domain.color}"></i>${domain.name}</span>`).join("")}</div><h3>Read the edges</h3><p>Colored arrows are typed relations. Gray lines are legacy “related” links with no implied direction or causal claim. Filters only show relationships supplied by the atlas.</p><p>Use <kbd>/</kbd> to search, <kbd>Enter</kbd> to select the first result, and <kbd>Escape</kbd> to close a dialog. Browse systems offers every visible system and its relations as ordinary keyboard-accessible buttons.</p></dialog>
+  <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title"><div class="dialog-header"><div><p class="eyebrow">Evidence to experiment</p><h2 id="help-title">Research position</h2></div><button data-close aria-label="Close research position">✕</button></div><p>Mathen studies whether a reviewed bridge between evidence, architectural microstructure, and checkable contracts can make cross-domain comparison more useful and falsifiable. The loop is <strong>evidence → deterministic observation → reviewed microstructure → contract → bounded composition → macro candidate → experiment → new evidence</strong>, with human review and question reformulation throughout.</p><h3>Different tools, different claims</h3><p>Humans reframe questions and review trade-offs. Deterministic analysis records reproducible repository signals. LLMs explain evidence and draft candidate abstractions. Graph analysis can expose typed neighborhoods and paths. Choose Browse systems & discover for reviewed-record retrieval using a bounded lexical baseline. It is not embeddings or semantic/vector similarity. Its uncalibrated discovery ranking signal is not semantic proof, compatibility, relation, causality, originality, or historical influence. Validators check supplied finite data for supported mathematical model families; contracts do not validate omitted implementation behavior, while experiments measure behavior within a stated workload, version, environment, and deployment scope.</p><p><code>retrieval ranking ≠ graph position ≠ LLM interpretation ≠ contract classification ≠ runtime compatibility</code></p><h3>Comparisons are bounded analogies</h3><p>Chemistry and biology may share a qualitative network motif, but not parameters, substrates, laws, units, or causal semantics: a representation can transfer a question about connectivity without transferring the mechanism that produces behavior. Materials science helps explain why software <em>microstructure</em> names bounded units, interfaces, conditions, and properties; it does not import crystal structure or thermodynamic laws. Taxonomy organizes vocabulary for retrieval and review; it does not discover natural kinds or establish dependency, compatibility, lineage, or historical influence.</p><h3>Discovery is a candidate, not a conclusion</h3><p>Discovery means surfacing a path, mapping, counterexample, or question not recorded in the current dataset. A graph path, larger graph, or retrieval candidate is not architectural novelty. Stronger novelty or usefulness claims need a defined reference set, source review, explicit scope, and an experiment. Reviewed cards, validators, and sample standalone artifacts remain separate from drafts; a configured, populated API/MCP projection exposes only the reviewed records provisioned there. These boundaries do not provide automatic proofs, calibrated originality scores, universal quality scores, or validation of the full loop. Graph projection and novelty benchmarks remain planned work; see the <a href="https://github.com/Xuepoo/mathen/issues/47" target="_blank" rel="noopener noreferrer">MTH-0117 plan</a> and <a href="https://github.com/Xuepoo/mathen/issues/48" target="_blank" rel="noopener noreferrer">MTH-0118 plan</a>.</p><h3>Explore the atlas</h3><p>Drag any node: spring forces pull connected systems along with it. Scroll or pinch to zoom. Drag the background to pan in 2D or orbit in 3D.</p><p>Select a system to highlight its neighbors, then open its architecture card for features, mathematical views, trade-offs, and source evidence. Select a line to inspect the relation and its claim metadata.</p><p>Node colors and the domain filter are broad browsing categories. They are independent of evidence-backed card scope and do not imply a relationship.</p><div class="domain-legend">${domains.map((domain) => `<span><i style="--domain-color:${domain.color}"></i>${domain.name}</span>`).join("")}</div><h3>Read the edges</h3><p>Colored arrows are typed relations. Gray lines are legacy “related” links with no implied direction or causal claim. Filters only show relationships supplied by the atlas.</p><p>Use <kbd>/</kbd> to search, <kbd>Enter</kbd> to select the first result, and <kbd>Escape</kbd> to close a dialog. Deployment origins are configurable and scope access or reproduction; they do not establish semantic validity.</p></dialog>
 `;
 
 function required<T extends HTMLElement>(id: string): T {
@@ -136,11 +147,22 @@ const detailDialog = required<HTMLDialogElement>("detail-dialog");
 const accessDialog = required<HTMLDialogElement>("access-dialog");
 const accessStatus = required<HTMLParagraphElement>("access-status");
 const helpDialog = required<HTMLDialogElement>("help-dialog");
+helpDialog
+  .querySelector(".dialog-header")
+  ?.insertAdjacentHTML(
+    "afterend",
+    `<h3>Keyboard-first browsing</h3><p>Choose <strong>Browse systems</strong> to open the searchable, keyboard-accessible system list. It offers every visible system and its relations as ordinary keyboard-accessible buttons: Tab to a system action, press <kbd>Enter</kbd> or <kbd>Space</kbd> to read its card or locate it, and use <kbd>Escape</kbd> to close a dialog. Pointer and touch gestures are optional; use them to drag nodes, scroll or pinch to zoom, and drag the background to pan in 2D or orbit in 3D.</p>`,
+  );
 helpDialog.insertAdjacentHTML(
   "beforeend",
-  `<h3>Why these shapes?</h3><p>Stars show a hub with many direct neighbors; in Math models a hub often represents a model family shared by several systems. Chains follow successive supplied links. Disconnected islands have no connecting links in the current data or filter. None of these shapes adds a new relationship.</p><p>2D and 3D are force-layout projections, not semantic distance maps. Position, closeness, direction, and depth do not measure similarity, chronology, or influence. A 3D chain can look shorter or overlap when viewed end-on: orbit to inspect it, or use 2D for a flat overview.</p><p>Names are shown beside every node by default and keep their screen size when zooming. Use Names to show only hovered, selected, or highlighted names in crowded views. Fit frames the current graph; filters and dimension changes frame their new layout until you pan, zoom, or drag.</p>`,
+  `<h3>Why these shapes?</h3><p>Stars show a hub with many direct neighbors; in Math models a hub often represents a model family shared by several systems. Chains follow successive supplied links. Disconnected islands have no connecting links in the current data or filter. None of these shapes adds a new relationship.</p><p>2D and 3D are force-layout projections, not semantic distance maps. Position, closeness, direction, and depth do not measure similarity, chronology, or influence. A 3D chain can look shorter or overlap when viewed end-on: orbit to inspect it, or use 2D for a flat overview.</p><p>Names are shown beside every node on desktop and keep their screen size when zooming. On smaller screens, names start in focused mode to keep the graph readable; use Names to show all labels when needed. Fit frames the current graph; filters and dimension changes frame their new layout until you pan, zoom, or drag.</p>`,
 );
 const catalogSearch = required<HTMLInputElement>("catalog-search");
+mountRetrieval(
+  required("retrieval"),
+  (id) => void openDetail(id),
+  () => catalogSearch.focus(),
+);
 const detailContent = required<HTMLDivElement>("detail-content");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let canonical: GraphPayload = { nodes: [], edges: [] };
@@ -161,7 +183,15 @@ let paused = reducedMotion.matches;
 let dimensions: 2 | 3 = 2;
 let autoFit = true;
 let initialFitPending = false;
-let allNames = true;
+const mobileViewport = window.matchMedia("(max-width: 700px)");
+let allNames = !mobileViewport.matches;
+let namesManuallySet = false;
+let mobileToolsOpen = false;
+let pathSelection: string[] = [];
+let pathNodes = new Set<string>();
+let pathEdges = new Set<string>();
+required("names").setAttribute("aria-pressed", String(allNames));
+required("names").textContent = allNames ? "Names: all" : "Names: focus";
 let detailRequest = 0;
 let metadataLoaded = false;
 let accessReady = false;
@@ -393,8 +423,8 @@ function configureCamera() {
   );
   required("gesture-hint").textContent =
     dimensions === 2
-      ? "Drag space to pan. Drag a node to reshape its neighborhood. Scroll to zoom."
-      : "Drag a node to reshape its neighborhood. Drag space to orbit.";
+      ? "Drag space to pan · Ctrl-click two nodes for a shortest path · scroll to zoom."
+      : "Drag to orbit · Ctrl-click two nodes for a shortest path · scroll to zoom.";
 }
 
 async function createGraph() {
@@ -413,12 +443,13 @@ async function createGraph() {
     .backgroundColor("#10192300")
     .showNavInfo(false)
     .numDimensions(dimensions)
-    .nodeRelSize(4)
+    .nodeRelSize(mobileViewport.matches ? 3.2 : 4)
     .nodeResolution(16)
-    .nodeVal(
-      (node: SimulationNode) =>
-        (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65,
-    )
+    .nodeVal((node: SimulationNode) => {
+      const value =
+        (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65;
+      return mobileViewport.matches ? value * 0.78 : value;
+    })
     .nodeColor(nodeColor)
     .nodeOpacity(0.95)
     .nodeLabel((node) => {
@@ -463,7 +494,12 @@ async function createGraph() {
     .warmupTicks(reducedMotion.matches ? 100 : 35)
     .cooldownTicks(paused ? 0 : 180)
     .cooldownTime(8000)
-    .onNodeClick((node) => selectNode(node.id))
+    .onNodeClick((node, event) => {
+      const pathClick = event.ctrlKey || event.metaKey;
+      if (pathClick) togglePathNode(node.id);
+      else clearPathSelection();
+      selectNode(node.id, !pathClick);
+    })
     .onNodeRightClick((node, event) => {
       event.preventDefault();
       selectNode(node.id);
@@ -508,11 +544,20 @@ async function createGraph() {
         autoFit = false;
       }
     });
-  graph.d3Force("charge")?.strength(-140).distanceMax(650);
+  graph
+    .d3Force("charge")
+    ?.strength(mobileViewport.matches ? -230 : -140)
+    .distanceMax(mobileViewport.matches ? 900 : 650);
   graph
     .d3Force("link")
     ?.distance((link: SimulationLink) =>
-      link.type === "modeled-by" ? 220 : 150,
+      link.type === "modeled-by"
+        ? mobileViewport.matches
+          ? 260
+          : 220
+        : mobileViewport.matches
+          ? 190
+          : 150,
     )
     .strength((link: SimulationLink) =>
       link.type === "related" ? 0.12 : 0.35,
@@ -558,6 +603,74 @@ function closeNodeMenu(restore = true) {
   nodeMenu.hidden = true;
   if (restore && menuOpener?.isConnected) menuOpener.focus();
 }
+function closeMobileTools() {
+  if (!mobileToolsOpen) return;
+  mobileToolsOpen = false;
+  required("mobile-tools").setAttribute("aria-expanded", "false");
+  required("secondary-tools").classList.remove("is-open");
+}
+function updateFullscreenState(fullscreen: boolean) {
+  document
+    .querySelector<HTMLElement>(".explorer")
+    ?.classList.toggle("is-fullscreen", fullscreen);
+  const button = required<HTMLButtonElement>("fullscreen-toggle");
+  button.setAttribute("aria-pressed", String(fullscreen));
+  button.setAttribute(
+    "aria-label",
+    fullscreen ? "Exit full screen" : "Enter full screen",
+  );
+  button.title = fullscreen
+    ? "Exit full screen (F11 or Escape)"
+    : "Enter full screen (F11)";
+  button.querySelector("span")!.textContent = fullscreen
+    ? "Exit"
+    : "Full screen";
+  button.querySelector("svg")!.innerHTML = fullscreen
+    ? '<path d="M9 4H4v5M20 9V4h-5M15 20h5v-5M4 15v5h5"></path>'
+    : '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path>';
+}
+async function toggleFullscreen() {
+  if (document.fullscreenElement) return document.exitFullscreen();
+  return document.documentElement.requestFullscreen();
+}
+function syncFullscreenState() {
+  updateFullscreenState(Boolean(document.fullscreenElement));
+}
+function updatePathHighlight() {
+  pathNodes = new Set(pathSelection);
+  pathEdges = new Set();
+  if (pathSelection.length === 2) {
+    const path = shortestPath(visible, pathSelection[0], pathSelection[1]);
+    if (path) {
+      pathNodes = new Set(path.nodes);
+      pathEdges = path.edges;
+      required("simulation-status").textContent =
+        `Shortest path · ${path.edges.size} relation${path.edges.size === 1 ? "" : "s"}`;
+    } else
+      required("simulation-status").textContent =
+        "No path between selected nodes";
+  } else if (pathSelection.length === 1) {
+    required("simulation-status").textContent =
+      "Path endpoint selected · Ctrl-click another node";
+  }
+  updateStyles();
+}
+function togglePathNode(id: string) {
+  const index = pathSelection.indexOf(id);
+  if (index >= 0) pathSelection.splice(index, 1);
+  else {
+    pathSelection.push(id);
+    if (pathSelection.length > 2) pathSelection.shift();
+  }
+  updatePathHighlight();
+}
+function clearPathSelection() {
+  if (!pathSelection.length) return;
+  pathSelection = [];
+  pathNodes.clear();
+  pathEdges.clear();
+  updateStyles();
+}
 function openNodeMenu(id: string, x?: number, y?: number) {
   const node = graph?.graphData().nodes.find((item) => item.id === id);
   if (!node || !graph) return;
@@ -565,7 +678,7 @@ function openNodeMenu(id: string, x?: number, y?: number) {
   initialFitPending = false;
   menuOpener = document.getElementById("node-actions") ?? host;
   const point = graph.graph2ScreenCoords(node.x!, node.y!, node.z!);
-  nodeMenu.innerHTML = `<strong>${escapeHtml(node.name)}</strong><button role="menuitem" data-action="pin">${pins.has(id) ? "Unpin" : "Pin"}</button><button role="menuitem" data-action="expand">Expand 1 hop</button><button role="menuitem" data-action="hide">Hide from view</button><button role="menuitem" data-action="details">${node.type === "model" ? "View model metadata" : "View details"}</button><p>Expand adds actual neighbors outside the domain; relation filters and hidden nodes still apply.</p>`;
+  nodeMenu.innerHTML = `<strong>${escapeHtml(node.name)}</strong><button role="menuitem" data-action="path">${pathSelection.includes(id) ? "Remove path endpoint" : "Add path endpoint"}</button><button role="menuitem" data-action="pin">${pins.has(id) ? "Unpin" : "Pin"}</button><button role="menuitem" data-action="expand">Expand 1 hop</button><button role="menuitem" data-action="hide">Hide from view</button><button role="menuitem" data-action="details">${node.type === "model" ? "View model metadata" : "View details"}</button><p>Path endpoints use Ctrl-click or this menu. The shortest visible route is highlighted when two are selected.</p>`;
   nodeMenu.hidden = false;
   nodeMenu.style.left = `${Math.max(8, Math.min(x ?? point.x + 14, window.innerWidth - nodeMenu.offsetWidth - 8))}px`;
   nodeMenu.style.top = `${Math.max(8, Math.min(y ?? point.y, window.innerHeight - nodeMenu.offsetHeight - 8))}px`;
@@ -575,6 +688,9 @@ function openNodeMenu(id: string, x?: number, y?: number) {
       button.onclick = () => {
         closeNodeMenu();
         switch (button.dataset.action) {
+          case "path":
+            togglePathNode(id);
+            break;
           case "pin":
             if (pins.has(id)) pins.delete(id);
             else pins.set(id, { x: node.x!, y: node.y!, z: node.z! });
@@ -589,13 +705,13 @@ function openNodeMenu(id: string, x?: number, y?: number) {
               expandedNodes,
               graphMode === "models" ? "all" : relationSelect.value,
             );
-            updateGraph();
+            updateGraph(true);
             required("simulation-status").textContent =
               "Expanded actual neighbors · domain exceptions active";
             break;
           case "hide":
             hiddenNodes.add(id);
-            updateGraph();
+            updateGraph(true);
             required("restore-hidden").focus();
             break;
           case "details":
@@ -625,8 +741,21 @@ nodeMenu.addEventListener("keydown", (event) => {
   }
   if (event.key === "Tab") closeNodeMenu(false);
 });
-window.addEventListener("resize", () => closeNodeMenu(false));
+window.addEventListener("resize", () => {
+  closeNodeMenu(false);
+  updateLabels();
+  syncFullscreenState();
+});
+mobileViewport.addEventListener("change", ({ matches }) => {
+  if (!namesManuallySet) {
+    allNames = !matches;
+    required("names").setAttribute("aria-pressed", String(allNames));
+    required("names").textContent = allNames ? "Names: all" : "Names: focus";
+  }
+  updateLabels();
+});
 function nodeColor(node: SimulationNode) {
+  if (pathNodes.has(node.id)) return "#ffffff";
   const active =
     (!highlighted.size || highlighted.has(node.id)) &&
     (!searchMatches || searchMatches.has(node.id));
@@ -637,6 +766,7 @@ function nodeColor(node: SimulationNode) {
     : "#34404c";
 }
 function linkColor(link: SimulationLink) {
+  if (pathEdges.has(link.id)) return "#ffffff";
   if (selectedEdge?.id === link.id) return "#ffffff";
   if (
     highlighted.size &&
@@ -647,22 +777,32 @@ function linkColor(link: SimulationLink) {
   return relationColor(link.type);
 }
 function labelVisible(node: SimulationNode) {
-  return (
-    allNames ||
-    node.id === hoveredId ||
-    node.id === selectedId ||
-    highlighted.has(node.id) ||
-    Boolean(searchMatches?.has(node.id))
-  );
+  return shouldShowLabel({
+    id: node.id,
+    allNames,
+    mobile: mobileViewport.matches,
+    selectedId,
+    hoveredId,
+    highlighted,
+    searchMatches,
+  });
 }
 function updateStyles() {
   if (!graph) return;
   graph.nodeColor(nodeColor).linkColor(linkColor);
   // The engine rebuilds every link mesh when linkWidth is set, even on hover.
-  if (styledEdgeId !== selectedEdge?.id) {
-    styledEdgeId = selectedEdge?.id;
+  const pathKey = [...pathEdges].sort().join(",");
+  const styleKey = `${selectedEdge?.id ?? ""}|${pathKey}`;
+  if (styledEdgeId !== styleKey) {
+    styledEdgeId = styleKey;
     graph.linkWidth((link) =>
-      selectedEdge?.id === link.id ? 2.5 : link.type === "related" ? 0.45 : 1.1,
+      pathEdges.has(link.id)
+        ? 3.4
+        : selectedEdge?.id === link.id
+          ? 2.5
+          : link.type === "related"
+            ? 0.45
+            : 1.1,
     );
   }
   updateLabels();
@@ -678,10 +818,23 @@ function updateLabels() {
   ]);
 }
 
-function updateGraph() {
+function updateGraph(preserveView = false) {
   closeNodeMenu(false);
-  autoFit = true;
-  initialFitPending = true;
+  const preservedCamera =
+    preserveView && graph
+      ? {
+          position: { ...graph.camera().position },
+          target: {
+            ...(
+              graph.controls() as {
+                target: { x: number; y: number; z: number };
+              }
+            ).target,
+          },
+        }
+      : undefined;
+  autoFit = !preserveView;
+  initialFitPending = !preserveView;
   visible =
     graphMode === "models"
       ? filterModelGraph(
@@ -698,6 +851,9 @@ function updateGraph() {
   );
   if (selectedId && !visible.nodes.some((node) => node.id === selectedId))
     clearSelection();
+  pathSelection = pathSelection.filter((id) =>
+    visible.nodes.some((node) => node.id === id),
+  );
   selectedEdge = undefined;
   const next = modelSimulationData(visible);
   const old = new Map(graph?.graphData().nodes.map((node) => [node.id, node]));
@@ -718,7 +874,10 @@ function updateGraph() {
   labelAnchors.clear();
   linkAnchors.clear();
   graph?.graphData(next);
+  if (preservedCamera && graph)
+    graph.cameraPosition(preservedCamera.position, preservedCamera.target, 0);
   highlighted = selectedId ? neighborhood(visible, selectedId) : new Set();
+  updatePathHighlight();
   if (selectedId) renderNodeInspector(selectedId);
   else inspector.hidden = true;
   required("counts").textContent =
@@ -739,7 +898,7 @@ function updateGraph() {
     `Restore hidden (${hiddenNodes.size})`;
   renderCatalog();
   updateStyles();
-  if (!paused) reheat();
+  if (!preserveView && !paused) reheat();
   else graph?.cooldownTicks(0);
 }
 
@@ -848,8 +1007,13 @@ function renderScreenGeometry() {
       const y = ((source.y ?? 0) + (target.y ?? 0)) / 2;
       const z = ((source.z ?? 0) + (target.z ?? 0)) / 2;
       const depth = -(m[2] * x + m[6] * y + m[10] * z + m[14]);
-      const pixels =
-        selectedEdge?.id === link.id ? 3 : link.type === "related" ? 1.2 : 2;
+      const pixels = pathEdges.has(link.id)
+        ? 5
+        : selectedEdge?.id === link.id
+          ? 3
+          : link.type === "related"
+            ? 1.2
+            : 2;
       anchor.scale.x = anchor.scale.y =
         (pixels * worldUnitsPerPixel(depth, camera.fov, height)) /
         (2 * anchor.geometry.parameters.radiusTop);
@@ -870,6 +1034,7 @@ function reheat() {
 }
 function clearSelection() {
   closeNodeMenu(false);
+  clearPathSelection();
   selectedId = undefined;
   selectedEdge = undefined;
   highlighted.clear();
@@ -877,8 +1042,9 @@ function clearSelection() {
   required<HTMLButtonElement>("focus").disabled = true;
   updateStyles();
 }
-function selectNode(id: string) {
+function selectNode(id: string, center = true) {
   closeNodeMenu(false);
+  closeMobileTools();
   selectedId = id;
   selectedEdge = undefined;
   highlighted = neighborhood(visible, id);
@@ -891,7 +1057,12 @@ function selectNode(id: string) {
   const node = graph
     ?.graphData()
     .nodes.find((candidate) => candidate.id === id);
-  if (graph && node && [node.x, node.y, node.z].every(Number.isFinite)) {
+  if (
+    center &&
+    graph &&
+    node &&
+    [node.x, node.y, node.z].every(Number.isFinite)
+  ) {
     autoFit = false;
     initialFitPending = false;
     const controls = graph.controls() as {
@@ -974,6 +1145,7 @@ function bindInspector() {
 }
 function selectEdge(edge: SimulationLink) {
   closeNodeMenu(false);
+  clearPathSelection();
   selectedEdge = edge;
   selectedId = undefined;
   highlighted = new Set([endpointId(edge.source), endpointId(edge.target)]);
@@ -1239,9 +1411,9 @@ function switchGraphMode(mode: "systems" | "models") {
       : "Search systems, descriptions, or card scope",
   );
   required("catalog-title").textContent =
-    mode === "models" ? "Browse systems & models" : "Browse systems";
+    mode === "models" ? "Browse nodes & discover" : "Browse systems & discover";
   required("catalog-open").innerHTML =
-    `${mode === "models" ? "Browse nodes" : "Browse systems"} <span aria-hidden="true">↗</span>`;
+    `${mode === "models" ? "Browse nodes" : "Browse systems"} & discover <span aria-hidden="true">↗</span>`;
   const key = document.querySelector(".edge-key");
   if (key)
     key.innerHTML =
@@ -1283,6 +1455,11 @@ document.addEventListener("pointerdown", (event) => {
     closeNodeMenu(false);
 });
 document.addEventListener("keydown", (event) => {
+  if (event.key === "F11") {
+    event.preventDefault();
+    void toggleFullscreen().catch(() => undefined);
+    return;
+  }
   if (event.key === "Escape" && !nodeMenu.hidden) {
     event.preventDefault();
     closeNodeMenu();
@@ -1315,19 +1492,33 @@ required("catalog-open").onclick = () => {
   renderCatalog();
   showDialog(catalog);
 };
+required("mobile-tools").onclick = () => {
+  mobileToolsOpen = !mobileToolsOpen;
+  required("mobile-tools").setAttribute(
+    "aria-expanded",
+    String(mobileToolsOpen),
+  );
+  required("secondary-tools").classList.toggle("is-open", mobileToolsOpen);
+};
+required("fullscreen-toggle").onclick = () =>
+  void toggleFullscreen().catch(() => undefined);
+document.addEventListener("fullscreenchange", () =>
+  updateFullscreenState(Boolean(document.fullscreenElement)),
+);
+syncFullscreenState();
 required("help-open").onclick = required("legend-open").onclick = () =>
   showDialog(helpDialog);
 domainSelect.onchange = () => {
   expandedNodes.clear();
-  updateGraph();
+  updateGraph(true);
 };
 relationSelect.onchange = () => {
   expandedNodes.clear();
-  updateGraph();
+  updateGraph(true);
 };
 required("restore-hidden").onclick = () => {
   hiddenNodes.clear();
-  updateGraph();
+  updateGraph(true);
 };
 required("fit").onclick = () => {
   autoFit = false;
@@ -1335,6 +1526,7 @@ required("fit").onclick = () => {
   fit();
 };
 required("names").onclick = () => {
+  namesManuallySet = true;
   allNames = !allNames;
   required("names").setAttribute("aria-pressed", String(allNames));
   required("names").textContent = allNames ? "Names: all" : "Names: focus";

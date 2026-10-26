@@ -67,8 +67,18 @@ describe("renderDetail", () => {
 
   test("tolerates cards without feature relations", () => {
     const { feature_relations: _, ...withoutRelations } = system;
-    expect(renderDetail(withoutRelations, graph)).toContain(
-      "No feature relations recorded.",
+    expect(renderDetail(withoutRelations, graph)).toContain("No feature relations recorded.");
+  });
+
+  test("does not turn credential-bearing evidence URLs into active links", () => {
+    const html = renderDetail(
+      {
+        ...system,
+        evidence: [{ ...system.evidence[0], uri: "https://token:secret@example.com/source" }],
+      },
+      graph,
     );
+    expect(html).not.toContain('href="https://token:secret@example.com/source"');
+    expect(html).toContain("(non-web source)");
   });
 });

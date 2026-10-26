@@ -106,12 +106,7 @@ h4 {
   height: 100dvh;
   overflow: hidden;
   position: relative;
-  background: radial-gradient(
-    ellipse at 55% 40%,
-    #1c2c3b 0%,
-    #121e2a 42%,
-    #0d151f 100%
-  );
+  background: radial-gradient(ellipse at 55% 40%, #1c2c3b 0%, #121e2a 42%, #0d151f 100%);
 }
 .explorer::before {
   content: "";
@@ -120,6 +115,45 @@ h4 {
   background-image: radial-gradient(#829bad1a 1px, transparent 1px);
   background-size: 30px 30px;
   pointer-events: none;
+}
+.explorer.is-fullscreen .topbar,
+.explorer.is-fullscreen .graph-tools,
+.explorer.is-fullscreen .filters,
+.explorer.is-fullscreen .map-footer,
+.explorer.is-fullscreen .metadata-notice,
+.explorer.is-fullscreen .state-panel,
+.explorer.is-fullscreen .inspector,
+.explorer.is-fullscreen .node-menu {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+.fullscreen-toggle {
+  position: fixed;
+  top: 22px;
+  right: 24px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 11px;
+  color: #c6d4d8;
+  background: #14202ee8;
+}
+.fullscreen-toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+.fullscreen-toggle span {
+  font-size: 11px;
+}
+.explorer.is-fullscreen .fullscreen-toggle {
+  color: var(--mint);
 }
 #graph {
   position: absolute;
@@ -140,7 +174,7 @@ h4 {
   position: absolute;
   top: 22px;
   left: 24px;
-  right: 24px;
+  right: 150px;
   z-index: 3;
   display: flex;
   align-items: center;
@@ -176,6 +210,12 @@ h4 {
   right: 3px;
   top: -6px;
 }
+.brand-logo {
+  display: block;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+}
 .brand small {
   display: block;
   margin-top: 1px;
@@ -193,16 +233,30 @@ h4 {
 }
 .search-wrap input {
   width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
   padding: 12px 36px;
   background: #0b152080;
   font-size: 13px;
 }
 .search-icon {
   position: absolute;
-  top: 6px;
+  top: 50%;
   left: 12px;
-  font-size: 23px;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
   color: var(--muted);
+}
+.search-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
 }
 .search-wrap kbd {
   position: absolute;
@@ -248,6 +302,7 @@ h4 {
   padding: 7px;
   max-height: min(60vh, 500px);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 .search-results button {
   width: 100%;
@@ -259,6 +314,13 @@ h4 {
   background: transparent;
   text-align: left;
   padding: 12px;
+}
+.search-results button strong,
+.search-results button small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .search-results small {
   color: var(--muted);
@@ -323,6 +385,12 @@ h4 {
   width: 1px;
   background: var(--border);
   margin: 0 4px;
+}
+.mobile-tools-toggle {
+  display: none;
+}
+.secondary-tools {
+  display: contents;
 }
 .filters {
   position: absolute;
@@ -761,6 +829,40 @@ dialog::backdrop {
   display: grid;
   gap: 13px;
 }
+.retrieval {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.retrieval h3 {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+.retrieval .catalog-search {
+  margin-top: 16px;
+}
+.retrieval-warning {
+  color: #e8ca9e;
+  margin: 12px 0;
+}
+.retrieval-results {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+}
+.retrieval dt {
+  color: var(--muted);
+  margin-top: 12px;
+}
+.retrieval dd {
+  margin: 3px 0 0;
+}
+.retrieval dd small {
+  color: var(--muted);
+}
 .catalog-item {
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -996,6 +1098,14 @@ summary {
   .topbar {
     gap: 20px;
   }
+  .fullscreen-toggle {
+    top: 12px;
+    right: 56px;
+    padding: 8px;
+  }
+  .fullscreen-toggle span {
+    display: none;
+  }
   .map-caption h1 {
     font-size: 30px;
   }
@@ -1004,7 +1114,7 @@ summary {
   .topbar {
     top: 12px;
     left: 12px;
-    right: 12px;
+    right: 56px;
     padding: 10px;
     gap: 12px;
     border-radius: 13px;
@@ -1032,9 +1142,17 @@ summary {
   .search-wrap kbd {
     display: none;
   }
+  .search-results {
+    left: 50%;
+    right: auto;
+    width: min(320px, calc(100vw - 24px));
+    transform: translateX(-50%);
+    z-index: 5;
+  }
   .search-icon {
-    top: 4px;
     left: 9px;
+    width: 18px;
+    height: 18px;
   }
   .topbar > button {
     font-size: 0;
@@ -1059,6 +1177,34 @@ summary {
     max-width: none;
     gap: 1px;
     padding: 5px;
+    overflow: visible;
+  }
+  .mobile-tools-toggle {
+    display: block;
+  }
+  .secondary-tools {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 4;
+    min-width: 150px;
+    padding: 6px;
+    border: 1px solid #ffffff14;
+    border-radius: 11px;
+    background: #14202ef5;
+    box-shadow: 0 16px 40px #02081170;
+  }
+  .secondary-tools.is-open {
+    display: grid;
+    gap: 3px;
+  }
+  .secondary-tools .tool-divider {
+    display: none;
+  }
+  .secondary-tools button {
+    width: 100%;
+    text-align: left;
   }
   .graph-tools button {
     font-size: 10px;

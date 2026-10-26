@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { applyView, expandOneHop, applyPin } from "./graph-view";
+import { applyView, expandOneHop, applyPin, shortestPath } from "./graph-view";
 import type { ExplorerPayload } from "./model-data";
 
 const source: ExplorerPayload = {
@@ -40,4 +40,11 @@ test("pins survive flattened 2D without losing their stored 3D depth", () => {
   applyPin(node, undefined, 3);
   expect(node.fx).toBeUndefined();
   expect(pin.z).toBe(35);
+});
+
+test("shortest path explores relations in either direction with deterministic BFS", () => {
+  const result = shortestPath(source, "a", "c");
+  expect(result?.nodes).toEqual(["a", "b", "c"]);
+  expect(result?.edges).toEqual(new Set(['edge-["a","b","uses"]', 'edge-["b","c","related"]']));
+  expect(shortestPath(source, "a", "d")).toBeUndefined();
 });

@@ -66,6 +66,13 @@ Repository analysis is deliberately staged:
 5. ask an LLM to propose semantic features and mathematical views;
 6. review and validate the resulting draft before promotion.
 
+For cross-domain research, the LLM is a breadth-oriented discovery instrument,
+not the final architecture designer. Graph and vector signals may surface
+distant candidates, while human problem reformulation, evidence review,
+mathematical contracts, and experiments determine whether a candidate survives.
+See [`research-instrument.md`](research-instrument.md) for the research
+questions and evaluation plan.
+
 Tree statistics and path signals are evidence for navigation, not architecture
 claims. A source archive is sufficient for tree inspection but does not preserve
 history-sensitive evidence; use a Git checkout when commit history or blame is

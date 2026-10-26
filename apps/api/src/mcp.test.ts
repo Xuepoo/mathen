@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { handleMcpRequest, mcpAuthorized } from "./mcp.js";
+import {
+  handleMcpRequest,
+  mcpAuthorized,
+  mcpCorsHeaders,
+  mcpOriginAllowed,
+} from "./mcp.js";
 
 const backend = {
   listSystems: async () => [{ id: "git" }],
@@ -8,6 +13,8 @@ const backend = {
   listFeatureRelations: async () => [],
   listCompositions: async () => [],
   getModelingBundle: async (id: string) => ({ id }),
+  getLayeredGraph: async () => ({ nodes: [], edges: [] }),
+  searchRetrieval: async (path: string) => ({ path }),
 };
 
 function jsonRequest(body: unknown) {
@@ -20,7 +27,9 @@ function jsonRequest(body: unknown) {
 
 describe("hosted MCP boundary", () => {
   test("requires an exact bearer token", () => {
-    expect(mcpAuthorized(new Request("https://example.test/mcp"), "secret")).toBe(false);
+    expect(
+      mcpAuthorized(new Request("https://example.test/mcp"), "secret"),
+    ).toBe(false);
     expect(
       mcpAuthorized(
         new Request("https://example.test/mcp", {
@@ -39,6 +48,22 @@ describe("hosted MCP boundary", () => {
     ).toBe(true);
   });
 
+  test("allows only configured browser origins and emits CORS headers", () => {
+    const allowed = new Request("https://example.test/api/mcp", {
+      headers: { Origin: "https://client.example" },
+    });
+    const denied = new Request("https://example.test/api/mcp", {
+      headers: { Origin: "https://other.example" },
+    });
+    expect(mcpOriginAllowed(allowed, "https://client.example")).toBe(true);
+    expect(mcpOriginAllowed(denied, "https://client.example")).toBe(false);
+    expect(
+      mcpCorsHeaders(allowed, "https://client.example").get(
+        "Access-Control-Allow-Origin",
+      ),
+    ).toBe("https://client.example");
+  });
+
   test("serves initialize and tools/list as JSON-RPC", async () => {
     const initialize = await handleMcpRequest(
       jsonRequest({ jsonrpc: "2.0", id: 1, method: "initialize" }),
@@ -55,7 +80,35 @@ describe("hosted MCP boundary", () => {
       backend,
     );
     const listed = (await tools.json()) as { result: { tools: unknown[] } };
-    expect(listed.result.tools).toHaveLength(6);
+    expect(listed.result.tools).toHaveLength(8);
+    expect(
+      (listed.result.tools as Array<{ name: string }>).some(
+        (tool) => tool.name === "get_layered_graph",
+      ),
+    ).toBe(true);
+  });
+
+  test("calls the reviewed layered graph projection with an origin", async () => {
+    const response = await handleMcpRequest(
+      jsonRequest({
+        jsonrpc: "2.0",
+        id: 4,
+        method: "tools/call",
+        params: {
+          name: "get_layered_graph",
+          arguments: { origin: "local-analysis" },
+        },
+      }),
+      backend,
+    );
+    expect(response.status).toBe(200);
+    const result = (await response.json()) as {
+      result: { content: Array<{ text: string }> };
+    };
+    expect(JSON.parse(result.result.content[0]!.text)).toEqual({
+      nodes: [],
+      edges: [],
+    });
   });
 
   test("calls reviewed tools without draft arguments", async () => {
@@ -83,7 +136,9 @@ describe("hosted MCP boundary", () => {
       backend,
     );
     expect(contentType.status).toBe(400);
-    expect((await contentType.json()) as { error: { code: number } }).toMatchObject({
+    expect(
+      (await contentType.json()) as { error: { code: number } },
+    ).toMatchObject({
       error: { code: -32700 },
     });
 
@@ -91,7 +146,9 @@ describe("hosted MCP boundary", () => {
       jsonRequest({ jsonrpc: "2.0", id: {}, method: "tools/list" }),
       backend,
     );
-    expect((await invalidId.json()) as { error: { code: number } }).toMatchObject({
+    expect(
+      (await invalidId.json()) as { error: { code: number } },
+    ).toMatchObject({
       error: { code: -32600 },
     });
 
@@ -121,7 +178,9 @@ describe("hosted MCP boundary", () => {
       }),
       backend,
     );
-    expect((await response.json()) as { error: { code: number } }).toMatchObject({
+    expect(
+      (await response.json()) as { error: { code: number } },
+    ).toMatchObject({
       error: { code: -32600 },
     });
   });

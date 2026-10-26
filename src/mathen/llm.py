@@ -11,7 +11,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .cards import CardValidationError, validate_card
-from .modeling import render_modeling_prompt
+from .modeling import protocol_run_record, render_modeling_prompt
 
 MAX_RESPONSE_BYTES = 2_000_000
 
@@ -87,6 +87,7 @@ def model_bundles(
     client: OpenAICompatibleClient,
     system_ids: set[str] | None = None,
     overwrite: bool = False,
+    provider: str = "unspecified",
 ) -> list[Path]:
     """Model selected bundles and write only validated draft cards."""
 
@@ -110,8 +111,24 @@ def model_bundles(
             raise LLMModelError(
                 f"{output_path}: refusing to overwrite existing draft; use --force"
             )
+        protocol_path = output_dir / f"{card['id']}.protocol.json"
+        if protocol_path.exists() and not overwrite:
+            raise LLMModelError(
+                f"{protocol_path}: refusing to overwrite existing protocol record; "
+                "use --force"
+            )
         output_path.write_text(
             json.dumps(card, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+        protocol = protocol_run_record(
+            bundle,
+            render_modeling_prompt(bundle),
+            provider=provider,
+            model=getattr(client, "model", "unspecified"),
+        )
+        protocol_path.write_text(
+            json.dumps(protocol, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
         )
         written.append(output_path)
     return written

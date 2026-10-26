@@ -1,0 +1,531 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/architecture-microstructure.schema.json",
+  "title": "Mathen Architecture Microstructure",
+  "description": "An evidence-backed architectural unit at an explicit scale. This is a candidate knowledge document, not a proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "summary",
+    "scale",
+    "role",
+    "state",
+    "events",
+    "operations",
+    "inputs",
+    "outputs",
+    "preconditions",
+    "postconditions",
+    "invariants",
+    "boundaries",
+    "resource_effects",
+    "failure_modes",
+    "validity_scope",
+    "claim_type",
+    "claim_status",
+    "evidence_ids",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "scale": { "$ref": "#/$defs/scale" },
+    "role": { "$ref": "#/$defs/role" },
+    "state": { "type": "array", "items": { "$ref": "#/$defs/state" } },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+    "operations": { "type": "array", "items": { "$ref": "#/$defs/operation" } },
+    "inputs": { "type": "array", "items": { "$ref": "#/$defs/input" } },
+    "outputs": { "type": "array", "items": { "$ref": "#/$defs/output" } },
+    "preconditions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/condition" }
+    },
+    "postconditions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/condition" }
+    },
+    "invariants": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
+    "boundaries": { "type": "array", "items": { "$ref": "#/$defs/boundary" } },
+    "resource_effects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/resourceEffect" }
+    },
+    "failure_modes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/failureMode" }
+    },
+    "validity_scope": { "$ref": "#/$defs/validityScope" },
+    "claim_type": { "$ref": "#/$defs/claimType" },
+    "claim_status": { "$ref": "#/$defs/claimStatus" },
+    "evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/evidence" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "claimType": {
+      "type": "string",
+      "enum": ["fact", "inference", "hypothesis", "analogy"]
+    },
+    "claimStatus": {
+      "type": "string",
+      "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"]
+    },
+    "claimFields": {
+      "type": "object",
+      "required": ["claim_type", "claim_status", "evidence_ids"],
+      "properties": {
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "scale": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["level", "unit", "description"],
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": [
+                "primitive",
+                "mechanism",
+                "subsystem",
+                "system",
+                "ecosystem"
+              ]
+            },
+            "unit": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 },
+            "claim_type": { "$ref": "#/$defs/claimType" },
+            "claim_status": { "$ref": "#/$defs/claimStatus" },
+            "evidence_ids": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/id" }
+            }
+          }
+        }
+      ]
+    },
+    "role": { "$ref": "#/$defs/claimObject" },
+    "state": { "$ref": "#/$defs/state" },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "source_state",
+        "target_state",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "source_state": { "$ref": "#/$defs/id" },
+        "target_state": { "$ref": "#/$defs/id" },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "input_ids",
+        "output_ids",
+        "precondition_ids",
+        "postcondition_ids",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "input_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "output_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "precondition_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "postcondition_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "input": { "$ref": "#/$defs/inputShape" },
+    "output": { "$ref": "#/$defs/outputShape" },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "kind",
+        "inside",
+        "outside",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "inside": { "type": "string", "minLength": 1 },
+        "outside": { "type": "string", "minLength": 1 },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "resourceEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "resource",
+        "effect",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "resource": { "type": "string", "minLength": 1 },
+        "effect": { "type": "string", "minLength": 1 },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "failureMode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "trigger",
+        "effect",
+        "recovery",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "trigger": { "type": "string", "minLength": 1 },
+        "effect": { "type": "string", "minLength": 1 },
+        "recovery": { "type": "string", "minLength": 1 },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "initial": { "type": "boolean" },
+        "terminal": { "type": "boolean" },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "element": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "initial": { "type": "boolean" },
+        "terminal": { "type": "boolean" },
+        "source_state": { "$ref": "#/$defs/id" },
+        "target_state": { "$ref": "#/$defs/id" },
+        "input_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "output_ids": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "precondition_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "postcondition_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "type": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "destination": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "inside": { "type": "string", "minLength": 1 },
+        "outside": { "type": "string", "minLength": 1 },
+        "resource": { "type": "string", "minLength": 1 },
+        "effect": { "type": "string", "minLength": 1 },
+        "trigger": { "type": "string", "minLength": 1 },
+        "recovery": { "type": "string", "minLength": 1 },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "inputShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "type",
+        "source",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "outputShape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "type",
+        "destination",
+        "claim_type",
+        "claim_status",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "destination": { "type": "string", "minLength": 1 },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "claimObject": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["description"],
+          "properties": {
+            "description": { "type": "string", "minLength": 1 },
+            "name": { "type": "string", "minLength": 1 },
+            "claim_type": { "$ref": "#/$defs/claimType" },
+            "claim_status": { "$ref": "#/$defs/claimStatus" },
+            "evidence_ids": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/id" }
+            }
+          }
+        }
+      ]
+    },
+    "validityScope": {
+      "allOf": [
+        { "$ref": "#/$defs/claimFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "systems",
+            "versions",
+            "deployment_origins",
+            "conditions",
+            "exclusions"
+          ],
+          "properties": {
+            "systems": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "versions": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "deployment_origins": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "conditions": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "exclusions": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "claim_type": { "$ref": "#/$defs/claimType" },
+            "claim_status": { "$ref": "#/$defs/claimStatus" },
+            "evidence_ids": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/id" }
+            }
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "title", "uri"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "official-doc",
+            "paper",
+            "source-code",
+            "experiment",
+            "secondary"
+          ]
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "uri": { "type": "string", "format": "uri" },
+        "accessed": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

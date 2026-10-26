@@ -55,6 +55,9 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: bun run test:api
