@@ -1,18 +1,23 @@
 import "./style.css";
 import type { ForceGraph3DInstance } from "3d-force-graph";
-import { createLabelPool, shouldShowLabel } from "./graph-labels";
-import { lazyModule } from "./lazy-module";
 import {
-  frameNodes,
-  seedCoordinates,
-  worldUnitsPerPixel,
-} from "./graph-viewport";
+  compactModelLabel,
+  createLabelPool,
+  displayNodeColor,
+  shouldShowLabel,
+} from "./graph-labels";
+import { lazyModule } from "./lazy-module";
+import { frameNodes, seedCoordinates, worldUnitsPerPixel } from "./graph-viewport";
 import {
   applyView,
   expandOneHop,
   applyPin,
-  shortestPath,
+  formatRouteText,
+  serializeExplorationPath,
+  shortestRoute,
   type Pin,
+  type PathEdge,
+  type ShortestRoute,
 } from "./graph-view";
 import { movablePanel } from "./movable-panel";
 import { configureNavigation } from "./navigation-controls";
@@ -112,6 +117,7 @@ app.innerHTML = `
       <p id="access-status" class="muted" role="status">Preparing verification…</p>
     </dialog>
     <aside id="inspector" class="inspector glass" aria-label="Selection" hidden></aside>
+    <aside id="path-panel" class="path-panel glass" aria-label="Exploration paths" hidden></aside>
     <div id="node-menu" class="node-menu glass" role="menu" aria-label="Node actions" hidden></div>
     <footer class="map-footer">
       <div class="map-caption"><p id="gesture-hint">Drag nodes · scroll to zoom · drag space to pan</p></div>
@@ -136,6 +142,7 @@ const domainSelect = required<HTMLSelectElement>("domain");
 const relationSelect = required<HTMLSelectElement>("relation");
 const inspector = required<HTMLElement>("inspector");
 const panel = movablePanel(inspector);
+const pathPanel = required<HTMLElement>("path-panel");
 const nodeMenu = required<HTMLDivElement>("node-menu");
 let menuOpener: HTMLElement | null = null;
 const pins = new Map<string, Pin>();
@@ -190,6 +197,18 @@ let mobileToolsOpen = false;
 let pathSelection: string[] = [];
 let pathNodes = new Set<string>();
 let pathEdges = new Set<string>();
+const pathColors = ["#69d7c3", "#bca5f4", "#e7bb7d", "#7ab9ee", "#e699ad"];
+type SavedPath = {
+  id: string;
+  color: string;
+  nodes: string[];
+  edges: PathEdge[];
+};
+let savedPaths: SavedPath[] = [];
+let pathNodeColors = new Map<string, string>();
+let pathEdgeColors = new Map<string, string>();
+let pathSerial = 0;
+let pathPanelOpen = false;
 required("names").setAttribute("aria-pressed", String(allNames));
 required("names").textContent = allNames ? "Names: all" : "Names: focus";
 let detailRequest = 0;
@@ -218,7 +237,9 @@ const labels = createLabelPool<SimulationNode, HTMLSpanElement>({
   create: (node) => {
     const label = document.createElement("span");
     label.className = "graph-name";
-    label.textContent = node.name;
+    label.textContent = node.type === "model" ? compactModelLabel(node.name) : node.name;
+    label.title = node.name;
+    label.setAttribute("aria-label", node.name);
     label.dataset.nodeId = node.id;
     label.hidden = true;
     namesLayer.append(label);
@@ -226,10 +247,7 @@ const labels = createLabelPool<SimulationNode, HTMLSpanElement>({
     return label;
   },
   update: (label, node) => {
-    label.classList.toggle(
-      "active",
-      node.id === selectedId || node.id === hoveredId,
-    );
+    label.classList.toggle("active", node.id === selectedId || node.id === hoveredId);
   },
   dispose: (label) => {
     labelElements.delete(label.dataset.nodeId!);
@@ -245,10 +263,8 @@ const relationColor = (type: string) =>
     : type === "related"
       ? "#8c9cab"
       : relationColors[
-          [...type].reduce(
-            (sum, character) => sum + character.charCodeAt(0),
-            0,
-          ) % relationColors.length
+          [...type].reduce((sum, character) => sum + character.charCodeAt(0), 0) %
+            relationColors.length
         ];
 const duration = () => (reducedMotion.matches ? 0 : 500);
 
@@ -256,9 +272,8 @@ function escapeHtml(value: string) {
   return value.replace(
     /[&<>"']/g,
     (character) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        character
-      ] ?? character,
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ??
+      character,
   );
 }
 
@@ -273,23 +288,16 @@ function loadTurnstileScript() {
       resolve();
       return;
     }
-    const existing = document.querySelector<HTMLScriptElement>(
-      "script[data-mathen-turnstile]",
-    );
+    const existing = document.querySelector<HTMLScriptElement>("script[data-mathen-turnstile]");
     if (existing) {
       existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener(
-        "error",
-        () => reject(new Error("Turnstile failed to load")),
-        {
-          once: true,
-        },
-      );
+      existing.addEventListener("error", () => reject(new Error("Turnstile failed to load")), {
+        once: true,
+      });
       return;
     }
     const script = document.createElement("script");
-    script.src =
-      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     script.async = true;
     script.defer = true;
     script.dataset.mathenTurnstile = "true";
@@ -305,8 +313,7 @@ async function startAccess() {
     const response = await fetch("/api/access/config", {
       credentials: "include",
     });
-    if (!response.ok)
-      throw new Error(`Access config returned ${response.status}`);
+    if (!response.ok) throw new Error(`Access config returned ${response.status}`);
     const body = (await response.json()) as {
       data?: {
         enabled?: boolean;
@@ -337,8 +344,7 @@ async function startAccess() {
           body: JSON.stringify({ token }),
         })
           .then(async (verification) => {
-            if (!verification.ok)
-              throw new Error("Turnstile verification failed");
+            if (!verification.ok) throw new Error("Turnstile verification failed");
             accessReady = true;
             accessDialog.close();
             void loadGraph();
@@ -350,17 +356,14 @@ async function startAccess() {
           });
       },
       "error-callback": () => {
-        accessStatus.textContent =
-          "Turnstile could not verify this browser. Retry the check.";
+        accessStatus.textContent = "Turnstile could not verify this browser. Retry the check.";
       },
       "expired-callback": () => {
-        accessStatus.textContent =
-          "The verification expired. Please complete it again.";
+        accessStatus.textContent = "The verification expired. Please complete it again.";
       },
     });
   })().catch(() => {
-    accessStatus.textContent =
-      "Access verification is unavailable. Please retry later.";
+    accessStatus.textContent = "Access verification is unavailable. Please retry later.";
     accessStatus.insertAdjacentHTML(
       "afterend",
       '<button id="retry-access" class="primary-button">Retry verification</button>',
@@ -375,11 +378,9 @@ async function startAccess() {
 }
 
 accessDialog.addEventListener("cancel", (event) => event.preventDefault());
-document
-  .querySelectorAll<HTMLButtonElement>("[data-close]")
-  .forEach((button) => {
-    button.addEventListener("click", () => button.closest("dialog")?.close());
-  });
+document.querySelectorAll<HTMLButtonElement>("[data-close]").forEach((button) => {
+  button.addEventListener("click", () => button.closest("dialog")?.close());
+});
 for (const dialog of [catalog, detailDialog, helpDialog]) {
   let opener: HTMLElement | null = null;
   let backdropDown = false;
@@ -417,10 +418,7 @@ for (const dialog of [catalog, detailDialog, helpDialog]) {
 
 function configureCamera() {
   if (!graph) return;
-  configureNavigation(
-    graph.controls() as Parameters<typeof configureNavigation>[0],
-    dimensions,
-  );
+  configureNavigation(graph.controls() as Parameters<typeof configureNavigation>[0], dimensions);
   required("gesture-hint").textContent =
     dimensions === 2
       ? "Drag space to pan · Ctrl-click two nodes for a shortest path · scroll to zoom."
@@ -446,15 +444,16 @@ async function createGraph() {
     .nodeRelSize(mobileViewport.matches ? 3.2 : 4)
     .nodeResolution(16)
     .nodeVal((node: SimulationNode) => {
-      const value =
-        (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65;
+      const value = (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65;
       return mobileViewport.matches ? value * 0.78 : value;
     })
     .nodeColor(nodeColor)
     .nodeOpacity(0.95)
     .nodeLabel((node) => {
       const label = document.createElement("span");
-      label.textContent = node.name;
+      label.textContent = node.type === "model" ? compactModelLabel(node.name) : node.name;
+      label.title = node.name;
+      label.setAttribute("aria-label", node.name);
       return label;
     })
     .nodePositionUpdate((object, _coordinates, node) => {
@@ -496,9 +495,13 @@ async function createGraph() {
     .cooldownTime(8000)
     .onNodeClick((node, event) => {
       const pathClick = event.ctrlKey || event.metaKey;
-      if (pathClick) togglePathNode(node.id);
-      else clearPathSelection();
-      selectNode(node.id, !pathClick);
+      if (pathClick) {
+        clearCardSelection();
+        togglePathNode(node.id);
+        return;
+      }
+      clearPathSelection();
+      selectNode(node.id);
     })
     .onNodeRightClick((node, event) => {
       event.preventDefault();
@@ -559,9 +562,7 @@ async function createGraph() {
           ? 190
           : 150,
     )
-    .strength((link: SimulationLink) =>
-      link.type === "related" ? 0.12 : 0.35,
-    );
+    .strength((link: SimulationLink) => (link.type === "related" ? 0.12 : 0.35));
   graph.d3Force("center")?.strength(0.08);
   configureCamera();
   new ResizeObserver(() => {
@@ -594,9 +595,7 @@ function nodeName(id: string) {
   );
 }
 function graphSource(): ExplorerPayload {
-  return graphMode === "models"
-    ? (modelCanonical ?? { nodes: [], edges: [] })
-    : canonical;
+  return graphMode === "models" ? (modelCanonical ?? { nodes: [], edges: [] }) : canonical;
 }
 function closeNodeMenu(restore = true) {
   if (nodeMenu.hidden) return;
@@ -610,21 +609,12 @@ function closeMobileTools() {
   required("secondary-tools").classList.remove("is-open");
 }
 function updateFullscreenState(fullscreen: boolean) {
-  document
-    .querySelector<HTMLElement>(".explorer")
-    ?.classList.toggle("is-fullscreen", fullscreen);
+  document.querySelector<HTMLElement>(".explorer")?.classList.toggle("is-fullscreen", fullscreen);
   const button = required<HTMLButtonElement>("fullscreen-toggle");
   button.setAttribute("aria-pressed", String(fullscreen));
-  button.setAttribute(
-    "aria-label",
-    fullscreen ? "Exit full screen" : "Enter full screen",
-  );
-  button.title = fullscreen
-    ? "Exit full screen (F11 or Escape)"
-    : "Enter full screen (F11)";
-  button.querySelector("span")!.textContent = fullscreen
-    ? "Exit"
-    : "Full screen";
+  button.setAttribute("aria-label", fullscreen ? "Exit full screen" : "Enter full screen");
+  button.title = fullscreen ? "Exit full screen (F11 or Escape)" : "Enter full screen (F11)";
+  button.querySelector("span")!.textContent = fullscreen ? "Exit" : "Full screen";
   button.querySelector("svg")!.innerHTML = fullscreen
     ? '<path d="M9 4H4v5M20 9V4h-5M15 20h5v-5M4 15v5h5"></path>'
     : '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path>';
@@ -640,20 +630,19 @@ function updatePathHighlight() {
   pathNodes = new Set(pathSelection);
   pathEdges = new Set();
   if (pathSelection.length === 2) {
-    const path = shortestPath(visible, pathSelection[0], pathSelection[1]);
-    if (path) {
-      pathNodes = new Set(path.nodes);
-      pathEdges = path.edges;
+    const route = currentPath();
+    if (route) {
+      pathNodes = new Set(route.nodes);
+      pathEdges = new Set(route.edges.map((edge) => edge.id));
       required("simulation-status").textContent =
-        `Shortest path · ${path.edges.size} relation${path.edges.size === 1 ? "" : "s"}`;
+        `Shortest path · ${route.edges.length} relation${route.edges.length === 1 ? "" : "s"}`;
     } else
-      required("simulation-status").textContent =
-        "No path between selected nodes";
+      required("simulation-status").textContent = "No visible route between selected endpoints";
   } else if (pathSelection.length === 1) {
-    required("simulation-status").textContent =
-      "Path endpoint selected · Ctrl-click another node";
+    required("simulation-status").textContent = "Path endpoint selected · Ctrl-click another node";
   }
   updateStyles();
+  renderPathPanel();
 }
 function togglePathNode(id: string) {
   const index = pathSelection.indexOf(id);
@@ -662,6 +651,7 @@ function togglePathNode(id: string) {
     pathSelection.push(id);
     if (pathSelection.length > 2) pathSelection.shift();
   }
+  pathPanelOpen = true;
   updatePathHighlight();
 }
 function clearPathSelection() {
@@ -669,7 +659,111 @@ function clearPathSelection() {
   pathSelection = [];
   pathNodes.clear();
   pathEdges.clear();
+  if (!savedPaths.length) pathPanelOpen = false;
   updateStyles();
+  renderPathPanel();
+}
+
+function currentPath(): ShortestRoute | undefined {
+  if (pathSelection.length !== 2) return undefined;
+  return shortestRoute(visible, pathSelection[0], pathSelection[1]);
+}
+
+function rebuildSavedPathColors() {
+  pathNodeColors = new Map();
+  pathEdgeColors = new Map();
+  for (const path of savedPaths) {
+    for (const id of path.nodes) pathNodeColors.set(id, path.color);
+    for (const edge of path.edges) pathEdgeColors.set(edge.id, path.color);
+  }
+}
+
+function saveCurrentPath() {
+  const path = currentPath();
+  if (!path) return;
+  const id = `path-${++pathSerial}`;
+  savedPaths.push({
+    id,
+    color: pathColors[(pathSerial - 1) % pathColors.length],
+    nodes: path.nodes,
+    edges: path.edges,
+  });
+  rebuildSavedPathColors();
+  updateStyles();
+  renderPathPanel();
+}
+
+function removeSavedPath(id: string) {
+  savedPaths = savedPaths.filter((path) => path.id !== id);
+  rebuildSavedPathColors();
+  updateStyles();
+  renderPathPanel();
+}
+
+function pathText(path: ShortestRoute) {
+  return formatRouteText(path, nodeName);
+}
+
+async function copyPath(path: ShortestRoute) {
+  const text = pathText(path);
+  try {
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+    else throw new Error("Clipboard API unavailable");
+    required("simulation-status").textContent = "Route copied";
+  } catch {
+    required("simulation-status").textContent = "Copy unavailable · select route text manually";
+  }
+}
+
+function downloadPath(path: ShortestRoute, color?: string) {
+  if (typeof URL.createObjectURL !== "function") {
+    required("simulation-status").textContent = "Export unavailable in this browser";
+    return;
+  }
+  const blob = new Blob(
+    [JSON.stringify(serializeExplorationPath(path, nodeName, color), null, 2)],
+    { type: "application/json" },
+  );
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "mathen-exploration-path.json";
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function renderPathPanel() {
+  const current = currentPath();
+  pathPanel.hidden = !pathPanelOpen;
+  if (pathPanel.hidden) return;
+  const currentSection = current
+    ? `<section class="path-current"><p class="eyebrow">Current route</p><pre>${escapeHtml(pathText(current))}</pre><p class="muted">Visible-graph shortest path · exploratory only</p><div class="path-actions"><button data-path-action="save">Save color</button><button data-path-action="copy-current">Copy</button><button data-path-action="export-current">Export JSON</button></div></section>`
+    : pathSelection.length
+      ? `<section class="path-current"><p class="eyebrow">Path endpoints</p><strong>${pathSelection.map((id) => escapeHtml(nodeName(id))).join(" · ")}</strong><p class="muted">${pathSelection.length < 2 ? "Ctrl/Cmd-click another visible node to complete a route." : "Route unavailable in the current visible graph. Unhide endpoints or adjust filters."}</p></section>`
+      : "";
+  const saved = savedPaths
+    .map(
+      (path) =>
+        `<section class="saved-path"><div><span class="path-swatch" style="background:${path.color}"></span><pre>${escapeHtml(pathText(path))}</pre></div><div class="path-actions"><button data-path-action="copy" data-path-id="${path.id}">Copy</button><button data-path-action="export" data-path-id="${path.id}">Export</button><button data-path-action="remove" data-path-id="${path.id}">Remove</button></div></section>`,
+    )
+    .join("");
+  pathPanel.innerHTML = `<div class="path-panel-header"><div><p class="eyebrow">Exploration paths</p><h2>Routes</h2></div><button class="inspector-close" data-path-action="close" aria-label="Close exploration paths">✕</button></div><p class="muted">Paths are navigation candidates, not inferred relations, causal chains, or proof.</p>${currentSection}${saved}`;
+  pathPanel.querySelectorAll<HTMLButtonElement>("[data-path-action]").forEach((button) => {
+    button.onclick = () => {
+      const action = button.dataset.pathAction;
+      const savedPath = savedPaths.find((path) => path.id === button.dataset.pathId);
+      const target = savedPath ?? current;
+      if (action === "close") {
+        pathPanelOpen = false;
+        pathPanel.hidden = true;
+      } else if (action === "save") saveCurrentPath();
+      else if (action === "remove" && savedPath) removeSavedPath(savedPath.id);
+      else if (action === "copy" && savedPath) void copyPath(savedPath);
+      else if (action === "copy-current" && target) void copyPath(target);
+      else if (action === "export" && savedPath) downloadPath(savedPath, savedPath.color);
+      else if (action === "export-current" && target) downloadPath(target);
+    };
+  });
 }
 function openNodeMenu(id: string, x?: number, y?: number) {
   const node = graph?.graphData().nodes.find((item) => item.id === id);
@@ -682,47 +776,45 @@ function openNodeMenu(id: string, x?: number, y?: number) {
   nodeMenu.hidden = false;
   nodeMenu.style.left = `${Math.max(8, Math.min(x ?? point.x + 14, window.innerWidth - nodeMenu.offsetWidth - 8))}px`;
   nodeMenu.style.top = `${Math.max(8, Math.min(y ?? point.y, window.innerHeight - nodeMenu.offsetHeight - 8))}px`;
-  nodeMenu
-    .querySelectorAll<HTMLButtonElement>("[data-action]")
-    .forEach((button) => {
-      button.onclick = () => {
-        closeNodeMenu();
-        switch (button.dataset.action) {
-          case "path":
-            togglePathNode(id);
-            break;
-          case "pin":
-            if (pins.has(id)) pins.delete(id);
-            else pins.set(id, { x: node.x!, y: node.y!, z: node.z! });
-            applyPin(node, pins.get(id), dimensions);
-            required("simulation-status").textContent =
-              `${node.name} ${pins.has(id) ? "pinned" : "unpinned"}`;
-            break;
-          case "expand":
-            expandOneHop(
-              graphSource(),
-              id,
-              expandedNodes,
-              graphMode === "models" ? "all" : relationSelect.value,
-            );
-            updateGraph(true);
-            required("simulation-status").textContent =
-              "Expanded actual neighbors · domain exceptions active";
-            break;
-          case "hide":
-            hiddenNodes.add(id);
-            updateGraph(true);
-            required("restore-hidden").focus();
-            break;
-          case "details":
-            if (node.type === "model") {
-              selectNode(id);
-              required("node-actions").focus();
-            } else void openDetail(id);
-            break;
-        }
-      };
-    });
+  nodeMenu.querySelectorAll<HTMLButtonElement>("[data-action]").forEach((button) => {
+    button.onclick = () => {
+      closeNodeMenu();
+      switch (button.dataset.action) {
+        case "path":
+          togglePathNode(id);
+          break;
+        case "pin":
+          if (pins.has(id)) pins.delete(id);
+          else pins.set(id, { x: node.x!, y: node.y!, z: node.z! });
+          applyPin(node, pins.get(id), dimensions);
+          required("simulation-status").textContent =
+            `${node.name} ${pins.has(id) ? "pinned" : "unpinned"}`;
+          break;
+        case "expand":
+          expandOneHop(
+            graphSource(),
+            id,
+            expandedNodes,
+            graphMode === "models" ? "all" : relationSelect.value,
+          );
+          updateGraph(true);
+          required("simulation-status").textContent =
+            "Expanded actual neighbors · domain exceptions active";
+          break;
+        case "hide":
+          hiddenNodes.add(id);
+          updateGraph(true);
+          required("restore-hidden").focus();
+          break;
+        case "details":
+          if (node.type === "model") {
+            selectNode(id);
+            required("node-actions").focus();
+          } else void openDetail(id);
+          break;
+      }
+    };
+  });
   nodeMenu.querySelector<HTMLButtonElement>("button")?.focus();
 }
 nodeMenu.addEventListener("keydown", (event) => {
@@ -735,8 +827,7 @@ nodeMenu.addEventListener("keydown", (event) => {
         ? 0
         : event.key === "End"
           ? items.length - 1
-          : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) %
-            items.length
+          : (index + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
     ]?.focus();
   }
   if (event.key === "Tab") closeNodeMenu(false);
@@ -755,23 +846,26 @@ mobileViewport.addEventListener("change", ({ matches }) => {
   updateLabels();
 });
 function nodeColor(node: SimulationNode) {
-  if (pathNodes.has(node.id)) return "#ffffff";
-  const active =
-    (!highlighted.size || highlighted.has(node.id)) &&
-    (!searchMatches || searchMatches.has(node.id));
-  return active
-    ? node.type === "model"
-      ? "#d5afff"
-      : domainFor(node.id).color
-    : "#34404c";
+  const savedColor = pathNodeColors.get(node.id);
+  const dimmed =
+    (highlighted.size > 0 && !highlighted.has(node.id)) ||
+    Boolean(searchMatches?.size && !searchMatches.has(node.id));
+  return displayNodeColor({
+    baseColor: node.type === "model" ? "#d5afff" : domainFor(node.id).color,
+    path: pathNodes.has(node.id),
+    selected: selectedId === node.id,
+    savedPathColor: savedColor,
+    dimmed,
+  });
 }
 function linkColor(link: SimulationLink) {
+  const savedColor = pathEdgeColors.get(link.id);
+  if (savedColor) return savedColor;
   if (pathEdges.has(link.id)) return "#ffffff";
   if (selectedEdge?.id === link.id) return "#ffffff";
   if (
     highlighted.size &&
-    (!highlighted.has(endpointId(link.source)) ||
-      !highlighted.has(endpointId(link.target)))
+    (!highlighted.has(endpointId(link.source)) || !highlighted.has(endpointId(link.target)))
   )
     return "#29323d";
   return relationColor(link.type);
@@ -837,10 +931,7 @@ function updateGraph(preserveView = false) {
   initialFitPending = !preserveView;
   visible =
     graphMode === "models"
-      ? filterModelGraph(
-          modelCanonical ?? { nodes: [], edges: [] },
-          domainSelect.value,
-        )
+      ? filterModelGraph(modelCanonical ?? { nodes: [], edges: [] }, domainSelect.value)
       : filterGraph(canonical, domainSelect.value, relationSelect.value);
   visible = applyView(
     graphSource(),
@@ -849,11 +940,7 @@ function updateGraph(preserveView = false) {
     hiddenNodes,
     graphMode === "models" ? "all" : relationSelect.value,
   );
-  if (selectedId && !visible.nodes.some((node) => node.id === selectedId))
-    clearSelection();
-  pathSelection = pathSelection.filter((id) =>
-    visible.nodes.some((node) => node.id === id),
-  );
+  if (selectedId && !visible.nodes.some((node) => node.id === selectedId)) clearCardSelection();
   selectedEdge = undefined;
   const next = modelSimulationData(visible);
   const old = new Map(graph?.graphData().nodes.map((node) => [node.id, node]));
@@ -884,8 +971,7 @@ function updateGraph(preserveView = false) {
     graphMode === "models"
       ? `${visible.nodes.filter((node) => node.type === "system").length} systems / ${visible.nodes.filter((node) => node.type === "model").length} models / ${visible.edges.length} model links`
       : `${visible.nodes.length} systems / ${visible.edges.length} relations`;
-  if (expandedNodes.size)
-    required("counts").textContent += " · expanded beyond group";
+  if (expandedNodes.size) required("counts").textContent += " · expanded beyond group";
   if (visible.nodes.length) state.hidden = true;
   else {
     state.hidden = false;
@@ -894,8 +980,7 @@ function updateGraph(preserveView = false) {
   }
   updateSearch();
   required("restore-hidden").hidden = !hiddenNodes.size;
-  required("restore-hidden").textContent =
-    `Restore hidden (${hiddenNodes.size})`;
+  required("restore-hidden").textContent = `Restore hidden (${hiddenNodes.size})`;
   renderCatalog();
   updateStyles();
   if (!preserveView && !paused) reheat();
@@ -905,13 +990,9 @@ function updateGraph(preserveView = false) {
 function safeViewport() {
   const width = host.clientWidth;
   const height = host.clientHeight;
-  const tools = required("fit")
-    .closest(".graph-tools")!
-    .getBoundingClientRect();
+  const tools = required("fit").closest(".graph-tools")!.getBoundingClientRect();
   const filters = domainSelect.closest(".filters")!.getBoundingClientRect();
-  const footer = required("counts")
-    .closest(".map-key")!
-    .getBoundingClientRect();
+  const footer = required("counts").closest(".map-key")!.getBoundingClientRect();
   const mobile = width <= 700;
   return {
     width,
@@ -924,17 +1005,14 @@ function safeViewport() {
 }
 function flatten2D() {
   // The engine deletes z when changing dimensions, including while forces are paused.
-  if (dimensions === 2)
-    for (const node of graph?.graphData().nodes ?? []) node.z = 0;
+  if (dimensions === 2) for (const node of graph?.graphData().nodes ?? []) node.z = 0;
 }
 function fit(ms = duration(), only?: Set<string>) {
   if (!graph) return;
   const nodes = graph
     .graphData()
     .nodes.filter(
-      (node) =>
-        (!only || only.has(node.id)) &&
-        [node.x, node.y, node.z].every(Number.isFinite),
+      (node) => (!only || only.has(node.id)) && [node.x, node.y, node.z].every(Number.isFinite),
     ) as (SimulationNode & { x: number; y: number; z: number })[];
   if (!nodes.length) return;
   const camera = graph.camera() as unknown as { fov: number };
@@ -963,10 +1041,7 @@ function renderScreenGeometry() {
       const depth = -(m[2] * x + m[6] * y + m[10] * z + m[14]);
       const radius = node.type === "model" ? 12 : 10;
       const baseRadius =
-        4 *
-        Math.cbrt(
-          (node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65,
-        );
+        4 * Math.cbrt((node.type === "model" ? 4 : 1.4) + Math.sqrt(node.degree) * 0.65);
       const anchor = labelAnchors.get(node.id);
       if (anchor) {
         anchor.scale.setScalar(
@@ -986,15 +1061,11 @@ function renderScreenGeometry() {
         point.y < -radius ||
         point.y > height + radius;
       if (!label.hidden) {
-        if (!labelWidths.has(node.id))
-          labelWidths.set(node.id, label.offsetWidth);
+        if (!labelWidths.has(node.id)) labelWidths.set(node.id, label.offsetWidth);
         const labelWidth = labelWidths.get(node.id)!;
         // Keep labels adjacent, flipping at the right edge without moving the node.
         const right = point.x + radius + 5;
-        const left =
-          right + labelWidth < width - 8
-            ? right
-            : point.x - radius - 5 - labelWidth;
+        const left = right + labelWidth < width - 8 ? right : point.x - radius - 5 - labelWidth;
         label.style.transform = `translate(${Math.max(8, left)}px, ${Math.max(4, Math.min(height - 24, point.y - 10))}px)`;
       }
     }
@@ -1035,6 +1106,9 @@ function reheat() {
 function clearSelection() {
   closeNodeMenu(false);
   clearPathSelection();
+  clearCardSelection();
+}
+function clearCardSelection() {
   selectedId = undefined;
   selectedEdge = undefined;
   highlighted.clear();
@@ -1045,24 +1119,16 @@ function clearSelection() {
 function selectNode(id: string, center = true) {
   closeNodeMenu(false);
   closeMobileTools();
+  clearPathSelection();
   selectedId = id;
   selectedEdge = undefined;
   highlighted = neighborhood(visible, id);
-  required<HTMLButtonElement>("focus").disabled = !visible.nodes.some(
-    (node) => node.id === id,
-  );
+  required<HTMLButtonElement>("focus").disabled = !visible.nodes.some((node) => node.id === id);
   results.hidden = true;
   renderNodeInspector(id);
   updateStyles();
-  const node = graph
-    ?.graphData()
-    .nodes.find((candidate) => candidate.id === id);
-  if (
-    center &&
-    graph &&
-    node &&
-    [node.x, node.y, node.z].every(Number.isFinite)
-  ) {
+  const node = graph?.graphData().nodes.find((candidate) => candidate.id === id);
+  if (center && graph && node && [node.x, node.y, node.z].every(Number.isFinite)) {
     autoFit = false;
     initialFitPending = false;
     const controls = graph.controls() as {
@@ -1086,13 +1152,10 @@ function renderNodeInspector(id: string) {
     return;
   }
   const system = details.get(id) ?? systems.find((item) => item.id === id);
-  const edges = visible.edges.filter(
-    (edge) => edge.source === id || edge.target === id,
-  );
+  const edges = visible.edges.filter((edge) => edge.source === id || edge.target === id);
   inspector.hidden = false;
   inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow">${escapeHtml(domainFor(id).name)} · navigation group</p><h2>${escapeHtml(nodeName(id))}</h2><p class="selection-summary">${escapeHtml(system?.summary ?? "Open the architecture card for reviewed scope, features, and evidence.")}</p><div class="tag-row">${system ? system.scope.map((scope) => `<span>${escapeHtml(scope)}</span>`).join("") : "<span>Card scope loading on demand</span>"}</div><div class="inspector-bottom"><span>${edges.length} visible relation${edges.length === 1 ? "" : "s"}</span><button id="open-card" class="primary-button">Open card ↗</button></div>`;
-  if (graphMode === "models")
-    inspector.insertAdjacentHTML("beforeend", modelConnections(id));
+  if (graphMode === "models") inspector.insertAdjacentHTML("beforeend", modelConnections(id));
   bindInspector();
   required("open-card").onclick = () => void openDetail(id);
 }
@@ -1100,11 +1163,7 @@ function renderNodeInspector(id: string) {
 function modelConnections(id: string) {
   return `<div class="model-connections">${visible.edges
     .flatMap((edge) => {
-      if (
-        edge.type !== "modeled-by" ||
-        (edge.source !== id && edge.target !== id)
-      )
-        return [];
+      if (edge.type !== "modeled-by" || (edge.source !== id && edge.target !== id)) return [];
       const other = edge.source === id ? edge.target : edge.source;
       return [
         `<div><button data-inspect-node="${escapeHtml(other)}">${escapeHtml(nodeName(other))}</button><button data-view-edge="${escapeHtml(simulationEdgeId(edge.source, edge.target))}">Inspect ${edge.metadata?.length ?? 0} view${edge.metadata?.length === 1 ? "" : "s"} ↗</button></div>`,
@@ -1124,24 +1183,16 @@ function bindInspector() {
       if (selectedId) openNodeMenu(selectedId);
     };
   panel.clamp();
-  inspector
-    .querySelector(".inspector-close")
-    ?.addEventListener("click", clearSelection);
-  inspector
-    .querySelectorAll<HTMLButtonElement>("[data-inspect-node]")
-    .forEach((button) => {
-      button.onclick = () => selectNode(button.dataset.inspectNode!);
-    });
-  inspector
-    .querySelectorAll<HTMLButtonElement>("[data-view-edge]")
-    .forEach((button) => {
-      button.onclick = () => {
-        const edge = graph
-          ?.graphData()
-          .links.find((link) => link.id === button.dataset.viewEdge);
-        if (edge) selectEdge(edge);
-      };
-    });
+  inspector.querySelector(".inspector-close")?.addEventListener("click", clearCardSelection);
+  inspector.querySelectorAll<HTMLButtonElement>("[data-inspect-node]").forEach((button) => {
+    button.onclick = () => selectNode(button.dataset.inspectNode!);
+  });
+  inspector.querySelectorAll<HTMLButtonElement>("[data-view-edge]").forEach((button) => {
+    button.onclick = () => {
+      const edge = graph?.graphData().links.find((link) => link.id === button.dataset.viewEdge);
+      if (edge) selectEdge(edge);
+    };
+  });
 }
 function selectEdge(edge: SimulationLink) {
   closeNodeMenu(false);
@@ -1154,8 +1205,7 @@ function selectEdge(edge: SimulationLink) {
   if (edge.type === "modeled-by") {
     inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow model-family">Candidate mathematical views · ${escapeHtml(edge.claim_type ?? "")}</p><h2>${escapeHtml(nodeName(endpointId(edge.target)))}</h2><p>${escapeHtml(nodeName(endpointId(edge.source)))} → modeled by</p><div class="model-views">${(edge.metadata ?? []).map((view) => `<section><h3>${escapeHtml(view.model)}</h3><dl><dt>Question</dt><dd>${escapeHtml(view.question) || "Not supplied"}</dd><dt>Assumptions</dt><dd>${view.assumptions.length ? `<ul>${view.assumptions.map((assumption) => `<li>${escapeHtml(assumption)}</li>`).join("")}</ul>` : "None supplied"}</dd><dt>Claim</dt><dd>${escapeHtml(view.claim_type)}</dd><dt>Evidence IDs · source card</dt><dd>${view.evidence_ids.length ? view.evidence_ids.map(escapeHtml).join(", ") : "None supplied"}</dd></dl></section>`).join("") || "<p>No view metadata supplied.</p>"}</div><button id="source-card" class="primary-button">Open source card & evidence ↗</button>`;
     bindInspector();
-    required("source-card").onclick = () =>
-      void openDetail(endpointId(edge.source));
+    required("source-card").onclick = () => void openDetail(endpointId(edge.source));
     updateStyles();
     return;
   }
@@ -1169,21 +1219,13 @@ function selectEdge(edge: SimulationLink) {
       "",
     )}</div>${edge.notes ? `<p class="selection-summary">${escapeHtml(edge.notes)}</p>` : ""}<p class="muted">${edge.evidence_ids?.length ? `Evidence: ${edge.evidence_ids.map(escapeHtml).join(", ")}` : "No relation evidence supplied."}</p><button id="source-card" class="primary-button">Open source card & evidence ↗</button>`;
   bindInspector();
-  required("source-card").onclick = () =>
-    void openDetail(endpointId(edge.source));
+  required("source-card").onclick = () => void openDetail(endpointId(edge.source));
   updateStyles();
 }
 
 function updateSearch() {
-  const matches = searchNodes(
-    visible.nodes,
-    systems,
-    search.value,
-    visible.edges,
-  );
-  searchMatches = search.value.trim()
-    ? new Set(matches.map((node) => node.id))
-    : undefined;
+  const matches = searchNodes(visible.nodes, systems, search.value, visible.edges);
+  searchMatches = search.value.trim() ? new Set(matches.map((node) => node.id)) : undefined;
   results.hidden = !search.value.trim() || document.activeElement !== search;
   results.innerHTML = matches.length
     ? `${matches
@@ -1192,9 +1234,7 @@ function updateSearch() {
           (node) =>
             `<button data-result="${escapeHtml(node.id)}"><strong>${escapeHtml(node.name)}</strong><small>${escapeHtml(node.type === "model" ? "Model family" : domainFor(node.id).name)}</small></button>`,
         )
-        .join(
-          "",
-        )}<button id="all-results">Browse all ${matches.length} results ↗</button>`
+        .join("")}<button id="all-results">Browse all ${matches.length} results ↗</button>`
     : `<p>No matching nodes in this navigation group.</p>`;
   results.querySelectorAll<HTMLButtonElement>("[data-result]").forEach(
     (button) =>
@@ -1213,9 +1253,7 @@ function updateSearch() {
   updateStyles();
 }
 function renderCatalog() {
-  const nodes = (
-    graphMode === "models" ? modelCanonical : canonical.nodes.length
-  )
+  const nodes = (graphMode === "models" ? modelCanonical : canonical.nodes.length)
     ? visible.nodes
     : systems.map((system) => ({
         id: system.id,
@@ -1236,10 +1274,7 @@ function renderCatalog() {
     : `<p class="muted">No nodes match this search. Change the query or navigation group.</p>`;
   required("catalog-list")
     .querySelectorAll<HTMLButtonElement>("[data-card]")
-    .forEach(
-      (button) =>
-        (button.onclick = () => void openDetail(button.dataset.card!)),
-    );
+    .forEach((button) => (button.onclick = () => void openDetail(button.dataset.card!)));
   required("catalog-list")
     .querySelectorAll<HTMLButtonElement>("[data-locate]")
     .forEach(
@@ -1269,10 +1304,7 @@ async function openDetail(id: string) {
     detailContent.innerHTML = renderDetail(system, canonical);
     detailContent
       .querySelectorAll<HTMLButtonElement>("[data-related]")
-      .forEach(
-        (button) =>
-          (button.onclick = () => void openDetail(button.dataset.related!)),
-      );
+      .forEach((button) => (button.onclick = () => void openDetail(button.dataset.related!)));
     if (selectedId === id) renderNodeInspector(id);
   } catch {
     if (request !== detailRequest) return;
@@ -1338,10 +1370,8 @@ async function loadGraph() {
       modelCanonical ??= await loadModelGraph();
     } else {
       const response = await fetch("/api/graph");
-      if (!response.ok)
-        throw new Error(`Graph API returned ${response.status}`);
-      const payload = (await response.json()) as
-        GraphPayload | { data: GraphPayload };
+      if (!response.ok) throw new Error(`Graph API returned ${response.status}`);
+      const payload = (await response.json()) as GraphPayload | { data: GraphPayload };
       canonical = "data" in payload ? payload.data : payload;
       if (!Array.isArray(canonical.nodes) || !Array.isArray(canonical.edges))
         throw new Error("Invalid graph payload");
@@ -1351,9 +1381,7 @@ async function loadGraph() {
     if (!graph) await createGraph();
     relationSelect.innerHTML = `<option value="all">All relations</option>${[
       ...new Set(
-        (mode === "models" ? modelCanonical!.edges : canonical.edges).map(
-          (edge) => edge.type,
-        ),
+        (mode === "models" ? modelCanonical!.edges : canonical.edges).map((edge) => edge.type),
       ),
     ]
       .sort()
@@ -1394,16 +1422,9 @@ function switchGraphMode(mode: "systems" | "models") {
   graph?.graphData({ nodes: [], links: [] });
   relationSelect.value = "all";
   relationSelect.disabled = mode === "models";
-  required("graph-systems").setAttribute(
-    "aria-pressed",
-    String(mode === "systems"),
-  );
-  required("graph-models").setAttribute(
-    "aria-pressed",
-    String(mode === "models"),
-  );
-  search.placeholder =
-    mode === "models" ? "Find a system or model…" : "Find a system…";
+  required("graph-systems").setAttribute("aria-pressed", String(mode === "systems"));
+  required("graph-models").setAttribute("aria-pressed", String(mode === "models"));
+  search.placeholder = mode === "models" ? "Find a system or model…" : "Find a system…";
   search.setAttribute(
     "aria-label",
     mode === "models"
@@ -1437,12 +1458,7 @@ search.addEventListener("keydown", (event) => {
     results.querySelector<HTMLButtonElement>("button")?.focus();
   }
   if (event.key === "Enter") {
-    const first = searchNodes(
-      visible.nodes,
-      systems,
-      search.value,
-      visible.edges,
-    )[0];
+    const first = searchNodes(visible.nodes, systems, search.value, visible.edges)[0];
     if (first) {
       selectNode(first.id);
       search.blur();
@@ -1451,8 +1467,7 @@ search.addEventListener("keydown", (event) => {
 });
 document.addEventListener("pointerdown", (event) => {
   if (!(event.target as Element).closest(".search-wrap")) results.hidden = true;
-  if (!(event.target as Element).closest("#node-menu, #node-actions"))
-    closeNodeMenu(false);
+  if (!(event.target as Element).closest("#node-menu, #node-actions")) closeNodeMenu(false);
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "F11") {
@@ -1494,20 +1509,15 @@ required("catalog-open").onclick = () => {
 };
 required("mobile-tools").onclick = () => {
   mobileToolsOpen = !mobileToolsOpen;
-  required("mobile-tools").setAttribute(
-    "aria-expanded",
-    String(mobileToolsOpen),
-  );
+  required("mobile-tools").setAttribute("aria-expanded", String(mobileToolsOpen));
   required("secondary-tools").classList.toggle("is-open", mobileToolsOpen);
 };
-required("fullscreen-toggle").onclick = () =>
-  void toggleFullscreen().catch(() => undefined);
+required("fullscreen-toggle").onclick = () => void toggleFullscreen().catch(() => undefined);
 document.addEventListener("fullscreenchange", () =>
   updateFullscreenState(Boolean(document.fullscreenElement)),
 );
 syncFullscreenState();
-required("help-open").onclick = required("legend-open").onclick = () =>
-  showDialog(helpDialog);
+required("help-open").onclick = required("legend-open").onclick = () => showDialog(helpDialog);
 domainSelect.onchange = () => {
   expandedNodes.clear();
   updateGraph(true);
@@ -1542,8 +1552,7 @@ required("pause").onclick = () => {
   updatePauseButton();
   if (paused) {
     graph?.cooldownTicks(0);
-    required("simulation-status").textContent =
-      "Forces paused · navigation active";
+    required("simulation-status").textContent = "Forces paused · navigation active";
   } else reheat();
 };
 for (const mode of [2, 3] as const)
@@ -1554,12 +1563,10 @@ for (const mode of [2, 3] as const)
     required("mode-2").setAttribute("aria-pressed", String(mode === 2));
     required("mode-3").setAttribute("aria-pressed", String(mode === 3));
     seedCoordinates(graph?.graphData().nodes ?? [], mode);
-    for (const node of graph?.graphData().nodes ?? [])
-      applyPin(node, pins.get(node.id), mode);
+    for (const node of graph?.graphData().nodes ?? []) applyPin(node, pins.get(node.id), mode);
     graph?.numDimensions(mode);
     configureCamera();
-    if (mode === 2)
-      graph?.cameraPosition({ x: 0, y: 0, z: 700 }, { x: 0, y: 0, z: 0 }, 0);
+    if (mode === 2) graph?.cameraPosition({ x: 0, y: 0, z: 700 }, { x: 0, y: 0, z: 0 }, 0);
     if (!paused) reheat();
     else graph?.cooldownTicks(0);
     autoFit = true;

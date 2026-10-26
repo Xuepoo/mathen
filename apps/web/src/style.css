@@ -698,6 +698,72 @@ h4 {
   color: var(--muted);
   font-size: 10px;
 }
+.path-panel {
+  position: absolute;
+  right: 28px;
+  bottom: 192px;
+  z-index: 4;
+  width: min(430px, calc(100vw - 56px));
+  max-height: calc(100dvh - 380px);
+  overflow-y: auto;
+  border-radius: 16px;
+  padding: 22px;
+}
+.path-panel-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.path-panel h2 {
+  margin: 5px 0 0;
+  font-size: 22px;
+  font-weight: 500;
+}
+.path-panel pre {
+  margin: 10px 0;
+  color: #dbe8e5;
+  font:
+    11px/1.7 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.path-current,
+.saved-path {
+  border-top: 1px solid var(--border);
+  margin-top: 15px;
+  padding-top: 15px;
+}
+.path-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.path-actions button {
+  padding: 7px 9px;
+  font-size: 10px;
+}
+.saved-path > div:first-child {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+}
+.saved-path pre {
+  margin: 0;
+  flex: 1;
+}
+.path-swatch {
+  display: block;
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  margin-top: 4px;
+  border-radius: 50%;
+}
 .primary-button {
   background: var(--mint);
   color: #173b30;
@@ -1283,6 +1349,15 @@ summary {
     width: auto;
     bottom: 144px;
     max-height: min(300px, calc(100dvh - 340px));
+    padding: 18px;
+    border-radius: 13px;
+  }
+  .path-panel {
+    right: 14px;
+    left: 14px;
+    bottom: 144px;
+    width: auto;
+    max-height: min(360px, calc(100dvh - 340px));
     padding: 18px;
     border-radius: 13px;
   }

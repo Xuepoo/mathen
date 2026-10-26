@@ -1,5 +1,27 @@
 import { expect, test } from "bun:test";
-import { createLabelPool, shouldShowLabel } from "./graph-labels";
+import {
+  compactModelLabel,
+  createLabelPool,
+  displayNodeColor,
+  shouldShowLabel,
+} from "./graph-labels";
+
+test("model labels remove duplicate title prefixes and truncate deterministically", () => {
+  expect(compactModelLabel("Same title: Finite labeled repository graph")).toBe(
+    "Finite labeled repository graph",
+  );
+  expect(compactModelLabel("Same title: A very long mathematical model name", 20)).toBe(
+    "A very long mathema…",
+  );
+  expect(compactModelLabel("Short model")).toBe("Short model");
+});
+
+test("node colors retain domain colors unless intentionally dimmed or selected", () => {
+  expect(displayNodeColor({ baseColor: "#66dbc5" })).toBe("#66dbc5");
+  expect(displayNodeColor({ baseColor: "#66dbc5", dimmed: true })).toBe("#34404c");
+  expect(displayNodeColor({ baseColor: "#66dbc5", path: true })).toBe("#ffffff");
+  expect(displayNodeColor({ baseColor: "#66dbc5", savedPathColor: "#e7bb7d" })).toBe("#e7bb7d");
+});
 
 test("clearing a graph cancels queued allocations before their frame runs", () => {
   const frames: (() => void)[] = [];

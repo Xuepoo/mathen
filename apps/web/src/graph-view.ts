@@ -11,6 +11,13 @@ type Pinnable = {
 };
 
 export type ShortestPath = { nodes: string[]; edges: Set<string> };
+export type PathEdge = {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+};
+export type ShortestRoute = { nodes: string[]; edges: PathEdge[] };
 
 /** Explicit domain exceptions; relation selection and hidden nodes still apply. O(V + E). */
 export function applyView(
@@ -69,14 +76,43 @@ export function shortestPath(
   start: string,
   target: string,
 ): ShortestPath | undefined {
-  if (start === target) return { nodes: [start], edges: new Set() };
-  const adjacency = new Map<string, { id: string; node: string }[]>();
+  const route = shortestRoute(graph, start, target);
+  return route
+    ? { nodes: route.nodes, edges: new Set(route.edges.map((edge) => edge.id)) }
+    : undefined;
+}
+
+/**
+ * Return the ordered, visible-graph route including relation metadata.
+ * Traversal is bidirectional for discovery only; it does not infer a directed relation.
+ */
+export function shortestRoute(
+  graph: ExplorerPayload,
+  start: string,
+  target: string,
+): ShortestRoute | undefined {
+  if (start === target) return { nodes: [start], edges: [] };
+  const known = new Set(graph.nodes.map((node) => node.id));
+  if (!known.has(start) || !known.has(target)) return undefined;
+  const adjacency = new Map<string, { edge: PathEdge; node: string }[]>();
   for (const edge of graph.edges) {
-    const id = simulationEdgeId(edge.source, edge.target, edge.type);
-    adjacency.set(edge.source, [...(adjacency.get(edge.source) ?? []), { id, node: edge.target }]);
-    adjacency.set(edge.target, [...(adjacency.get(edge.target) ?? []), { id, node: edge.source }]);
+    if (!known.has(edge.source) || !known.has(edge.target)) continue;
+    const pathEdge = {
+      id: simulationEdgeId(edge.source, edge.target, edge.type),
+      source: edge.source,
+      target: edge.target,
+      type: edge.type,
+    };
+    adjacency.set(edge.source, [
+      ...(adjacency.get(edge.source) ?? []),
+      { edge: pathEdge, node: edge.target },
+    ]);
+    adjacency.set(edge.target, [
+      ...(adjacency.get(edge.target) ?? []),
+      { edge: pathEdge, node: edge.source },
+    ]);
   }
-  const previous = new Map<string, { node: string; edge: string }>();
+  const previous = new Map<string, { node: string; edge: PathEdge }>();
   const queue = [start];
   const visited = new Set([start]);
   while (queue.length) {
@@ -84,23 +120,49 @@ export function shortestPath(
     for (const next of adjacency.get(current) ?? []) {
       if (visited.has(next.node)) continue;
       visited.add(next.node);
-      previous.set(next.node, { node: current, edge: next.id });
+      previous.set(next.node, { node: current, edge: next.edge });
       if (next.node === target) {
         const nodes = [target];
-        const edges = new Set<string>();
+        const edges: PathEdge[] = [];
         let cursor = target;
         while (cursor !== start) {
           const step = previous.get(cursor);
           if (!step) return undefined;
-          edges.add(step.edge);
+          edges.push(step.edge);
           cursor = step.node;
           nodes.push(cursor);
         }
         nodes.reverse();
+        edges.reverse();
         return { nodes, edges };
       }
       queue.push(next.node);
     }
   }
   return undefined;
+}
+
+export function formatRouteText(route: ShortestRoute, names: (id: string) => string): string {
+  if (!route.edges.length) return names(route.nodes[0]);
+  return route.edges
+    .map(
+      (edge, index) =>
+        `${names(route.nodes[index])} --${edge.type} [${edge.id}]-- ${names(route.nodes[index + 1])}`,
+    )
+    .join("\n");
+}
+
+export function serializeExplorationPath(
+  route: ShortestRoute,
+  names: (id: string) => string,
+  color?: string,
+) {
+  return {
+    kind: "graph-exploration-path" as const,
+    claim:
+      "navigation and discovery output only; not a canonical relation, causal chain, compatibility claim, proof, or inferred evidence",
+    color,
+    nodes: route.nodes.map((id) => ({ id, name: names(id) })),
+    edges: route.edges.map((edge) => ({ ...edge })),
+  };
 }
