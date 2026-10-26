@@ -344,7 +344,7 @@ def _observation_audit(
             "kind": value.get("kind", "not-recorded"),
             "review_status": review_status,
             "card_claim_refs": explicit_refs,
-            "promoted": bool(explicit_refs),
+            "promotion_decision": "not-determined",
             "artifact_detached": True,
             "detached": value.get("id") not in canonical_evidence,
             "canonical_evidence_linked": value.get("id") in canonical_evidence,

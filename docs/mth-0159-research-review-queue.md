@@ -24,7 +24,8 @@ The report covers:
   human-review promotion gate, and whether the observation ID is linked from a
   canonical evidence bundle. The artifact remains physically detached from
   the card corpus even when a reviewed card has copied the evidence record;
-  neither presence nor linkage is treated as promotion.
+  review status, claim references, presence, and linkage are reported without
+  inferring a promotion decision.
 - Standalone mathematical-view contracts under `data/mathviews/`, their
   deterministic validation result, and each `validation_record`. A `valid`
   classification is a bounded consistency result, not a review or promotion

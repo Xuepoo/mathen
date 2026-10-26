@@ -86,7 +86,7 @@ class ResearchReviewQueueTests(unittest.TestCase):
             "unknown",
         )
 
-    def test_detached_observation_keeps_unreviewed_and_unpromoted(self) -> None:
+    def test_observation_references_do_not_infer_promotion(self) -> None:
         report = AUDIT.audit_documents(
             [], [("data/experiments/observation.json", observation())], []
         )
@@ -96,10 +96,29 @@ class ResearchReviewQueueTests(unittest.TestCase):
         self.assertTrue(record["artifact_detached"])
         self.assertFalse(record["canonical_evidence_linked"])
         self.assertEqual(record["review_status"], "unreviewed")
-        self.assertFalse(record["promoted"])
+        self.assertEqual(record["promotion_decision"], "not-determined")
         self.assertEqual(
             len(report["detached_observation_evidence"]["review_candidates"]), 1
         )
+
+    def test_reviewed_observation_reference_still_does_not_infer_promotion(
+        self,
+    ) -> None:
+        value = observation()
+        value["review"] = {
+            "status": "reviewed",
+            "reviewer": "reviewer",
+            "reviewed_at": "2026-10-27T00:00:00Z",
+            "card_claim_refs": ["feature:source-feature"],
+        }
+
+        report = AUDIT.audit_documents(
+            [], [("data/experiments/observation.json", value)], []
+        )
+
+        record = report["detached_observation_evidence"]["records"][0]
+        self.assertEqual(record["card_claim_refs"], ["feature:source-feature"])
+        self.assertEqual(record["promotion_decision"], "not-determined")
 
     def test_standalone_validation_record_is_not_promoted_by_valid_classification(
         self,
