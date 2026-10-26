@@ -109,6 +109,34 @@ class CardValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(CardValidationError, "duplicate evidence ids"):
             validate_card(card)
 
+    def test_feature_lifecycle_requires_explicit_evidence_and_transition_target(
+        self,
+    ) -> None:
+        card = json.loads((ROOT / "data" / "systems" / "git.json").read_text())
+        evidence_id = card["features"][0]["evidence_ids"][0]
+        card["features"][0]["lifecycle"] = {
+            "status": "superseded",
+            "evidence_ids": [evidence_id],
+            "claim_type": "fact",
+            "claim_status": "accepted",
+            "superseded_by": ["replacement-feature"],
+            "notes": "The cited release documentation names the replacement.",
+        }
+        validate_card(card)
+
+        card["features"][0]["lifecycle"].pop("notes")
+        with self.assertRaisesRegex(
+            CardValidationError, "superseded status needs notes"
+        ):
+            validate_card(card)
+
+    def test_lifecycle_is_not_derived_from_claim_type(self) -> None:
+        card = json.loads((ROOT / "data" / "systems" / "git.json").read_text())
+        feature = card["features"][0]
+        feature["claim_type"] = "hypothesis"
+        self.assertNotIn("lifecycle", feature)
+        validate_card(card)
+
         card = self._evolution_fixture()
         card["composition"]["claim_status"] = "certain"
         with self.assertRaisesRegex(
