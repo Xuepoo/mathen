@@ -1,0 +1,424 @@
+{
+  "id": "g5-sqlite-wal-visibility",
+  "kind": "experiment",
+  "title": "SQLite WAL reader snapshot visibility after writer commit",
+  "uri": "https://sqlite.org/src/info/4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "protocol": "For each repetition, create a fresh SQLite database, enable WAL and FULL synchronous mode, commit a fixed four-row dataset, begin a reader transaction, commit one appended row from a writer connection, read again from the held reader snapshot, then start a fresh reader transaction and compare all observations across repetitions.",
+  "system_commit": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "environment": {
+    "os": "Linux",
+    "os_release": "7.3.0-4-cachyos",
+    "architecture": "x86_64",
+    "python": "3.13.13",
+    "sqlite": "3.50.4",
+    "sqlite_source_id": "2025-07-30 19:33:53 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+  },
+  "command": "uv run --offline python scripts/g5_sqlite_wal_visibility_experiment.py --expected-source-id 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3 --repetitions 3 --output data/experiments/g5-sqlite-wal-visibility-results.json",
+  "dataset": {
+    "name": "fixed-records-v1",
+    "rows": [
+      [
+        1,
+        "alpha",
+        10
+      ],
+      [
+        2,
+        "beta",
+        20
+      ],
+      [
+        3,
+        "gamma",
+        30
+      ],
+      [
+        4,
+        "delta",
+        40
+      ]
+    ],
+    "appended_row": [
+      5,
+      "epsilon",
+      50
+    ],
+    "schema": "records(id INTEGER PRIMARY KEY, name TEXT NOT NULL, value INTEGER NOT NULL)"
+  },
+  "repetitions": 3,
+  "metrics": {
+    "seed_rows": 4,
+    "snapshot_rows_during_writer_commit": 4,
+    "writer_rows_after_commit": 5,
+    "refreshed_reader_rows": 5,
+    "integrity_checks_passed": 3,
+    "snapshot_checks_passed": 3,
+    "refresh_checks_passed": 3,
+    "repetitions_consistent": 1
+  },
+  "artifacts": [
+    {
+      "name": "per-repetition-observations",
+      "results": [
+        {
+          "journal_mode": "wal",
+          "reader_snapshot": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "writer_after_commit": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "reader_during_writer_commit": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "reader_after_refresh": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "integrity_check": "ok",
+          "final_rows_sha256": "216b84a4a8809a38a0a796c9fdfef275a54e69f76ad3822302d57122118f2be0"
+        },
+        {
+          "journal_mode": "wal",
+          "reader_snapshot": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "writer_after_commit": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "reader_during_writer_commit": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "reader_after_refresh": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "integrity_check": "ok",
+          "final_rows_sha256": "216b84a4a8809a38a0a796c9fdfef275a54e69f76ad3822302d57122118f2be0"
+        },
+        {
+          "journal_mode": "wal",
+          "reader_snapshot": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "writer_after_commit": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "reader_during_writer_commit": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ]
+            ],
+            "row_count": 4,
+            "value_sum": 100
+          },
+          "reader_after_refresh": {
+            "rows": [
+              [
+                1,
+                "alpha",
+                10
+              ],
+              [
+                2,
+                "beta",
+                20
+              ],
+              [
+                3,
+                "gamma",
+                30
+              ],
+              [
+                4,
+                "delta",
+                40
+              ],
+              [
+                5,
+                "epsilon",
+                50
+              ]
+            ],
+            "row_count": 5,
+            "value_sum": 150
+          },
+          "integrity_check": "ok",
+          "final_rows_sha256": "216b84a4a8809a38a0a796c9fdfef275a54e69f76ad3822302d57122118f2be0"
+        }
+      ],
+      "runner_sha256": "c6182e6f9b87cb0c8e51530c607939ed1c6af6be235c9714b0174aab0ebf855f"
+    }
+  ]
+}
