@@ -5,7 +5,7 @@
 - **Status:** internal research note, not a paper or submission artifact
 - **Search date:** 2026-10-27
 - **Source set:** bounded arXiv reconnaissance supplied by the commander
-**Method:** targeted metadata and abstract inspection of the supplied arXiv IDs;
+- **Method:** targeted metadata and abstract inspection of the supplied arXiv IDs;
 this is **not a systematic literature review**.
 
 This map records prior art and useful neighboring ideas for Mathen. It is not a
