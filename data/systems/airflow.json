@@ -79,5 +79,65 @@
     {"id": "airflow-source-commit", "kind": "source-code", "title": "Apache Airflow source at c01a68cb1e30", "uri": "https://github.com/apache/airflow/commit/c01a68cb1e30092e379ddf4459b8d2e1c7f3bc56", "accessed": "2026-10-23", "notes": "Fixed official repository revision used as the provenance boundary for this card."},
     {"id": "airflow-architecture-doc", "kind": "official-doc", "title": "Apache Airflow Architecture Overview", "uri": "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html", "accessed": "2026-10-23", "notes": "Official documentation for DAGs, scheduler, DAG processor, API server, metadata database, workers, and separated deployment."},
     {"id": "airflow-executor-doc", "kind": "official-doc", "title": "Apache Airflow Executor", "uri": "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/index.html", "accessed": "2026-10-23", "notes": "Official documentation for local and remote executors, the common executor interface, and execution trade-offs."}
-  ]
+  ],
+  "scope_context": {
+  "validity_scope": {
+    "status": "specified",
+    "systems": [
+      "Apache Airflow"
+    ],
+    "versions": [
+      "commit c01a68cb1e30092e379ddf4459b8d2e1c7f3bc56"
+    ],
+    "deployment_origins": [],
+    "conditions": [
+      "fixed Apache Airflow source revision and cited official architecture documentation"
+    ],
+    "exclusions": [
+      "claims outside the cited revision and documentation boundary"
+    ],
+    "evidence_ids": [
+      "airflow-architecture-doc",
+      "airflow-source-commit"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "workload": {
+    "status": "specified",
+    "values": [
+      "DAG task scheduling",
+      "distributed task execution",
+      "pluggable executor workloads"
+    ],
+    "evidence_ids": [
+      "airflow-architecture-doc",
+      "airflow-executor-doc"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "runtime_conditions": {
+    "status": "specified",
+    "values": [
+      "scheduler and metadata database with local or remote executor"
+    ],
+    "evidence_ids": [
+      "airflow-architecture-doc",
+      "airflow-executor-doc"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "scale": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  },
+  "failure_conditions": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  }
+}
 }

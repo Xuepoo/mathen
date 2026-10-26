@@ -305,5 +305,73 @@
     "sqlite",
     "duckdb",
     "supabase"
-  ]
+  ],
+  "scope_context": {
+  "validity_scope": {
+    "status": "specified",
+    "systems": [
+      "PostgreSQL"
+    ],
+    "versions": [
+      "commit 6b9f40d49ae33eb0b4a7c77666fe4971ef7ba087"
+    ],
+    "deployment_origins": [],
+    "conditions": [
+      "fixed PostgreSQL source revision and cited official architecture documentation"
+    ],
+    "exclusions": [
+      "claims outside the cited revision and documentation boundary"
+    ],
+    "evidence_ids": [
+      "postgresql-architecture",
+      "postgresql-repository-commit"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "workload": {
+    "status": "specified",
+    "values": [
+      "multi-client relational transactions",
+      "transaction isolation",
+      "extensible database workloads"
+    ],
+    "evidence_ids": [
+      "postgresql-architecture",
+      "postgresql-mvcc",
+      "postgresql-extensions"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "runtime_conditions": {
+    "status": "specified",
+    "values": [
+      "client/server process-per-session execution",
+      "database kernel with extensions"
+    ],
+    "evidence_ids": [
+      "postgresql-architecture",
+      "postgresql-extensions"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "scale": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  },
+  "failure_conditions": {
+    "status": "specified",
+    "values": [
+      "serialization failure requiring transaction retry"
+    ],
+    "evidence_ids": [
+      "postgresql-transaction-isolation"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  }
+}
 }

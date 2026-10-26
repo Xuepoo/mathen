@@ -388,5 +388,74 @@
       ],
       "notes": "Both expose relational query execution, while SQLite is an embedded/local engine and PostgreSQL is a client/server engine with a broader extension and multi-client boundary; this is a structural comparison, not historical influence or equivalence."
     }
-  ]
+  ],
+  "scope_context": {
+  "validity_scope": {
+    "status": "specified",
+    "systems": [
+      "SQLite"
+    ],
+    "versions": [
+      "commit 4242856e539471ce7b7fc7f7d93679df7f0edd25"
+    ],
+    "deployment_origins": [],
+    "conditions": [
+      "fixed SQLite source revision and cited official architecture documentation"
+    ],
+    "exclusions": [
+      "claims outside the cited revision and documentation boundary"
+    ],
+    "evidence_ids": [
+      "sqlite-architecture",
+      "sqlite-repository-commit"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "workload": {
+    "status": "specified",
+    "values": [
+      "embedded database use",
+      "single-file local application storage",
+      "relational query execution"
+    ],
+    "evidence_ids": [
+      "sqlite-appropriate-uses",
+      "sqlite-architecture"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "runtime_conditions": {
+    "status": "specified",
+    "values": [
+      "single-host embedded process",
+      "portable filesystem/VFS boundary"
+    ],
+    "evidence_ids": [
+      "sqlite-appropriate-uses",
+      "sqlite-architecture"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "scale": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  },
+  "failure_conditions": {
+    "status": "specified",
+    "values": [
+      "transaction commit interruption and crash recovery",
+      "WAL checkpoint boundary"
+    ],
+    "evidence_ids": [
+      "sqlite-atomic-commit",
+      "sqlite-wal"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  }
+}
 }

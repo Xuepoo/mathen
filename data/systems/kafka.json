@@ -348,5 +348,70 @@
     "redis",
     "elasticsearch",
     "kubernetes"
-  ]
+  ],
+  "scope_context": {
+  "validity_scope": {
+    "status": "specified",
+    "systems": [
+      "Apache Kafka"
+    ],
+    "versions": [
+      "commit 787c2b4d9f032890226590f9956d501812f10cbd"
+    ],
+    "deployment_origins": [],
+    "conditions": [
+      "fixed Apache Kafka source revision and cited official introduction documentation"
+    ],
+    "exclusions": [
+      "claims outside the cited revision and documentation boundary"
+    ],
+    "evidence_ids": [
+      "kafka-introduction",
+      "kafka-repository-commit"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "workload": {
+    "status": "specified",
+    "values": [
+      "distributed event streaming",
+      "partitioned append-log retention and replay",
+      "stream-processing pipelines"
+    ],
+    "evidence_ids": [
+      "kafka-introduction"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "runtime_conditions": {
+    "status": "specified",
+    "values": [
+      "broker topics partitioned by key",
+      "consumer groups and replicated topic partitions"
+    ],
+    "evidence_ids": [
+      "kafka-introduction"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "scale": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  },
+  "failure_conditions": {
+    "status": "specified",
+    "values": [
+      "partition replica unavailability and retained-history recovery boundary"
+    ],
+    "evidence_ids": [
+      "kafka-introduction"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  }
+}
 }

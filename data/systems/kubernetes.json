@@ -199,5 +199,66 @@
       "notes": "Fixed-revision source provenance for scheduler decisions and binding."
     }
   ],
-  "related_systems": ["linux"]
+  "related_systems": ["linux"],
+  "scope_context": {
+  "validity_scope": {
+    "status": "specified",
+    "systems": [
+      "Kubernetes"
+    ],
+    "versions": [
+      "commit 2770c7b39f56a750c23d026bd311cb8d0eda8b4d"
+    ],
+    "deployment_origins": [],
+    "conditions": [
+      "fixed Kubernetes source revision and cited official architecture documentation"
+    ],
+    "exclusions": [
+      "claims outside the cited revision and documentation boundary"
+    ],
+    "evidence_ids": [
+      "kubernetes-architecture-doc",
+      "kubernetes-controller-source"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "workload": {
+    "status": "specified",
+    "values": [
+      "declarative resource reconciliation",
+      "scheduled workload placement"
+    ],
+    "evidence_ids": [
+      "kubernetes-controller-doc",
+      "kubernetes-scheduler-source"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "runtime_conditions": {
+    "status": "specified",
+    "values": [
+      "API server, controller, scheduler, node, and etcd-backed control-plane components"
+    ],
+    "evidence_ids": [
+      "kubernetes-architecture-doc",
+      "kubernetes-apiserver-source",
+      "kubernetes-etcd-source",
+      "kubernetes-scheduler-source"
+    ],
+    "claim_type": "fact",
+    "claim_status": "under-review"
+  },
+  "scale": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  },
+  "failure_conditions": {
+    "status": "unspecified",
+    "values": [],
+    "evidence_ids": []
+  }
+}
 }
