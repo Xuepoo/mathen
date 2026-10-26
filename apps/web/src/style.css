@@ -122,21 +122,68 @@ h4 {
 .explorer.is-fullscreen .map-footer,
 .explorer.is-fullscreen .metadata-notice,
 .explorer.is-fullscreen .state-panel,
-.explorer.is-fullscreen .inspector,
-.explorer.is-fullscreen .node-menu {
+.explorer.is-fullscreen .inspector {
   opacity: 0;
   pointer-events: none;
   visibility: hidden;
 }
+.explorer.is-fullscreen.fullscreen-panel-topbar .topbar,
+.explorer.is-fullscreen.fullscreen-panel-graph-tools .graph-tools,
+.explorer.is-fullscreen.fullscreen-panel-filters .filters,
+.explorer.is-fullscreen.fullscreen-panel-map-footer .map-footer,
+.explorer.is-fullscreen.fullscreen-panel-inspector .inspector {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+.fullscreen-panel-dock {
+  position: fixed;
+  top: 144px;
+  right: 24px;
+  z-index: 10;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 11px;
+  white-space: nowrap;
+}
+.explorer.is-fullscreen .fullscreen-panel-dock {
+  display: flex;
+}
+.fullscreen-dock-label {
+  padding: 0 5px 0 7px;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.fullscreen-panel-dock button {
+  padding: 7px 8px;
+  border-color: transparent;
+  color: #b3c1ca;
+  background: transparent;
+  font-size: 10px;
+}
+.fullscreen-panel-dock button[aria-pressed="true"] {
+  color: #173b30;
+  background: var(--mint);
+}
+.fullscreen-panel-dock button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 .fullscreen-toggle {
   position: fixed;
-  top: 22px;
+  top: 100px;
   right: 24px;
   z-index: 10;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 9px 11px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
   color: #c6d4d8;
   background: #14202ee8;
 }
@@ -148,9 +195,6 @@ h4 {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
-}
-.fullscreen-toggle span {
-  font-size: 11px;
 }
 .explorer.is-fullscreen .fullscreen-toggle {
   color: var(--mint);
@@ -1099,12 +1143,14 @@ summary {
     gap: 20px;
   }
   .fullscreen-toggle {
-    top: 12px;
-    right: 56px;
-    padding: 8px;
+    top: 92px;
+    right: 24px;
   }
-  .fullscreen-toggle span {
-    display: none;
+  .fullscreen-panel-dock {
+    top: 138px;
+    right: 24px;
+    max-width: calc(100vw - 68px);
+    overflow-x: auto;
   }
   .map-caption h1 {
     font-size: 30px;
@@ -1178,6 +1224,23 @@ summary {
     gap: 1px;
     padding: 5px;
     overflow: visible;
+  }
+  .fullscreen-panel-dock {
+    top: 112px;
+    left: 12px;
+    right: 56px;
+    justify-content: flex-start;
+  }
+  .fullscreen-dock-label {
+    display: none;
+  }
+  .fullscreen-toggle {
+    top: 70px;
+    right: 12px;
+  }
+  .fullscreen-panel-dock button {
+    padding: 7px 6px;
+    font-size: 9px;
   }
   .mobile-tools-toggle {
     display: block;

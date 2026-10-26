@@ -79,7 +79,15 @@ app.innerHTML = `
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.25c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.74.08-.74 1.2.08 1.84 1.23 1.84 1.23 1.07 1.83 2.8 1.3 3.48 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.38 1.23-3.22-.12-.3-.53-1.52.12-3.17 0 0 1-.32 3.3 1.23a11.4 11.4 0 0 1 6 0c2.3-1.55 3.3-1.23 3.3-1.23.65 1.65.24 2.87.12 3.17.76.84 1.23 1.91 1.23 3.22 0 4.62-2.8 5.64-5.48 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .5Z"/></svg>
       </a>
     </header>
-    <button id="fullscreen-toggle" class="fullscreen-toggle glass" aria-pressed="false" aria-keyshortcuts="F11" aria-label="Enter full screen" title="Enter full screen (F11)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path></svg><span>Full screen</span></button>
+    <button id="fullscreen-toggle" class="fullscreen-toggle glass" aria-pressed="false" aria-keyshortcuts="F11" aria-label="Enter full screen" title="Enter full screen (F11)"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path></svg></button>
+    <div id="fullscreen-panel-dock" class="fullscreen-panel-dock glass" aria-label="Fullscreen panels">
+      <span class="fullscreen-dock-label">Show</span>
+      <button type="button" data-fullscreen-panel="topbar" aria-pressed="false">Navigation</button>
+      <button type="button" data-fullscreen-panel="graph-tools" aria-pressed="false">Controls</button>
+      <button type="button" data-fullscreen-panel="filters" aria-pressed="false">Filters</button>
+      <button type="button" data-fullscreen-panel="map-footer" aria-pressed="false">Status</button>
+      <button type="button" data-fullscreen-panel="inspector" aria-pressed="false" disabled>Selection</button>
+    </div>
 
     <section class="graph-tools glass" aria-label="Graph controls">
       <div class="dimension-switch graph-mode-switch" role="group" aria-label="Graph mode"><button id="graph-systems" aria-pressed="true">Systems</button><button id="graph-models" aria-pressed="false">Math models</button></div>
@@ -496,9 +504,14 @@ async function createGraph() {
     .cooldownTime(8000)
     .onNodeClick((node, event) => {
       const pathClick = event.ctrlKey || event.metaKey;
-      if (pathClick) togglePathNode(node.id);
-      else clearPathSelection();
-      selectNode(node.id, !pathClick);
+      if (pathClick) {
+        // Ctrl/Cmd-click is reserved for path exploration, not card selection.
+        clearCardSelection();
+        togglePathNode(node.id);
+        return;
+      }
+      clearPathSelection();
+      selectNode(node.id);
     })
     .onNodeRightClick((node, event) => {
       event.preventDefault();
@@ -622,12 +635,31 @@ function updateFullscreenState(fullscreen: boolean) {
   button.title = fullscreen
     ? "Exit full screen (F11 or Escape)"
     : "Enter full screen (F11)";
-  button.querySelector("span")!.textContent = fullscreen
-    ? "Exit"
-    : "Full screen";
   button.querySelector("svg")!.innerHTML = fullscreen
     ? '<path d="M9 4H4v5M20 9V4h-5M15 20h5v-5M4 15v5h5"></path>'
     : '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path>';
+  syncFullscreenPanelControls();
+}
+function fullscreenPanelClass(panelName: string) {
+  return `fullscreen-panel-${panelName}`;
+}
+function syncFullscreenPanelControls() {
+  const explorer = document.querySelector<HTMLElement>(".explorer");
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-fullscreen-panel]")
+    .forEach((button) => {
+      const panelName = button.dataset.fullscreenPanel!;
+      const open =
+        explorer?.classList.contains(fullscreenPanelClass(panelName)) ?? false;
+      button.setAttribute("aria-pressed", String(open));
+      if (panelName === "inspector") button.disabled = inspector.hidden;
+    });
+}
+function setFullscreenPanel(panelName: string, open: boolean) {
+  document
+    .querySelector<HTMLElement>(".explorer")
+    ?.classList.toggle(fullscreenPanelClass(panelName), open);
+  syncFullscreenPanelControls();
 }
 async function toggleFullscreen() {
   if (document.fullscreenElement) return document.exitFullscreen();
@@ -879,7 +911,10 @@ function updateGraph(preserveView = false) {
   highlighted = selectedId ? neighborhood(visible, selectedId) : new Set();
   updatePathHighlight();
   if (selectedId) renderNodeInspector(selectedId);
-  else inspector.hidden = true;
+  else {
+    inspector.hidden = true;
+    setFullscreenPanel("inspector", false);
+  }
   required("counts").textContent =
     graphMode === "models"
       ? `${visible.nodes.filter((node) => node.type === "system").length} systems / ${visible.nodes.filter((node) => node.type === "model").length} models / ${visible.edges.length} model links`
@@ -1035,10 +1070,15 @@ function reheat() {
 function clearSelection() {
   closeNodeMenu(false);
   clearPathSelection();
+  clearCardSelection();
+}
+function clearCardSelection() {
+  closeNodeMenu(false);
   selectedId = undefined;
   selectedEdge = undefined;
   highlighted.clear();
   inspector.hidden = true;
+  setFullscreenPanel("inspector", false);
   required<HTMLButtonElement>("focus").disabled = true;
   updateStyles();
 }
@@ -1081,6 +1121,7 @@ function renderNodeInspector(id: string) {
   if (node?.type === "model") {
     const edges = visible.edges.filter((edge) => edge.target === id);
     inspector.hidden = false;
+    setFullscreenPanel("inspector", true);
     inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow model-family">Mathematical model family</p><h2>${escapeHtml(node.name)}</h2><p>${edges.length} visible systems share this candidate model family. Shared models do not imply influence or a system-to-system relation.</p>${modelConnections(id)}`;
     bindInspector();
     return;
@@ -1090,6 +1131,7 @@ function renderNodeInspector(id: string) {
     (edge) => edge.source === id || edge.target === id,
   );
   inspector.hidden = false;
+  setFullscreenPanel("inspector", true);
   inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow">${escapeHtml(domainFor(id).name)} · navigation group</p><h2>${escapeHtml(nodeName(id))}</h2><p class="selection-summary">${escapeHtml(system?.summary ?? "Open the architecture card for reviewed scope, features, and evidence.")}</p><div class="tag-row">${system ? system.scope.map((scope) => `<span>${escapeHtml(scope)}</span>`).join("") : "<span>Card scope loading on demand</span>"}</div><div class="inspector-bottom"><span>${edges.length} visible relation${edges.length === 1 ? "" : "s"}</span><button id="open-card" class="primary-button">Open card ↗</button></div>`;
   if (graphMode === "models")
     inspector.insertAdjacentHTML("beforeend", modelConnections(id));
@@ -1151,6 +1193,7 @@ function selectEdge(edge: SimulationLink) {
   highlighted = new Set([endpointId(edge.source), endpointId(edge.target)]);
   required<HTMLButtonElement>("focus").disabled = true;
   inspector.hidden = false;
+  setFullscreenPanel("inspector", true);
   if (edge.type === "modeled-by") {
     inspector.innerHTML = `<button class="inspector-close" aria-label="Clear selection">✕</button><p class="eyebrow model-family">Candidate mathematical views · ${escapeHtml(edge.claim_type ?? "")}</p><h2>${escapeHtml(nodeName(endpointId(edge.target)))}</h2><p>${escapeHtml(nodeName(endpointId(edge.source)))} → modeled by</p><div class="model-views">${(edge.metadata ?? []).map((view) => `<section><h3>${escapeHtml(view.model)}</h3><dl><dt>Question</dt><dd>${escapeHtml(view.question) || "Not supplied"}</dd><dt>Assumptions</dt><dd>${view.assumptions.length ? `<ul>${view.assumptions.map((assumption) => `<li>${escapeHtml(assumption)}</li>`).join("")}</ul>` : "None supplied"}</dd><dt>Claim</dt><dd>${escapeHtml(view.claim_type)}</dd><dt>Evidence IDs · source card</dt><dd>${view.evidence_ids.length ? view.evidence_ids.map(escapeHtml).join(", ") : "None supplied"}</dd></dl></section>`).join("") || "<p>No view metadata supplied.</p>"}</div><button id="source-card" class="primary-button">Open source card & evidence ↗</button>`;
     bindInspector();
@@ -1502,6 +1545,16 @@ required("mobile-tools").onclick = () => {
 };
 required("fullscreen-toggle").onclick = () =>
   void toggleFullscreen().catch(() => undefined);
+document
+  .querySelectorAll<HTMLButtonElement>("[data-fullscreen-panel]")
+  .forEach((button) => {
+    button.onclick = () => {
+      const panelName = button.dataset.fullscreenPanel!;
+      const explorer = document.querySelector<HTMLElement>(".explorer");
+      const className = fullscreenPanelClass(panelName);
+      setFullscreenPanel(panelName, !explorer?.classList.contains(className));
+    };
+  });
 document.addEventListener("fullscreenchange", () =>
   updateFullscreenState(Boolean(document.fullscreenElement)),
 );
