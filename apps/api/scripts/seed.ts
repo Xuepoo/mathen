@@ -53,6 +53,24 @@ type Card = {
     accessed?: string;
     notes?: string;
     scope_context?: Record<string, unknown>;
+    protocol?: string;
+    system_commit?: string;
+    command?: string;
+    dataset?: unknown;
+    repetitions?: number;
+    metrics?: Record<string, unknown>;
+    artifacts?: unknown[];
+    observation_version?: string;
+    workload?: unknown;
+    environment?: unknown;
+    conditions?: unknown;
+    provenance?: Record<string, unknown>;
+    result_boundary?: Record<string, unknown>;
+    result?: Record<string, unknown>;
+    review?: Record<string, unknown>;
+    failure?: Record<string, unknown>;
+    counterexample?: Record<string, unknown>;
+    negative_result?: Record<string, unknown>;
   }>;
 };
 
@@ -215,16 +233,68 @@ function toStatements(card: Card) {
       related_systems_json: JSON.stringify(card.related_systems ?? []),
       source_path: `data/systems/${card.id}.json`,
     }),
-    ...card.evidence.map(({ scope_context, ...item }) =>
-      insert("evidence", {
+    ...card.evidence.map((item) => {
+      const {
+        id,
+        kind,
+        title,
+        uri,
+        accessed,
+        notes,
+        scope_context,
+        protocol,
+        system_commit,
+        command,
+        dataset,
+        repetitions,
+        metrics,
+        artifacts,
+        observation_version,
+        workload,
+        environment,
+        conditions,
+        provenance,
+        result_boundary,
+        result,
+        review,
+        failure,
+        counterexample,
+        negative_result,
+      } = item;
+      const metadata = Object.fromEntries(
+        Object.entries({
+          protocol,
+          system_commit,
+          command,
+          dataset,
+          repetitions,
+          metrics,
+          artifacts,
+          observation_version,
+          workload,
+          environment,
+          conditions,
+          provenance,
+          result_boundary,
+          result,
+          review,
+          failure,
+          counterexample,
+          negative_result,
+        }).filter(([, value]) => value !== undefined),
+      );
+      return insert("evidence", {
         system_id: card.id,
-        ...item,
-        id: evidenceKey(card.id, item.id),
-        accessed: item.accessed ?? null,
-        notes: item.notes ?? null,
+        id: evidenceKey(card.id, id),
+        kind,
+        title,
+        uri,
+        accessed: accessed ?? null,
+        notes: notes ?? null,
         scope_context_json: scope_context ? JSON.stringify(scope_context) : null,
-      }),
-    ),
+        metadata_json: JSON.stringify(metadata),
+      });
+    }),
     ...card.features.map((feature) =>
       insert("features", {
         system_id: card.id,

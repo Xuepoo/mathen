@@ -44,6 +44,20 @@ class MathematicalViewContractTests(unittest.TestCase):
         self.assertEqual(model.to_dict(), value)
         self.assertEqual(classify_math_view_contract(value)["result"], "valid")
 
+    def test_sqlite_mth0152_contract_is_valid(self) -> None:
+        path = (
+            ROOT
+            / "data/mathviews/sqlite-crash-recovery-transition-system-mth-0152.json"
+        )
+        value = json.loads(path.read_text(encoding="utf-8"))
+        validate_math_view_contract(value)
+        self.assertEqual(value["family"], "state_machine")
+        self.assertEqual(len(value["validation_records"]), 2)
+        self.assertEqual(value["validation_records"][0]["result"]["status"], "observed")
+        self.assertEqual(
+            value["validation_records"][1]["result"]["status"], "not-established"
+        )
+
     def test_validation_records_are_bounded_and_round_trip(self) -> None:
         value = self._fixture("math-view-validation-record.json")
         validate_math_view_contract(value, evidence_ids={"design-doc", "run-a"})

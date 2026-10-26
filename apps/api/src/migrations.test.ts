@@ -14,6 +14,7 @@ test("feature relation evidence rejects evidence owned by another system", async
     "0005_feature_relation_evidence_integrity.sql",
     "0006_graph_projection_metadata.sql",
     "0007_evidence_scope_context.sql",
+    "0008_evidence_metadata.sql",
   ]) {
     database.exec(await readFile(resolve(import.meta.dir, "../migrations", migration), "utf8"));
   }
@@ -64,6 +65,7 @@ test("graph projection migration stores reviewed document metadata", async () =>
     "0005_feature_relation_evidence_integrity.sql",
     "0006_graph_projection_metadata.sql",
     "0007_evidence_scope_context.sql",
+    "0008_evidence_metadata.sql",
   ]) {
     database.exec(await readFile(resolve(import.meta.dir, "../migrations", migration), "utf8"));
   }
@@ -94,6 +96,7 @@ test("scope migration adds nullable metadata columns without backfill", async ()
     "0005_feature_relation_evidence_integrity.sql",
     "0006_graph_projection_metadata.sql",
     "0007_evidence_scope_context.sql",
+    "0008_evidence_metadata.sql",
   ]) {
     database.exec(await readFile(resolve(import.meta.dir, "../migrations", migration), "utf8"));
   }
@@ -101,5 +104,6 @@ test("scope migration adds nullable metadata columns without backfill", async ()
   const evidence = database.query("PRAGMA table_info(evidence)").all() as Array<{ name: string }>;
   assert.ok(systems.some((column) => column.name === "scope_context_json"));
   assert.ok(evidence.some((column) => column.name === "scope_context_json"));
+  assert.ok(evidence.some((column) => column.name === "metadata_json"));
   database.close();
 });

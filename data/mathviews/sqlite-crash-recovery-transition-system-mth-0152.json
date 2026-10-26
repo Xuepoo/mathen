@@ -1,0 +1,174 @@
+{
+  "schema_version": "1.0",
+  "id": "sqlite-crash-recovery-transition-system",
+  "family": "state_machine",
+  "question": "Which transaction states and recovery transitions preserve the appearance of atomic commit under a bounded rollback and reopen protocol?",
+  "carrier": {
+    "kind": "transaction-state",
+    "description": "Finite states observed or modeled by the bounded sequential protocol.",
+    "elements": [
+      "seeded",
+      "transaction-failed",
+      "rolled-back",
+      "recovered",
+      "reopened"
+    ]
+  },
+  "state_space": {
+    "states": [
+      "seeded",
+      "transaction-failed",
+      "rolled-back",
+      "recovered",
+      "reopened"
+    ],
+    "initial": ["seeded"],
+    "terminal": ["reopened"],
+    "description": "A single connection seeds committed rows, encounters a duplicate-key failure, explicitly rolls back, commits a new transaction, and is reopened for inspection."
+  },
+  "operations": [],
+  "relations": [],
+  "transitions": [
+    {
+      "id": "seed-to-failed",
+      "name": "Seed then duplicate-key failure",
+      "source": "seeded",
+      "target": "transaction-failed",
+      "label": "insert fifth row then duplicate primary key",
+      "system": "SQLite"
+    },
+    {
+      "id": "failed-to-rolled-back",
+      "name": "Explicit rollback",
+      "source": "transaction-failed",
+      "target": "rolled-back",
+      "label": "rollback after IntegrityError",
+      "system": "SQLite"
+    },
+    {
+      "id": "rolled-back-to-recovered",
+      "name": "Subsequent commit",
+      "source": "rolled-back",
+      "target": "recovered",
+      "label": "commit fifth row in a new transaction",
+      "system": "SQLite"
+    },
+    {
+      "id": "recovered-to-reopened",
+      "name": "Close and reopen",
+      "source": "recovered",
+      "target": "reopened",
+      "label": "reopen database and compare rows",
+      "system": "SQLite"
+    }
+  ],
+  "laws_or_checks": [
+    {
+      "id": "initial-state",
+      "name": "Initial state",
+      "description": "The protocol begins in the seeded state.",
+      "check": "initial"
+    },
+    {
+      "id": "transition-closure",
+      "name": "Transition closure",
+      "description": "Declared transitions remain within the finite state carrier.",
+      "check": "closure"
+    }
+  ],
+  "assumptions": [
+    "The model covers one fixed sequential protocol and does not model process crashes or power loss.",
+    "The explicit application rollback is distinguished from automatic crash recovery.",
+    "The model abstracts SQLite pager, journal, filesystem, and concurrency internals."
+  ],
+  "validity_scope": {
+    "systems": ["SQLite"],
+    "versions": ["commit 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"],
+    "deployment_origins": ["local-process"],
+    "conditions": ["Linux x86_64", "SQLite default journal and synchronous settings", "single connection and sequential reopen"],
+    "exclusions": ["process crash", "power failure", "concurrent writers", "other durability modes", "performance"]
+  },
+  "claim_type": "inference",
+  "claim_status": "under-review",
+  "evidence_ids": ["sqlite-atomic-commit", "sqlite-wal", "g5-sqlite-transaction-observation-mth-0152"],
+  "classification": {
+    "result": "valid",
+    "reason": "All transitions are closed over the declared state space.",
+    "checks": [
+      {"id": "initial-state", "result": "pass"},
+      {"id": "transition-closure", "result": "pass"}
+    ]
+  },
+  "validation_records": [
+    {
+      "id": "g5-explicit-rollback-observed",
+      "view_id": "sqlite-crash-recovery-transition-system",
+      "kind": "observed-result",
+      "basis": "experiment",
+      "claim_type": "inference",
+      "claim_status": "under-review",
+      "system": "SQLite",
+      "version": "commit 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+      "scope": {
+        "systems": ["SQLite"],
+        "versions": ["commit 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"],
+        "deployment_origins": ["local-process"],
+        "conditions": ["Linux x86_64", "SQLite default journal and synchronous settings", "single connection and sequential reopen"],
+        "exclusions": ["process crash", "power failure", "concurrent writers", "other durability modes", "performance"]
+      },
+      "evidence_ids": ["g5-sqlite-transaction-observation-mth-0152"],
+      "provenance": {
+        "run_id": "g5-sqlite-transaction-mth-0152",
+        "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+        "protocol_digest": "sha256:ecfd47db059920cf08391558f5378abeb0e670dbfee1097528ac3f2af787f8de",
+        "recorded_at": "2026-10-26T13:41:00Z",
+        "runner": "mathen-local-experiment-runner",
+        "toolchain": {"python": "3.13.13", "sqlite": "3.50.4"}
+      },
+      "result": {
+        "status": "observed",
+        "summary": "Under the fixed sequential protocol, explicit rollback restored the committed seed state and a subsequent transaction remained readable after close and reopen."
+      },
+      "limitations": [
+        "This observes application-requested rollback, not process crash or power-loss recovery.",
+        "The fixed five-row dataset and three repetitions do not establish a general atomicity or durability theorem."
+      ]
+    },
+    {
+      "id": "g5-crash-recovery-not-established",
+      "view_id": "sqlite-crash-recovery-transition-system",
+      "kind": "absence-of-evidence",
+      "basis": "absence-of-evidence",
+      "claim_type": "hypothesis",
+      "claim_status": "under-review",
+      "system": "SQLite",
+      "version": "commit 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+      "scope": {
+        "systems": ["SQLite"],
+        "versions": ["commit 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"],
+        "deployment_origins": ["local-process"],
+        "conditions": ["fixed G5 transaction protocol"],
+        "exclusions": ["process crash", "power loss", "automatic recovery after interruption"]
+      },
+      "evidence_ids": ["g5-sqlite-transaction-observation-mth-0152"],
+      "provenance": {
+        "run_id": "g5-sqlite-transaction-mth-0152",
+        "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+        "protocol_digest": "sha256:ecfd47db059920cf08391558f5378abeb0e670dbfee1097528ac3f2af787f8de",
+        "recorded_at": "2026-10-26T13:41:00Z",
+        "runner": "mathen-local-experiment-runner",
+        "toolchain": {"python": "3.13.13", "sqlite": "3.50.4"}
+      },
+      "result": {
+        "status": "not-established",
+        "summary": "The G5 protocol did not test process crash, power loss, or automatic recovery after interruption."
+      },
+      "question": "Did the G5 protocol establish crash or power-loss recovery behavior?",
+      "what_not_established": "No crash-recovery, power-loss, or automatic-interruption recovery result was established.",
+      "limitations": [
+        "This is an absence-of-evidence record, not a negative finding about SQLite.",
+        "A dedicated fault-injection protocol is required for those conditions."
+      ]
+    }
+  ]
+}

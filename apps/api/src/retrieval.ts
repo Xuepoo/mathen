@@ -46,6 +46,7 @@ export type RetrievalEvidence = {
   accessed?: string | null;
   notes?: string | null;
   scope_context?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 };
 
 export type RetrievalDocument = {
@@ -139,6 +140,7 @@ export type RetrievalCompositionRow = {
 export type RetrievalEvidenceRow = RetrievalEvidence & {
   system_id: string;
   scope_context_json?: string | null;
+  metadata_json?: string | null;
 };
 
 export type RetrievalResult = {
@@ -168,6 +170,7 @@ export async function buildRetrievalDocuments(input: {
   const evidenceBySystem = new Map<string, Map<string, RetrievalEvidence>>();
   for (const row of input.evidence) {
     const byId = evidenceBySystem.get(row.system_id) ?? new Map<string, RetrievalEvidence>();
+    const metadata = parseOptionalRecord(row.metadata_json);
     byId.set(row.id, {
       id: row.id,
       kind: row.kind,
@@ -175,6 +178,7 @@ export async function buildRetrievalDocuments(input: {
       uri: row.uri,
       accessed: row.accessed,
       notes: row.notes,
+      ...(metadata ? { metadata } : {}),
     });
     evidenceBySystem.set(row.system_id, byId);
   }
