@@ -41,7 +41,14 @@
         "Convergence depends on retries, event delivery, and idempotent handlers",
         "Transient divergence is expected while reconciliation is in progress"
       ],
-      "evidence_ids": ["kubernetes-controller-doc", "kubernetes-controller-source"]
+      "evidence_ids": ["kubernetes-controller-doc", "kubernetes-controller-source"],
+      "lifecycle": {
+        "status": "observed",
+        "evidence_ids": ["kubernetes-controller-doc", "kubernetes-controller-source"],
+        "claim_type": "fact",
+        "claim_status": "under-review",
+        "notes": "The fixed official documentation and source directly record controller work processing and reconciliation behavior for the cited revision."
+      }
     },
     {
       "id": "etcd-backed-cluster-state",
@@ -86,7 +93,14 @@
         "The system may remain temporarily divergent while work is queued or retried"
       ],
       "claim_type": "inference",
-      "evidence_ids": ["kubernetes-controller-doc", "kubernetes-controller-source"]
+      "evidence_ids": ["kubernetes-controller-doc", "kubernetes-controller-source"],
+      "lifecycle": {
+        "status": "proposed",
+        "evidence_ids": ["kubernetes-controller-doc", "kubernetes-controller-source"],
+        "claim_type": "inference",
+        "claim_status": "proposed",
+        "notes": "Candidate lifecycle model proposed from the cited controller documentation and source; temporary divergence and convergence are assumptions, not a proven guarantee for every workload."
+      }
     },
     {
       "model": "Typed resource graph with durable state",

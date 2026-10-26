@@ -87,7 +87,14 @@
       ],
       "evidence_ids": [
         "sqlite-atomic-commit"
-      ]
+      ],
+      "lifecycle": {
+        "status": "observed",
+        "evidence_ids": ["sqlite-atomic-commit"],
+        "claim_type": "fact",
+        "claim_status": "under-review",
+        "notes": "The fixed official atomic-commit documentation directly records rollback-journal commit and crash-recovery behavior for the card's bounded SQLite revision; this is not a claim of universal currentness."
+      }
     },
     {
       "id": "wal-snapshot-concurrency",
@@ -198,7 +205,14 @@
         "g5-sqlite-transaction-observation-mth-0152",
         "sqlite-atomic-commit",
         "sqlite-wal"
-      ]
+      ],
+      "lifecycle": {
+        "status": "proposed",
+        "evidence_ids": ["sqlite-atomic-commit", "sqlite-wal"],
+        "claim_type": "inference",
+        "claim_status": "proposed",
+        "notes": "Candidate lifecycle model proposed from the cited commit, locking, recovery, WAL, and checkpoint documentation; the sources do not establish a formal proof or implementation-wide validation."
+      }
     },
     {
       "model": "Layered refinement boundary",
