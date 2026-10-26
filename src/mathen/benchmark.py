@@ -220,11 +220,16 @@ def validate_retrieval_evaluation_manifest(value: Mapping[str, Any]) -> None:
         "metrics",
         "result_boundary",
     }
+    optional = {
+        "evaluation_metadata",
+        "comparison",
+        "decision",
+    }
     _object("retrieval manifest", value)
-    _allowed("retrieval manifest", value, required)
-    if set(value) != required:
+    _allowed("retrieval manifest", value, required | optional)
+    if not required.issubset(value):
         raise BenchmarkManifestValidationError(
-            f"retrieval manifest fields must be exactly {sorted(required)}"
+            f"retrieval manifest fields must include {sorted(required)}"
         )
     if value["manifest_kind"] != "retrieval_evaluation":
         raise BenchmarkManifestValidationError("invalid retrieval manifest_kind")
@@ -321,9 +326,10 @@ def validate_retrieval_evaluation_manifest(value: Mapping[str, Any]) -> None:
         if query_id in query_ids:
             raise BenchmarkManifestValidationError(f"duplicate query id: {query_id}")
         query_ids.add(query_id)
-        if query["query_digest"] != retrieval_digest(
-            {key: query[key] for key in ("id", "question", "scope")}
-        ):
+        query_digest_fields = {key: query[key] for key in ("id", "question", "scope")}
+        if "slice_ids" in query:
+            query_digest_fields["slice_ids"] = query["slice_ids"]
+        if query["query_digest"] != retrieval_digest(query_digest_fields):
             raise BenchmarkManifestValidationError(
                 f"{label}.query_digest does not match query"
             )
@@ -398,6 +404,12 @@ def validate_retrieval_evaluation_manifest(value: Mapping[str, Any]) -> None:
         )
     _validate_retrieval_metrics(value["metrics"])
     _validate_retrieval_result_boundary(value["result_boundary"])
+    if "evaluation_metadata" in value:
+        _validate_retrieval_evaluation_metadata(value["evaluation_metadata"])
+    if "comparison" in value:
+        _validate_retrieval_comparison(value["comparison"])
+    if "decision" in value:
+        _validate_retrieval_decision(value["decision"])
 
 
 def recall_at_k(
@@ -1170,7 +1182,10 @@ def _validate_retrieval_document(document: Any, label: str) -> None:
     _digest(document, "source_digest", label)
     if document.get("claim_type") not in CLAIM_TYPES:
         raise BenchmarkManifestValidationError(f"{label}.claim_type is invalid")
-    if document.get("claim_status") not in CLAIM_STATUSES:
+    if (
+        document.get("claim_status") is not None
+        and document.get("claim_status") not in CLAIM_STATUSES
+    ):
         raise BenchmarkManifestValidationError(f"{label}.claim_status is invalid")
     _non_empty_string_list(document, "evidence_ids", label)
     _validate_scope(document.get("validity_scope"), f"{label}.validity_scope")
@@ -1204,7 +1219,7 @@ def _validate_scope_context(value: Any, label: str, evidence_ids: set[str]) -> N
 
 def _validate_retrieval_query(query: Any, label: str) -> None:
     _object(label, query)
-    _allowed(label, query, {"id", "query_digest", "question", "scope"})
+    _allowed(label, query, {"id", "query_digest", "question", "scope", "slice_ids"})
     _text(query, "id", label)
     _digest(query, "query_digest", label)
     question = query.get("question")
@@ -1213,6 +1228,8 @@ def _validate_retrieval_query(query: Any, label: str) -> None:
             f"{label}.question must be 1-1000 characters"
         )
     _validate_scope(query.get("scope"), f"{label}.scope")
+    if "slice_ids" in query:
+        _string_list(query, "slice_ids", label)
 
 
 def _validate_relevance_label(
@@ -1583,7 +1600,10 @@ def _validate_retrieval_result(
     if (
         document.get("record_kind") not in RETRIEVAL_RECORD_KINDS
         or document.get("claim_type") not in CLAIM_TYPES
-        or document.get("claim_status") not in CLAIM_STATUSES
+        or (
+            document.get("claim_status") is not None
+            and document.get("claim_status") not in CLAIM_STATUSES
+        )
     ):
         raise BenchmarkManifestValidationError(
             f"{label} has invalid record or claim type"
@@ -1658,6 +1678,8 @@ def _validate_retrieval_metrics(metrics: Any) -> None:
         "scope_completeness",
         "false_link_rate",
         "abstention_rate",
+        "slices",
+        "error_analysis",
     }
     _allowed("metrics", metrics, names)
     for field in ("recall_at_k", "ndcg_at_k"):
@@ -1680,6 +1702,210 @@ def _validate_retrieval_metrics(metrics: Any) -> None:
         "abstention_rate",
     ):
         _validate_metric(metrics.get(field), f"metrics.{field}")
+    if "slices" in metrics:
+        slices = _list(metrics, "slices", "metrics")
+        for index, record in enumerate(slices):
+            _validate_retrieval_slice(record, f"metrics.slices[{index}]")
+    if "error_analysis" in metrics:
+        errors = _list(metrics, "error_analysis", "metrics")
+        for index, record in enumerate(errors):
+            _validate_retrieval_error(record, f"metrics.error_analysis[{index}]")
+
+
+def _validate_retrieval_slice(record: Any, label: str) -> None:
+    _object(label, record)
+    _allowed(
+        label,
+        record,
+        {
+            "slice_id",
+            "query_count",
+            "recall_at_k",
+            "ndcg_at_k",
+            "false_link_rate",
+            "abstention_rate",
+        },
+    )
+    _text(record, "slice_id", label)
+    if not isinstance(record.get("query_count"), int) or record["query_count"] < 0:
+        raise BenchmarkManifestValidationError(
+            f"{label}.query_count must be non-negative"
+        )
+    for field in ("recall_at_k", "ndcg_at_k"):
+        for index, metric in enumerate(_list(record, field, label)):
+            _validate_metric(metric, f"{label}.{field}[{index}]")
+            if not isinstance(metric.get("k"), int) or not 1 <= metric["k"] <= 50:
+                raise BenchmarkManifestValidationError(
+                    f"{label}.{field}[{index}].k is invalid"
+                )
+    for field in ("false_link_rate", "abstention_rate"):
+        _validate_metric(record.get(field), f"{label}.{field}")
+
+
+def _validate_retrieval_error(record: Any, label: str) -> None:
+    _object(label, record)
+    _allowed(label, record, {"query_id", "category", "observed", "reviewer_note"})
+    for field in ("query_id", "observed", "reviewer_note"):
+        _text(record, field, label)
+    if record.get("category") not in {
+        "miss",
+        "false-link",
+        "scope-unknown",
+        "abstention",
+        "provider-error",
+        "other",
+    }:
+        raise BenchmarkManifestValidationError(f"{label}.category is invalid")
+
+
+def _validate_retrieval_evaluation_metadata(metadata: Any) -> None:
+    _object("evaluation_metadata", metadata)
+    _allowed(
+        "evaluation_metadata",
+        metadata,
+        {
+            "query_slices",
+            "reviewer_labeling",
+            "freshness_policy",
+            "null_semantics",
+            "operational_observations",
+        },
+    )
+    slices = _list(metadata, "query_slices", "evaluation_metadata")
+    if not slices:
+        raise BenchmarkManifestValidationError(
+            "evaluation_metadata.query_slices must not be empty"
+        )
+    for index, record in enumerate(slices):
+        _object(f"evaluation_metadata.query_slices[{index}]", record)
+        _allowed(
+            f"evaluation_metadata.query_slices[{index}]",
+            record,
+            {"id", "description", "query_ids"},
+        )
+        _text(record, "id", f"evaluation_metadata.query_slices[{index}]")
+        _text(record, "description", f"evaluation_metadata.query_slices[{index}]")
+        _string_list(record, "query_ids", f"evaluation_metadata.query_slices[{index}]")
+    reviewer = metadata.get("reviewer_labeling")
+    _object("evaluation_metadata.reviewer_labeling", reviewer)
+    _allowed(
+        "evaluation_metadata.reviewer_labeling",
+        reviewer,
+        {"label_source", "independent_reviewers", "disagreement_retained"},
+    )
+    _text(reviewer, "label_source", "evaluation_metadata.reviewer_labeling")
+    if (
+        not isinstance(reviewer.get("independent_reviewers"), int)
+        or reviewer["independent_reviewers"] < 1
+    ):
+        raise BenchmarkManifestValidationError(
+            "evaluation_metadata.reviewer_labeling.independent_reviewers is invalid"
+        )
+    if not isinstance(reviewer.get("disagreement_retained"), bool):
+        raise BenchmarkManifestValidationError(
+            "evaluation_metadata.reviewer_labeling.disagreement_retained "
+            "must be boolean"
+        )
+    for field in ("freshness_policy", "null_semantics"):
+        _text(metadata, field, "evaluation_metadata")
+    observations = metadata.get("operational_observations")
+    _object("evaluation_metadata.operational_observations", observations)
+    _allowed(
+        "evaluation_metadata.operational_observations",
+        observations,
+        {"latency_ms", "provider_errors", "cost"},
+    )
+    latency = observations.get("latency_ms")
+    _object("evaluation_metadata.operational_observations.latency_ms", latency)
+    _allowed(
+        "evaluation_metadata.operational_observations.latency_ms",
+        latency,
+        {"unit", "sample_count", "p50", "p95", "measurement_status"},
+    )
+    if latency.get("unit") != "ms":
+        raise BenchmarkManifestValidationError("latency unit must be ms")
+    if not isinstance(latency.get("sample_count"), int) or latency["sample_count"] < 0:
+        raise BenchmarkManifestValidationError(
+            "latency sample_count must be non-negative"
+        )
+    for field in ("p50", "p95"):
+        if latency.get(field) is not None and (
+            not isinstance(latency[field], (int, float)) or latency[field] < 0
+        ):
+            raise BenchmarkManifestValidationError(f"latency {field} is invalid")
+    _text(
+        latency,
+        "measurement_status",
+        "evaluation_metadata.operational_observations.latency_ms",
+    )
+    errors = observations.get("provider_errors")
+    _object("evaluation_metadata.operational_observations.provider_errors", errors)
+    _allowed(
+        "evaluation_metadata.operational_observations.provider_errors",
+        errors,
+        {"numerator", "denominator", "value", "measurement_status"},
+    )
+    _validate_metric(
+        {key: errors[key] for key in ("numerator", "denominator", "value")},
+        "evaluation_metadata.operational_observations.provider_errors",
+    )
+    _text(
+        errors,
+        "measurement_status",
+        "evaluation_metadata.operational_observations.provider_errors",
+    )
+    cost = observations.get("cost")
+    _object("evaluation_metadata.operational_observations.cost", cost)
+    _allowed(
+        "evaluation_metadata.operational_observations.cost",
+        cost,
+        {"unit", "value", "measurement_status"},
+    )
+    _text(cost, "unit", "evaluation_metadata.operational_observations.cost")
+    if cost.get("value") is not None and (
+        not isinstance(cost["value"], (int, float)) or cost["value"] < 0
+    ):
+        raise BenchmarkManifestValidationError("cost value is invalid")
+    _text(
+        cost, "measurement_status", "evaluation_metadata.operational_observations.cost"
+    )
+
+
+def _validate_retrieval_comparison(comparison: Any) -> None:
+    _object("comparison", comparison)
+    _allowed(
+        "comparison",
+        comparison,
+        {"control", "candidate", "candidate_results_status", "prior_pilot_reference"},
+    )
+    for field in ("control", "candidate"):
+        _text(comparison, field, "comparison")
+    if comparison.get("candidate_results_status") not in {
+        "not-run",
+        "prior-pilot-only",
+        "complete",
+    }:
+        raise BenchmarkManifestValidationError(
+            "comparison.candidate_results_status is invalid"
+        )
+    if comparison.get("prior_pilot_reference") is not None:
+        _text(comparison, "prior_pilot_reference", "comparison")
+
+
+def _validate_retrieval_decision(decision: Any) -> None:
+    _object("decision", decision)
+    _allowed("decision", decision, {"outcome", "rationale", "production_change"})
+    if decision.get("outcome") not in {
+        "retain_lexical_baseline",
+        "reconsider_after_gate",
+        "insufficient_evidence",
+    }:
+        raise BenchmarkManifestValidationError("decision.outcome is invalid")
+    _text(decision, "rationale", "decision")
+    if decision.get("production_change") is not False:
+        raise BenchmarkManifestValidationError(
+            "decision.production_change must remain false"
+        )
 
 
 def _validate_metric(metric: Any, label: str) -> None:
