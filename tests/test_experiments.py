@@ -14,6 +14,7 @@ from mathen.mathviews import load_math_view_contract
 ROOT = Path(__file__).parents[1]
 SCRIPT = ROOT / "scripts" / "g5_sqlite_transaction_experiment.py"
 WAL_SCRIPT = ROOT / "scripts" / "g5_sqlite_wal_visibility_experiment.py"
+SAVEPOINT_SCRIPT = ROOT / "scripts" / "g5_sqlite_savepoint_experiment.py"
 
 
 class SQLiteExperimentTests(unittest.TestCase):
