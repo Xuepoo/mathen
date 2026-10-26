@@ -907,6 +907,7 @@ export function serializeFeature(feature: FeatureRow) {
     benefits: parseJson<string[]>(feature.benefits_json, []),
     costs: parseJson<string[]>(feature.costs_json, []),
     evidence_ids: parseJsonArray<string>(feature.evidence_ids_json),
+    ...(isRecord(metadata.lifecycle) ? { lifecycle: metadata.lifecycle } : {}),
     ...(Object.keys(metadata).length ? { metadata } : {}),
   };
 }
@@ -1067,6 +1068,7 @@ function relationMetadata(value: Record<string, unknown>) {
     ...(isRecord(value.validity_scope) ? { validity_scope: value.validity_scope } : {}),
     ...(isRecord(value.provenance) ? { provenance: value.provenance } : {}),
     ...(isRecord(value.discovery) ? { discovery: value.discovery } : {}),
+    ...(isRecord(value.lifecycle) ? { lifecycle: value.lifecycle } : {}),
   };
 }
 

@@ -22,6 +22,7 @@ export type ProjectionLayer =
 export type ProjectionMetadata = {
   claim_type?: string;
   claim_status?: string;
+  lifecycle?: Record<string, unknown>;
   evidence_ids?: string[];
   validity_scope?: Record<string, unknown>;
   proven?: false;
@@ -44,6 +45,7 @@ export type ProjectionEdge = {
   type: string;
   claim_type?: string;
   claim_status?: string;
+  lifecycle?: Record<string, unknown>;
   evidence_ids?: string[];
   notes?: string;
   metadata?: ProjectionMetadata;
@@ -76,6 +78,7 @@ export type ProjectionFeature = {
   category: string;
   claim_type: string;
   claim_status?: string;
+  lifecycle?: Record<string, unknown>;
   description: string;
   evidence_ids: string[];
   metadata?: ProjectionMetadata;
@@ -88,6 +91,7 @@ export type ProjectionView = {
   assumptions: string[];
   claim_type: string;
   claim_status?: string;
+  lifecycle?: Record<string, unknown>;
   evidence_ids: string[];
   metadata?: ProjectionMetadata;
 };
@@ -152,6 +156,7 @@ export function buildLayeredGraphProjection(
           ...feature.metadata,
           claim_type: feature.claim_type,
           ...(feature.claim_status ? { claim_status: feature.claim_status } : {}),
+          ...(feature.lifecycle ? { lifecycle: feature.lifecycle } : {}),
           evidence_ids: feature.evidence_ids,
           category: feature.category,
           description: feature.description,
@@ -163,6 +168,7 @@ export function buildLayeredGraphProjection(
         type: "has-property",
         claim_type: feature.claim_type,
         ...(feature.claim_status ? { claim_status: feature.claim_status } : {}),
+        ...(feature.lifecycle ? { lifecycle: feature.lifecycle } : {}),
         evidence_ids: feature.evidence_ids,
         metadata: feature.metadata,
       });
@@ -179,6 +185,7 @@ export function buildLayeredGraphProjection(
           ...view.metadata,
           claim_type: view.claim_type,
           ...(view.claim_status ? { claim_status: view.claim_status } : {}),
+          ...(view.lifecycle ? { lifecycle: view.lifecycle } : {}),
           evidence_ids: view.evidence_ids,
           question: view.question,
           assumptions: view.assumptions,
@@ -191,6 +198,7 @@ export function buildLayeredGraphProjection(
         type: "has-mathematical-contract",
         claim_type: view.claim_type,
         ...(view.claim_status ? { claim_status: view.claim_status } : {}),
+        ...(view.lifecycle ? { lifecycle: view.lifecycle } : {}),
         evidence_ids: view.evidence_ids,
         metadata: view.metadata,
       });

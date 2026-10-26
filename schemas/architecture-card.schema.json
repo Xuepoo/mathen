@@ -67,6 +67,48 @@
       "type": "string",
       "enum": ["proposed", "under-review", "accepted", "rejected", "deprecated"]
     },
+    "lifecycleStatus": {
+      "type": "string",
+      "enum": ["proposed", "observed", "reviewed", "deprecated", "superseded"]
+    },
+    "lifecycleMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence_ids"],
+      "properties": {
+        "status": { "$ref": "#/$defs/lifecycleStatus" },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "claim_type": { "$ref": "#/$defs/claimType" },
+        "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "superseded_by": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "minItems": 1
+        },
+        "notes": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "required": ["claim_type", "claim_status"]
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["deprecated", "superseded"] } } },
+          "then": { "required": ["notes"] }
+        },
+        {
+          "if": { "properties": { "status": { "const": "superseded" } } },
+          "then": { "required": ["superseded_by"] }
+        },
+        {
+          "if": { "required": ["superseded_by"] },
+          "then": { "properties": { "status": { "const": "superseded" } } }
+        }
+      ]
+    },
     "claimEvidence": {
       "type": "object",
       "additionalProperties": false,
@@ -258,6 +300,7 @@
         "claim_type": { "$ref": "#/$defs/claimType" },
         "description": { "type": "string", "minLength": 1 },
         "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "lifecycle": { "$ref": "#/$defs/lifecycleMetadata" },
         "benefits": { "type": "array", "items": { "type": "string" } },
         "costs": { "type": "array", "items": { "type": "string" } },
         "evidence_ids": {
@@ -284,6 +327,7 @@
         "assumptions": { "type": "array", "items": { "type": "string" } },
         "claim_type": { "$ref": "#/$defs/claimType" },
         "claim_status": { "$ref": "#/$defs/claimStatus" },
+        "lifecycle": { "$ref": "#/$defs/lifecycleMetadata" },
         "evidence_ids": { "type": "array", "items": { "type": "string" } },
         "contract": {
           "$ref": "architecture-mathematical-view.schema.json"

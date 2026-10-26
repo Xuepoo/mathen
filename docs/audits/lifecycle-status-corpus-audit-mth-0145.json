@@ -1,0 +1,80 @@
+{
+  "task": "MTH-0145",
+  "schema_version": 1,
+  "corpus": "data/systems/*.json",
+  "reviewed_only": true,
+  "mutation_performed": false,
+  "counts": {
+    "cards": 219,
+    "features": 830,
+    "mathematical_views": 608
+  },
+  "surfaces": {
+    "cards": {
+      "total": 219,
+      "claim_type": {
+        "<missing>": 219
+      },
+      "claim_status": {
+        "<missing>": 219
+      },
+      "lifecycle_status": {
+        "<missing>": 219
+      },
+      "records_with_lifecycle": 0,
+      "records_with_evidence_ids": 0,
+      "claim_types_missing_from_surface": [
+        "analogy",
+        "fact",
+        "hypothesis",
+        "inference"
+      ]
+    },
+    "features": {
+      "total": 830,
+      "claim_type": {
+        "fact": 818,
+        "inference": 12
+      },
+      "claim_status": {
+        "<missing>": 823,
+        "accepted": 7
+      },
+      "lifecycle_status": {
+        "<missing>": 830
+      },
+      "records_with_lifecycle": 0,
+      "records_with_evidence_ids": 830,
+      "claim_types_missing_from_surface": [
+        "analogy",
+        "hypothesis"
+      ]
+    },
+    "mathematical_views": {
+      "total": 608,
+      "claim_type": {
+        "analogy": 2,
+        "fact": 1,
+        "hypothesis": 160,
+        "inference": 445
+      },
+      "claim_status": {
+        "<missing>": 604,
+        "proposed": 4
+      },
+      "lifecycle_status": {
+        "<missing>": 608
+      },
+      "records_with_lifecycle": 0,
+      "records_with_evidence_ids": 608,
+      "claim_types_missing_from_surface": []
+    }
+  },
+  "interpretation": {
+    "status_inferred_from_claim_type": false,
+    "status_inferred_from_source_kind": false,
+    "status_inferred_from_popularity_or_graph": false,
+    "status_inferred_from_similarity": false,
+    "canonical_cards_backfilled": false
+  }
+}

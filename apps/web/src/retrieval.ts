@@ -128,7 +128,8 @@ export function renderRetrievalState(state: RetrievalState): string {
       const { document, provenance } = result;
       const evidence = new Map(result.evidence.map((item) => [item.id, item]));
       return `<li><article class="content-card"><p class="eyebrow">#${result.rank} · ${text(document.record_kind)} · ${text(document.system_id)}</p><h3>${text(document.name)}</h3><p>${text(document.description)}</p><dl>
-      <dt>Claim type / review status</dt><dd>${text(document.claim_type)} / ${text(document.claim_status)}</dd>
+       <dt>Claim type / review status</dt><dd>${text(document.claim_type)} / ${text(document.claim_status)}</dd>
+       <dt>Lifecycle status</dt><dd>${text(document.lifecycle)}</dd>
       <dt>Discovery ranking · score_kind</dt><dd>${result.score} · ${text(result.score_kind)} (uncalibrated)</dd>
       <dt>Version context</dt><dd>${text(document.version_context)}</dd>
       <dt>Validity / deployment scope (not universal applicability)</dt><dd>${text(document.validity_scope)}</dd>

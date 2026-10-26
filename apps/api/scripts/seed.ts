@@ -19,6 +19,7 @@ type Card = {
     category: string;
     claim_type: string;
     claim_status?: string;
+    lifecycle?: Record<string, unknown>;
     validity_scope?: Record<string, unknown>;
     scope_context?: Record<string, unknown>;
     description: string;
@@ -33,6 +34,7 @@ type Card = {
     assumptions: string[];
     claim_type: string;
     claim_status?: string;
+    lifecycle?: Record<string, unknown>;
     validity_scope?: Record<string, unknown>;
     scope_context?: Record<string, unknown>;
     contract?: Record<string, unknown>;
@@ -299,6 +301,7 @@ function toGraphDocumentStatement(document: {
 function featureMetadata(feature: Card["features"][number]) {
   return {
     ...(feature.claim_status ? { claim_status: feature.claim_status } : {}),
+    ...(feature.lifecycle ? { lifecycle: feature.lifecycle } : {}),
     ...(feature.validity_scope ? { validity_scope: feature.validity_scope } : {}),
     ...(feature.scope_context ? { scope_context: feature.scope_context } : {}),
   };
@@ -308,6 +311,7 @@ function viewMetadata(systemId: string, view: Card["mathematical_views"][number]
   return {
     id: view.id ?? stableViewId(systemId, view.model, view.question),
     ...(view.claim_status ? { claim_status: view.claim_status } : {}),
+    ...(view.lifecycle ? { lifecycle: view.lifecycle } : {}),
     ...(view.validity_scope ? { validity_scope: view.validity_scope } : {}),
     ...(view.scope_context ? { scope_context: view.scope_context } : {}),
     ...(view.contract ? { contract: view.contract } : {}),
