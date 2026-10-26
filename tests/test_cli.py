@@ -39,6 +39,12 @@ class CliTests(unittest.TestCase):
             "validate research-only retrieval evaluation manifests", help_text
         )
 
+    def test_relation_audit_command_is_in_help(self) -> None:
+        help_text = build_parser(default_config()).format_help()
+
+        self.assertIn("relation-audit", help_text)
+        self.assertIn("read-only typed relation coverage", help_text)
+
     def test_mcp_check_sends_protocol_metadata_and_validates_response(self) -> None:
         config = replace(
             default_config(),

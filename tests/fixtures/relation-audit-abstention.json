@@ -1,0 +1,7 @@
+{
+  "source": "alpha",
+  "target": "beta",
+  "signals": ["shared-word:runtime", "legacy-related_systems"],
+  "expected_action": "abstain",
+  "reason": "Vocabulary and navigation metadata do not establish a typed relation or source-local evidence closure."
+}

@@ -36,6 +36,7 @@ from .config import (
 )
 from .data_sync import SyncError, sync_reviewed_cards
 from .data_sync import status as sync_status
+from .graph_audit import GraphAuditError, write_relation_audit_report
 from .llm import LLMModelError, client_from_environment, model_bundles
 from .mathviews import (
     MathematicalViewValidationError,
@@ -182,6 +183,18 @@ def build_parser(config: MathenConfig | None = None) -> argparse.ArgumentParser:
         type=Path,
         default=config.paths.analyses_dir / "g6-relation-candidates.json",
     )
+    relation_audit = subparsers.add_parser(
+        "relation-audit",
+        help="generate a read-only typed relation coverage and closure report",
+    )
+    relation_audit.add_argument(
+        "path", nargs="?", type=Path, default=config.paths.cards_dir
+    )
+    relation_audit.add_argument(
+        "--output",
+        type=Path,
+        default=config.paths.analyses_dir / "mth-0148-relation-audit.json",
+    )
     analyze.add_argument(
         "--refresh",
         action="store_true",
@@ -303,6 +316,8 @@ def main() -> int:
             )
         if args.command == "relation-candidates":
             return relation_candidates_command(args.path, args.output)
+        if args.command == "relation-audit":
+            return relation_audit_command(args.path, args.output)
     except (
         CardValidationError,
         ConfigError,
@@ -311,6 +326,7 @@ def main() -> int:
         ModelingBundleError,
         RepositoryAnalysisError,
         RelationCandidateError,
+        GraphAuditError,
         MicrostructureValidationError,
         AnalogyValidationError,
         NegativeKnowledgeValidationError,
@@ -554,6 +570,14 @@ def relation_candidates_command(cards_path: Path, output_path: Path) -> int:
     """Write the G6 report and print its path."""
 
     path = write_relation_candidate_report(cards_path, output_path)
+    print(f"report  {path}")
+    return 0
+
+
+def relation_audit_command(cards_path: Path, output_path: Path) -> int:
+    """Write the read-only MTH-0148 graph audit and print its path."""
+
+    path = write_relation_audit_report(cards_path, output_path)
     print(f"report  {path}")
     return 0
 
