@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/direct-llm-readiness.schema.json",
+  "title": "Mathen direct-LLM local readiness record",
+  "description": "A bounded, secret-safe record of local direct-LLM runtime readiness; it is not an inference result.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_kind",
+    "schema_version",
+    "record_id",
+    "purpose",
+    "inspection",
+    "runtime_inventory",
+    "cache_inventory",
+    "configuration_inventory",
+    "provenance",
+    "metrics",
+    "result_boundary"
+  ],
+  "properties": {
+    "manifest_kind": { "const": "direct_llm_readiness" },
+    "schema_version": { "const": "1.0" },
+    "record_id": { "$ref": "#/$defs/text" },
+    "purpose": { "$ref": "#/$defs/text" },
+    "inspection": { "$ref": "#/$defs/inspection" },
+    "runtime_inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approved_runtime_available", "executables", "python_modules", "processes", "service_units"],
+      "properties": {
+        "approved_runtime_available": { "const": false },
+        "executables": { "type": "array", "items": { "$ref": "#/$defs/executable" } },
+        "python_modules": { "type": "array", "items": { "$ref": "#/$defs/module" } },
+        "processes": { "$ref": "#/$defs/stringList" },
+        "service_units": { "type": "array", "items": { "$ref": "#/$defs/serviceUnit" } }
+      }
+    },
+    "cache_inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_identifiers_recorded", "locations"],
+      "properties": {
+        "model_identifiers_recorded": { "const": false },
+        "locations": { "type": "array", "items": { "$ref": "#/$defs/cacheLocation" } }
+      }
+    },
+    "configuration_inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["secret_values_read", "locations"],
+      "properties": {
+        "secret_values_read": { "const": false },
+        "locations": { "type": "array", "items": { "$ref": "#/$defs/cacheLocation" } }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "exact_model_id", "prompt", "output", "inspection_digest"],
+      "properties": {
+        "provider": { "type": ["string", "null"] },
+        "exact_model_id": { "type": ["string", "null"] },
+        "prompt": { "$ref": "#/$defs/artifactStatus" },
+        "output": { "$ref": "#/$defs/artifactStatus" },
+        "inspection_digest": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latency_ms", "throughput_tokens_per_second", "quality", "coverage", "error_rate"],
+      "properties": {
+        "latency_ms": { "type": "null" },
+        "throughput_tokens_per_second": { "type": "null" },
+        "quality": { "type": "null" },
+        "coverage": { "type": "null" },
+        "error_rate": { "type": "null" }
+      }
+    },
+    "result_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "canonical", "promotion_requires_human_review", "storage_scope", "reason"],
+      "properties": {
+        "status": { "const": "not-evaluated" },
+        "canonical": { "const": false },
+        "promotion_requires_human_review": { "const": true },
+        "storage_scope": { "const": "research" },
+        "reason": { "$ref": "#/$defs/text" }
+      }
+    }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "stringList": { "type": "array", "items": { "$ref": "#/$defs/text" }, "uniqueItems": true },
+    "executable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "available", "path_recorded", "version_probe"],
+      "properties": {
+        "name": { "$ref": "#/$defs/text" },
+        "available": { "type": "boolean" },
+        "path_recorded": { "const": false },
+        "version_probe": { "const": "not-run" }
+      }
+    },
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "available"],
+      "properties": {
+        "name": { "$ref": "#/$defs/text" },
+        "available": { "type": "boolean" }
+      }
+    },
+    "serviceUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status"],
+      "properties": {
+        "name": { "$ref": "#/$defs/text" },
+        "status": { "enum": ["active", "inactive", "failed", "unknown", "not-installed"] }
+      }
+    },
+    "cacheLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "present", "file_count", "directory_count", "bytes", "identifiers_recorded"],
+      "properties": {
+        "label": { "$ref": "#/$defs/text" },
+        "present": { "type": "boolean" },
+        "file_count": { "type": "integer", "minimum": 0 },
+        "directory_count": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "identifiers_recorded": { "const": false }
+      }
+    },
+    "artifactStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "raw_stored", "digest"],
+      "properties": {
+        "status": { "const": "not-rendered" },
+        "raw_stored": { "const": false },
+        "digest": { "type": "null" }
+      }
+    },
+    "inspection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inspector", "inspector_version", "repository_revision", "python_version", "platform", "network_requests", "checked_names"],
+      "properties": {
+        "inspector": { "$ref": "#/$defs/text" },
+        "inspector_version": { "$ref": "#/$defs/text" },
+        "repository_revision": { "$ref": "#/$defs/text" },
+        "python_version": { "$ref": "#/$defs/text" },
+        "platform": { "$ref": "#/$defs/text" },
+        "network_requests": { "const": false },
+        "checked_names": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["executables", "python_modules", "cache_locations", "configuration_locations", "service_units", "environment_variables"],
+          "properties": {
+            "executables": { "$ref": "#/$defs/stringList" },
+            "python_modules": { "$ref": "#/$defs/stringList" },
+            "cache_locations": { "$ref": "#/$defs/stringList" },
+            "configuration_locations": { "$ref": "#/$defs/stringList" },
+            "service_units": { "$ref": "#/$defs/stringList" },
+            "environment_variables": { "$ref": "#/$defs/stringList" }
+          }
+        }
+      }
+    }
+  }
+}
