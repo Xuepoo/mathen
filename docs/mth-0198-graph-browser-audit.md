@@ -1,7 +1,7 @@
 # MTH-0198 graph browser audit
 
-Date: 2026-10-27  
-Source commit: `ec70a18316ff54f7efda3706d40bc40efb7d256a`  
+Date: 2026-10-27
+Source commit: `ec70a18316ff54f7efda3706d40bc40efb7d256a`
 Scope: browser verification of the current graph exploration UI only. No API,
 canonical card, relation, production, or paper files were changed.
 
