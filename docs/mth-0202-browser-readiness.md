@@ -1,7 +1,7 @@
 # MTH-0202 browser evidence readiness
 
-Date: 2026-10-28  
-Source commit: `2308f26` (`origin/main` after the PR #74 release)  
+Date: 2026-10-28
+Source commit: `2308f26` (`origin/main` after the PR #74 release)
 Scope: remaining browser evidence gaps listed in
 [`mth-0198-graph-browser-audit.md`](mth-0198-graph-browser-audit.md). This is a
 readiness record only. No API, canonical card, production, or paper files were
