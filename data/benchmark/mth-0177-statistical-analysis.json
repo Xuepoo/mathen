@@ -12548,7 +12548,7 @@
     },
     "mth_0193": {
       "artifact": "data/research-review/pilots/mth-0193.json",
-      "digest": "sha256:f3482841c7b8b86e598d294add5b6347c48584e5871491ed31a196ed8c5f56d0"
+      "digest": "sha256:61489067120578363bb2bb9bda6bcfae120de08df15d0f9ceaa0b2712766e5e7"
     },
     "mth_0195": {
       "artifact": "data/benchmark/mth-0195-independent-exploration.json",

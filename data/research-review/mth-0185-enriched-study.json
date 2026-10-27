@@ -21,15 +21,15 @@
     "source_digest_semantics": "Digests identify packet inputs; candidate and evidence digests identify payloads and excerpts separately.",
     "source_digests": {
       "benchmark": "sha256:0079440b630a7319b73d0934fd01610b2773854047ab62787a8b3560bfb0b2e1",
-      "card:airflow": "sha256:1d5d1e50c2f5c023b3057477316480aa9a2c23e1592e8f0b4f10a1eef5de6e87",
-      "card:carryctx": "sha256:bdee6db652f2e13f88077c89294f42e535e0ecd46ff123a3277cffe7dd284158",
+      "card:airflow": "sha256:b1e00e8d4a3de132afd8ea90cc033d3643d2ac833d65b3db3d7393bedfeb3ac2",
+      "card:carryctx": "sha256:7fd4ad25b8edafbbd0ff90f1e43f7759a4373948f58fa94c48e0b4736bfda5c5",
       "card:duckdb": "sha256:8a23865635e4faeb4578bf50445fc89864a51711e2d82957ab16c23c04c2fdd6",
-      "card:firecracker": "sha256:427013dd1da343f1fd6a1e66df39aaff7f9b421ad8fdeb6a9f2f673df49eaf5d",
+      "card:firecracker": "sha256:7e3aa1f68df53d745e1bd8a9ff8632a54490ecd4b5ec7786dc5c551be4a64d5f",
       "card:git": "sha256:3bcaa2f349bde0e04880458d6a7e1af58dca647c6e755a87eafb740124cc9e40",
-      "card:kafka": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
-      "card:kubernetes": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
-      "card:postgresql": "sha256:2eb9a8b36744c1e67150b408bbacb16ba667d9d7ffa85d971e48bf1cf9b1a32f",
-      "card:sqlite": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
+      "card:kafka": "sha256:5cf78250b387ab1223a9b2edca912b8c2109ba1c9d3b1c0227f79486ae14f91a",
+      "card:kubernetes": "sha256:53902a93828704d7ed329e349d63efb42a220f1b571ac51980d61156f2d7365c",
+      "card:postgresql": "sha256:44a6537d0ba65d157c5508f85a47391301514fb8826855776c4260dae6548546",
+      "card:sqlite": "sha256:2fd36a430ac12fd9bdd029d117a9556ca8a1283619e2d15197fe7b10c08423ff",
       "card:temporal": "sha256:a8de115ba218d6059b0731f7a3874a23df5d6523146a5ca2cb0abc81b6dbe055",
       "frozen_study": "sha256:df743e79fc96a8b0b3f7b6f8fc48880241ad903c18d8b46ae911af1b23ca553a",
       "negative_knowledge": "sha256:a24eba82119bdb9f77037184194fe4050f675a0ae9c0bbccd1531445547e77ff"
@@ -201,7 +201,7 @@
               "carryctx:carryctx-readme-fixed"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:kubernetes",
               "system:airflow",
@@ -318,7 +318,7 @@
               "git:git-data-model"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:firecracker",
               "system:git"
@@ -465,7 +465,7 @@
               "temporal:temporal-server-architecture"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:kafka",
               "system:temporal"
@@ -631,7 +631,7 @@
               "duckdb:duckdb-why"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:sqlite",
               "system:postgresql",
@@ -815,7 +815,7 @@
               "carryctx:carryctx-readme-fixed"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:kubernetes",
               "system:airflow",
@@ -983,7 +983,7 @@
               "duckdb:duckdb-why"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:sqlite",
               "system:postgresql",
@@ -1132,7 +1132,7 @@
               "temporal:temporal-server-architecture"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:kafka",
               "system:temporal"
@@ -1247,7 +1247,7 @@
               "git:git-data-model"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:firecracker",
               "system:git"
@@ -1402,7 +1402,7 @@
               "temporal:temporal-server-architecture"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:kafka",
               "system:temporal"
@@ -1517,7 +1517,7 @@
               "git:git-data-model"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:firecracker",
               "system:git"
@@ -1664,7 +1664,7 @@
               "temporal:temporal-server-architecture"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:kafka",
               "system:temporal"
@@ -1846,7 +1846,7 @@
               "carryctx:carryctx-readme-fixed"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:kubernetes",
               "system:airflow",
@@ -2030,7 +2030,7 @@
               "carryctx:carryctx-readme-fixed"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:kubernetes",
               "system:airflow",
@@ -2198,7 +2198,7 @@
               "duckdb:duckdb-why"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:sqlite",
               "system:postgresql",
@@ -2366,7 +2366,7 @@
               "duckdb:duckdb-why"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:sqlite",
               "system:postgresql",
@@ -2483,7 +2483,7 @@
               "git:git-data-model"
             ],
             "candidate_evidence_local": true,
-            "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+            "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
             "source_ids": [
               "system:firecracker",
               "system:git"
