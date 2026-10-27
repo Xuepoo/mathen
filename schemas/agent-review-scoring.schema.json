@@ -105,6 +105,9 @@
       "additionalProperties": false,
       "required": [
         "mode",
+        "execution_actor",
+        "provider",
+        "model",
         "reviewer_kind",
         "human_review",
         "pilot_ids",
@@ -113,6 +116,15 @@
       "properties": {
         "mode": {
           "const": "agent-review-pilot"
+        },
+        "execution_actor": {
+          "const": "llm-based-agent"
+        },
+        "provider": {
+          "const": "not-recorded"
+        },
+        "model": {
+          "const": "not-recorded"
         },
         "reviewer_kind": {
           "const": "agent"

@@ -20,7 +20,7 @@
         "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
         "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
       ],
-      "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
       "task_id": "task-08-reconciliation"
     },
     {
@@ -36,7 +36,7 @@
         "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
         "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
       ],
-      "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
       "task_id": "task-11-boundary-isolation"
     },
     {
@@ -54,7 +54,7 @@
         "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
         "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
       ],
-      "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
       "task_id": "task-05-stream-history"
     },
     {
@@ -73,7 +73,7 @@
         "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
         "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
       ],
-      "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
       "task_id": "task-01-storage-mechanism"
     },
     {
@@ -93,7 +93,7 @@
         "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
         "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
       ],
-      "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
       "task_id": "task-07-reconciliation"
     },
     {
@@ -112,7 +112,7 @@
         "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
         "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
       ],
-      "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
       "task_id": "task-02-storage-mechanism"
     },
     {
@@ -130,7 +130,7 @@
         "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
         "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
       ],
-      "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
       "task_id": "task-04-stream-history"
     },
     {
@@ -146,7 +146,7 @@
         "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
         "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
       ],
-      "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
       "task_id": "task-10-boundary-isolation"
     }
   ],
@@ -217,7 +217,7 @@
           "carryctx:carryctx-readme-fixed"
         ],
         "candidate_evidence_local": true,
-        "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
         "source_ids": [
           "system:kubernetes",
           "system:airflow",
@@ -293,7 +293,7 @@
           "git:git-data-model"
         ],
         "candidate_evidence_local": true,
-        "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
         "source_ids": [
           "system:firecracker",
           "system:git"
@@ -372,7 +372,7 @@
           "temporal:temporal-server-architecture"
         ],
         "candidate_evidence_local": true,
-        "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
         "source_ids": [
           "system:kafka",
           "system:temporal"
@@ -454,7 +454,7 @@
           "duckdb:duckdb-why"
         ],
         "candidate_evidence_local": true,
-        "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
         "source_ids": [
           "system:sqlite",
           "system:postgresql",
@@ -542,7 +542,7 @@
           "carryctx:carryctx-readme-fixed"
         ],
         "candidate_evidence_local": true,
-        "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
         "source_ids": [
           "system:kubernetes",
           "system:airflow",
@@ -627,7 +627,7 @@
           "duckdb:duckdb-why"
         ],
         "candidate_evidence_local": true,
-        "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
         "source_ids": [
           "system:sqlite",
           "system:postgresql",
@@ -709,7 +709,7 @@
           "temporal:temporal-server-architecture"
         ],
         "candidate_evidence_local": true,
-        "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
         "source_ids": [
           "system:kafka",
           "system:temporal"
@@ -782,7 +782,7 @@
           "git:git-data-model"
         ],
         "candidate_evidence_local": true,
-        "source_digest": "sha256:0cb658910e73ad7fde7d365eea696b175414037268269b202d00204563fb44bb",
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
         "source_ids": [
           "system:firecracker",
           "system:git"
@@ -835,5 +835,5 @@
     "started_at": "2026-10-27T17:04:24.749364+08:00"
   },
   "study_id": "mth-0185-enriched-study",
-  "study_packet_digest": "sha256:2df9a80105549bfbb5a33a4df44a525e0d65161f6bd43316622e7bb45da8972b"
+  "study_packet_digest": "sha256:e68c31237f1956611c285637ac6ba7a2ce39fecef58cc1623e0030648d0bfd24"
 }

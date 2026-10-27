@@ -420,6 +420,9 @@ def build_artifact() -> dict[str, Any]:
         ),
         "provenance": {
             "mode": "agent-review-pilot",
+            "execution_actor": "llm-based-agent",
+            "provider": "not-recorded",
+            "model": "not-recorded",
             "reviewer_kind": "agent",
             "human_review": False,
             "pilot_ids": ["mth-0186", "mth-0187", "mth-0193"],

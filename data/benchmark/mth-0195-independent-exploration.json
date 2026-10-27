@@ -411,7 +411,7 @@
     "source_revision_digests": {
       "contract-boundaries": "sha256:a24eba82119bdb9f77037184194fe4050f675a0ae9c0bbccd1531445547e77ff",
       "mth-0118-contract": "sha256:02480d88885b8bcf4576d1e65716c9355a2e1be0b86bace3949cbf9fe076750d",
-      "reviewed-cards": "sha256:e80f927f561cf2f15bf673bf24de271247cbe536e85084c28420896c1263f809",
+      "reviewed-cards": "sha256:edb62335c0d38b9eddd443694efe7bcd657b0e87d55780d466ff600fc441af64",
       "scope-context-contract": "sha256:0297a8f18fea107de291f2291599aadfc841160f00bb0be69391eca6e113cbe9"
     }
   },
@@ -595,12 +595,12 @@
   },
   "reviewed_card_digests": [
     {
-      "digest": "sha256:b1e00e8d4a3de132afd8ea90cc033d3643d2ac833d65b3db3d7393bedfeb3ac2",
+      "digest": "sha256:1d5d1e50c2f5c023b3057477316480aa9a2c23e1592e8f0b4f10a1eef5de6e87",
       "path": "data/systems/airflow.json",
       "system_id": "airflow"
     },
     {
-      "digest": "sha256:7fd4ad25b8edafbbd0ff90f1e43f7759a4373948f58fa94c48e0b4736bfda5c5",
+      "digest": "sha256:bdee6db652f2e13f88077c89294f42e535e0ecd46ff123a3277cffe7dd284158",
       "path": "data/systems/carryctx.json",
       "system_id": "carryctx"
     },
@@ -615,7 +615,7 @@
       "system_id": "duckdb"
     },
     {
-      "digest": "sha256:7e3aa1f68df53d745e1bd8a9ff8632a54490ecd4b5ec7786dc5c551be4a64d5f",
+      "digest": "sha256:427013dd1da343f1fd6a1e66df39aaff7f9b421ad8fdeb6a9f2f673df49eaf5d",
       "path": "data/systems/firecracker.json",
       "system_id": "firecracker"
     },
@@ -625,22 +625,22 @@
       "system_id": "git"
     },
     {
-      "digest": "sha256:5cf78250b387ab1223a9b2edca912b8c2109ba1c9d3b1c0227f79486ae14f91a",
+      "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
       "path": "data/systems/kafka.json",
       "system_id": "kafka"
     },
     {
-      "digest": "sha256:53902a93828704d7ed329e349d63efb42a220f1b571ac51980d61156f2d7365c",
+      "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
       "path": "data/systems/kubernetes.json",
       "system_id": "kubernetes"
     },
     {
-      "digest": "sha256:44a6537d0ba65d157c5508f85a47391301514fb8826855776c4260dae6548546",
+      "digest": "sha256:2eb9a8b36744c1e67150b408bbacb16ba667d9d7ffa85d971e48bf1cf9b1a32f",
       "path": "data/systems/postgresql.json",
       "system_id": "postgresql"
     },
     {
-      "digest": "sha256:2fd36a430ac12fd9bdd029d117a9556ca8a1283619e2d15197fe7b10c08423ff",
+      "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
       "path": "data/systems/sqlite.json",
       "system_id": "sqlite"
     },
@@ -650,7 +650,7 @@
       "system_id": "temporal"
     }
   ],
-  "reviewed_cards_digest": "sha256:e80f927f561cf2f15bf673bf24de271247cbe536e85084c28420896c1263f809",
+  "reviewed_cards_digest": "sha256:edb62335c0d38b9eddd443694efe7bcd657b0e87d55780d466ff600fc441af64",
   "schema_version": "1.0",
   "source_revisions": [
     {
@@ -672,7 +672,7 @@
       "source_ref": "data/negative-knowledge/contract-boundaries.json"
     },
     {
-      "digest": "sha256:e80f927f561cf2f15bf673bf24de271247cbe536e85084c28420896c1263f809",
+      "digest": "sha256:edb62335c0d38b9eddd443694efe7bcd657b0e87d55780d466ff600fc441af64",
       "id": "reviewed-cards",
       "scope": "frozen reviewed Architecture Cards used as references only",
       "source_ref": "data/systems/*.json"
@@ -680,31 +680,31 @@
   ],
   "task_card_digests": [
     {
-      "digest": "sha256:5cdee5681272d81e8682e72b5ef30b1d7ca57e467f4eb89ce65ba08d99fa485c",
+      "digest": "sha256:ac0882f306484fbee799e1ddb984a0760c99d1ae8b101b686fd01a1dfcf2b60f",
       "id": "task-01-storage-local-transaction"
     },
     {
-      "digest": "sha256:518d00a134c9126a4b07ed2cc4273ca9bd25edddacf655433d6d9bcf5853b779",
+      "digest": "sha256:fc1d7c8612b638610416b5da44e44bfd63d963600c92ca83933567090e398c1f",
       "id": "task-02-storage-replay-analytics"
     },
     {
-      "digest": "sha256:10920c6574b5ff681d5b0c40271432f612fe5561fd0711f12aaa0b45e26f7b80",
+      "digest": "sha256:fb759917ffc6adb7f8a3b50337c5ffa8aae8ac5c6adbc272536c6a9b5329fc46",
       "id": "task-03-storage-embedded-composition"
     },
     {
-      "digest": "sha256:e802d34fc07231fc8d7f84341c7e755f03ac4d909de5c1c17cd76aeed265814f",
+      "digest": "sha256:34a3aec11f1876f4248530e824700d78e6ca9ecb5e25810223a38fa2bc1f97a4",
       "id": "task-04-storage-universal-isolation"
     },
     {
-      "digest": "sha256:69a666a6ddbb525dd373e9f416c9f4c2c7d7213021b34d27a5e7c1ccb3d4dd5d",
+      "digest": "sha256:2cc22c2ec1d81c4f012d61349707e27ba3af8f3e0a33e98a540f9b457dc97585",
       "id": "task-05-storage-cross-file-snapshot"
     },
     {
-      "digest": "sha256:a420ac43a96e5001c33c3270cd34da5b6c5fc78394908795e745b0a2bde33b92",
+      "digest": "sha256:8e564818cb0ed5b60275c3c9f571b368ccffc0db45dc28b32e9ffe670874186d",
       "id": "task-06-storage-wal-order-counterexample"
     },
     {
-      "digest": "sha256:a4117f01015a94359960c0075ebb2d2d7bc33672cb8fb46bbf74f8a5faf25960",
+      "digest": "sha256:591cbe636f208346ba3153d49d50ce0f9aaa5d133d00624672509ba96fc63473",
       "id": "task-07-stream-kafka-replay"
     },
     {
@@ -712,63 +712,63 @@
       "id": "task-08-stream-temporal-history"
     },
     {
-      "digest": "sha256:79123db4a2b86e2d98795e0e21166e6535bf99fbe6f70cf9005a91de6ffd06e4",
+      "digest": "sha256:2d146b89d639f2189b3bf56e9fbe208fd3bcc6da89e869ec9b24240dc3cff67c",
       "id": "task-09-stream-workflow-composition"
     },
     {
-      "digest": "sha256:7154f9150fe55bd3475b4cf2fd97686e8317b36b1cec34ecef8ca3e4602fd117",
+      "digest": "sha256:c48a4569fcb112cc3c87072408c1ec3aef150c92f46e9ce0b2128e3e55fd9b37",
       "id": "task-10-stream-global-order"
     },
     {
-      "digest": "sha256:d39e5af364c25594d52b1d6adf0518902e8f8349a7a1b9a69758790136fd35ce",
+      "digest": "sha256:12ae0baeac76dd639ee44b1a9cbd4408cfb6840bc1a38a644cbb973ce8aa71ad",
       "id": "task-11-stream-cross-history"
     },
     {
-      "digest": "sha256:bbd7d622a4d2c8f0cfff3986ce7bed8b9b6bb1378a2091df9577bbf8bea51493",
+      "digest": "sha256:59e7b6ff066fe20a24fc80afa44d2a3b84385f0a9526d9efbdd59406e5303d1c",
       "id": "task-12-stream-partition-counterexample"
     },
     {
-      "digest": "sha256:19659f3857bf81b48bb984c9f57a10ff4bdb44f0a1b2a674d9fe101a6ff49f6a",
+      "digest": "sha256:56c5a1bddebeb56ed26941221433b999035e25e745d58daa43d2d90be8891219",
       "id": "task-13-orchestration-kubernetes-reconcile"
     },
     {
-      "digest": "sha256:42c96df92a4f0ff057ca4e13447f7a7cd5542928a0730af1a645e6c006b149c7",
+      "digest": "sha256:6fbc497bfb8b95c43275e22a9e332ec48239448fdf22c6aac885e20f1b9cc3d8",
       "id": "task-14-orchestration-airflow-dag"
     },
     {
-      "digest": "sha256:c3b35c4f3a01399bf85589d4a8f1cfa843b5ba7743d47063f7ed6c6cc53f90d9",
+      "digest": "sha256:ffe89adae24b4d8382196c5e8dfc6638d185bd53fcb65f624205b4b5b3c10f8f",
       "id": "task-15-orchestration-provider-composition"
     },
     {
-      "digest": "sha256:a5e50382c430d595f82c472d439bfa0839951e59d7587cc96eb9e7d63002eaa1",
+      "digest": "sha256:2ff1b2b74813df4d2853a66f67d959b5edcf410ecb6fceac04f25c5c504961ee",
       "id": "task-16-orchestration-convergence-proof"
     },
     {
-      "digest": "sha256:f507186c29c3ab03b1ee3441a89a70637a10d2b2a57f52df0b5aea35d31efadb",
+      "digest": "sha256:5920d9e66f5eb07d8ce74fe81d7cdd240fe3c34d32b8caf9dcc8543177c7b37d",
       "id": "task-17-orchestration-exactly-once"
     },
     {
-      "digest": "sha256:ceff5c0e74e2ce10ad2eab0e4216f039f71a2591fd0c0de21e8270de0eafc758",
+      "digest": "sha256:952f96739a6a41fd1813a5eb7cd4e0a17e817dfea7cf51b62b2024c9e1da0e9c",
       "id": "task-18-orchestration-reconcile-counterexample"
     },
     {
-      "digest": "sha256:22ac71b43571d32d20bcae75e99d689016bee4a75a43870d0d6c5aa08ac84cc1",
+      "digest": "sha256:af3676b221e451a1ddf83edf23270ab430fc4f0e40c00a778c243c6c170960df",
       "id": "task-19-boundary-firecracker"
     },
     {
-      "digest": "sha256:df3005dad99d424786eb329aaf51c73a53b91a7b2fb36ee68772504d10702ea3",
+      "digest": "sha256:698bc9e38b50a3e8d549d523c90fc083f4355f06182a243f779e74ee586fa4ff",
       "id": "task-20-boundary-carryctx-worktree"
     },
     {
-      "digest": "sha256:70d2807675faa79ec0c53a9e9d7bcdbb9ca5c96ca0c11d0ea16b03db5e788fa6",
+      "digest": "sha256:b8fae5a6b975be9fcc9fee2caecaca31cc06fbbbeb71b8b99656354494af87d2",
       "id": "task-21-boundary-collaboration-composition"
     },
     {
-      "digest": "sha256:70fb5e1fd7dfe05a2ea436fdb7a7039e27a56b5a27dad9838fe97728abed8f36",
+      "digest": "sha256:45ba4d8dbdee54997bc8e780b01b7f02efdb056f9c0f7fe4b83c6f48f66770a2",
       "id": "task-22-boundary-formal-security"
     },
     {
-      "digest": "sha256:6d1a0e3cd90985d744588616dfc4d31c3e2132cf981d1e9076dd1b20c0f037b1",
+      "digest": "sha256:01a4b0c02a0791c350281c38991488134a45e0d0eb9504a98ad4cc893d759ed8",
       "id": "task-23-boundary-cross-layer-isolation"
     },
     {
@@ -782,12 +782,12 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:2fd36a430ac12fd9bdd029d117a9556ca8a1283619e2d15197fe7b10c08423ff",
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
           "path": "data/systems/sqlite.json",
           "system_id": "sqlite"
         },
         {
-          "digest": "sha256:44a6537d0ba65d157c5508f85a47391301514fb8826855776c4260dae6548546",
+          "digest": "sha256:2eb9a8b36744c1e67150b408bbacb16ba667d9d7ffa85d971e48bf1cf9b1a32f",
           "path": "data/systems/postgresql.json",
           "system_id": "postgresql"
         }
@@ -831,7 +831,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:2fd36a430ac12fd9bdd029d117a9556ca8a1283619e2d15197fe7b10c08423ff",
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
           "path": "data/systems/sqlite.json",
           "system_id": "sqlite"
         },
@@ -878,7 +878,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:2fd36a430ac12fd9bdd029d117a9556ca8a1283619e2d15197fe7b10c08423ff",
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
           "path": "data/systems/sqlite.json",
           "system_id": "sqlite"
         },
@@ -926,12 +926,12 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:2fd36a430ac12fd9bdd029d117a9556ca8a1283619e2d15197fe7b10c08423ff",
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
           "path": "data/systems/sqlite.json",
           "system_id": "sqlite"
         },
         {
-          "digest": "sha256:44a6537d0ba65d157c5508f85a47391301514fb8826855776c4260dae6548546",
+          "digest": "sha256:2eb9a8b36744c1e67150b408bbacb16ba667d9d7ffa85d971e48bf1cf9b1a32f",
           "path": "data/systems/postgresql.json",
           "system_id": "postgresql"
         },
@@ -983,7 +983,7 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:2fd36a430ac12fd9bdd029d117a9556ca8a1283619e2d15197fe7b10c08423ff",
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
           "path": "data/systems/sqlite.json",
           "system_id": "sqlite"
         },
@@ -1033,7 +1033,7 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:2fd36a430ac12fd9bdd029d117a9556ca8a1283619e2d15197fe7b10c08423ff",
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
           "path": "data/systems/sqlite.json",
           "system_id": "sqlite"
         }
@@ -1074,7 +1074,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:5cf78250b387ab1223a9b2edca912b8c2109ba1c9d3b1c0227f79486ae14f91a",
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
           "path": "data/systems/kafka.json",
           "system_id": "kafka"
         }
@@ -1155,7 +1155,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:5cf78250b387ab1223a9b2edca912b8c2109ba1c9d3b1c0227f79486ae14f91a",
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
           "path": "data/systems/kafka.json",
           "system_id": "kafka"
         },
@@ -1203,7 +1203,7 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:5cf78250b387ab1223a9b2edca912b8c2109ba1c9d3b1c0227f79486ae14f91a",
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
           "path": "data/systems/kafka.json",
           "system_id": "kafka"
         },
@@ -1252,7 +1252,7 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:5cf78250b387ab1223a9b2edca912b8c2109ba1c9d3b1c0227f79486ae14f91a",
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
           "path": "data/systems/kafka.json",
           "system_id": "kafka"
         },
@@ -1302,7 +1302,7 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:5cf78250b387ab1223a9b2edca912b8c2109ba1c9d3b1c0227f79486ae14f91a",
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
           "path": "data/systems/kafka.json",
           "system_id": "kafka"
         }
@@ -1343,7 +1343,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:53902a93828704d7ed329e349d63efb42a220f1b571ac51980d61156f2d7365c",
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
           "path": "data/systems/kubernetes.json",
           "system_id": "kubernetes"
         }
@@ -1384,7 +1384,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:b1e00e8d4a3de132afd8ea90cc033d3643d2ac833d65b3db3d7393bedfeb3ac2",
+          "digest": "sha256:1d5d1e50c2f5c023b3057477316480aa9a2c23e1592e8f0b4f10a1eef5de6e87",
           "path": "data/systems/airflow.json",
           "system_id": "airflow"
         }
@@ -1425,7 +1425,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:53902a93828704d7ed329e349d63efb42a220f1b571ac51980d61156f2d7365c",
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
           "path": "data/systems/kubernetes.json",
           "system_id": "kubernetes"
         },
@@ -1474,12 +1474,12 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:53902a93828704d7ed329e349d63efb42a220f1b571ac51980d61156f2d7365c",
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
           "path": "data/systems/kubernetes.json",
           "system_id": "kubernetes"
         },
         {
-          "digest": "sha256:b1e00e8d4a3de132afd8ea90cc033d3643d2ac833d65b3db3d7393bedfeb3ac2",
+          "digest": "sha256:1d5d1e50c2f5c023b3057477316480aa9a2c23e1592e8f0b4f10a1eef5de6e87",
           "path": "data/systems/airflow.json",
           "system_id": "airflow"
         },
@@ -1531,12 +1531,12 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:53902a93828704d7ed329e349d63efb42a220f1b571ac51980d61156f2d7365c",
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
           "path": "data/systems/kubernetes.json",
           "system_id": "kubernetes"
         },
         {
-          "digest": "sha256:b1e00e8d4a3de132afd8ea90cc033d3643d2ac833d65b3db3d7393bedfeb3ac2",
+          "digest": "sha256:1d5d1e50c2f5c023b3057477316480aa9a2c23e1592e8f0b4f10a1eef5de6e87",
           "path": "data/systems/airflow.json",
           "system_id": "airflow"
         }
@@ -1580,7 +1580,7 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:53902a93828704d7ed329e349d63efb42a220f1b571ac51980d61156f2d7365c",
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
           "path": "data/systems/kubernetes.json",
           "system_id": "kubernetes"
         },
@@ -1629,7 +1629,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:7e3aa1f68df53d745e1bd8a9ff8632a54490ecd4b5ec7786dc5c551be4a64d5f",
+          "digest": "sha256:427013dd1da343f1fd6a1e66df39aaff7f9b421ad8fdeb6a9f2f673df49eaf5d",
           "path": "data/systems/firecracker.json",
           "system_id": "firecracker"
         }
@@ -1668,7 +1668,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:7fd4ad25b8edafbbd0ff90f1e43f7759a4373948f58fa94c48e0b4736bfda5c5",
+          "digest": "sha256:bdee6db652f2e13f88077c89294f42e535e0ecd46ff123a3277cffe7dd284158",
           "path": "data/systems/carryctx.json",
           "system_id": "carryctx"
         },
@@ -1716,7 +1716,7 @@
       "candidate_generation_allowed": true,
       "card_digests": [
         {
-          "digest": "sha256:7fd4ad25b8edafbbd0ff90f1e43f7759a4373948f58fa94c48e0b4736bfda5c5",
+          "digest": "sha256:bdee6db652f2e13f88077c89294f42e535e0ecd46ff123a3277cffe7dd284158",
           "path": "data/systems/carryctx.json",
           "system_id": "carryctx"
         },
@@ -1764,7 +1764,7 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:7e3aa1f68df53d745e1bd8a9ff8632a54490ecd4b5ec7786dc5c551be4a64d5f",
+          "digest": "sha256:427013dd1da343f1fd6a1e66df39aaff7f9b421ad8fdeb6a9f2f673df49eaf5d",
           "path": "data/systems/firecracker.json",
           "system_id": "firecracker"
         },
@@ -1774,7 +1774,7 @@
           "system_id": "git"
         },
         {
-          "digest": "sha256:7fd4ad25b8edafbbd0ff90f1e43f7759a4373948f58fa94c48e0b4736bfda5c5",
+          "digest": "sha256:bdee6db652f2e13f88077c89294f42e535e0ecd46ff123a3277cffe7dd284158",
           "path": "data/systems/carryctx.json",
           "system_id": "carryctx"
         }
@@ -1821,7 +1821,7 @@
       "candidate_generation_allowed": false,
       "card_digests": [
         {
-          "digest": "sha256:7e3aa1f68df53d745e1bd8a9ff8632a54490ecd4b5ec7786dc5c551be4a64d5f",
+          "digest": "sha256:427013dd1da343f1fd6a1e66df39aaff7f9b421ad8fdeb6a9f2f673df49eaf5d",
           "path": "data/systems/firecracker.json",
           "system_id": "firecracker"
         },
