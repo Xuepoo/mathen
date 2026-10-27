@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/reproducibility-index.schema.json",
+  "title": "Mathen research reproducibility index",
+  "description": "A deterministic, research-only index of Architecture Exploration Methodology evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "index_id",
+    "research_only",
+    "canonical",
+    "promotion_boundary",
+    "baseline",
+    "package_sources",
+    "work_items"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "index_id": { "const": "mth-0201-reproducibility-index" },
+    "research_only": { "const": true },
+    "canonical": { "const": false },
+    "promotion_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["human_review_required", "promotion_decision", "inference_allowed"],
+      "properties": {
+        "human_review_required": { "const": true },
+        "promotion_decision": { "const": "not-determined" },
+        "inference_allowed": { "const": false }
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_ref", "source_revision", "scope"],
+      "properties": {
+        "source_ref": { "type": "string", "minLength": 1 },
+        "source_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "package_sources": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/file" }
+    },
+    "work_items": {
+      "type": "array",
+      "minItems": 18,
+      "items": { "$ref": "#/$defs/workItem" }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "present", "digest"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "present": { "type": "boolean" },
+        "digest": { "type": ["string", "null"] }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "command", "status"],
+      "properties": {
+        "kind": { "enum": ["regenerate", "validate", "test", "audit"] },
+        "command": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["available", "unavailable", "informational"] },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "scope"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["measured", "observed", "not-measured", "not-evaluated", "protocol-defined"] },
+        "scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "workItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "status",
+        "files",
+        "commands",
+        "environment_assumptions",
+        "observations",
+        "limitations",
+        "boundary"
+      ],
+      "properties": {
+        "id": { "pattern": "^MTH-[0-9]{4}$" },
+        "title": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["present", "partial", "represented", "not-present"] },
+        "files": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/file" } },
+        "commands": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/command" } },
+        "environment_assumptions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "observations": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/observation" } },
+        "limitations": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "boundary": {
+          "type": "object",
+          "additionalProperties": false,
+      "required": ["research_only", "canonical", "review_state", "promotion_decision", "inference_allowed"],
+          "properties": {
+            "research_only": { "const": true },
+        "canonical": { "const": false },
+        "review_state": { "const": "under-review" },
+            "promotion_decision": { "const": "not-determined" },
+            "inference_allowed": { "const": false }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reviewer_kind", "human_review", "human_stratum", "direct_llm_status"],
+          "properties": {
+            "reviewer_kind": { "enum": ["agent", "human", "mixed", "not-applicable"] },
+            "human_review": { "type": "boolean" },
+            "human_stratum": { "enum": ["empty", "not-applicable", "observed"] },
+            "direct_llm_status": { "enum": ["not-evaluated", "not-applicable"] }
+          }
+        }
+      }
+    }
+  }
+}
