@@ -1,0 +1,348 @@
+{
+  "study_kind": "blinded_reviewer_study",
+  "schema_version": "1.0",
+  "analysis_version": "mth-0175-reviewer-study-v1",
+  "study_id": "mth-0175-example",
+  "research_only": true,
+  "purpose": "Measure independent evidence-bounded review judgments while retaining missing values, unknown values, and disagreements for later study.",
+  "reproducibility": {
+    "source_ref": "provided-input",
+    "source_revision": "not-recorded",
+    "task_set_digest": "sha256:89dd57fab2971ce60217055486d95ddf07ec8545241b3f84d1a31ee039e0bdf8",
+    "assignment_seed": "mth-0175-seed-1",
+    "generated_at": "not-recorded"
+  },
+  "reviewer_pool": {
+    "count": 2,
+    "independent": true,
+    "identity_visibility": "opaque",
+    "reviewer_keys": [
+      "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+      "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral"
+    ]
+  },
+  "balance": {
+    "balanced": true,
+    "domain_task_counts": {
+      "retrieval": 2,
+      "sqlite": 2
+    },
+    "tasks_per_reviewer": 4,
+    "overlap_policy": "all-reviewers-review-all-tasks"
+  },
+  "instructions": [
+    "Use only the evidence and task material in this packet.",
+    "Review independently; do not exchange labels or reviewer identities.",
+    "Record unknown when the material does not support a judgment.",
+    "Leave a label absent when you did not record it; absent is not unknown.",
+    "Record observed timing only; do not estimate or backfill elapsed time.",
+    "Retain a short note for a material disagreement or abstention when useful.",
+    "These judgments are research observations and do not promote any card."
+  ],
+  "rubric": {
+    "version": "reviewer-study-rubric-v1",
+    "missing_value": "not-recorded",
+    "unknown_value": "unknown",
+    "dimensions": [
+      {
+        "id": "evidence_support",
+        "allowed_values": [
+          "supported",
+          "partially-supported",
+          "unsupported",
+          "unknown"
+        ],
+        "question": "How well do the supplied records support the item?"
+      },
+      {
+        "id": "claim_type",
+        "allowed_values": [
+          "fact",
+          "inference",
+          "hypothesis",
+          "analogy",
+          "unknown"
+        ],
+        "question": "What claim type best describes the item?"
+      },
+      {
+        "id": "scope_completeness",
+        "allowed_values": [
+          "complete",
+          "partial",
+          "incomplete",
+          "unknown"
+        ],
+        "question": "Is the stated scope sufficiently complete?"
+      },
+      {
+        "id": "false_link",
+        "allowed_values": [
+          "false",
+          "not-false",
+          "unknown"
+        ],
+        "question": "Does the item contain a false or unsupported link?"
+      },
+      {
+        "id": "counterexample_awareness",
+        "allowed_values": [
+          "aware",
+          "unaware",
+          "not-applicable",
+          "unknown"
+        ],
+        "question": "Does the item account for a relevant counterexample?"
+      },
+      {
+        "id": "usefulness",
+        "allowed_values": [
+          "useful",
+          "somewhat-useful",
+          "not-useful",
+          "unknown"
+        ],
+        "question": "Would this item help a bounded architecture review?"
+      },
+      {
+        "id": "abstention",
+        "allowed_values": [
+          "abstained",
+          "not-abstained",
+          "unknown"
+        ],
+        "question": "Did you abstain because the evidence was insufficient?"
+      },
+      {
+        "id": "reviewer_effort",
+        "allowed_values": [
+          "low",
+          "medium",
+          "high",
+          "unknown"
+        ],
+        "question": "What effort level did this review require?"
+      }
+    ]
+  },
+  "timing": {
+    "required_for_submitted_record": true,
+    "fields": [
+      "started_at",
+      "ended_at",
+      "elapsed_seconds"
+    ],
+    "missing_value": "not-recorded",
+    "policy": "Record observed timestamps and/or elapsed seconds; never estimate or backfill them."
+  },
+  "packets": [
+    {
+      "packet_id": "packet-f7b7f8b71f850b0717d12962",
+      "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+      "instructions": [
+        "Use only the evidence and task material in this packet.",
+        "Review independently; do not exchange labels or reviewer identities.",
+        "Record unknown when the material does not support a judgment.",
+        "Leave a label absent when you did not record it; absent is not unknown.",
+        "Record observed timing only; do not estimate or backfill elapsed time.",
+        "Retain a short note for a material disagreement or abstention when useful.",
+        "These judgments are research observations and do not promote any card."
+      ],
+      "assignments": [
+        {
+          "assignment_id": "assignment-aeac0f3000560b73394b0f1e",
+          "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+          "task_id": "retrieval-1",
+          "domain_id": "retrieval",
+          "order": 1,
+          "task": {
+            "task_id": "retrieval-1",
+            "domain_id": "retrieval",
+            "prompt": "Review the evidence locality statement.",
+            "candidate_refs": [
+              "candidate-retrieval-1"
+            ],
+            "source_refs": [
+              "data/experiments/retrieval.json"
+            ]
+          }
+        },
+        {
+          "assignment_id": "assignment-a46c75a5735290e955b12485",
+          "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+          "task_id": "sqlite-2",
+          "domain_id": "sqlite",
+          "order": 2,
+          "task": {
+            "task_id": "sqlite-2",
+            "domain_id": "sqlite",
+            "prompt": "Review the stated failure boundary.",
+            "candidate_refs": [
+              "candidate-sqlite-2"
+            ],
+            "source_refs": [
+              "data/experiments/sqlite.json"
+            ]
+          }
+        },
+        {
+          "assignment_id": "assignment-310dd57dd56056d1fe479d10",
+          "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+          "task_id": "sqlite-1",
+          "domain_id": "sqlite",
+          "order": 3,
+          "task": {
+            "task_id": "sqlite-1",
+            "domain_id": "sqlite",
+            "prompt": "Review the bounded transaction observation.",
+            "candidate_refs": [
+              "candidate-sqlite-1"
+            ],
+            "source_refs": [
+              "data/experiments/sqlite.json"
+            ]
+          }
+        },
+        {
+          "assignment_id": "assignment-a61fefb4bdc14191e77b42f3",
+          "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+          "task_id": "retrieval-2",
+          "domain_id": "retrieval",
+          "order": 4,
+          "task": {
+            "task_id": "retrieval-2",
+            "domain_id": "retrieval",
+            "prompt": "Review the abstention boundary.",
+            "candidate_refs": [
+              "candidate-retrieval-2"
+            ],
+            "source_refs": [
+              "data/experiments/retrieval.json"
+            ]
+          }
+        }
+      ],
+      "review_records": []
+    },
+    {
+      "packet_id": "packet-8f2875980480619c6d6f31cb",
+      "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+      "instructions": [
+        "Use only the evidence and task material in this packet.",
+        "Review independently; do not exchange labels or reviewer identities.",
+        "Record unknown when the material does not support a judgment.",
+        "Leave a label absent when you did not record it; absent is not unknown.",
+        "Record observed timing only; do not estimate or backfill elapsed time.",
+        "Retain a short note for a material disagreement or abstention when useful.",
+        "These judgments are research observations and do not promote any card."
+      ],
+      "assignments": [
+        {
+          "assignment_id": "assignment-60bc5ee76e4526c1eb304707",
+          "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+          "task_id": "sqlite-1",
+          "domain_id": "sqlite",
+          "order": 1,
+          "task": {
+            "task_id": "sqlite-1",
+            "domain_id": "sqlite",
+            "prompt": "Review the bounded transaction observation.",
+            "candidate_refs": [
+              "candidate-sqlite-1"
+            ],
+            "source_refs": [
+              "data/experiments/sqlite.json"
+            ]
+          }
+        },
+        {
+          "assignment_id": "assignment-762fed8e40846d2728e32d5a",
+          "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+          "task_id": "retrieval-2",
+          "domain_id": "retrieval",
+          "order": 2,
+          "task": {
+            "task_id": "retrieval-2",
+            "domain_id": "retrieval",
+            "prompt": "Review the abstention boundary.",
+            "candidate_refs": [
+              "candidate-retrieval-2"
+            ],
+            "source_refs": [
+              "data/experiments/retrieval.json"
+            ]
+          }
+        },
+        {
+          "assignment_id": "assignment-6d5ae8386c0e318519cba439",
+          "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+          "task_id": "retrieval-1",
+          "domain_id": "retrieval",
+          "order": 3,
+          "task": {
+            "task_id": "retrieval-1",
+            "domain_id": "retrieval",
+            "prompt": "Review the evidence locality statement.",
+            "candidate_refs": [
+              "candidate-retrieval-1"
+            ],
+            "source_refs": [
+              "data/experiments/retrieval.json"
+            ]
+          }
+        },
+        {
+          "assignment_id": "assignment-a49dbb5afb6fd842beb60eaf",
+          "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+          "task_id": "sqlite-2",
+          "domain_id": "sqlite",
+          "order": 4,
+          "task": {
+            "task_id": "sqlite-2",
+            "domain_id": "sqlite",
+            "prompt": "Review the stated failure boundary.",
+            "candidate_refs": [
+              "candidate-sqlite-2"
+            ],
+            "source_refs": [
+              "data/experiments/sqlite.json"
+            ]
+          }
+        }
+      ],
+      "review_records": []
+    }
+  ],
+  "review_records": [],
+  "disagreement_records": [],
+  "adjudications": [],
+  "adjudication_protocol": {
+    "trigger": "one or more retained dimension disagreements for a task",
+    "order": [
+      "Preserve every independent review and its original timing.",
+      "Invite an adjudicator who did not submit the independent labels.",
+      "Review the cited evidence and scope, then record open, resolved, or abstained.",
+      "Require a rationale for resolved outcomes and preserve unresolved cases."
+    ],
+    "allowed_statuses": [
+      "open",
+      "resolved",
+      "abstained"
+    ],
+    "outcome_is_not_promotion": true
+  },
+  "results": {
+    "status": "not-started",
+    "agreement": {
+      "status": "not-determined"
+    },
+    "promotion_decision": "not-determined"
+  },
+  "promotion_boundary": {
+    "promotion_decision": "not-determined",
+    "review_implies_promotion": false,
+    "adjudication_implies_promotion": false,
+    "canonical_cards_written": false,
+    "production_records_written": false
+  }
+}

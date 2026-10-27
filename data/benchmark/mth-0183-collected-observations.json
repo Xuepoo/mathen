@@ -1,0 +1,2384 @@
+{
+  "aggregation": {
+    "agent-review": {
+      "agent_run_timings": [
+        {
+          "elapsed_seconds": 466.082486,
+          "ended_at": "2026-10-27T14:14:16.082486+08:00",
+          "pilot_id": "mth-0180",
+          "started_at": "2026-10-27T14:06:30+08:00",
+          "timing_scope": "agent-run"
+        },
+        {
+          "elapsed_seconds": 167.019,
+          "ended_at": "2026-10-27T06:20:23.835Z",
+          "pilot_id": "mth-0181",
+          "started_at": "2026-10-27T06:17:36.817Z",
+          "timing_scope": "agent-run"
+        }
+      ],
+      "by_pilot": [
+        {
+          "error_analysis": {
+            "by_domain": [],
+            "by_task": [
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 1,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.025000000000000022,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 1,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 1 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "retrieval-1",
+                "warnings": [
+                  "small sample: denominator 1 is below 5"
+                ]
+              },
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 1,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.025000000000000022,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 1,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 1 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "retrieval-2",
+                "warnings": [
+                  "small sample: denominator 1 is below 5"
+                ]
+              },
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 1,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.025000000000000022,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 1,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 1 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "sqlite-1",
+                "warnings": [
+                  "small sample: denominator 1 is below 5"
+                ]
+              },
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 1,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.025000000000000022,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 1,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 1 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "sqlite-2",
+                "warnings": [
+                  "small sample: denominator 1 is below 5"
+                ]
+              }
+            ],
+            "metrics": {
+              "abstention": {
+                "denominator": 4,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.3976353643835254,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 4,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 4 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "observed_count": 4,
+            "warnings": [
+              "small sample: denominator 4 is below 5"
+            ]
+          },
+          "slice": "mth-0180"
+        },
+        {
+          "error_analysis": {
+            "by_domain": [],
+            "by_task": [
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 1,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.025000000000000022,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 1,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 1 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "retrieval-1",
+                "warnings": [
+                  "small sample: denominator 1 is below 5"
+                ]
+              },
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 1,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.025000000000000022,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 1,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 1 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "retrieval-2",
+                "warnings": [
+                  "small sample: denominator 1 is below 5"
+                ]
+              },
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 1,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.025000000000000022,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 1,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 1 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "sqlite-1",
+                "warnings": [
+                  "small sample: denominator 1 is below 5"
+                ]
+              },
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 1,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.025000000000000022,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 1,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 1 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "sqlite-2",
+                "warnings": [
+                  "small sample: denominator 1 is below 5"
+                ]
+              }
+            ],
+            "metrics": {
+              "abstention": {
+                "denominator": 4,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.3976353643835254,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 4,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 4 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "observed_count": 4,
+            "warnings": [
+              "small sample: denominator 4 is below 5"
+            ]
+          },
+          "slice": "mth-0181"
+        }
+      ],
+      "by_task": [
+        {
+          "error_analysis": {
+            "by_domain": [],
+            "by_task": [
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 2,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.15811388300841905,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 2,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 2 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "retrieval-1",
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              }
+            ],
+            "metrics": {
+              "abstention": {
+                "denominator": 2,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.15811388300841905,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 2,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "observed_count": 2,
+            "warnings": [
+              "small sample: denominator 2 is below 5"
+            ]
+          },
+          "slice": "retrieval-1"
+        },
+        {
+          "error_analysis": {
+            "by_domain": [],
+            "by_task": [
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 2,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.15811388300841905,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 2,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 2 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "retrieval-2",
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              }
+            ],
+            "metrics": {
+              "abstention": {
+                "denominator": 2,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.15811388300841905,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 2,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "observed_count": 2,
+            "warnings": [
+              "small sample: denominator 2 is below 5"
+            ]
+          },
+          "slice": "retrieval-2"
+        },
+        {
+          "error_analysis": {
+            "by_domain": [],
+            "by_task": [
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 2,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.15811388300841905,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 2,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 2 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "sqlite-1",
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              }
+            ],
+            "metrics": {
+              "abstention": {
+                "denominator": 2,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.15811388300841905,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 2,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "observed_count": 2,
+            "warnings": [
+              "small sample: denominator 2 is below 5"
+            ]
+          },
+          "slice": "sqlite-1"
+        },
+        {
+          "error_analysis": {
+            "by_domain": [],
+            "by_task": [
+              {
+                "metrics": {
+                  "abstention": {
+                    "denominator": 2,
+                    "interval": {
+                      "confidence": 0.95,
+                      "lower": 0.15811388300841905,
+                      "method": "clopper-pearson-exact",
+                      "upper": 1.0
+                    },
+                    "name": "abstention",
+                    "numerator": 2,
+                    "reason": "abstention observations among rows that evaluated this dimension.",
+                    "status": "measured",
+                    "value": 1.0,
+                    "warnings": [
+                      "small sample: denominator 2 is below 5"
+                    ]
+                  },
+                  "claim-discipline": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "claim-discipline",
+                    "numerator": 0,
+                    "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "counterexample-miss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "counterexample-miss",
+                    "numerator": 0,
+                    "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "false-link": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "false-link",
+                    "numerator": 0,
+                    "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "reviewer-disagreement": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "reviewer-disagreement",
+                    "numerator": 0,
+                    "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  },
+                  "scope-loss": {
+                    "denominator": 0,
+                    "interval": null,
+                    "name": "scope-loss",
+                    "numerator": 0,
+                    "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                    "status": "not-evaluated",
+                    "value": null,
+                    "warnings": []
+                  }
+                },
+                "slice": "sqlite-2",
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              }
+            ],
+            "metrics": {
+              "abstention": {
+                "denominator": 2,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.15811388300841905,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 2,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "observed_count": 2,
+            "warnings": [
+              "small sample: denominator 2 is below 5"
+            ]
+          },
+          "slice": "sqlite-2"
+        }
+      ],
+      "overall": {
+        "by_domain": [],
+        "by_task": [
+          {
+            "metrics": {
+              "abstention": {
+                "denominator": 2,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.15811388300841905,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 2,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "slice": "retrieval-1",
+            "warnings": [
+              "small sample: denominator 2 is below 5"
+            ]
+          },
+          {
+            "metrics": {
+              "abstention": {
+                "denominator": 2,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.15811388300841905,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 2,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "slice": "retrieval-2",
+            "warnings": [
+              "small sample: denominator 2 is below 5"
+            ]
+          },
+          {
+            "metrics": {
+              "abstention": {
+                "denominator": 2,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.15811388300841905,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 2,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "slice": "sqlite-1",
+            "warnings": [
+              "small sample: denominator 2 is below 5"
+            ]
+          },
+          {
+            "metrics": {
+              "abstention": {
+                "denominator": 2,
+                "interval": {
+                  "confidence": 0.95,
+                  "lower": 0.15811388300841905,
+                  "method": "clopper-pearson-exact",
+                  "upper": 1.0
+                },
+                "name": "abstention",
+                "numerator": 2,
+                "reason": "abstention observations among rows that evaluated this dimension.",
+                "status": "measured",
+                "value": 1.0,
+                "warnings": [
+                  "small sample: denominator 2 is below 5"
+                ]
+              },
+              "claim-discipline": {
+                "denominator": 0,
+                "interval": null,
+                "name": "claim-discipline",
+                "numerator": 0,
+                "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "counterexample-miss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "counterexample-miss",
+                "numerator": 0,
+                "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "false-link": {
+                "denominator": 0,
+                "interval": null,
+                "name": "false-link",
+                "numerator": 0,
+                "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "reviewer-disagreement": {
+                "denominator": 0,
+                "interval": null,
+                "name": "reviewer-disagreement",
+                "numerator": 0,
+                "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              },
+              "scope-loss": {
+                "denominator": 0,
+                "interval": null,
+                "name": "scope-loss",
+                "numerator": 0,
+                "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+                "status": "not-evaluated",
+                "value": null,
+                "warnings": []
+              }
+            },
+            "slice": "sqlite-2",
+            "warnings": [
+              "small sample: denominator 2 is below 5"
+            ]
+          }
+        ],
+        "metrics": {
+          "abstention": {
+            "denominator": 8,
+            "interval": {
+              "confidence": 0.95,
+              "lower": 0.6305833524471809,
+              "method": "clopper-pearson-exact",
+              "upper": 1.0
+            },
+            "name": "abstention",
+            "numerator": 8,
+            "reason": "abstention observations among rows that evaluated this dimension.",
+            "status": "measured",
+            "value": 1.0,
+            "warnings": []
+          },
+          "claim-discipline": {
+            "denominator": 0,
+            "interval": null,
+            "name": "claim-discipline",
+            "numerator": 0,
+            "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "counterexample-miss": {
+            "denominator": 0,
+            "interval": null,
+            "name": "counterexample-miss",
+            "numerator": 0,
+            "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "false-link": {
+            "denominator": 0,
+            "interval": null,
+            "name": "false-link",
+            "numerator": 0,
+            "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "reviewer-disagreement": {
+            "denominator": 0,
+            "interval": null,
+            "name": "reviewer-disagreement",
+            "numerator": 0,
+            "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "scope-loss": {
+            "denominator": 0,
+            "interval": null,
+            "name": "scope-loss",
+            "numerator": 0,
+            "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          }
+        },
+        "observed_count": 8,
+        "warnings": []
+      }
+    },
+    "human-review": {
+      "by_pilot": [],
+      "by_task": [],
+      "overall": {
+        "by_domain": [],
+        "by_task": [],
+        "metrics": {
+          "abstention": {
+            "denominator": 0,
+            "interval": null,
+            "name": "abstention",
+            "numerator": 0,
+            "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "claim-discipline": {
+            "denominator": 0,
+            "interval": null,
+            "name": "claim-discipline",
+            "numerator": 0,
+            "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "counterexample-miss": {
+            "denominator": 0,
+            "interval": null,
+            "name": "counterexample-miss",
+            "numerator": 0,
+            "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "false-link": {
+            "denominator": 0,
+            "interval": null,
+            "name": "false-link",
+            "numerator": 0,
+            "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "reviewer-disagreement": {
+            "denominator": 0,
+            "interval": null,
+            "name": "reviewer-disagreement",
+            "numerator": 0,
+            "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "scope-loss": {
+            "denominator": 0,
+            "interval": null,
+            "name": "scope-loss",
+            "numerator": 0,
+            "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          }
+        },
+        "observed_count": 0,
+        "warnings": []
+      },
+      "timing": {
+        "status": "not-collected",
+        "timing_scope": "human-review timing is absent"
+      }
+    },
+    "model-run": {
+      "output_metrics": {
+        "abstention": null,
+        "claim-discipline": null,
+        "counterexample-miss": null,
+        "false-link": null,
+        "reviewer-disagreement": null,
+        "scope-loss": null
+      },
+      "overall": {
+        "by_domain": [],
+        "by_task": [],
+        "metrics": {
+          "abstention": {
+            "denominator": 0,
+            "interval": null,
+            "name": "abstention",
+            "numerator": 0,
+            "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "claim-discipline": {
+            "denominator": 0,
+            "interval": null,
+            "name": "claim-discipline",
+            "numerator": 0,
+            "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "counterexample-miss": {
+            "denominator": 0,
+            "interval": null,
+            "name": "counterexample-miss",
+            "numerator": 0,
+            "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "false-link": {
+            "denominator": 0,
+            "interval": null,
+            "name": "false-link",
+            "numerator": 0,
+            "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "reviewer-disagreement": {
+            "denominator": 0,
+            "interval": null,
+            "name": "reviewer-disagreement",
+            "numerator": 0,
+            "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          },
+          "scope-loss": {
+            "denominator": 0,
+            "interval": null,
+            "name": "scope-loss",
+            "numerator": 0,
+            "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+            "status": "not-evaluated",
+            "value": null,
+            "warnings": []
+          }
+        },
+        "observed_count": 0,
+        "warnings": []
+      },
+      "status": "not-evaluated"
+    }
+  },
+  "artifact_id": "mth-0183-collected-observations",
+  "error_taxonomy": [
+    {
+      "definition": "A returned candidate is labeled as an invalid relation or irrelevant link.",
+      "id": "false-link"
+    },
+    {
+      "definition": "A result omits or changes the task/system/deployment scope needed for interpretation.",
+      "id": "scope-loss"
+    },
+    {
+      "definition": "A result changes claim type, overstates status, or lacks required evidence discipline.",
+      "id": "claim-discipline"
+    },
+    {
+      "definition": "The method abstains on an eligible observation; abstention is retained as its own dimension.",
+      "id": "abstention"
+    },
+    {
+      "definition": "A supplied counterexample or negative-knowledge target is not surfaced when eligible.",
+      "id": "counterexample-miss"
+    },
+    {
+      "definition": "Explicit reviewer labels disagree for the same observation.",
+      "id": "reviewer-disagreement"
+    }
+  ],
+  "limitations": [
+    "Evidence-dependent labels could not be evaluated because both frozen pilot packets lack candidate and evidence payloads.",
+    "The resulting agent observations are unknown/abstained, not positive or negative evidence about candidate quality.",
+    "Elapsed times are retained only as observed agent-run timing; they are not human-review or model-run measurements.",
+    "The direct-LLM attempt is not-evaluated with null output metrics; it is not a failure and is not scored as zero."
+  ],
+  "non_claims": [
+    "Agent-review observations are not human reviewer evidence.",
+    "No canonical card, production record, or promotion decision is made.",
+    "No aggregate quality score is computed; taxonomy dimensions remain separate."
+  ],
+  "observations": {
+    "agent-review": [
+      {
+        "errors": [
+          "abstention"
+        ],
+        "evaluated_errors": [
+          "abstention"
+        ],
+        "evaluated_labels": [],
+        "evaluation_status": "abstained",
+        "evidence_payload_available": false,
+        "human_review": false,
+        "labels": {
+          "abstention": "abstained",
+          "claim_type": "unknown",
+          "counterexample_awareness": "unknown",
+          "evidence_support": "unknown",
+          "false_link": "unknown",
+          "reviewer_effort": "medium",
+          "scope_completeness": "unknown",
+          "usefulness": "not-useful"
+        },
+        "notes": "Evidence-dependent labels could not be evaluated because the packet contains no candidate or evidence payload; the observation is unknown and abstained.",
+        "observation_id": "mth-0180-retrieval-1",
+        "reviewer_kind": "agent",
+        "source_pilot": "mth-0180",
+        "stratum": "agent-review",
+        "task_id": "retrieval-1",
+        "timing": {
+          "elapsed_seconds": 466.082486,
+          "ended_at": "2026-10-27T14:14:16.082486+08:00",
+          "started_at": "2026-10-27T14:06:30+08:00",
+          "timing_scope": "agent-run"
+        },
+        "unknown_labels": [
+          "evidence_support",
+          "claim_type",
+          "scope_completeness",
+          "false_link",
+          "counterexample_awareness"
+        ]
+      },
+      {
+        "errors": [
+          "abstention"
+        ],
+        "evaluated_errors": [
+          "abstention"
+        ],
+        "evaluated_labels": [],
+        "evaluation_status": "abstained",
+        "evidence_payload_available": false,
+        "human_review": false,
+        "labels": {
+          "abstention": "abstained",
+          "claim_type": "unknown",
+          "counterexample_awareness": "unknown",
+          "evidence_support": "unknown",
+          "false_link": "unknown",
+          "reviewer_effort": "medium",
+          "scope_completeness": "unknown",
+          "usefulness": "not-useful"
+        },
+        "notes": "Evidence-dependent labels could not be evaluated because the packet contains no candidate or evidence payload; the observation is unknown and abstained.",
+        "observation_id": "mth-0180-retrieval-2",
+        "reviewer_kind": "agent",
+        "source_pilot": "mth-0180",
+        "stratum": "agent-review",
+        "task_id": "retrieval-2",
+        "timing": {
+          "elapsed_seconds": 466.082486,
+          "ended_at": "2026-10-27T14:14:16.082486+08:00",
+          "started_at": "2026-10-27T14:06:30+08:00",
+          "timing_scope": "agent-run"
+        },
+        "unknown_labels": [
+          "evidence_support",
+          "claim_type",
+          "scope_completeness",
+          "false_link",
+          "counterexample_awareness"
+        ]
+      },
+      {
+        "errors": [
+          "abstention"
+        ],
+        "evaluated_errors": [
+          "abstention"
+        ],
+        "evaluated_labels": [],
+        "evaluation_status": "abstained",
+        "evidence_payload_available": false,
+        "human_review": false,
+        "labels": {
+          "abstention": "abstained",
+          "claim_type": "unknown",
+          "counterexample_awareness": "unknown",
+          "evidence_support": "unknown",
+          "false_link": "unknown",
+          "reviewer_effort": "medium",
+          "scope_completeness": "unknown",
+          "usefulness": "not-useful"
+        },
+        "notes": "Evidence-dependent labels could not be evaluated because the packet contains no candidate or evidence payload; the observation is unknown and abstained.",
+        "observation_id": "mth-0180-sqlite-1",
+        "reviewer_kind": "agent",
+        "source_pilot": "mth-0180",
+        "stratum": "agent-review",
+        "task_id": "sqlite-1",
+        "timing": {
+          "elapsed_seconds": 466.082486,
+          "ended_at": "2026-10-27T14:14:16.082486+08:00",
+          "started_at": "2026-10-27T14:06:30+08:00",
+          "timing_scope": "agent-run"
+        },
+        "unknown_labels": [
+          "evidence_support",
+          "claim_type",
+          "scope_completeness",
+          "false_link",
+          "counterexample_awareness"
+        ]
+      },
+      {
+        "errors": [
+          "abstention"
+        ],
+        "evaluated_errors": [
+          "abstention"
+        ],
+        "evaluated_labels": [],
+        "evaluation_status": "abstained",
+        "evidence_payload_available": false,
+        "human_review": false,
+        "labels": {
+          "abstention": "abstained",
+          "claim_type": "unknown",
+          "counterexample_awareness": "unknown",
+          "evidence_support": "unknown",
+          "false_link": "unknown",
+          "reviewer_effort": "medium",
+          "scope_completeness": "unknown",
+          "usefulness": "not-useful"
+        },
+        "notes": "Evidence-dependent labels could not be evaluated because the packet contains no candidate or evidence payload; the observation is unknown and abstained.",
+        "observation_id": "mth-0180-sqlite-2",
+        "reviewer_kind": "agent",
+        "source_pilot": "mth-0180",
+        "stratum": "agent-review",
+        "task_id": "sqlite-2",
+        "timing": {
+          "elapsed_seconds": 466.082486,
+          "ended_at": "2026-10-27T14:14:16.082486+08:00",
+          "started_at": "2026-10-27T14:06:30+08:00",
+          "timing_scope": "agent-run"
+        },
+        "unknown_labels": [
+          "evidence_support",
+          "claim_type",
+          "scope_completeness",
+          "false_link",
+          "counterexample_awareness"
+        ]
+      },
+      {
+        "errors": [
+          "abstention"
+        ],
+        "evaluated_errors": [
+          "abstention"
+        ],
+        "evaluated_labels": [],
+        "evaluation_status": "abstained",
+        "evidence_payload_available": false,
+        "human_review": false,
+        "labels": {
+          "abstention": "abstained",
+          "claim_type": "unknown",
+          "counterexample_awareness": "unknown",
+          "evidence_support": "unknown",
+          "false_link": "unknown",
+          "reviewer_effort": "low",
+          "scope_completeness": "unknown",
+          "usefulness": "unknown"
+        },
+        "notes": "Evidence-dependent labels could not be evaluated because the packet contains no candidate or evidence payload; the observation is unknown and abstained.",
+        "observation_id": "mth-0181-b-sqlite-1",
+        "reviewer_kind": "agent",
+        "source_pilot": "mth-0181",
+        "stratum": "agent-review",
+        "task_id": "sqlite-1",
+        "timing": {
+          "elapsed_seconds": 32.887,
+          "ended_at": "2026-10-27T06:18:09.703Z",
+          "started_at": "2026-10-27T06:17:36.817Z",
+          "timing_scope": "agent-run"
+        },
+        "unknown_labels": [
+          "evidence_support",
+          "claim_type",
+          "scope_completeness",
+          "false_link",
+          "counterexample_awareness"
+        ]
+      },
+      {
+        "errors": [
+          "abstention"
+        ],
+        "evaluated_errors": [
+          "abstention"
+        ],
+        "evaluated_labels": [],
+        "evaluation_status": "abstained",
+        "evidence_payload_available": false,
+        "human_review": false,
+        "labels": {
+          "abstention": "abstained",
+          "claim_type": "unknown",
+          "counterexample_awareness": "unknown",
+          "evidence_support": "unknown",
+          "false_link": "unknown",
+          "reviewer_effort": "low",
+          "scope_completeness": "unknown",
+          "usefulness": "unknown"
+        },
+        "notes": "Evidence-dependent labels could not be evaluated because the packet contains no candidate or evidence payload; the observation is unknown and abstained.",
+        "observation_id": "mth-0181-b-retrieval-2",
+        "reviewer_kind": "agent",
+        "source_pilot": "mth-0181",
+        "stratum": "agent-review",
+        "task_id": "retrieval-2",
+        "timing": {
+          "elapsed_seconds": 54.374,
+          "ended_at": "2026-10-27T06:19:04.077Z",
+          "started_at": "2026-10-27T06:18:09.703Z",
+          "timing_scope": "agent-run"
+        },
+        "unknown_labels": [
+          "evidence_support",
+          "claim_type",
+          "scope_completeness",
+          "false_link",
+          "counterexample_awareness"
+        ]
+      },
+      {
+        "errors": [
+          "abstention"
+        ],
+        "evaluated_errors": [
+          "abstention"
+        ],
+        "evaluated_labels": [],
+        "evaluation_status": "abstained",
+        "evidence_payload_available": false,
+        "human_review": false,
+        "labels": {
+          "abstention": "abstained",
+          "claim_type": "unknown",
+          "counterexample_awareness": "unknown",
+          "evidence_support": "unknown",
+          "false_link": "unknown",
+          "reviewer_effort": "low",
+          "scope_completeness": "unknown",
+          "usefulness": "unknown"
+        },
+        "notes": "Evidence-dependent labels could not be evaluated because the packet contains no candidate or evidence payload; the observation is unknown and abstained.",
+        "observation_id": "mth-0181-b-retrieval-1",
+        "reviewer_kind": "agent",
+        "source_pilot": "mth-0181",
+        "stratum": "agent-review",
+        "task_id": "retrieval-1",
+        "timing": {
+          "elapsed_seconds": 28.721,
+          "ended_at": "2026-10-27T06:19:32.798Z",
+          "started_at": "2026-10-27T06:19:04.077Z",
+          "timing_scope": "agent-run"
+        },
+        "unknown_labels": [
+          "evidence_support",
+          "claim_type",
+          "scope_completeness",
+          "false_link",
+          "counterexample_awareness"
+        ]
+      },
+      {
+        "errors": [
+          "abstention"
+        ],
+        "evaluated_errors": [
+          "abstention"
+        ],
+        "evaluated_labels": [],
+        "evaluation_status": "abstained",
+        "evidence_payload_available": false,
+        "human_review": false,
+        "labels": {
+          "abstention": "abstained",
+          "claim_type": "unknown",
+          "counterexample_awareness": "unknown",
+          "evidence_support": "unknown",
+          "false_link": "unknown",
+          "reviewer_effort": "low",
+          "scope_completeness": "unknown",
+          "usefulness": "unknown"
+        },
+        "notes": "Evidence-dependent labels could not be evaluated because the packet contains no candidate or evidence payload; the observation is unknown and abstained.",
+        "observation_id": "mth-0181-b-sqlite-2",
+        "reviewer_kind": "agent",
+        "source_pilot": "mth-0181",
+        "stratum": "agent-review",
+        "task_id": "sqlite-2",
+        "timing": {
+          "elapsed_seconds": 51.037,
+          "ended_at": "2026-10-27T06:20:23.835Z",
+          "started_at": "2026-10-27T06:19:32.798Z",
+          "timing_scope": "agent-run"
+        },
+        "unknown_labels": [
+          "evidence_support",
+          "claim_type",
+          "scope_completeness",
+          "false_link",
+          "counterexample_awareness"
+        ]
+      }
+    ],
+    "human-review": [],
+    "model-run": [
+      {
+        "artifact": "data/benchmark/mth-0182-direct-llm-attempt.json",
+        "digest": "sha256:2e0d6e0c4bdfb9168957ed271417059596b80a40a98e8084631a5722a296323e",
+        "human_review": false,
+        "output_metrics": {
+          "abstention": null,
+          "claim-discipline": null,
+          "counterexample-miss": null,
+          "false-link": null,
+          "reviewer-disagreement": null,
+          "scope-loss": null
+        },
+        "reason": "Not evaluated: no safe local model/runtime was available. Environment inspection found no local model-serving executable or supported inference runtime; no provider was selected, no prompt was rendered, no request was made, and no output was produced.",
+        "reviewer_kind": "model",
+        "run_id": "mth-0182-direct-llm-attempt",
+        "status": "not-evaluated",
+        "stratum": "model-run",
+        "timing_scope": "no model run; no elapsed time observed"
+      }
+    ]
+  },
+  "outcome": {
+    "agent_observation_count": 8,
+    "human_observation_count": 0,
+    "model_run_status": "not-evaluated",
+    "reason": "Both agent pilots abstained because evidence payloads were missing; the direct-LLM attempt produced no output.",
+    "status": "agent-abstention-observations-only"
+  },
+  "purpose": "Score the two detached agent-review pilot observations through the MTH-0177 error-analysis primitives while preserving reviewer and model-run boundaries.",
+  "research_only": true,
+  "schema_version": "1.0",
+  "sources": {
+    "agent_review_pilots": [
+      {
+        "artifact": "data/research-review/pilots/mth-0180.json",
+        "digest": "sha256:daf37addd9ff2a291a08c82c122091fe648ac9245d1fb88648630b8358fb66be",
+        "human_review": false,
+        "pilot_id": "mth-0180",
+        "reviewer_kind": "agent"
+      },
+      {
+        "artifact": "data/research-review/pilots/mth-0181.json",
+        "digest": "sha256:0d1f350a07e43f482f4b3491fcfb324f251f11fbb50771a3b0bb1cae191e375e",
+        "human_review": false,
+        "pilot_id": "mth-0181",
+        "reviewer_kind": "agent"
+      }
+    ],
+    "model_run": {
+      "artifact": "data/benchmark/mth-0182-direct-llm-attempt.json",
+      "digest": "sha256:2e0d6e0c4bdfb9168957ed271417059596b80a40a98e8084631a5722a296323e",
+      "human_review": false,
+      "output_metrics": {
+        "abstention": null,
+        "claim-discipline": null,
+        "counterexample-miss": null,
+        "false-link": null,
+        "reviewer-disagreement": null,
+        "scope-loss": null
+      },
+      "reason": "Not evaluated: no safe local model/runtime was available. Environment inspection found no local model-serving executable or supported inference runtime; no provider was selected, no prompt was rendered, no request was made, and no output was produced.",
+      "reviewer_kind": "model",
+      "run_id": "mth-0182-direct-llm-attempt",
+      "status": "not-evaluated",
+      "stratum": "model-run",
+      "timing_scope": "no model run; no elapsed time observed"
+    },
+    "statistical_primitives": {
+      "artifact": "data/benchmark/mth-0177-statistical-analysis.json",
+      "script": "scripts/statistical_error_analysis.py"
+    }
+  }
+}
