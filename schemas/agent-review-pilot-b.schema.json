@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/agent-review-pilot-b.schema.json",
+  "title": "Mathen detached packet B agent review pilot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pilot_id",
+    "record_kind",
+    "pilot_kind",
+    "research_only",
+    "non_canonical",
+    "study_id",
+    "packet_digest",
+    "packet_label",
+    "packet_id",
+    "reviewer_key",
+    "provenance",
+    "run_timing",
+    "assignment_digests",
+    "review_records",
+    "agreement",
+    "promotion_decision",
+    "promotion_boundary"
+  ],
+  "properties": {
+    "pilot_id": { "const": "mth-0187" },
+    "record_kind": { "const": "agent-review-pilot" },
+    "pilot_kind": { "const": "agent-review-pilot" },
+    "research_only": { "const": true },
+    "non_canonical": { "const": true },
+    "study_id": { "const": "mth-0185-enriched-study" },
+    "packet_digest": { "$ref": "#/$defs/digest" },
+    "packet_label": { "const": "B" },
+    "packet_id": { "type": "string", "minLength": 1 },
+    "reviewer_key": { "type": "string", "minLength": 1 },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "reviewer_kind", "human_review", "packet_selection", "evidence_boundary"],
+      "properties": {
+        "mode": { "const": "agent-review-pilot" },
+        "reviewer_kind": { "const": "agent" },
+        "human_review": { "const": false },
+        "packet_selection": { "const": "B" },
+        "evidence_boundary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "run_timing": { "$ref": "#/$defs/timing" },
+    "assignment_digests": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": { "$ref": "#/$defs/assignmentDigest" }
+    },
+    "review_records": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": { "$ref": "#/$defs/reviewRecord" }
+    },
+    "agreement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": { "status": { "const": "not-determined" } }
+    },
+    "promotion_decision": { "const": "not-determined" },
+    "promotion_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["promotion_decision", "review_implies_promotion", "canonical_cards_written", "production_records_written"],
+      "properties": {
+        "promotion_decision": { "const": "not-determined" },
+        "review_implies_promotion": { "const": false },
+        "canonical_cards_written": { "const": false },
+        "production_records_written": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started_at", "ended_at", "elapsed_seconds", "measurement_status", "scope"],
+      "properties": {
+        "started_at": { "type": "string", "minLength": 1 },
+        "ended_at": { "type": "string", "minLength": 1 },
+        "elapsed_seconds": { "type": "number", "minimum": 0 },
+        "measurement_status": { "const": "observed" },
+        "scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "assignmentDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "assignment_id", "candidate_digest", "evidence_digests", "negative_knowledge_digests", "source_digest"],
+      "properties": {
+        "task_id": { "type": "string", "minLength": 1 },
+        "assignment_id": { "type": "string", "minLength": 1 },
+        "candidate_digest": { "$ref": "#/$defs/digest" },
+        "evidence_digests": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/digest" } },
+        "negative_knowledge_digests": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/digest" } },
+        "source_digest": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "reviewRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["review_id", "task_id", "assignment_id", "domain_id", "partition", "candidate_statement", "candidate_claim_type", "candidate_digest", "evidence_ids", "evidence_excerpt_digests", "source_ids", "negative_knowledge_refs", "negative_knowledge_digests", "scope_context", "locality", "labels", "timing", "notes"],
+      "properties": {
+        "review_id": { "type": "string", "minLength": 1 },
+        "task_id": { "type": "string", "minLength": 1 },
+        "assignment_id": { "type": "string", "minLength": 1 },
+        "domain_id": { "type": "string", "minLength": 1 },
+        "partition": { "enum": ["train", "evaluation"] },
+        "candidate_statement": { "type": "string", "minLength": 1 },
+        "candidate_claim_type": { "enum": ["fact", "inference", "hypothesis", "analogy"] },
+        "candidate_digest": { "$ref": "#/$defs/digest" },
+        "evidence_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "evidence_excerpt_digests": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/digest" } },
+        "source_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "negative_knowledge_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "negative_knowledge_digests": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/digest" } },
+        "scope_context": { "type": "object" },
+        "locality": { "type": "object" },
+        "labels": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["evidence_support", "claim_type", "scope_completeness", "false_link", "counterexample_awareness", "usefulness", "abstention", "reviewer_effort"],
+          "properties": {
+            "evidence_support": { "enum": ["supported", "partially-supported", "unsupported", "unknown", "not-recorded"] },
+            "claim_type": { "enum": ["fact", "inference", "hypothesis", "analogy", "unknown", "not-recorded"] },
+            "scope_completeness": { "enum": ["complete", "partial", "incomplete", "unknown", "not-recorded"] },
+            "false_link": { "enum": ["false", "not-false", "unknown", "not-recorded"] },
+            "counterexample_awareness": { "enum": ["aware", "unaware", "not-applicable", "unknown", "not-recorded"] },
+            "usefulness": { "enum": ["useful", "somewhat-useful", "not-useful", "unknown", "not-recorded"] },
+            "abstention": { "enum": ["abstained", "not-abstained", "unknown", "not-recorded"] },
+            "reviewer_effort": { "enum": ["low", "medium", "high", "unknown", "not-recorded"] }
+          }
+        },
+        "timing": { "$ref": "#/$defs/timing" },
+        "notes": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
