@@ -1,0 +1,239 @@
+{
+  "id": "g5-sqlite-busy-timeout-observation-mth-0197",
+  "kind": "experiment",
+  "title": "SQLite two-writer busy timeout behavior \u2014 MTH-0197",
+  "uri": "https://sqlite.org/src/info/4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "observation_version": "1",
+  "protocol": "For each repetition, create a fresh SQLite database with the default journal and synchronous settings, commit a fixed four-row seed, begin an IMMEDIATE transaction on a holder connection, insert one row without committing, and attempt BEGIN IMMEDIATE on a second connection with a zero-second timeout. Then commit the holder and compare the contender's post-release read, close/reopen state, integrity checks, and repetitions.",
+  "system_commit": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+  "environment": {
+    "os": "Linux",
+    "os_release": "7.3.0-4-cachyos",
+    "architecture": "x86_64",
+    "python": "3.13.13",
+    "sqlite": "3.50.4",
+    "sqlite_source_id": "2025-07-30 19:33:53 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+  },
+  "command": "uv run --offline python scripts/g5_sqlite_busy_timeout_experiment.py --expected-source-id 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3 --repetitions 3 --output data/experiments/g5-sqlite-busy-timeout-results-mth-0197.json",
+  "dataset": {
+    "name": "fixed-records-v1",
+    "rows": [
+      [
+        1,
+        "alpha",
+        10
+      ],
+      [
+        2,
+        "beta",
+        20
+      ],
+      [
+        3,
+        "gamma",
+        30
+      ],
+      [
+        4,
+        "delta",
+        40
+      ]
+    ],
+    "appended_row": [
+      5,
+      "epsilon",
+      50
+    ],
+    "schema": "records(id INTEGER PRIMARY KEY, name TEXT NOT NULL, value INTEGER NOT NULL)"
+  },
+  "repetitions": 3,
+  "metrics": {
+    "seed_rows": 4,
+    "holder_uncommitted_rows": 5,
+    "contender_lock_failures": 3,
+    "holder_commit_rows": 5,
+    "contender_post_release_rows": 5,
+    "reopened_rows": 5,
+    "integrity_checks_passed": 3,
+    "oracle_checks_passed": 3,
+    "repetitions_consistent": 1
+  },
+  "artifacts": [
+    {
+      "id": "g5-sqlite-busy-timeout-results-mth-0197",
+      "kind": "experiment-results",
+      "path": "data/experiments/g5-sqlite-busy-timeout-results-mth-0197.json",
+      "digest": "sha256:296e03ad61fe91c72e0b647447a209e32bf66372ad674cd9506baae8bc535a57"
+    },
+    {
+      "id": "g5-sqlite-busy-timeout-runner-mth-0197",
+      "kind": "runner-source",
+      "path": "scripts/g5_sqlite_busy_timeout_experiment.py",
+      "digest": "sha256:fb38cdf11f44200342ff818c21105f3100dd81d0f3907cc09adb6be6c196ffb7"
+    }
+  ],
+  "workload": {
+    "name": "fixed four-row seed with one uncommitted holder row",
+    "protocol": "two local writers; zero-timeout BEGIN IMMEDIATE contention; commit; reopen"
+  },
+  "conditions": {
+    "journal_mode": "SQLite default",
+    "synchronous_mode": "SQLite default",
+    "connections": "one holder and one zero-timeout contender",
+    "holder_timeout_seconds": 5.0,
+    "contender_timeout_seconds": 0.0,
+    "failure_oracle": [
+      "the holder begins an IMMEDIATE transaction and keeps its appended row uncommitted",
+      "the zero-timeout contender receives sqlite3.OperationalError: database is locked",
+      "the holder commit and contender post-release read contain the seed plus appended row",
+      "close/reopen contains the seed plus appended row and integrity_check is ok",
+      "all repetitions produce equal observations"
+    ],
+    "timing": "not measured"
+  },
+  "provenance": {
+    "run_id": "g5-sqlite-busy-timeout-mth-0197",
+    "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+    "protocol_digest": "sha256:abac0d6d00cccebbd19669821bd0a9af602fa98e28ff229c05170b48cefb92d9",
+    "recorded_at": "2026-10-28T00:00:00Z",
+    "runner": "mathen-local-experiment-runner",
+    "toolchain": {
+      "python": "3.13.13",
+      "sqlite": "3.50.4",
+      "os": "7.3.0-4-cachyos",
+      "runner_sha256": "sha256:fb38cdf11f44200342ff818c21105f3100dd81d0f3907cc09adb6be6c196ffb7"
+    }
+  },
+  "result_boundary": {
+    "canonical": false,
+    "promotion_requires_human_review": true,
+    "storage_scope": "research",
+    "limits": [
+      "one fixed four-row dataset and one appended row",
+      "three repetitions on one Linux host and one Python/SQLite build",
+      "two local writers with a zero-second contender timeout",
+      "SQLite default journal and synchronous settings",
+      "does not test process crashes, power loss, checkpoint behavior, durability, performance, other journal modes, nonzero timeout policy, or general concurrency compatibility"
+    ]
+  },
+  "result": {
+    "status": "observed",
+    "summary": "The bounded zero-timeout contender received database is locked while the holder transaction was open; after the holder committed, the contender and a close/reopen observed the five-row state in all 3 repetitions.",
+    "measurements": [
+      {
+        "id": "contender-lock-failures",
+        "value": 3,
+        "unit": "repetitions",
+        "status": "observed"
+      },
+      {
+        "id": "committed-rows",
+        "value": 5,
+        "unit": "rows",
+        "status": "observed"
+      },
+      {
+        "id": "timing",
+        "value": null,
+        "unit": "milliseconds",
+        "status": "not-measured",
+        "notes": "Timing was outside the protocol."
+      }
+    ]
+  },
+  "review": {
+    "status": "unreviewed",
+    "card_claim_refs": []
+  },
+  "scope_context": {
+    "validity_scope": {
+      "status": "specified",
+      "systems": [
+        "SQLite"
+      ],
+      "versions": [
+        "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"
+      ],
+      "deployment_origins": [
+        "local-process"
+      ],
+      "conditions": [
+        "Linux x86_64",
+        "SQLite default journal and synchronous settings",
+        "two local writer connections",
+        "zero-second contender timeout"
+      ],
+      "exclusions": [
+        "process crash",
+        "power loss",
+        "checkpoint behavior",
+        "durability",
+        "performance",
+        "other journal modes",
+        "nonzero timeout policy"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-busy-timeout-observation-mth-0197"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "workload": {
+      "status": "specified",
+      "values": [
+        "fixed four-row seed",
+        "one appended holder row",
+        "3 repetitions"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-busy-timeout-observation-mth-0197"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "runtime_conditions": {
+      "status": "specified",
+      "values": [
+        "CPython 3.13.13",
+        "SQLite 3.50.4",
+        "Linux 7.3.0-4-cachyos",
+        "two local writers",
+        "zero-second contender timeout"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-busy-timeout-observation-mth-0197"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "scale": {
+      "status": "specified",
+      "values": [
+        "4 seed rows",
+        "5 holder and committed rows",
+        "2 local writer connections",
+        "3 repetitions"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-busy-timeout-observation-mth-0197"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    },
+    "failure_conditions": {
+      "status": "specified",
+      "values": [
+        "the holder begins an IMMEDIATE transaction and keeps its appended row uncommitted",
+        "the zero-timeout contender receives sqlite3.OperationalError: database is locked",
+        "the holder commit and contender post-release read contain the seed plus appended row",
+        "close/reopen contains the seed plus appended row and integrity_check is ok",
+        "all repetitions produce equal observations"
+      ],
+      "evidence_ids": [
+        "g5-sqlite-busy-timeout-observation-mth-0197"
+      ],
+      "claim_type": "fact",
+      "claim_status": "under-review"
+    }
+  }
+}

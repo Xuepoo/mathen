@@ -1,0 +1,210 @@
+{
+  "schema_version": "1.0",
+  "id": "sqlite-busy-timeout",
+  "family": "state_machine",
+  "question": "Which bounded SQLite states are observed when a zero-timeout writer meets a held IMMEDIATE transaction?",
+  "carrier": {
+    "kind": "busy-timeout-state",
+    "description": "Finite holder and contender states in the fixed two-writer protocol.",
+    "elements": [
+      "seeded",
+      "holder-uncommitted",
+      "contender-locked",
+      "holder-committed",
+      "reopened"
+    ]
+  },
+  "state_space": {
+    "states": [
+      "seeded",
+      "holder-uncommitted",
+      "contender-locked",
+      "holder-committed",
+      "reopened"
+    ],
+    "initial": ["seeded"],
+    "terminal": ["reopened"],
+    "description": "A holder keeps one appended row uncommitted, a zero-timeout contender receives a bounded lock error, and the holder commit is later observed after release and reopen."
+  },
+  "operations": [],
+  "relations": [],
+  "transitions": [
+    {
+      "id": "seed-to-holder-uncommitted",
+      "name": "Begin holder transaction",
+      "source": "seeded",
+      "target": "holder-uncommitted",
+      "label": "holder begins IMMEDIATE transaction and inserts fifth row without commit",
+      "system": "SQLite"
+    },
+    {
+      "id": "holder-to-contender-locked",
+      "name": "Contender attempts write",
+      "source": "holder-uncommitted",
+      "target": "contender-locked",
+      "label": "zero-timeout contender receives database is locked",
+      "system": "SQLite"
+    },
+    {
+      "id": "contender-to-holder-committed",
+      "name": "Release holder lock",
+      "source": "contender-locked",
+      "target": "holder-committed",
+      "label": "holder commits the appended row and contender reads after release",
+      "system": "SQLite"
+    },
+    {
+      "id": "holder-committed-to-reopened",
+      "name": "Close and reopen",
+      "source": "holder-committed",
+      "target": "reopened",
+      "label": "reopened connection sees the committed five-row state",
+      "system": "SQLite"
+    }
+  ],
+  "laws_or_checks": [
+    {
+      "id": "initial-state",
+      "name": "Initial state",
+      "description": "The protocol begins in the seeded state.",
+      "check": "initial"
+    },
+    {
+      "id": "transition-closure",
+      "name": "Transition closure",
+      "description": "Declared transitions remain within the finite state carrier.",
+      "check": "closure"
+    }
+  ],
+  "assumptions": [
+    "The carrier is a bounded observational projection of one fixed SQLite lock protocol, not a complete concurrency model.",
+    "The contender-locked state records one exact OperationalError message under a zero-second timeout.",
+    "Null timing and omitted failure modes do not imply zero latency or absence of those failures."
+  ],
+  "validity_scope": {
+    "systems": ["SQLite"],
+    "versions": ["SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"],
+    "deployment_origins": ["local-process"],
+    "conditions": [
+      "Linux x86_64",
+      "SQLite default journal and synchronous settings",
+      "two local writer connections",
+      "zero-second contender timeout",
+      "three repetitions"
+    ],
+    "exclusions": [
+      "process crash",
+      "power loss",
+      "checkpoint behavior",
+      "durability",
+      "performance",
+      "other journal modes",
+      "nonzero timeout policy"
+    ]
+  },
+  "claim_type": "inference",
+  "claim_status": "under-review",
+  "evidence_ids": ["g5-sqlite-busy-timeout-observation-mth-0197"],
+  "classification": {
+    "result": "valid",
+    "reason": "All declared transitions are closed over the finite state space and the protocol has an initial state.",
+    "checks": [
+      {"id": "initial-state", "result": "pass"},
+      {"id": "transition-closure", "result": "pass"}
+    ]
+  },
+  "validation_records": [
+    {
+      "id": "g5-busy-timeout-observed",
+      "view_id": "sqlite-busy-timeout",
+      "kind": "observed-result",
+      "basis": "experiment",
+      "claim_type": "inference",
+      "claim_status": "under-review",
+      "system": "SQLite",
+      "version": "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+      "scope": {
+        "systems": ["SQLite"],
+        "versions": ["SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"],
+        "deployment_origins": ["local-process"],
+        "conditions": [
+          "Linux x86_64",
+          "SQLite default journal and synchronous settings",
+          "two local writer connections",
+          "zero-second contender timeout",
+          "three repetitions"
+        ],
+        "exclusions": [
+          "process crash",
+          "power loss",
+          "checkpoint behavior",
+          "durability",
+          "performance",
+          "other journal modes",
+          "nonzero timeout policy"
+        ]
+      },
+      "evidence_ids": ["g5-sqlite-busy-timeout-observation-mth-0197"],
+      "provenance": {
+        "run_id": "g5-sqlite-busy-timeout-mth-0197",
+        "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+        "protocol_digest": "sha256:abac0d6d00cccebbd19669821bd0a9af602fa98e28ff229c05170b48cefb92d9",
+        "recorded_at": "2026-10-28T00:00:00Z",
+        "runner": "mathen-local-experiment-runner",
+        "toolchain": {"python": "3.13.13", "sqlite": "3.50.4"}
+      },
+      "result": {
+        "status": "observed",
+        "summary": "In three repetitions, a zero-timeout contender received database is locked while the holder transaction was open, and the committed five-row state was visible after release and reopen."
+      },
+      "limitations": [
+        "The result is bounded to one fixed dataset, three repetitions, one host, and one SQLite build.",
+        "The protocol does not test crash, power-loss, checkpoint, durability, performance, alternate journal, or nonzero timeout behavior."
+      ]
+    },
+    {
+      "id": "g5-busy-timeout-omitted-behavior-not-established",
+      "view_id": "sqlite-busy-timeout",
+      "kind": "absence-of-evidence",
+      "basis": "absence-of-evidence",
+      "claim_type": "hypothesis",
+      "claim_status": "under-review",
+      "system": "SQLite",
+      "version": "SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+      "scope": {
+        "systems": ["SQLite"],
+        "versions": ["SQLite source 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3"],
+        "deployment_origins": ["local-process"],
+        "conditions": ["fixed two-writer zero-timeout protocol"],
+        "exclusions": [
+          "process crash",
+          "power loss",
+          "checkpoint behavior",
+          "durability",
+          "performance",
+          "other journal modes",
+          "nonzero timeout policy"
+        ]
+      },
+      "evidence_ids": ["g5-sqlite-busy-timeout-observation-mth-0197"],
+      "provenance": {
+        "run_id": "g5-sqlite-busy-timeout-mth-0197",
+        "source_revision": "4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3",
+        "protocol_digest": "sha256:abac0d6d00cccebbd19669821bd0a9af602fa98e28ff229c05170b48cefb92d9",
+        "recorded_at": "2026-10-28T00:00:00Z",
+        "runner": "mathen-local-experiment-runner",
+        "toolchain": {"python": "3.13.13", "sqlite": "3.50.4"}
+      },
+      "result": {
+        "status": "not-established",
+        "summary": "The bounded zero-timeout lock protocol did not establish crash, power-loss, checkpoint, durability, performance, alternate journal, or nonzero timeout behavior."
+      },
+      "question": "Did this protocol establish behavior for omitted failure, durability, checkpoint, performance, journal, or timeout conditions?",
+      "what_not_established": "No result for those omitted conditions was established by this protocol.",
+      "limitations": [
+        "This is an absence-of-evidence record, not a negative finding about SQLite.",
+        "A dedicated protocol is required for each omitted condition."
+      ]
+    }
+  ]
+}
