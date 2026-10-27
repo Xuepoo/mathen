@@ -56,6 +56,12 @@ def _file_digest(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _relative_artifact_path(path: Path) -> str:
+    """Return a repository artifact path with stable POSIX separators."""
+
+    return path.relative_to(ROOT).as_posix()
+
+
 def _pilot_id(pilot: Mapping[str, Any], path: Path) -> str:
     value = pilot.get("pilot_id")
     if isinstance(value, str) and value:
@@ -185,7 +191,7 @@ def build_artifact() -> dict[str, Any]:
         pilot_sources.append(
             {
                 "pilot_id": pilot_id,
-                "artifact": str(path.relative_to(ROOT)),
+                "artifact": _relative_artifact_path(path),
                 "digest": _file_digest(path),
                 "execution_actor": "llm-based-agent",
                 "provider": "not-recorded",
@@ -206,7 +212,7 @@ def build_artifact() -> dict[str, Any]:
         "status": "not-evaluated",
         "output_metrics": _null_output_metrics(),
         "reason": direct_llm["outcome"]["reason"],
-        "artifact": str(DIRECT_LLM_PATH.relative_to(ROOT)),
+        "artifact": _relative_artifact_path(DIRECT_LLM_PATH),
         "digest": _file_digest(DIRECT_LLM_PATH),
         "timing_scope": "no model run; no elapsed time observed",
     }

@@ -280,10 +280,11 @@ def _regularized_beta(x: float, a: int, b: int) -> float:
 
 
 def _capacity_from_source(path: Path) -> dict[str, Any]:
+    source_artifact = path.relative_to(ROOT).as_posix()
     if not path.exists():
         return {
             "status": "protocol-capacity",
-            "source_artifact": str(path.relative_to(ROOT)),
+            "source_artifact": source_artifact,
             "source_commit": MTH_0174_COMMIT,
             "source_digest": MTH_0174_DIGEST,
             "domain_slices": _known_mth_0174_slices(),
@@ -296,7 +297,7 @@ def _capacity_from_source(path: Path) -> dict[str, Any]:
     source = json.loads(path.read_text(encoding="utf-8"))
     return {
         "status": "protocol-capacity",
-        "source_artifact": str(path.relative_to(ROOT)),
+        "source_artifact": source_artifact,
         "source_commit": MTH_0174_COMMIT,
         "source_digest": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
         "domain_slices": [
