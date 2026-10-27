@@ -95,6 +95,12 @@ def file_digest(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def relative_artifact_path(path: Path) -> str:
+    """Return a repository artifact path with stable POSIX separators."""
+
+    return path.relative_to(ROOT).as_posix()
+
+
 def _read(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
@@ -273,7 +279,7 @@ def _load_observations() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
                 {
                     "pilot_id": pilot_id,
                     "packet_label": packet_label,
-                    "artifact": str(path.relative_to(ROOT)),
+                    "artifact": relative_artifact_path(path),
                     "digest": pilot_digest,
                     "study_packet_digest": packet_digest,
                     "assignment_digests": pilot["assignment_digests"],
@@ -322,7 +328,7 @@ def _load_observations() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
                 {
                     "pilot_id": pilot_id,
                     "packet_label": packet_label,
-                    "artifact": str(path.relative_to(ROOT)),
+                    "artifact": relative_artifact_path(path),
                     "digest": pilot_digest,
                     "study_packet_digest": pilot["study_packet_digest"],
                     "run_count": pilot["run_count"],
