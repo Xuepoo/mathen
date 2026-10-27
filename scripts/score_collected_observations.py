@@ -93,6 +93,12 @@ def _normalize_pilot(
         raise ValueError(f"{pilot_id} is not an agent-review observation")
     if provenance.get("human_review") is not False:
         raise ValueError(f"{pilot_id} must preserve human_review=false")
+    if (
+        provenance.get("execution_actor") != "llm-based-agent"
+        or provenance.get("provider") != "not-recorded"
+        or provenance.get("model") != "not-recorded"
+    ):
+        raise ValueError(f"{pilot_id} must preserve bounded agent provenance")
     run_timing = _pilot_timing(pilot, pilot_id)
     records = pilot.get("review_records")
     if not isinstance(records, list):
@@ -181,6 +187,9 @@ def build_artifact() -> dict[str, Any]:
                 "pilot_id": pilot_id,
                 "artifact": str(path.relative_to(ROOT)),
                 "digest": _file_digest(path),
+                "execution_actor": "llm-based-agent",
+                "provider": "not-recorded",
+                "model": "not-recorded",
                 "reviewer_kind": "agent",
                 "human_review": False,
             }
@@ -207,6 +216,11 @@ def build_artifact() -> dict[str, Any]:
         "schema_version": "1.0",
         "artifact_id": "mth-0183-collected-observations",
         "research_only": True,
+        "provenance": {
+            "execution_actor": "llm-based-agent",
+            "provider": "not-recorded",
+            "model": "not-recorded",
+        },
         "purpose": (
             "Score the two detached agent-review pilot observations through the "
             "MTH-0177 error-analysis primitives while preserving reviewer and "

@@ -21,7 +21,10 @@
     "human_review": false,
     "independent_packet_review": true,
     "frozen_study_packet": true,
-    "packet_selection": "A"
+    "packet_selection": "A",
+    "execution_actor": "llm-based-agent",
+    "provider": "not-recorded",
+    "model": "not-recorded"
   },
   "timing": {
     "started_at": "2026-10-27T14:06:30+08:00",

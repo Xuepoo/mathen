@@ -47,6 +47,14 @@ class CollectedObservationTests(unittest.TestCase):
 
     def test_strata_and_direct_llm_not_evaluated(self) -> None:
         self.assertEqual(self.artifact["observations"]["human-review"], [])
+        self.assertEqual(
+            self.artifact["provenance"],
+            {
+                "execution_actor": "llm-based-agent",
+                "provider": "not-recorded",
+                "model": "not-recorded",
+            },
+        )
         model = self.artifact["observations"]["model-run"][0]
         self.assertEqual(model["status"], "not-evaluated")
         self.assertTrue(

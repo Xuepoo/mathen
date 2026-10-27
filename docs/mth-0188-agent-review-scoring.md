@@ -22,6 +22,11 @@ locality, and the observed timing supplied by each pilot. It preserves
 `record_kind: agent-review-pilot`, `reviewer_kind: agent`,
 `human_review: false`, and `agent-review-pilot` provenance.
 
+The provenance also records `execution_actor: "llm-based-agent"`,
+`provider: "not-recorded"`, and `model: "not-recorded"`. This metadata describes
+the executing LLM-based agent only; provider/model runtime provenance was not
+recorded, and it does not identify a provider/model or imply a model run.
+
 The 16 rows present in the pilots are the evaluated observations. Both
 `train` and `evaluation` rows are retained because they are observed pilot
 rows; no holdout payload is read or copied. A holdout partition is rejected by

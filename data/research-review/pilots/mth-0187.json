@@ -165,9 +165,12 @@
   "promotion_decision": "not-determined",
   "provenance": {
     "evidence_boundary": "packet B candidate statements, local evidence excerpts, scope/context, locality, and negative-knowledge references only",
+    "execution_actor": "llm-based-agent",
     "human_review": false,
     "mode": "agent-review-pilot",
+    "model": "not-recorded",
     "packet_selection": "B",
+    "provider": "not-recorded",
     "reviewer_kind": "agent"
   },
   "record_kind": "agent-review-pilot",

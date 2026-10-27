@@ -15,6 +15,16 @@ SPEC.loader.exec_module(PILOT)
 
 
 class ReviewerPilotTests(unittest.TestCase):
+    def test_checked_in_mth_0180_has_bounded_agent_provenance(self) -> None:
+        record = json.loads(
+            (ROOT / "data/research-review/pilots/mth-0180.json").read_text()
+        )
+        self.assertEqual(record["record_kind"], "agent-review-pilot")
+        self.assertEqual(record["provenance"]["execution_actor"], "llm-based-agent")
+        self.assertEqual(record["provenance"]["provider"], "not-recorded")
+        self.assertEqual(record["provenance"]["model"], "not-recorded")
+        self.assertEqual(record["promotion_decision"], "not-determined")
+
     def test_packet_b_record_is_digest_linked_and_non_promoting(self) -> None:
         study_path = ROOT / "data/research-review/mth-0175-study.json"
         study = json.loads(study_path.read_text(encoding="utf-8"))
@@ -56,6 +66,9 @@ class ReviewerPilotTests(unittest.TestCase):
         self.assertEqual(report["promotion_decision"], "not-determined")
         self.assertEqual(record["pilot_kind"], "agent-review-pilot")
         self.assertTrue(record["non_canonical"])
+        self.assertEqual(record["provenance"]["execution_actor"], "llm-based-agent")
+        self.assertEqual(record["provenance"]["provider"], "not-recorded")
+        self.assertEqual(record["provenance"]["model"], "not-recorded")
 
 
 if __name__ == "__main__":

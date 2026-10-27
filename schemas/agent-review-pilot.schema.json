@@ -37,9 +37,12 @@
     "provenance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mode", "reviewer_kind", "human_review", "packet_selection", "evidence_boundary"],
+      "required": ["mode", "execution_actor", "provider", "model", "reviewer_kind", "human_review", "packet_selection", "evidence_boundary"],
       "properties": {
         "mode": { "const": "agent-review-pilot" },
+        "execution_actor": { "const": "llm-based-agent" },
+        "provider": { "const": "not-recorded" },
+        "model": { "const": "not-recorded" },
         "reviewer_kind": { "const": "agent" },
         "human_review": { "const": false },
         "packet_selection": { "const": "A" },

@@ -15,6 +15,12 @@ evidence-dependent dimensions `unknown`, records abstention, and leaves no
 dimension implicit. `unknown` is distinct from an absent `not-recorded`
 label.
 
+Its bounded execution provenance is `execution_actor: "llm-based-agent"`, with
+`provider: "not-recorded"` and `model: "not-recorded"`. These fields describe
+the executing LLM-based agent only; provider and model runtime provenance was
+not recorded. They do not identify a model run or relabel this record as a
+specific provider/model.
+
 Validate the detached record without changing the frozen study or production
 artifacts:
 

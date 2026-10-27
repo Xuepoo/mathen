@@ -2337,6 +2337,11 @@
     "reason": "Both agent pilots abstained because evidence payloads were missing; the direct-LLM attempt produced no output.",
     "status": "agent-abstention-observations-only"
   },
+  "provenance": {
+    "execution_actor": "llm-based-agent",
+    "model": "not-recorded",
+    "provider": "not-recorded"
+  },
   "purpose": "Score the two detached agent-review pilot observations through the MTH-0177 error-analysis primitives while preserving reviewer and model-run boundaries.",
   "research_only": true,
   "schema_version": "1.0",
@@ -2344,16 +2349,22 @@
     "agent_review_pilots": [
       {
         "artifact": "data/research-review/pilots/mth-0180.json",
-        "digest": "sha256:daf37addd9ff2a291a08c82c122091fe648ac9245d1fb88648630b8358fb66be",
+        "digest": "sha256:8b3c250489af0443f204c73ad288ee07f2033773f927d909c74b087ef593155e",
+        "execution_actor": "llm-based-agent",
         "human_review": false,
+        "model": "not-recorded",
         "pilot_id": "mth-0180",
+        "provider": "not-recorded",
         "reviewer_kind": "agent"
       },
       {
         "artifact": "data/research-review/pilots/mth-0181.json",
-        "digest": "sha256:0d1f350a07e43f482f4b3491fcfb324f251f11fbb50771a3b0bb1cae191e375e",
+        "digest": "sha256:87003df1e9db2819ddc440afb908579b11b8cfa91a63e0bb19d1a8603c713114",
+        "execution_actor": "llm-based-agent",
         "human_review": false,
+        "model": "not-recorded",
         "pilot_id": "mth-0181",
+        "provider": "not-recorded",
         "reviewer_kind": "agent"
       }
     ],

@@ -14,6 +14,11 @@ agent-run observations, never human reviewer evidence. The artifact has
 separate `agent-review`, `human-review`, and `model-run` strata; the human-review
 stratum is empty.
 
+The artifact records bounded execution provenance as
+`execution_actor: "llm-based-agent"`, `provider: "not-recorded"`, and
+`model: "not-recorded"`. This describes the executing LLM-based agent only;
+provider/model runtime provenance was not recorded and no model run is implied.
+
 Both pilots supplied only prompts and opaque references. Candidate statements
 and evidence payloads were missing, so evidence-dependent labels
 (`evidence_support`, `claim_type`, `scope_completeness`, `false_link`, and

@@ -23,6 +23,9 @@ class AgentReviewPilotBTests(unittest.TestCase):
         self.assertEqual(pilot["pilot_kind"], "agent-review-pilot")
         self.assertEqual(pilot["packet_label"], "B")
         self.assertFalse(pilot["provenance"]["human_review"])
+        self.assertEqual(pilot["provenance"]["execution_actor"], "llm-based-agent")
+        self.assertEqual(pilot["provenance"]["provider"], "not-recorded")
+        self.assertEqual(pilot["provenance"]["model"], "not-recorded")
         self.assertEqual(len(pilot["review_records"]), 8)
         self.assertEqual(pilot["promotion_decision"], "not-determined")
 

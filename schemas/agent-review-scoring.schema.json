@@ -60,6 +60,9 @@
       "additionalProperties": false,
       "required": [
         "mode",
+        "execution_actor",
+        "provider",
+        "model",
         "reviewer_kind",
         "human_review",
         "pilot_ids",
@@ -67,6 +70,9 @@
       ],
       "properties": {
         "mode": {"const": "agent-review-pilot"},
+        "execution_actor": {"const": "llm-based-agent"},
+        "provider": {"const": "not-recorded"},
+        "model": {"const": "not-recorded"},
         "reviewer_kind": {"const": "agent"},
         "human_review": {"const": false},
         "pilot_ids": {"const": ["mth-0186", "mth-0187"]},
@@ -268,12 +274,15 @@
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pilot_id", "packet_label", "artifact", "digest", "study_packet_digest", "assignment_digests", "run_timing"],
+      "required": ["pilot_id", "packet_label", "artifact", "digest", "execution_actor", "provider", "model", "study_packet_digest", "assignment_digests", "run_timing"],
       "properties": {
         "pilot_id": {"enum": ["mth-0186", "mth-0187"]},
         "packet_label": {"enum": ["A", "B"]},
         "artifact": {"type": "string", "minLength": 1},
         "digest": {"$ref": "#/$defs/digest"},
+        "execution_actor": {"const": "llm-based-agent"},
+        "provider": {"const": "not-recorded"},
+        "model": {"const": "not-recorded"},
         "study_packet_digest": {"$ref": "#/$defs/digest"},
         "assignment_digests": {"type": "array", "minItems": 1, "items": {"type": "object"}},
         "run_timing": {"$ref": "#/$defs/timing"}

@@ -5,11 +5,20 @@
   "description": "Research-only agent-review and model-run observation aggregation.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "artifact_id", "research_only", "purpose", "sources", "observations", "aggregation", "error_taxonomy", "limitations", "non_claims", "outcome"],
+  "required": ["schema_version", "artifact_id", "research_only", "provenance", "purpose", "sources", "observations", "aggregation", "error_taxonomy", "limitations", "non_claims", "outcome"],
   "properties": {
     "schema_version": {"const": "1.0"},
     "artifact_id": {"const": "mth-0183-collected-observations"},
     "research_only": {"const": true},
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["execution_actor", "provider", "model"],
+      "properties": {
+        "execution_actor": {"const": "llm-based-agent"},
+        "provider": {"const": "not-recorded"},
+        "model": {"const": "not-recorded"}
+      }
+    },
     "purpose": {"type": "string", "minLength": 1},
     "sources": {"$ref": "#/$defs/sources"},
     "observations": {"$ref": "#/$defs/observations"},
@@ -23,10 +32,13 @@
     "strings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
     "source": {
       "type": "object", "additionalProperties": false,
-      "required": ["artifact", "digest"],
+      "required": ["artifact", "digest", "execution_actor", "provider", "model"],
       "properties": {
         "artifact": {"type": "string", "minLength": 1},
         "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "execution_actor": {"const": "llm-based-agent"},
+        "provider": {"const": "not-recorded"},
+        "model": {"const": "not-recorded"},
         "pilot_id": {"type": "string", "minLength": 1},
         "reviewer_kind": {"enum": ["agent", "human", "model"]},
         "human_review": {"type": "boolean"}

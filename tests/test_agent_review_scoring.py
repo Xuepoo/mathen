@@ -72,6 +72,9 @@ class AgentReviewScoringTests(unittest.TestCase):
     def test_agreement_is_explicitly_agent_pilot_only(self) -> None:
         artifact = json.loads(ARTIFACT.read_text(encoding="utf-8"))
         agreement = artifact["agreement"]
+        self.assertEqual(artifact["provenance"]["execution_actor"], "llm-based-agent")
+        self.assertEqual(artifact["provenance"]["provider"], "not-recorded")
+        self.assertEqual(artifact["provenance"]["model"], "not-recorded")
         self.assertEqual(agreement["observation_kind"], "agent-pilot-agreement")
         self.assertEqual(agreement["reviewer_kind"], "agent")
         self.assertFalse(agreement["human_review"])

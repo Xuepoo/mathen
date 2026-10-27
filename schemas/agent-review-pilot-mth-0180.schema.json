@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/agent-review-pilot-mth-0180.schema.json",
+  "title": "Mathen MTH-0180 detached agent review pilot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pilot_id", "record_kind", "research_only", "canonical", "study_id", "study_commit", "study_digest", "packet_id", "packet_digest", "reviewer_key", "assignment_ids", "provenance", "timing", "review_records", "adjudications", "agreement", "promotion_decision", "promotion_boundary"],
+  "properties": {
+    "pilot_id": {"const": "mth-0180"},
+    "record_kind": {"const": "agent-review-pilot"},
+    "research_only": {"const": true},
+    "canonical": {"const": false},
+    "study_id": {"type": "string", "minLength": 1},
+    "study_commit": {"type": "string", "minLength": 1},
+    "study_digest": {"$ref": "#/$defs/digest"},
+    "packet_id": {"type": "string", "minLength": 1},
+    "packet_digest": {"$ref": "#/$defs/digest"},
+    "reviewer_key": {"type": "string", "minLength": 1},
+    "assignment_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "timing": {"$ref": "#/$defs/timing"},
+    "review_records": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/reviewRecord"}},
+    "adjudications": {"type": "array", "items": {"type": "object"}},
+    "agreement": {"type": "object", "additionalProperties": false, "required": ["status"], "properties": {"status": {"const": "not-determined"}}},
+    "promotion_decision": {"const": "not-determined"},
+    "promotion_boundary": {"$ref": "#/$defs/promotionBoundary"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "execution_actor", "provider", "model", "reviewer_kind", "human_review", "independent_packet_review", "frozen_study_packet", "packet_selection"],
+      "properties": {
+        "mode": {"const": "agent-review-pilot"}, "execution_actor": {"const": "llm-based-agent"}, "provider": {"const": "not-recorded"}, "model": {"const": "not-recorded"}, "reviewer_kind": {"const": "agent"}, "human_review": {"const": false}, "independent_packet_review": {"const": true}, "frozen_study_packet": {"const": true}, "packet_selection": {"const": "A"}
+      }
+    },
+    "timing": {
+      "type": "object", "additionalProperties": false,
+      "required": ["started_at", "ended_at", "elapsed_seconds", "scope"],
+      "properties": {"started_at": {"type": "string", "minLength": 1}, "ended_at": {"type": "string", "minLength": 1}, "elapsed_seconds": {"type": "number", "minimum": 0}, "scope": {"type": "string", "minLength": 1}}
+    },
+    "recordTiming": {
+      "type": "object", "additionalProperties": false,
+      "required": ["started_at", "ended_at", "elapsed_seconds"],
+      "properties": {"started_at": {"type": "string", "minLength": 1}, "ended_at": {"type": "string", "minLength": 1}, "elapsed_seconds": {"type": "number", "minimum": 0}}
+    },
+    "reviewRecord": {
+      "type": "object", "additionalProperties": false,
+      "required": ["review_id", "reviewer_key", "task_id", "assignment_id", "labels", "timing", "notes"],
+      "properties": {"review_id": {"type": "string", "minLength": 1}, "reviewer_key": {"type": "string", "minLength": 1}, "task_id": {"type": "string", "minLength": 1}, "assignment_id": {"type": "string", "minLength": 1}, "labels": {"type": "object", "additionalProperties": true}, "timing": {"$ref": "#/$defs/recordTiming"}, "notes": {"type": "string", "minLength": 1}}
+    },
+    "promotionBoundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["review_implies_promotion", "adjudication_implies_promotion", "canonical_cards_written", "production_records_written"],
+      "properties": {"review_implies_promotion": {"const": false}, "adjudication_implies_promotion": {"const": false}, "canonical_cards_written": {"const": false}, "production_records_written": {"const": false}}
+    }
+  }
+}

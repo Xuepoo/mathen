@@ -213,6 +213,9 @@ def _load_observations() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             provenance["reviewer_kind"] != "agent"
             or provenance["human_review"] is not False
             or provenance["mode"] != "agent-review-pilot"
+            or provenance["execution_actor"] != "llm-based-agent"
+            or provenance["provider"] != "not-recorded"
+            or provenance["model"] != "not-recorded"
         ):
             raise ScoringError(f"invalid provenance in {path}")
         assignment_digests = {
@@ -229,6 +232,9 @@ def _load_observations() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
                 "artifact": str(path.relative_to(ROOT)),
                 "digest": pilot_digest,
                 "study_packet_digest": packet_digest,
+                "execution_actor": "llm-based-agent",
+                "provider": "not-recorded",
+                "model": "not-recorded",
                 "assignment_digests": pilot["assignment_digests"],
                 "run_timing": pilot["run_timing"],
             }
@@ -327,6 +333,9 @@ def build_artifact() -> dict[str, Any]:
         ),
         "provenance": {
             "mode": "agent-review-pilot",
+            "execution_actor": "llm-based-agent",
+            "provider": "not-recorded",
+            "model": "not-recorded",
             "reviewer_kind": "agent",
             "human_review": False,
             "pilot_ids": ["mth-0186", "mth-0187"],

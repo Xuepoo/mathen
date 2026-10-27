@@ -75,6 +75,9 @@ def _record_metadata(
         "reviewer_key": packet["reviewer_key"],
         "provenance": {
             "observation_kind": PILOT_KIND,
+            "execution_actor": "llm-based-agent",
+            "provider": "not-recorded",
+            "model": "not-recorded",
             "reviewer_kind": "agent",
             "human_review": False,
             "independent_packet_review": True,
@@ -183,6 +186,12 @@ def validate(study_path: Path, record_path: Path) -> dict[str, Any]:
         raise PilotError("pilot provenance must identify agent-review-pilot")
     if provenance.get("human_review") is not False:
         raise PilotError("pilot provenance must state human_review=false")
+    if (
+        provenance.get("execution_actor") != "llm-based-agent"
+        or provenance.get("provider") != "not-recorded"
+        or provenance.get("model") != "not-recorded"
+    ):
+        raise PilotError("pilot provenance must identify unrecorded agent runtime")
     run_timing = pilot.get("run_timing")
     if not isinstance(run_timing, dict):
         raise PilotError("pilot.run_timing is required")

@@ -4905,7 +4905,7 @@
       ],
       "packet_label": "A",
       "partition": "evaluation",
-      "pilot_digest": "sha256:478eb83cdb41461cba4717e97fa4a6d2a11cc7bd7b4cc443064d30182a139e62",
+      "pilot_digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
       "pilot_id": "mth-0186",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -4982,7 +4982,7 @@
       ],
       "packet_label": "A",
       "partition": "evaluation",
-      "pilot_digest": "sha256:478eb83cdb41461cba4717e97fa4a6d2a11cc7bd7b4cc443064d30182a139e62",
+      "pilot_digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
       "pilot_id": "mth-0186",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5063,7 +5063,7 @@
       ],
       "packet_label": "A",
       "partition": "evaluation",
-      "pilot_digest": "sha256:478eb83cdb41461cba4717e97fa4a6d2a11cc7bd7b4cc443064d30182a139e62",
+      "pilot_digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
       "pilot_id": "mth-0186",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5148,7 +5148,7 @@
       ],
       "packet_label": "A",
       "partition": "train",
-      "pilot_digest": "sha256:478eb83cdb41461cba4717e97fa4a6d2a11cc7bd7b4cc443064d30182a139e62",
+      "pilot_digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
       "pilot_id": "mth-0186",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5238,7 +5238,7 @@
       ],
       "packet_label": "A",
       "partition": "train",
-      "pilot_digest": "sha256:478eb83cdb41461cba4717e97fa4a6d2a11cc7bd7b4cc443064d30182a139e62",
+      "pilot_digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
       "pilot_id": "mth-0186",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5325,7 +5325,7 @@
       ],
       "packet_label": "A",
       "partition": "evaluation",
-      "pilot_digest": "sha256:478eb83cdb41461cba4717e97fa4a6d2a11cc7bd7b4cc443064d30182a139e62",
+      "pilot_digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
       "pilot_id": "mth-0186",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5408,7 +5408,7 @@
       ],
       "packet_label": "A",
       "partition": "train",
-      "pilot_digest": "sha256:478eb83cdb41461cba4717e97fa4a6d2a11cc7bd7b4cc443064d30182a139e62",
+      "pilot_digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
       "pilot_id": "mth-0186",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5483,7 +5483,7 @@
       ],
       "packet_label": "A",
       "partition": "train",
-      "pilot_digest": "sha256:478eb83cdb41461cba4717e97fa4a6d2a11cc7bd7b4cc443064d30182a139e62",
+      "pilot_digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
       "pilot_id": "mth-0186",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5564,7 +5564,7 @@
       ],
       "packet_label": "B",
       "partition": "evaluation",
-      "pilot_digest": "sha256:fc3c6202a64f613840fd7efaa7d1539cdbda51710d592edbf51ff04a23c0c26c",
+      "pilot_digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
       "pilot_id": "mth-0187",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5639,7 +5639,7 @@
       ],
       "packet_label": "B",
       "partition": "evaluation",
-      "pilot_digest": "sha256:fc3c6202a64f613840fd7efaa7d1539cdbda51710d592edbf51ff04a23c0c26c",
+      "pilot_digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
       "pilot_id": "mth-0187",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5720,7 +5720,7 @@
       ],
       "packet_label": "B",
       "partition": "train",
-      "pilot_digest": "sha256:fc3c6202a64f613840fd7efaa7d1539cdbda51710d592edbf51ff04a23c0c26c",
+      "pilot_digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
       "pilot_id": "mth-0187",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5808,7 +5808,7 @@
       ],
       "packet_label": "B",
       "partition": "evaluation",
-      "pilot_digest": "sha256:fc3c6202a64f613840fd7efaa7d1539cdbda51710d592edbf51ff04a23c0c26c",
+      "pilot_digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
       "pilot_id": "mth-0187",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5898,7 +5898,7 @@
       ],
       "packet_label": "B",
       "partition": "train",
-      "pilot_digest": "sha256:fc3c6202a64f613840fd7efaa7d1539cdbda51710d592edbf51ff04a23c0c26c",
+      "pilot_digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
       "pilot_id": "mth-0187",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -5985,7 +5985,7 @@
       ],
       "packet_label": "B",
       "partition": "evaluation",
-      "pilot_digest": "sha256:fc3c6202a64f613840fd7efaa7d1539cdbda51710d592edbf51ff04a23c0c26c",
+      "pilot_digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
       "pilot_id": "mth-0187",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -6072,7 +6072,7 @@
       ],
       "packet_label": "B",
       "partition": "train",
-      "pilot_digest": "sha256:fc3c6202a64f613840fd7efaa7d1539cdbda51710d592edbf51ff04a23c0c26c",
+      "pilot_digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
       "pilot_id": "mth-0187",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -6149,7 +6149,7 @@
       ],
       "packet_label": "B",
       "partition": "train",
-      "pilot_digest": "sha256:fc3c6202a64f613840fd7efaa7d1539cdbda51710d592edbf51ff04a23c0c26c",
+      "pilot_digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
       "pilot_id": "mth-0187",
       "scope_context": {
         "deployment": "offline review fixture",
@@ -6182,12 +6182,15 @@
     "review_implies_promotion": false
   },
   "provenance": {
+    "execution_actor": "llm-based-agent",
     "human_review": false,
     "mode": "agent-review-pilot",
+    "model": "not-recorded",
     "pilot_ids": [
       "mth-0186",
       "mth-0187"
     ],
+    "provider": "not-recorded",
     "reviewer_kind": "agent",
     "source_artifacts": [
       "data/research-review/pilots/mth-0186.json",
@@ -16954,9 +16957,12 @@
           "task_id": "task-10-boundary-isolation"
         }
       ],
-      "digest": "sha256:478eb83cdb41461cba4717e97fa4a6d2a11cc7bd7b4cc443064d30182a139e62",
+      "digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
+      "execution_actor": "llm-based-agent",
+      "model": "not-recorded",
       "packet_label": "A",
       "pilot_id": "mth-0186",
+      "provider": "not-recorded",
       "run_timing": {
         "elapsed_seconds": 0.0015255059988703579,
         "ended_at": "2026-10-27T17:04:24.750899+08:00",
@@ -17116,9 +17122,12 @@
           "task_id": "task-10-boundary-isolation"
         }
       ],
-      "digest": "sha256:fc3c6202a64f613840fd7efaa7d1539cdbda51710d592edbf51ff04a23c0c26c",
+      "digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
+      "execution_actor": "llm-based-agent",
+      "model": "not-recorded",
       "packet_label": "B",
       "pilot_id": "mth-0187",
+      "provider": "not-recorded",
       "run_timing": {
         "elapsed_seconds": 0.00047159899258986115,
         "ended_at": "2026-10-27T17:16:05.877418+08:00",

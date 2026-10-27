@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/agent-review-pilot-mth-0181.schema.json",
+  "title": "Mathen MTH-0181 detached agent review pilot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task", "pilot_kind", "packet_role", "study_id", "study_packet_digest", "frozen_study_ref", "frozen_source_revision", "packet_id", "reviewer_key", "provenance", "run_timing", "review_records", "research_only", "non_canonical", "promotion_decision", "canonical_cards_written", "production_records_written"],
+  "properties": {
+    "task": {"const": "MTH-0181"}, "pilot_kind": {"const": "agent-review-pilot"}, "packet_role": {"const": "B"}, "study_id": {"type": "string", "minLength": 1}, "study_packet_digest": {"$ref": "#/$defs/digest"}, "frozen_study_ref": {"type": "string", "minLength": 1}, "frozen_source_revision": {"type": "string", "minLength": 1}, "packet_id": {"type": "string", "minLength": 1}, "reviewer_key": {"type": "string", "minLength": 1}, "provenance": {"$ref": "#/$defs/provenance"}, "run_timing": {"$ref": "#/$defs/runTiming"}, "review_records": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/reviewRecord"}}, "research_only": {"const": true}, "non_canonical": {"const": true}, "promotion_decision": {"const": "not-determined"}, "canonical_cards_written": {"const": false}, "production_records_written": {"const": false}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["observation_kind", "execution_actor", "provider", "model", "reviewer_kind", "human_review", "independent_packet_review", "evidence_boundary"], "properties": {"observation_kind": {"const": "agent-review-pilot"}, "execution_actor": {"const": "llm-based-agent"}, "provider": {"const": "not-recorded"}, "model": {"const": "not-recorded"}, "reviewer_kind": {"const": "agent"}, "human_review": {"const": false}, "independent_packet_review": {"const": true}, "evidence_boundary": {"type": "string", "minLength": 1}}},
+    "runTiming": {"type": "object", "additionalProperties": false, "required": ["started_at", "ended_at", "elapsed_seconds"], "properties": {"started_at": {"type": "string", "minLength": 1}, "ended_at": {"type": "string", "minLength": 1}, "elapsed_seconds": {"type": "number", "minimum": 0}}},
+    "reviewRecord": {"type": "object", "additionalProperties": false, "required": ["review_id", "reviewer_key", "task_id", "labels", "timing", "notes"], "properties": {"review_id": {"type": "string", "minLength": 1}, "reviewer_key": {"type": "string", "minLength": 1}, "task_id": {"type": "string", "minLength": 1}, "labels": {"type": "object", "additionalProperties": true}, "timing": {"$ref": "#/$defs/runTiming"}, "notes": {"type": "string", "minLength": 1}}}
+  }
+}
