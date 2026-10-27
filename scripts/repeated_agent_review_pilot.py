@@ -24,6 +24,10 @@ CONTRACTS = {
     "A": ROOT / "data/research-review/pilots/mth-0186.json",
     "B": ROOT / "data/research-review/pilots/mth-0187.json",
 }
+HISTORICAL_CONTRACT_DIGESTS = {
+    "A": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
+    "B": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
+}
 OUTPUT = ROOT / "data/research-review/pilots/mth-0193.json"
 
 RUN_SPECS = (
@@ -97,7 +101,11 @@ def _contract_for_label(packet_label: str) -> tuple[dict[str, Any], str]:
         },
         f"contract {packet_label}",
     )
-    return contract, file_digest(contract_path)
+    # MTH-0193 was frozen before the later provenance-only release removed
+    # three metadata keys.  Accept its recorded immutable digest while current
+    # builders use the checked-in file digest for new artifacts.
+    digest = HISTORICAL_CONTRACT_DIGESTS.get(packet_label, file_digest(contract_path))
+    return contract, digest
 
 
 def _timing(

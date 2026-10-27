@@ -89,7 +89,40 @@ class StatisticalErrorAnalysisTests(unittest.TestCase):
         self.assertEqual(actual, build_artifact())
         self.assertEqual(actual["protocol_capacity"]["task_count"], 12)
         self.assertEqual(len(actual["protocol_capacity"]["domain_slices"]), 4)
-        self.assertEqual(actual["outcome"]["status"], "not-evaluated")
+        self.assertEqual(actual["aggregation"]["agent_review"]["observed_count"], 32)
+        self.assertEqual(
+            actual["aggregation"]["agent_review"]["runs"][0]["reviewer_kind"], "agent"
+        )
+        self.assertEqual(actual["aggregation"]["repeated_runs"]["run_count"], 0)
+        self.assertEqual(
+            actual["aggregation"]["human_review"]["status"], "not-evaluated"
+        )
+        self.assertEqual(
+            actual["aggregation"]["human_review"]["overall"]["observed_count"], 0
+        )
+        self.assertEqual(
+            actual["sources"]["mth_0195"]["artifact"],
+            "data/benchmark/mth-0195-independent-exploration.json",
+        )
+        self.assertIn(
+            "MTH-0193 agent labels are descriptive", " ".join(actual["non_claims"])
+        )
+
+    def test_repeated_agent_slices_have_exact_intervals_and_small_warnings(
+        self,
+    ) -> None:
+        actual = json.loads(ARTIFACT.read_text(encoding="utf-8"))
+        agent = actual["aggregation"]["agent_review"]
+        self.assertEqual(len(agent["by_run"]), 2)
+        self.assertEqual(len(agent["by_task"]), 8)
+        self.assertEqual(len(agent["by_domain"]), 4)
+        metric = agent["overall"]["dimensions"]["usefulness"]["categories"]["useful"]
+        self.assertEqual(metric["interval"]["method"], "clopper-pearson-exact")
+        self.assertTrue(
+            agent["by_task"][0]["dimensions"]["usefulness"]["categories"]["useful"][
+                "warnings"
+            ]
+        )
 
     def test_schema_closes_contract_and_preserves_no_aggregate_score(self) -> None:
         schema = json.loads(SCHEMA.read_text(encoding="utf-8"))

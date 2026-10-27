@@ -1,10 +1,12 @@
 # MTH-0188 agent-review pilot scoring
 
-MTH-0188 is a research-only scoring artifact for the two accepted enriched
-packet pilots:
+MTH-0188/MTH-0196 is a research-only scoring artifact for the two accepted
+enriched packet pilots and the repeated MTH-0193 agent-only pilot:
 
 - [`mth-0186`](../data/research-review/pilots/mth-0186.json), packet A;
 - [`mth-0187`](../data/research-review/pilots/mth-0187.json), packet B.
+- [`mth-0193`](../data/research-review/pilots/mth-0193.json), two repeated
+  agent-only runs over the same reviewed packet.
 
 The checked-in artifact is
 [`data/research-review/scoring/mth-0188-agent-review-scoring.json`](../data/research-review/scoring/mth-0188-agent-review-scoring.json).
@@ -15,22 +17,21 @@ and its deterministic builder is
 
 ## Boundary and provenance
 
-The builder reads only the two accepted pilot artifacts. It records the pilot
+The builder reads the three accepted agent pilot artifacts. It records the pilot
 file digest, enriched packet digest, candidate digest, evidence excerpt
 digests, source IDs, negative-knowledge references and digests, scope context,
 locality, and the observed timing supplied by each pilot. It preserves
 `record_kind: agent-review-pilot`, `reviewer_kind: agent`,
 `human_review: false`, and `agent-review-pilot` provenance.
 
-The provenance also records `execution_actor: "llm-based-agent"`,
-`provider: "not-recorded"`, and `model: "not-recorded"`. This metadata describes
-the executing LLM-based agent only; provider/model runtime provenance was not
-recorded, and it does not identify a provider/model or imply a model run.
-
-The 16 rows present in the pilots are the evaluated observations. Both
+The 48 rows present in the pilots are the evaluated observations. Both
 `train` and `evaluation` rows are retained because they are observed pilot
 rows; no holdout payload is read or copied. A holdout partition is rejected by
 the builder. No canonical card, API, production, or paper file is written.
+
+The `agent_review` stratum contains only agent observations and is never
+combined with human evidence. The `human_review` stratum is explicit,
+`not-evaluated`, and has empty slices with null metrics. It is not a zero score.
 
 ## Separate dimensions
 
@@ -51,7 +52,9 @@ for denominators with actual evaluated rows. Task and agreement slices have
 small-sample warnings because their denominators are below five; warnings do
 not discard observations.
 
-The artifact includes per-pilot, per-task, and per-domain slices. It computes
+The artifact includes per-pilot, per-run, per-task, and per-domain slices. It
+also exposes all 24 MTH-0195 benchmark task slices. The benchmark is linked by
+ID and digest; unobserved MTH-0195 task slices contain no labels. It computes
 no aggregate quality score. The timing fields remain observations of the
 source pilots' stated wall-clock scopes, not a claim about conversational
 reasoning time or reviewer productivity.

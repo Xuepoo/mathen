@@ -1,88 +1,697 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mathen.dev/schemas/statistical-analysis.schema.json",
-  "title": "Mathen MTH-0177 statistical error analysis",
-  "description": "Research-only deterministic aggregation hooks; empty observations are not empirical results.",
+  "title": "Mathen MTH-0177/MTH-0196 statistical error and agent-review analysis",
+  "description": "Research-only deterministic aggregation with separate agent and empty human-review strata.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "analysis_id", "research_only", "purpose", "sources", "protocol_capacity", "observations", "aggregation", "error_taxonomy", "small_sample_policy", "non_claims", "outcome"],
+  "required": [
+    "schema_version",
+    "analysis_id",
+    "research_only",
+    "purpose",
+    "sources",
+    "protocol_capacity",
+    "observations",
+    "aggregation",
+    "error_taxonomy",
+    "small_sample_policy",
+    "non_claims",
+    "outcome"
+  ],
   "properties": {
-    "schema_version": {"const": "1.0"},
-    "analysis_id": {"const": "mth-0177-statistical-analysis"},
-    "research_only": {"const": true},
-    "purpose": {"type": "string", "minLength": 1},
-    "sources": {"$ref": "#/$defs/sources"},
-    "protocol_capacity": {"$ref": "#/$defs/protocolCapacity"},
-    "observations": {"$ref": "#/$defs/observations"},
-    "aggregation": {"$ref": "#/$defs/aggregation"},
-    "error_taxonomy": {"type": "array", "minItems": 6, "items": {"$ref": "#/$defs/taxonomy"}},
-    "small_sample_policy": {
-      "type": "object", "additionalProperties": false, "required": ["threshold", "warning"],
-      "properties": {"threshold": {"type": "integer", "minimum": 1}, "warning": {"type": "string", "minLength": 1}}
+    "schema_version": {
+      "const": "1.0"
     },
-    "non_claims": {"$ref": "#/$defs/strings"},
-    "outcome": {"$ref": "#/$defs/outcome"}
-  },
-  "$defs": {
-    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
-    "strings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-    "source": {
-      "type": "object", "additionalProperties": false, "required": ["artifact", "digest"],
-      "properties": {"artifact": {"type": "string", "minLength": 1}, "commit": {"type": "string", "minLength": 1}, "digest": {"$ref": "#/$defs/digest"}}
+    "analysis_id": {
+      "const": "mth-0177-statistical-analysis"
+    },
+    "research_only": {
+      "const": true
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
     },
     "sources": {
-      "type": "object", "additionalProperties": false, "required": ["mth_0174", "mth_0172"],
-      "properties": {"mth_0174": {"$ref": "#/$defs/source"}, "mth_0172": {"$ref": "#/$defs/source"}}
+      "$ref": "#/$defs/sources"
+    },
+    "protocol_capacity": {
+      "$ref": "#/$defs/protocolCapacity"
+    },
+    "observations": {
+      "$ref": "#/$defs/observations"
+    },
+    "aggregation": {
+      "$ref": "#/$defs/aggregation"
+    },
+    "error_taxonomy": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "$ref": "#/$defs/taxonomy"
+      }
+    },
+    "small_sample_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "threshold",
+        "warning"
+      ],
+      "properties": {
+        "threshold": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "warning": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "non_claims": {
+      "$ref": "#/$defs/strings"
+    },
+    "outcome": {
+      "$ref": "#/$defs/outcome"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "strings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact",
+        "digest"
+      ],
+      "properties": {
+        "artifact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mth_0174",
+        "mth_0172",
+        "mth_0193",
+        "mth_0195"
+      ],
+      "properties": {
+        "mth_0174": {
+          "$ref": "#/$defs/source"
+        },
+        "mth_0172": {
+          "$ref": "#/$defs/source"
+        },
+        "mth_0193": {
+          "$ref": "#/$defs/source"
+        },
+        "mth_0195": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact",
+            "digest"
+          ],
+          "properties": {
+            "artifact": {
+              "type": "string",
+              "minLength": 1
+            },
+            "digest": {
+              "$ref": "#/$defs/digest"
+            }
+          }
+        }
+      }
     },
     "domainSlice": {
-      "type": "object", "additionalProperties": false, "required": ["domain", "task_ids", "system_ids"],
-      "properties": {"domain": {"type": "string", "minLength": 1}, "task_ids": {"$ref": "#/$defs/strings"}, "system_ids": {"$ref": "#/$defs/strings"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domain",
+        "task_ids",
+        "system_ids"
+      ],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "task_ids": {
+          "$ref": "#/$defs/strings"
+        },
+        "system_ids": {
+          "$ref": "#/$defs/strings"
+        }
+      }
     },
     "protocolCapacity": {
-      "type": "object", "additionalProperties": false, "required": ["status", "source_artifact", "source_commit", "source_digest", "domain_slices", "task_count", "reason"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "source_artifact",
+        "source_commit",
+        "source_digest",
+        "domain_slices",
+        "task_count",
+        "reason"
+      ],
       "properties": {
-        "status": {"enum": ["protocol-capacity", "not-available-in-worktree"]}, "source_artifact": {"type": "string", "minLength": 1}, "source_commit": {"type": "string", "minLength": 1}, "source_digest": {"$ref": "#/$defs/digest"}, "domain_slices": {"type": "array", "items": {"$ref": "#/$defs/domainSlice"}}, "task_count": {"type": "integer", "minimum": 0}, "reason": {"type": "string", "minLength": 1}
+        "status": {
+          "enum": [
+            "protocol-capacity",
+            "not-available-in-worktree"
+          ]
+        },
+        "source_artifact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_commit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "domain_slices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/domainSlice"
+          }
+        },
+        "task_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "observations": {
-      "type": "object", "additionalProperties": false, "required": ["runs", "reviewer_labels", "llm_outputs", "rows"],
-      "properties": {"runs": {"type": "array", "items": {"type": "object"}}, "reviewer_labels": {"type": "array", "items": {"type": "object"}}, "llm_outputs": {"type": "array", "items": {"type": "object"}}, "rows": {"type": "array", "items": {"type": "object"}}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runs",
+        "reviewer_labels",
+        "llm_outputs",
+        "rows"
+      ],
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reviewer_labels": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "llm_outputs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/agentRow"
+          }
+        }
+      }
     },
     "interval": {
-      "type": ["object", "null"], "additionalProperties": false, "required": ["method", "confidence", "lower", "upper"],
-      "properties": {"method": {"enum": ["clopper-pearson-exact", "percentile-bootstrap"]}, "confidence": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1}, "resamples": {"type": "integer", "minimum": 1}, "seed": {"type": "integer"}, "lower": {"type": "number", "minimum": 0, "maximum": 1}, "upper": {"type": "number", "minimum": 0, "maximum": 1}}
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "confidence",
+        "lower",
+        "upper"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "clopper-pearson-exact",
+            "percentile-bootstrap"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "resamples": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "lower": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "upper": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
     },
     "metric": {
-      "type": "object", "additionalProperties": false, "required": ["name", "numerator", "denominator", "value", "status", "reason", "interval", "warnings"],
-      "properties": {"name": {"type": "string", "minLength": 1}, "numerator": {"type": "integer", "minimum": 0}, "denominator": {"type": "integer", "minimum": 0}, "value": {"type": ["number", "null"]}, "status": {"enum": ["measured", "not-evaluated"]}, "reason": {"type": "string", "minLength": 1}, "interval": {"$ref": "#/$defs/interval"}, "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "numerator",
+        "denominator",
+        "value",
+        "status",
+        "reason",
+        "interval",
+        "warnings"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "numerator": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "denominator": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "not-evaluated"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interval": {
+          "$ref": "#/$defs/interval"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     },
     "slice": {
-      "type": "object", "additionalProperties": false, "required": ["slice", "metrics", "warnings"],
-      "properties": {"slice": {"type": "string", "minLength": 1}, "metrics": {"type": "object", "additionalProperties": {"$ref": "#/$defs/metric"}}, "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slice",
+        "metrics",
+        "warnings"
+      ],
+      "properties": {
+        "slice": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/metric"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     },
     "errorAnalysis": {
-      "type": "object", "additionalProperties": false, "required": ["observed_count", "metrics", "by_domain", "by_task", "warnings"],
-      "properties": {"observed_count": {"type": "integer", "minimum": 0}, "metrics": {"type": "object", "minProperties": 6, "additionalProperties": {"$ref": "#/$defs/metric"}}, "by_domain": {"type": "array", "items": {"$ref": "#/$defs/slice"}}, "by_task": {"type": "array", "items": {"$ref": "#/$defs/slice"}}, "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observed_count",
+        "metrics",
+        "by_domain",
+        "by_task",
+        "warnings"
+      ],
+      "properties": {
+        "observed_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metrics": {
+          "type": "object",
+          "minProperties": 6,
+          "additionalProperties": {
+            "$ref": "#/$defs/metric"
+          }
+        },
+        "by_domain": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/slice"
+          }
+        },
+        "by_task": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/slice"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     },
     "repeatedMetric": {
-      "type": "object", "additionalProperties": false, "required": ["run_denominator", "mean", "interval", "status", "warnings"],
-      "properties": {"run_denominator": {"type": "integer", "minimum": 0}, "mean": {"type": ["number", "null"]}, "interval": {"$ref": "#/$defs/interval"}, "status": {"enum": ["measured", "not-evaluated"]}, "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_denominator",
+        "mean",
+        "interval",
+        "status",
+        "warnings"
+      ],
+      "properties": {
+        "run_denominator": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mean": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "interval": {
+          "$ref": "#/$defs/interval"
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "not-evaluated"
+          ]
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     },
     "repeatedRuns": {
-      "type": "object", "additionalProperties": false, "required": ["run_count", "metrics"],
-      "properties": {"run_count": {"type": "integer", "minimum": 0}, "metrics": {"type": "object", "minProperties": 6, "additionalProperties": {"$ref": "#/$defs/repeatedMetric"}}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_count",
+        "metrics"
+      ],
+      "properties": {
+        "run_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metrics": {
+          "type": "object",
+          "minProperties": 6,
+          "additionalProperties": {
+            "$ref": "#/$defs/repeatedMetric"
+          }
+        }
+      }
     },
     "aggregation": {
-      "type": "object", "additionalProperties": false, "required": ["overall", "repeated_runs", "interval_policy"],
-      "properties": {"overall": {"$ref": "#/$defs/errorAnalysis"}, "repeated_runs": {"$ref": "#/$defs/repeatedRuns"}, "interval_policy": {"type": "object", "additionalProperties": false, "required": ["binary", "continuous", "empty_denominator"], "properties": {"binary": {"type": "string", "minLength": 1}, "continuous": {"type": "string", "minLength": 1}, "empty_denominator": {"type": "string", "minLength": 1}}}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overall",
+        "repeated_runs",
+        "interval_policy",
+        "agent_review",
+        "human_review"
+      ],
+      "properties": {
+        "overall": {
+          "$ref": "#/$defs/errorAnalysis"
+        },
+        "repeated_runs": {
+          "$ref": "#/$defs/repeatedRuns"
+        },
+        "interval_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "binary",
+            "continuous",
+            "empty_denominator"
+          ],
+          "properties": {
+            "binary": {
+              "type": "string",
+              "minLength": 1
+            },
+            "continuous": {
+              "type": "string",
+              "minLength": 1
+            },
+            "empty_denominator": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "agent_review": {
+          "$ref": "#/$defs/agentReview"
+        },
+        "human_review": {
+          "$ref": "#/$defs/humanReview"
+        }
+      }
     },
     "taxonomy": {
-      "type": "object", "additionalProperties": false, "required": ["id", "definition"],
-      "properties": {"id": {"enum": ["false-link", "scope-loss", "claim-discipline", "abstention", "counterexample-miss", "reviewer-disagreement"]}, "definition": {"type": "string", "minLength": 1}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "definition"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "false-link",
+            "scope-loss",
+            "claim-discipline",
+            "abstention",
+            "counterexample-miss",
+            "reviewer-disagreement"
+          ]
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "outcome": {
-      "type": "object", "additionalProperties": false, "required": ["status", "reason"],
-      "properties": {"status": {"const": "not-evaluated"}, "reason": {"type": "string", "minLength": 1}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason"
+      ],
+      "properties": {
+        "status": {
+          "const": "not-evaluated"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "agentRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "task_id",
+        "domain",
+        "partition",
+        "labels",
+        "candidate_digest"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partition": {
+          "enum": [
+            "train",
+            "evaluation"
+          ]
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "candidate_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "agentReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewer_kind",
+        "human_review",
+        "observed_count",
+        "runs",
+        "overall",
+        "by_run",
+        "by_task",
+        "by_domain"
+      ],
+      "properties": {
+        "reviewer_kind": {
+          "const": "agent"
+        },
+        "human_review": {
+          "const": false
+        },
+        "observed_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "overall": {
+          "type": "object"
+        },
+        "by_run": {
+          "type": "array"
+        },
+        "by_task": {
+          "type": "array"
+        },
+        "by_domain": {
+          "type": "array"
+        }
+      }
+    },
+    "humanReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewer_kind",
+        "human_review",
+        "status",
+        "reason",
+        "overall",
+        "by_run",
+        "by_task",
+        "by_domain"
+      ],
+      "properties": {
+        "reviewer_kind": {
+          "const": "human"
+        },
+        "human_review": {
+          "const": true
+        },
+        "status": {
+          "const": "not-evaluated"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "overall": {
+          "type": "object"
+        },
+        "by_run": {
+          "type": "array"
+        },
+        "by_task": {
+          "type": "array"
+        },
+        "by_domain": {
+          "type": "array"
+        }
+      }
     }
   }
 }
