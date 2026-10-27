@@ -1,0 +1,1434 @@
+{
+  "baseline": {
+    "scope": "Current Architecture Exploration Methodology research artifacts only; no canonical, API, MCP, migration, relation, production, or paper changes.",
+    "source_ref": "origin/main after PR #74 merge",
+    "source_revision": "2308f260547e3a618d5498fc4038cef9a297e2b8"
+  },
+  "canonical": false,
+  "index_id": "mth-0201-reproducibility-index",
+  "package_sources": [
+    {
+      "digest": "sha256:52e942bf89bfb92caa4f6ab07686af396dc6cd2c944b5c8c3445bcf01ceb3076",
+      "path": "schemas/reproducibility-index.schema.json",
+      "present": true
+    },
+    {
+      "digest": "sha256:1cfb867376358d05fe74124eca036e80f8baa8ef0847448093c2e4d4f3bda448",
+      "path": "scripts/build_mth0201_reproducibility_index.py",
+      "present": true
+    },
+    {
+      "digest": "sha256:061769231fbeea52d11907eac9b1af7bbea1f1675e522a2bcb7cfc31e447d720",
+      "path": "docs/mth-0201-reproducibility-index.md",
+      "present": true
+    }
+  ],
+  "promotion_boundary": {
+    "human_review_required": true,
+    "inference_allowed": false,
+    "promotion_decision": "not-determined"
+  },
+  "research_only": true,
+  "schema_version": "1.0",
+  "work_items": [
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "python scripts/exploration_benchmark.py",
+          "kind": "regenerate",
+          "reason": "The MTH-0169 fixture and builder are historical artifacts and are not present on the baseline.",
+          "status": "unavailable"
+        },
+        {
+          "command": "python scripts/exploration_benchmark.py --validate data/benchmark/mth-0169-exploration.json",
+          "kind": "validate",
+          "reason": "The historical validator cannot run without the absent script.",
+          "status": "unavailable"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "Historical protocol used deterministic normalized token overlap and an offline authored fixture."
+      ],
+      "files": [
+        {
+          "digest": null,
+          "path": "data/benchmark/mth-0169-exploration.json",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "schemas/exploration-benchmark.schema.json",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "scripts/exploration_benchmark.py",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "docs/mth-0170-exploration-benchmark.md",
+          "present": false
+        }
+      ],
+      "id": "MTH-0169",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Historical files are indexed as absent rather than copied from old commits."
+      ],
+      "observations": [
+        {
+          "name": "empirical benchmark result",
+          "scope": "No model output or reviewer labels are present in the historical fixture.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM condition",
+          "scope": "No exact provider, model, prompt, runtime, or output provenance.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "not-applicable",
+        "reviewer_kind": "not-applicable"
+      },
+      "status": "not-present",
+      "title": "Architecture exploration benchmark fixture"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "python scripts/evaluate_exploration.py",
+          "kind": "regenerate",
+          "reason": "The MTH-0172 evaluator and result are not present on the baseline.",
+          "status": "unavailable"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_evaluate_exploration -v",
+          "kind": "validate",
+          "reason": "The historical test is not present on the baseline.",
+          "status": "unavailable"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "Historical fixture compared bounded lexical discovery with authored evidence-bounded records."
+      ],
+      "files": [
+        {
+          "digest": null,
+          "path": "data/benchmark/mth-0172-candidate-quality.json",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "scripts/evaluate_exploration.py",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "docs/mth-0172-candidate-quality.md",
+          "present": false
+        }
+      ],
+      "id": "MTH-0172",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Historical documentation must not be treated as a current checked-in result."
+      ],
+      "observations": [
+        {
+          "name": "authored fixture metrics",
+          "scope": "The current checkout contains no MTH-0172 result to measure.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM condition",
+          "scope": "No direct model run was supplied.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "not-applicable",
+        "reviewer_kind": "not-applicable"
+      },
+      "status": "not-present",
+      "title": "Candidate discovery quality fixture evaluation"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "python scripts/expand_exploration_benchmark.py",
+          "kind": "regenerate",
+          "reason": "The MTH-0174 task set and builder are absent from the baseline.",
+          "status": "unavailable"
+        },
+        {
+          "command": "python scripts/expand_exploration_benchmark.py --validate data/benchmark/mth-0174-cross-system.json",
+          "kind": "validate",
+          "reason": "The historical validator cannot run without the absent files.",
+          "status": "unavailable"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "Historical task set was authored, offline, and split into train/evaluation/holdout partitions."
+      ],
+      "files": [
+        {
+          "digest": null,
+          "path": "data/benchmark/mth-0174-cross-system.json",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "schemas/expanded-exploration-benchmark.schema.json",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "scripts/expand_exploration_benchmark.py",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "docs/mth-0174-cross-system-benchmark.md",
+          "present": false
+        }
+      ],
+      "id": "MTH-0174",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Repeated task keys were not independent measurements or statistical power."
+      ],
+      "observations": [
+        {
+          "name": "task-set result",
+          "scope": "Task capacity is not an empirical quality result.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM condition",
+          "scope": "No model provenance or output.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "not-applicable",
+        "reviewer_kind": "not-applicable"
+      },
+      "status": "not-present",
+      "title": "Cross-system exploration task set"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/reviewer_study.py generate <tasks.json> --output <study.json> --study-id mth-0175-example --assignment-seed <seed>",
+          "kind": "regenerate",
+          "status": "available"
+        },
+        {
+          "command": "uv run python scripts/reviewer_study.py validate data/research-review/mth-0175-study.json",
+          "kind": "validate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_reviewer_pilot -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "The checked-in study is a protocol with empty review records; no human session is assumed."
+      ],
+      "files": [
+        {
+          "digest": "sha256:df743e79fc96a8b0b3f7b6f8fc48880241ad903c18d8b46ae911af1b23ca553a",
+          "path": "data/research-review/mth-0175-study.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:b3d8ab829030180cd2defc8b5621bffa42da3e72cd5bd18b695cd379af73c005",
+          "path": "schemas/reviewer-study.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:68debf5405ec48924325ff5baf776cfd75d7554184a688d0d1afdcea656471ef",
+          "path": "scripts/reviewer_study.py",
+          "present": true
+        },
+        {
+          "digest": null,
+          "path": "docs/mth-0175-review-study.md",
+          "present": false
+        }
+      ],
+      "id": "MTH-0175",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Reviewer assignment balance does not establish agreement, quality, or promotion."
+      ],
+      "observations": [
+        {
+          "name": "review labels",
+          "scope": "The study contains no completed human labels.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "human stratum",
+          "scope": "Empty by protocol, not a zero score.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "timing",
+          "scope": "No completed review timing is supplied.",
+          "status": "not-measured"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-applicable",
+        "human_review": false,
+        "human_stratum": "empty",
+        "reviewer_kind": "human"
+      },
+      "status": "partial",
+      "title": "Blinded reviewer study protocol"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/direct_llm_control.py dry-run --provider unavailable --model unavailable --output data/benchmark/mth-0176-direct-llm-control.json",
+          "kind": "regenerate",
+          "reason": "The checked-in manifest is absent on the baseline.",
+          "status": "unavailable"
+        },
+        {
+          "command": "uv run python scripts/direct_llm_control.py validate data/benchmark/mth-0176-direct-llm-control.json",
+          "kind": "validate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_direct_llm_control -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "A dry run hashes only supplied prompt/input files and performs no inference or network request."
+      ],
+      "files": [
+        {
+          "digest": null,
+          "path": "data/benchmark/mth-0176-direct-llm-control.json",
+          "present": false
+        },
+        {
+          "digest": "sha256:612827684f458a680b711e2f467887be0f91ae68ea888fa38bac02cd79f1aa1e",
+          "path": "schemas/direct-llm-control.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:397e00b858f8004dd978c9b7bc9a91216de926424e17f2415e1b7f24cf6ab556",
+          "path": "scripts/direct_llm_control.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:f0283d427572fd844323af83494375064484f0106895a3d98d61c4c96aaaf778",
+          "path": "docs/mth-0176-direct-llm-control.md",
+          "present": true
+        }
+      ],
+      "id": "MTH-0176",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "The control contract is not an adapter and cannot establish direct-LLM quality."
+      ],
+      "observations": [
+        {
+          "name": "direct-LLM evaluation",
+          "scope": "Exact provider/model, runtime, prompt, input, and secret-safe output are required.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "candidate quality",
+          "scope": "No candidates or model output are indexed.",
+          "status": "not-measured"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "not-applicable",
+        "reviewer_kind": "not-applicable"
+      },
+      "status": "partial",
+      "title": "Direct-LLM control boundary"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/statistical_error_analysis.py",
+          "kind": "regenerate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_statistical_error_analysis -v",
+          "kind": "test",
+          "status": "available"
+        },
+        {
+          "command": "uv run ruff format --check scripts/statistical_error_analysis.py tests/test_statistical_error_analysis.py && uv run ruff check scripts/statistical_error_analysis.py tests/test_statistical_error_analysis.py",
+          "kind": "audit",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "Statistics are computed offline from checked-in agent observations and benchmark capacity."
+      ],
+      "files": [
+        {
+          "digest": "sha256:55e2829f74c414d09340dec11ab025a8d5ee43521a1abbd3a40fe9a59e2ec682",
+          "path": "data/benchmark/mth-0177-statistical-analysis.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:789fd79ad032d4b679d64cac9959b30bb902c32ac6ac16b12fa2e6493573b05a",
+          "path": "schemas/statistical-analysis.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:d2c5947f603db3c19dae9a4787a168fe141172c9a57e7090f65b96ede3e858e5",
+          "path": "scripts/statistical_error_analysis.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:a96799e0505d629ff3cc9bb431111284e2e2ba136982252552060ee62389108f",
+          "path": "docs/mth-0177-statistical-analysis.md",
+          "present": true
+        },
+        {
+          "digest": "sha256:210375c1bfb6c95d841e4c07cd68fccc1aea86a51e39c85ed50c029b65c005a8",
+          "path": "tests/test_statistical_error_analysis.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0177",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Small samples and authored protocol capacity do not support general quality or human-productivity claims."
+      ],
+      "observations": [
+        {
+          "name": "agent stratum",
+          "scope": "Observed agent-only rows and deterministic interval calculations.",
+          "status": "measured"
+        },
+        {
+          "name": "human stratum",
+          "scope": "Explicitly empty; null metrics are not zero.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM condition",
+          "scope": "No direct model evaluation.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "empty",
+        "reviewer_kind": "agent"
+      },
+      "status": "present",
+      "title": "Statistical error analysis"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/g6_sqlite_composition_experiment.py",
+          "kind": "regenerate",
+          "reason": "The MTH-0178 prototype artifacts are absent from the baseline.",
+          "status": "unavailable"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_composition_experiment -v",
+          "kind": "validate",
+          "reason": "The historical test is not present on the baseline.",
+          "status": "unavailable"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "Historical protocol assumed CPython 3.13.13, SQLite 3.50.4, Linux 7.3.0-4-cachyos, WAL/FULL, and three repetitions."
+      ],
+      "files": [
+        {
+          "digest": null,
+          "path": "data/experiments/g6-sqlite-composition-mth-0178-results.json",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "data/experiments/g6-sqlite-composition-observation-mth-0178.json",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "data/mathviews/sqlite-wal-savepoint-composition-mth-0178.json",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "scripts/g6_sqlite_composition_experiment.py",
+          "present": false
+        },
+        {
+          "digest": null,
+          "path": "docs/mth-0178-prototype-experiment.md",
+          "present": false
+        }
+      ],
+      "id": "MTH-0178",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "A finite state-machine candidate would not be a proof or general composition claim."
+      ],
+      "observations": [
+        {
+          "name": "SQLite transition observation",
+          "scope": "No current result artifact is present.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "timing",
+          "scope": "The historical protocol excluded timing.",
+          "status": "not-measured"
+        }
+      ],
+      "status": "not-present",
+      "title": "SQLite WAL/savepoint composition prototype"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/enriched_review_packet.py",
+          "kind": "regenerate",
+          "status": "available"
+        },
+        {
+          "command": "uv run python scripts/enriched_review_packet.py --validate data/research-review/mth-0185-enriched-study.json",
+          "kind": "validate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_enriched_review_packet -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "The packet is built offline from reviewed cards and the bounded negative-knowledge record."
+      ],
+      "files": [
+        {
+          "digest": "sha256:e68c31237f1956611c285637ac6ba7a2ce39fecef58cc1623e0030648d0bfd24",
+          "path": "data/research-review/mth-0185-enriched-study.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:5abd8c600a49b9a42b50fda4c6a99e62ce13e8c7e7c382a3ccb5692b5180d01b",
+          "path": "schemas/enriched-review-packet.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:df1fd00ff5a735a1e5bf874619788cc781f0ede7393e0d407a1753eef71708de",
+          "path": "scripts/enriched_review_packet.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:bfc73af951a8f6f60a0c92234dc1479bf24cac1f98b77f34feab8762eb107cb4",
+          "path": "docs/mth-0185-enriched-review-packet.md",
+          "present": true
+        },
+        {
+          "digest": "sha256:812f8dc70cf667bbfc1c0a53fb3c00634f000b52e85f903139ca0260148c9749",
+          "path": "tests/test_enriched_review_packet.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0185",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Packet construction is not reviewer evidence, a model result, or a promotion decision."
+      ],
+      "observations": [
+        {
+          "name": "packet construction",
+          "scope": "Deterministic assignment and evidence digest closure are present.",
+          "status": "measured"
+        },
+        {
+          "name": "human labels",
+          "scope": "No reviewer result is generated.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM",
+          "scope": "No model output is included.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "empty",
+        "reviewer_kind": "not-applicable"
+      },
+      "status": "present",
+      "title": "Enriched review packet"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/agent_review_pilot.py",
+          "kind": "regenerate",
+          "status": "available"
+        },
+        {
+          "command": "uv run python scripts/agent_review_pilot.py --validate data/research-review/pilots/mth-0186.json",
+          "kind": "validate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_agent_review_pilot -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "The pilot records bounded payload-handling timing, not conversational reasoning or human review."
+      ],
+      "files": [
+        {
+          "digest": "sha256:f5d0de98661526b54acc19d226cc32ae6fb3478ee90e09c6abfe826cec0d805c",
+          "path": "data/research-review/pilots/mth-0186.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:6ef6730300d1083142830495156077ba55c966e48d03e94fd9af7acf6bedaeef",
+          "path": "schemas/agent-review-pilot.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:938a018b1bb851976f6bccc543215f0f585dbfc7c394f2fbb8fadb8f3576f8f3",
+          "path": "scripts/agent_review_pilot.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:47d275c03af00c6397bc7f5f7a3e7f4116be056127897e6b1bf96af48a78be79",
+          "path": "tests/test_agent_review_pilot.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0186",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Agent observations are not human labels, agreement, productivity, or canonical evidence."
+      ],
+      "observations": [
+        {
+          "name": "agent payload handling",
+          "scope": "Eight agent-only records retain evidence and timing boundaries.",
+          "status": "observed"
+        },
+        {
+          "name": "human review",
+          "scope": "human_review is false and no human stratum is supplied.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM",
+          "scope": "Provider/model are not recorded.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "empty",
+        "reviewer_kind": "agent"
+      },
+      "status": "present",
+      "title": "Enriched packet A agent pilot"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/agent_review_pilot_b.py",
+          "kind": "regenerate",
+          "status": "available"
+        },
+        {
+          "command": "uv run python scripts/agent_review_pilot_b.py --validate data/research-review/pilots/mth-0187.json",
+          "kind": "validate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_agent_review_pilot_b -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "The pilot records bounded payload-handling timing, not conversational reasoning or human review."
+      ],
+      "files": [
+        {
+          "digest": "sha256:bb539df71232830e01f186aa9b1691d9a1d32d49c1be953ff749ac4a93108d42",
+          "path": "data/research-review/pilots/mth-0187.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:e5fb7feaf84215f7a83858cb32f34b9633b003f655c5ae29ab99a1677f719e50",
+          "path": "schemas/agent-review-pilot-b.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:c680c3aeb61925186146ed967b9c89e63ccdf41e01e5d70f6ad20081a0dd6b68",
+          "path": "scripts/agent_review_pilot_b.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:e7317a9b2d7f82fc3c64d611162b4c41941ba4c10345227e995de9c0d6aff89d",
+          "path": "tests/test_agent_review_pilot_b.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0187",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Agent observations are not human labels, agreement, productivity, or canonical evidence."
+      ],
+      "observations": [
+        {
+          "name": "agent payload handling",
+          "scope": "Eight agent-only records retain evidence and timing boundaries.",
+          "status": "observed"
+        },
+        {
+          "name": "human review",
+          "scope": "human_review is false and no human stratum is supplied.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM",
+          "scope": "Provider/model are not recorded.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "empty",
+        "reviewer_kind": "agent"
+      },
+      "status": "present",
+      "title": "Enriched packet B agent pilot"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/agent_review_scoring.py",
+          "kind": "regenerate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_agent_review_scoring -v",
+          "kind": "test",
+          "status": "available"
+        },
+        {
+          "command": "uv run ruff format --check scripts/agent_review_scoring.py tests/test_agent_review_scoring.py && uv run ruff check scripts/agent_review_scoring.py tests/test_agent_review_scoring.py",
+          "kind": "audit",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "Scoring is deterministic and separates agent observations from the empty human stratum."
+      ],
+      "files": [
+        {
+          "digest": "sha256:18ac40b0454ab065737518ebf437c678cf9daebf8746d4008c35358f0991dced",
+          "path": "data/research-review/scoring/mth-0188-agent-review-scoring.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:c57b8b4eca065c55089aa7261fe6bdaef8a848691b447494cb9c1f1a5d76be10",
+          "path": "schemas/agent-review-scoring.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:7fd2b3b99e57b0ec3d9ed772e8b3ff8ddeaf1bb77f8750be4f6eea3ada2c966e",
+          "path": "scripts/agent_review_scoring.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:3233867b56726478c725c04a0e23ab5a58b9b275fc4cc8ce56d9ce7652dd2287",
+          "path": "docs/mth-0188-agent-review-scoring.md",
+          "present": true
+        },
+        {
+          "digest": "sha256:1d1d3fe29eeb0b357c5afdeb6e91d3f6ce8141ac4225bcb692dbf144390d9b4b",
+          "path": "tests/test_agent_review_scoring.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0188",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Agent agreement is not human inter-rater agreement and no aggregate quality score is inferred."
+      ],
+      "observations": [
+        {
+          "name": "agent scores",
+          "scope": "Observed rows and non-zero/non-null metrics are retained where applicable.",
+          "status": "measured"
+        },
+        {
+          "name": "human stratum",
+          "scope": "Empty slices with null metrics.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM",
+          "scope": "No provider/model evaluation.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "empty",
+        "reviewer_kind": "agent"
+      },
+      "status": "present",
+      "title": "Agent-review pilot scoring"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/repeated_agent_review_pilot.py",
+          "kind": "regenerate",
+          "reason": "A regeneration records new wall-clock timestamps and is a new observation.",
+          "status": "available"
+        },
+        {
+          "command": "uv run python scripts/repeated_agent_review_pilot.py --validate data/research-review/pilots/mth-0193.json",
+          "kind": "validate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_repeated_agent_review_pilot -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "The two runs use independent seeds and packet orders over the frozen MTH-0185 packet."
+      ],
+      "files": [
+        {
+          "digest": "sha256:86608a2a1d8991c9b452759570643a69b67fd8524479eb2376122f94ed94e072",
+          "path": "data/research-review/pilots/mth-0193.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:920c4e8ff3114ec0bb6b3438dfdc30e0c64c009cce88e24ec3c3010a0728b1b1",
+          "path": "schemas/repeated-agent-review-pilot.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:051cab4ea2883b7c643efea14e5f8f107215fe44a292bca556e31f207459afe3",
+          "path": "scripts/repeated_agent_review_pilot.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:db974e6fd576d2520dee7db20ea93499863e687bf21d64f2fcaf609278f04a33",
+          "path": "docs/mth-0193-repeated-agent-review-pilot.md",
+          "present": true
+        },
+        {
+          "digest": "sha256:1fb3bd4f457b447d58efd9c28b82052f3567154078878e5b2165f5a91520899d",
+          "path": "tests/test_repeated_agent_review_pilot.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0193",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Timing excludes conversational reasoning, human review, and reviewer productivity."
+      ],
+      "observations": [
+        {
+          "name": "agent observations",
+          "scope": "Two runs and 32 bounded agent-only observations are recorded.",
+          "status": "observed"
+        },
+        {
+          "name": "human stratum",
+          "scope": "No human records are supplied.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM",
+          "scope": "Provider/model are not recorded.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "empty",
+        "reviewer_kind": "agent"
+      },
+      "status": "present",
+      "title": "Repeated agent-only review pilot"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/direct_llm_readiness.py inspect --root . --output data/analyses/mth-0194-direct-llm-readiness.json",
+          "kind": "regenerate",
+          "reason": "The inspection is environment-dependent and should not overwrite the recorded baseline without review.",
+          "status": "available"
+        },
+        {
+          "command": "uv run python scripts/direct_llm_readiness.py validate data/analyses/mth-0194-direct-llm-readiness.json",
+          "kind": "validate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_direct_llm_readiness -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "Inspection is secret-safe, local, and must not load a model, invoke inference, or contact an endpoint."
+      ],
+      "files": [
+        {
+          "digest": "sha256:ff2cf5cff1c80ffa9b0851876b29d54e861c23e1bfd30054ce448b212e321fa8",
+          "path": "data/analyses/mth-0194-direct-llm-readiness.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:bfaf9acbdd44da04d4730b354a604407621c3362bf70d7f30e0f09888bdf806f",
+          "path": "schemas/direct-llm-readiness.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:d81b642326d6e24a36ed9e2d22d2a8182a2dd93aabfff0fa31ba74746a12d391",
+          "path": "scripts/direct_llm_readiness.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:1ed98194ab892f3feb9f7d74735a3058d39a3da00cabeee2eea98bb60f2c3400",
+          "path": "docs/mth-0194-direct-llm-readiness.md",
+          "present": true
+        },
+        {
+          "digest": "sha256:1103003a0d40875a119fbbb176c948bfe747636fc2acdf970b7a498663b01ccf",
+          "path": "tests/test_direct_llm_readiness.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0194",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Cache presence is not runtime approval and readiness is not an inference result."
+      ],
+      "observations": [
+        {
+          "name": "approved runtime",
+          "scope": "No approved local runtime was recorded.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM output",
+          "scope": "Prompt/output and model metrics are null.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "secret access",
+          "scope": "Secret values are deliberately not read.",
+          "status": "not-measured"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "not-applicable",
+        "reviewer_kind": "not-applicable"
+      },
+      "status": "present",
+      "title": "Direct-LLM local readiness"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/build_mth0195_benchmark.py",
+          "kind": "regenerate",
+          "status": "available"
+        },
+        {
+          "command": "uv run python scripts/build_mth0195_benchmark.py --validate data/benchmark/mth-0195-independent-exploration.json",
+          "kind": "validate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_mth0195_benchmark -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "The benchmark is authored, offline, and stores task/evidence/source digests without model outputs."
+      ],
+      "files": [
+        {
+          "digest": "sha256:a3c73f0d3fc5df79511f9b3bf76085ce3b98438f3b485844cc54f13a2e6529be",
+          "path": "data/benchmark/mth-0195-independent-exploration.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:c04408c346df28812f6f88d99b7d3d34a5e61357b884d3663ac863d2dc23f209",
+          "path": "schemas/independent-exploration-benchmark.schema.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:bdea58b5f4b7d4e7d131aebafd7113da4726ac5292ceae44d206b68551b932f7",
+          "path": "scripts/build_mth0195_benchmark.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:13254569bee9eae36cae51686e545afebf080eb04cf6ad212f8c2c156bec6fb0",
+          "path": "docs/mth-0195-independent-exploration-benchmark.md",
+          "present": true
+        },
+        {
+          "digest": "sha256:316aea0ae6ac18294c54f929290db5a48293144618dbd52f43ebc1a556d42e11",
+          "path": "tests/test_mth0195_benchmark.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0195",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "Task capacity and composition candidates do not establish statistical power, truth, compatibility, or superiority."
+      ],
+      "observations": [
+        {
+          "name": "task set",
+          "scope": "Twenty-four task instances and exhaustive partitions are defined.",
+          "status": "protocol-defined"
+        },
+        {
+          "name": "empirical quality",
+          "scope": "No reviewer labels or model outputs are present.",
+          "status": "not-measured"
+        },
+        {
+          "name": "direct-LLM",
+          "scope": "The condition is explicit but unevaluated.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "not-applicable",
+        "reviewer_kind": "not-applicable"
+      },
+      "status": "present",
+      "title": "Independent cross-system exploration benchmark"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run python scripts/statistical_error_analysis.py && uv run python scripts/agent_review_scoring.py",
+          "kind": "regenerate",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_statistical_error_analysis tests.test_agent_review_scoring -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "MTH-0196 is represented by the checked-in statistical and scoring artifacts rather than a separate file."
+      ],
+      "files": [
+        {
+          "digest": "sha256:55e2829f74c414d09340dec11ab025a8d5ee43521a1abbd3a40fe9a59e2ec682",
+          "path": "data/benchmark/mth-0177-statistical-analysis.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:18ac40b0454ab065737518ebf437c678cf9daebf8746d4008c35358f0991dced",
+          "path": "data/research-review/scoring/mth-0188-agent-review-scoring.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:3233867b56726478c725c04a0e23ab5a58b9b275fc4cc8ce56d9ce7652dd2287",
+          "path": "docs/mth-0188-agent-review-scoring.md",
+          "present": true
+        },
+        {
+          "digest": "sha256:a96799e0505d629ff3cc9bb431111284e2e2ba136982252552060ee62389108f",
+          "path": "docs/mth-0177-statistical-analysis.md",
+          "present": true
+        }
+      ],
+      "id": "MTH-0196",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "This release preserves observed strata and does not infer a combined quality result."
+      ],
+      "observations": [
+        {
+          "name": "agent aggregation",
+          "scope": "Repeated agent observations are aggregated with explicit uncertainty and slices.",
+          "status": "measured"
+        },
+        {
+          "name": "human stratum",
+          "scope": "Empty by contract.",
+          "status": "not-evaluated"
+        },
+        {
+          "name": "direct-LLM",
+          "scope": "No direct model evaluation.",
+          "status": "not-evaluated"
+        }
+      ],
+      "provenance": {
+        "direct_llm_status": "not-evaluated",
+        "human_review": false,
+        "human_stratum": "empty",
+        "reviewer_kind": "agent"
+      },
+      "status": "represented",
+      "title": "Agent-review aggregation release"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "uv run --offline python scripts/g5_sqlite_busy_timeout_experiment.py --expected-source-id 4d8adfb30e03f9cf27f800a2c1ba3c48fb4ca1b08b0f5ed59a4d5ecbf45e20a3 --repetitions 3 --output data/experiments/g5-sqlite-busy-timeout-results-mth-0197.json --observation-output data/experiments/g5-sqlite-busy-timeout-observation-mth-0197.json",
+          "kind": "regenerate",
+          "reason": "Requires the same SQLite source ID; a new run is a new observation.",
+          "status": "available"
+        },
+        {
+          "command": "PYTHONPATH=src uv run python -m unittest tests.test_experiments -v",
+          "kind": "test",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "Recorded environment is Linux 7.3.0-4-cachyos, Python 3.13.13, SQLite 3.50.4, two local writers, and SQLite defaults."
+      ],
+      "files": [
+        {
+          "digest": "sha256:dca42cb0585b9ae0828514849f11bcb7315bb69a480492b144adc7858ca257d7",
+          "path": "data/experiments/g5-sqlite-busy-timeout-observation-mth-0197.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:296e03ad61fe91c72e0b647447a209e32bf66372ad674cd9506baae8bc535a57",
+          "path": "data/experiments/g5-sqlite-busy-timeout-results-mth-0197.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:e8ab51148e78b471b58d623c60f21b032a4c0465ea1930c870ac409f7191deb8",
+          "path": "data/mathviews/sqlite-busy-timeout-mth-0197.json",
+          "present": true
+        },
+        {
+          "digest": "sha256:fb38cdf11f44200342ff818c21105f3100dd81d0f3907cc09adb6be6c196ffb7",
+          "path": "scripts/g5_sqlite_busy_timeout_experiment.py",
+          "present": true
+        },
+        {
+          "digest": "sha256:adbb9317674be1f40a14c0d3d3729ab1d9875ad5717c88224c2bb915a53d0aa2",
+          "path": "docs/mth-0197-sqlite-busy-timeout-observation.md",
+          "present": true
+        },
+        {
+          "digest": "sha256:7b14c7972c4f21e29cb618f5ee87a1e06fab7930ce75bfa797f7f5b36c7d818a",
+          "path": "tests/test_experiments.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0197",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "This does not establish general concurrency, timeout policy, durability, crash recovery, performance, or deployment behavior."
+      ],
+      "observations": [
+        {
+          "name": "lock/reopen/integrity sequence",
+          "scope": "Three bounded repetitions observed the declared lock failure and successful post-release state.",
+          "status": "observed"
+        },
+        {
+          "name": "timing",
+          "scope": "Timing is explicitly null.",
+          "status": "not-measured"
+        },
+        {
+          "name": "canonical status",
+          "scope": "The observation and math view remain canonical=false and under review.",
+          "status": "not-measured"
+        }
+      ],
+      "status": "present",
+      "title": "SQLite busy-timeout observation"
+    },
+    {
+      "boundary": {
+        "canonical": false,
+        "inference_allowed": false,
+        "promotion_decision": "not-determined",
+        "research_only": true,
+        "review_state": "under-review"
+      },
+      "commands": [
+        {
+          "command": "bun run db:reset:local && bun run build",
+          "kind": "regenerate",
+          "reason": "The documentation records the completed local audit; browser execution requires local services and system Chromium.",
+          "status": "available"
+        },
+        {
+          "command": "bun run check:web && bun test apps/web/src/*.test.ts",
+          "kind": "test",
+          "status": "available"
+        },
+        {
+          "command": "lighthouse http://127.0.0.1:4174/ --output=json --output-path=/tmp/opencode/mth-0198-lighthouse.json --chrome-path=/usr/bin/chromium --chrome-flags='--no-sandbox' --quiet",
+          "kind": "audit",
+          "reason": "Requires a local production preview.",
+          "status": "available"
+        }
+      ],
+      "environment_assumptions": [
+        "Commands are offline and run from the repository root.",
+        "Paths and digests refer to the checked-in origin/main baseline; absent files are not reconstructed.",
+        "Audit used headed Chromium 156.0.8078.47, Playwright 1.64.0, Vite production output, and local API/web services."
+      ],
+      "files": [
+        {
+          "digest": "sha256:9b755997e72d4050b0bfc708da07c180257436eb6111bdc93156c36e476871b5",
+          "path": "docs/mth-0198-graph-browser-audit.md",
+          "present": true
+        },
+        {
+          "digest": "sha256:356a683960841a50d4b9ee96c4daad744a25b0750294962f5e746489cf1fa48c",
+          "path": "tests/test_graph_audit.py",
+          "present": true
+        }
+      ],
+      "id": "MTH-0198",
+      "limitations": [
+        "The record is research-only and does not promote evidence or infer an unmeasured result.",
+        "The indexed artifact remains bounded by its own protocol and source revision.",
+        "A desktop Chromium viewport and local Lighthouse run are not representative mobile, network, or production metrics."
+      ],
+      "observations": [
+        {
+          "name": "desktop/local browser checks",
+          "scope": "Graph load, mode switching, search, inspector, path panel, catalog, and card metadata were checked.",
+          "status": "observed"
+        },
+        {
+          "name": "local Lighthouse smoke",
+          "scope": "The recorded audit contains local performance/accessibility metrics.",
+          "status": "measured"
+        },
+        {
+          "name": "Firefox/mobile/touch/edge targeting",
+          "scope": "The audit explicitly makes no pass claim for these surfaces.",
+          "status": "not-measured"
+        }
+      ],
+      "status": "present",
+      "title": "Graph browser and local performance audit"
+    }
+  ]
+}
