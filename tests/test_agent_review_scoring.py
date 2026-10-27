@@ -24,10 +24,14 @@ class AgentReviewScoringTests(unittest.TestCase):
         self,
     ) -> None:
         artifact = json.loads(ARTIFACT.read_text(encoding="utf-8"))
-        self.assertEqual(artifact["evaluation_boundary"]["observed_row_count"], 16)
+        self.assertEqual(artifact["evaluation_boundary"]["observed_row_count"], 48)
         self.assertFalse(artifact["evaluation_boundary"]["holdout_included"])
         self.assertEqual(
             {row["packet_label"] for row in artifact["observations"]}, {"A", "B"}
+        )
+        self.assertEqual(
+            {row["pilot_id"] for row in artifact["observations"]},
+            {"mth-0186", "mth-0187", "mth-0193"},
         )
         for row in artifact["observations"]:
             self.assertTrue(row["pilot_digest"].startswith("sha256:"))
@@ -49,23 +53,58 @@ class AgentReviewScoringTests(unittest.TestCase):
         )
         self.assertEqual(
             [item["slice"] for item in artifact["scores"]["by_pilot"]],
-            ["mth-0186", "mth-0187"],
+            ["mth-0186", "mth-0187", "mth-0193"],
         )
         self.assertEqual(len(artifact["scores"]["by_task"]), 8)
         self.assertEqual(len(artifact["scores"]["by_domain"]), 4)
+        self.assertEqual(len(artifact["scores"]["by_run"]), 4)
+        self.assertEqual(len(artifact["scores"]["by_benchmark_task"]), 24)
+        self.assertEqual(artifact["scores"]["repeated_runs"]["run_count"], 2)
         metric = artifact["scores"]["overall"]["dimensions"]["usefulness"][
             "categories"
         ]["useful"]
-        self.assertEqual(metric["denominator"], 16)
+        self.assertEqual(metric["denominator"], 48)
         self.assertEqual(metric["interval"]["method"], "clopper-pearson-exact")
         self.assertEqual(metric["warnings"], [])
+
+    def test_repeated_agent_and_empty_human_strata_are_separate(self) -> None:
+        artifact = json.loads(ARTIFACT.read_text(encoding="utf-8"))
+        self.assertEqual(
+            artifact["strata"]["agent_review"]["scores"]["overall"]["observed_count"],
+            48,
+        )
+        human = artifact["strata"]["human_review"]
+        self.assertEqual(human["status"], "not-evaluated")
+        self.assertEqual(human["scores"]["overall"]["observed_count"], 0)
+        self.assertIsNone(
+            human["scores"]["overall"]["dimensions"]["usefulness"]["categories"][
+                "useful"
+            ]["value"]
+        )
+
+    def test_unobserved_benchmark_tasks_have_no_labels(self) -> None:
+        artifact = json.loads(ARTIFACT.read_text(encoding="utf-8"))
+        self.assertEqual(artifact["benchmark"]["observed_task_ids"], [])
+        self.assertEqual(len(artifact["benchmark"]["unobserved_task_ids"]), 24)
+        self.assertTrue(
+            all(
+                item["observed_count"] == 0
+                for item in artifact["scores"]["by_benchmark_task"]
+            )
+        )
+        self.assertTrue(
+            all(
+                metric["value"] is None
+                for item in artifact["scores"]["by_benchmark_task"]
+                for dimension in item["dimensions"].values()
+                for metric in dimension["categories"].values()
+            )
+        )
 
     def test_small_sample_warnings_are_present_for_task_and_agreement_slices(
         self,
     ) -> None:
         artifact = json.loads(ARTIFACT.read_text(encoding="utf-8"))
-        for item in artifact["scores"]["by_task"]:
-            self.assertTrue(item["dimensions"]["claim_type"]["warnings"])
         for item in artifact["agreement"]["by_task"]:
             self.assertTrue(item["warnings"])
 

@@ -1,0 +1,301 @@
+{
+  "cache_inventory": {
+    "locations": [
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "ollama_data",
+        "present": false
+      },
+      {
+        "bytes": 7142963202,
+        "directory_count": 32,
+        "file_count": 80,
+        "identifiers_recorded": false,
+        "label": "huggingface_cache",
+        "present": true
+      },
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "llama_cpp_cache",
+        "present": false
+      },
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "lm_studio_cache",
+        "present": false
+      },
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "lmstudio_cache",
+        "present": false
+      },
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "vllm_cache",
+        "present": false
+      }
+    ],
+    "model_identifiers_recorded": false
+  },
+  "configuration_inventory": {
+    "locations": [
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "ollama_config",
+        "present": false
+      },
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "lm_studio_config",
+        "present": false
+      },
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "lmstudio_config",
+        "present": false
+      },
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "vllm_config",
+        "present": false
+      },
+      {
+        "bytes": 0,
+        "directory_count": 0,
+        "file_count": 0,
+        "identifiers_recorded": false,
+        "label": "huggingface_config",
+        "present": false
+      }
+    ],
+    "secret_values_read": false
+  },
+  "inspection": {
+    "checked_names": {
+      "cache_locations": [
+        "ollama_data",
+        "huggingface_cache",
+        "llama_cpp_cache",
+        "lm_studio_cache",
+        "lmstudio_cache",
+        "vllm_cache"
+      ],
+      "configuration_locations": [
+        "ollama_config",
+        "lm_studio_config",
+        "lmstudio_config",
+        "vllm_config",
+        "huggingface_config"
+      ],
+      "environment_variables": [
+        "HF_ENDPOINT",
+        "MODEL_PATH",
+        "VISION_MODEL"
+      ],
+      "executables": [
+        "ollama",
+        "llama-cli",
+        "llama-server",
+        "llamafile",
+        "vllm",
+        "text-generation-launcher",
+        "lmstudio",
+        "lms",
+        "local-ai",
+        "llamactl",
+        "mlx_lm"
+      ],
+      "python_modules": [
+        "ollama",
+        "llama_cpp",
+        "vllm",
+        "transformers",
+        "mlx_lm",
+        "ctransformers"
+      ],
+      "service_units": [
+        "ollama.service",
+        "llama-server.service",
+        "local-ai.service"
+      ]
+    },
+    "inspector": "scripts/direct_llm_readiness.py",
+    "inspector_version": "mth-0194-v1",
+    "network_requests": false,
+    "platform": "Linux-7.3.0-4-cachyos-x86_64-with-glibc2.44",
+    "python_version": "3.13.13",
+    "repository_revision": "ec70a18316ff54f7efda3706d40bc40efb7d256a"
+  },
+  "manifest_kind": "direct_llm_readiness",
+  "metrics": {
+    "coverage": null,
+    "error_rate": null,
+    "latency_ms": null,
+    "quality": null,
+    "throughput_tokens_per_second": null
+  },
+  "provenance": {
+    "exact_model_id": null,
+    "inspection_digest": "sha256:036aea13bd627b67681a02155ef3a737cb61c560aecc0f655c472f42e0484ec5",
+    "output": {
+      "digest": null,
+      "raw_stored": false,
+      "status": "not-rendered"
+    },
+    "prompt": {
+      "digest": null,
+      "raw_stored": false,
+      "status": "not-rendered"
+    },
+    "provider": null
+  },
+  "purpose": "Audit whether an approved local direct-LLM runtime is ready without running inference.",
+  "record_id": "mth-0194-direct-llm-readiness",
+  "result_boundary": {
+    "canonical": false,
+    "promotion_requires_human_review": true,
+    "reason": "No approved local runtime was available; no provider or model was recorded, no prompt or output was rendered, and no inference request was made.",
+    "status": "not-evaluated",
+    "storage_scope": "research"
+  },
+  "runtime_inventory": {
+    "approved_runtime_available": false,
+    "executables": [
+      {
+        "available": false,
+        "name": "ollama",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "llama-cli",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "llama-server",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "llamafile",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "vllm",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "text-generation-launcher",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "lmstudio",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "lms",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "local-ai",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "llamactl",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      },
+      {
+        "available": false,
+        "name": "mlx_lm",
+        "path_recorded": false,
+        "version_probe": "not-run"
+      }
+    ],
+    "processes": [],
+    "python_modules": [
+      {
+        "available": false,
+        "name": "ollama"
+      },
+      {
+        "available": false,
+        "name": "llama_cpp"
+      },
+      {
+        "available": false,
+        "name": "vllm"
+      },
+      {
+        "available": false,
+        "name": "transformers"
+      },
+      {
+        "available": false,
+        "name": "mlx_lm"
+      },
+      {
+        "available": false,
+        "name": "ctransformers"
+      }
+    ],
+    "service_units": [
+      {
+        "name": "ollama.service",
+        "status": "inactive"
+      },
+      {
+        "name": "llama-server.service",
+        "status": "inactive"
+      },
+      {
+        "name": "local-ai.service",
+        "status": "inactive"
+      }
+    ]
+  },
+  "schema_version": "1.0"
+}

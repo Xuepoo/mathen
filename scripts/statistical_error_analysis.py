@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Build deterministic, research-only statistical error analysis for MTH-0177.
+"""Build deterministic, research-only statistical analysis for MTH-0177.
 
 The module deliberately separates protocol capacity from observations.  Empty
-observation sets produce ``null`` metrics and no interval.  It has no provider,
-model, reviewer, or network integration; callers supply normalized observations
-from a future run.
+observation sets produce ``null`` metrics and no interval.  Agent-review labels
+from the accepted MTH-0193 artifact are reported separately from the empty
+human-review and error-taxonomy strata.  It has no provider, model, reviewer,
+or network integration.
 """
 
 from __future__ import annotations
@@ -27,6 +28,10 @@ MTH_0174_DIGEST = (
 MTH_0172_DIGEST = (
     "sha256:77c06204f5c8286dd07d237b8ef4ffe6351f2a2652b48b0eeb1293528ea3b1c8"
 )
+MTH_0193_ARTIFACT = ROOT / "data" / "research-review" / "pilots" / "mth-0193.json"
+MTH_0195_ARTIFACT = (
+    ROOT / "data" / "benchmark" / "mth-0195-independent-exploration.json"
+)
 
 ERROR_TAXONOMY = (
     "false-link",
@@ -37,6 +42,48 @@ ERROR_TAXONOMY = (
     "reviewer-disagreement",
 )
 SMALL_SAMPLE_THRESHOLD = 5
+
+AGENT_LABEL_CATEGORIES: dict[str, tuple[str, ...]] = {
+    "evidence_support": (
+        "supported",
+        "partially-supported",
+        "unsupported",
+        "unknown",
+        "not-recorded",
+    ),
+    "claim_type": (
+        "fact",
+        "inference",
+        "hypothesis",
+        "analogy",
+        "unknown",
+        "not-recorded",
+    ),
+    "scope_completeness": (
+        "complete",
+        "partial",
+        "incomplete",
+        "unknown",
+        "not-recorded",
+    ),
+    "false_link": ("false", "not-false", "unknown", "not-recorded"),
+    "usefulness": (
+        "useful",
+        "somewhat-useful",
+        "not-useful",
+        "unknown",
+        "not-recorded",
+    ),
+    "counterexample_awareness": (
+        "aware",
+        "unaware",
+        "not-applicable",
+        "unknown",
+        "not-recorded",
+    ),
+    "abstention": ("abstained", "not-abstained", "unknown", "not-recorded"),
+    "reviewer_effort": ("low", "medium", "high", "unknown", "not-recorded"),
+}
 
 
 def canonical_digest(value: Any) -> str:
@@ -167,6 +214,76 @@ def _small_sample_warnings(denominator: int) -> list[str]:
         if 0 < denominator < SMALL_SAMPLE_THRESHOLD
         else []
     )
+
+
+def _agent_label_analysis(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Aggregate agent labels independently; no human labels or quality score."""
+
+    dimensions: dict[str, Any] = {}
+    for dimension, categories in AGENT_LABEL_CATEGORIES.items():
+        values = [row["labels"][dimension] for row in rows]
+        dimensions[dimension] = {
+            "categories": {
+                category: _metric(
+                    f"agent:{dimension}:{category}",
+                    values.count(category),
+                    len(values),
+                    reason=f"Observed agent-review {dimension} label is {category}.",
+                    interval=exact_binomial_interval(
+                        values.count(category), len(values)
+                    ),
+                    warnings=_small_sample_warnings(len(values)),
+                )
+                for category in categories
+            },
+            "warnings": _small_sample_warnings(len(values)),
+        }
+    return {"observed_count": len(rows), "dimensions": dimensions}
+
+
+def _agent_label_slices(
+    rows: Sequence[Mapping[str, Any]], field: str
+) -> list[dict[str, Any]]:
+    groups: defaultdict[str, list[Mapping[str, Any]]] = defaultdict(list)
+    for row in rows:
+        groups[str(row[field])].append(row)
+    return [
+        {"slice": key, **_agent_label_analysis(groups[key])} for key in sorted(groups)
+    ]
+
+
+def _load_mth0193() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Load only the reviewed, non-holdout agent observations from MTH-0193."""
+
+    if not MTH_0193_ARTIFACT.exists():
+        return [], []
+    artifact = json.loads(MTH_0193_ARTIFACT.read_text(encoding="utf-8"))
+    rows: list[dict[str, Any]] = []
+    runs: list[dict[str, Any]] = []
+    for run in artifact["runs"]:
+        runs.append(
+            {
+                "run_id": run["run_id"],
+                "run_seed": run["run_seed"],
+                "reviewer_kind": "agent",
+                "human_review": False,
+                "observation_count": len(run["observations"]),
+            }
+        )
+        for observation in run["observations"]:
+            if observation["partition"] == "holdout":
+                raise ValueError("MTH-0193 holdout observation must not be scored")
+            rows.append(
+                {
+                    "run_id": run["run_id"],
+                    "task_id": observation["task_id"],
+                    "domain": observation["domain_id"],
+                    "partition": observation["partition"],
+                    "labels": observation["labels"],
+                    "candidate_digest": observation["candidate_digest"],
+                }
+            )
+    return rows, runs
 
 
 def error_analysis(observations: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -364,6 +481,28 @@ def build_artifact() -> dict[str, Any]:
 
     capacity = _capacity_from_source(MTH_0174_ARTIFACT)
     empty = error_analysis([])
+    agent_rows, agent_runs = _load_mth0193()
+    agent_empty = _agent_label_analysis([])
+    agent_review = {
+        "reviewer_kind": "agent",
+        "human_review": False,
+        "observed_count": len(agent_rows),
+        "runs": agent_runs,
+        "overall": _agent_label_analysis(agent_rows),
+        "by_run": _agent_label_slices(agent_rows, "run_id"),
+        "by_task": _agent_label_slices(agent_rows, "task_id"),
+        "by_domain": _agent_label_slices(agent_rows, "domain"),
+    }
+    human_review = {
+        "reviewer_kind": "human",
+        "human_review": True,
+        "status": "not-evaluated",
+        "reason": "No human-review observations were supplied.",
+        "overall": agent_empty,
+        "by_run": [],
+        "by_task": [],
+        "by_domain": [],
+    }
     empty["by_domain"] = [
         _empty_slice(item["domain"]) for item in capacity["domain_slices"]
     ]
@@ -378,7 +517,8 @@ def build_artifact() -> dict[str, Any]:
         "research_only": True,
         "purpose": (
             "Deterministic aggregation and error-analysis hooks for MTH-0174 and "
-            "MTH-0172."
+            "MTH-0172, with separate descriptive agent-review labels from "
+            "MTH-0193."
         ),
         "sources": {
             "mth_0174": {
@@ -390,16 +530,28 @@ def build_artifact() -> dict[str, Any]:
                 "artifact": "data/benchmark/mth-0172-candidate-quality.json",
                 "digest": MTH_0172_DIGEST,
             },
+            "mth_0193": {
+                "artifact": "data/research-review/pilots/mth-0193.json",
+                "digest": "sha256:"
+                + hashlib.sha256(MTH_0193_ARTIFACT.read_bytes()).hexdigest(),
+            },
+            "mth_0195": {
+                "artifact": "data/benchmark/mth-0195-independent-exploration.json",
+                "digest": "sha256:"
+                + hashlib.sha256(MTH_0195_ARTIFACT.read_bytes()).hexdigest(),
+            },
         },
         "protocol_capacity": capacity,
         "observations": {
-            "runs": [],
+            "runs": agent_runs,
             "reviewer_labels": [],
             "llm_outputs": [],
-            "rows": [],
+            "rows": agent_rows,
         },
         "aggregation": {
             "overall": empty,
+            "agent_review": agent_review,
+            "human_review": human_review,
             "repeated_runs": repeated_run_aggregation([]),
             "interval_policy": {
                 "binary": (
@@ -426,15 +578,22 @@ def build_artifact() -> dict[str, Any]:
         },
         "non_claims": [
             (
-                "No run, reviewer label, model output, interval, or statistical "
-                "power is asserted."
+                "No human-review label, LLM output, or error-taxonomy observation "
+                "is asserted."
+            ),
+            (
+                "MTH-0193 agent labels are descriptive observations, not an "
+                "aggregate quality score."
             ),
             "Separate dimensions are retained; no aggregate quality score is computed.",
             "Protocol capacity and task repetition are not empirical replication.",
         ],
         "outcome": {
             "status": "not-evaluated",
-            "reason": "No repeated run, reviewer, or LLM observations were supplied.",
+            "reason": (
+                "No human-review labels, LLM outputs, or error-taxonomy observations "
+                "were supplied; MTH-0193 agent labels are reported separately."
+            ),
         },
     }
 

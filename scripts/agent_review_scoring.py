@@ -23,13 +23,17 @@ DEFAULT_OUTPUT = (
 PILOT_SOURCES = (
     ("mth-0186", "A", ROOT / "data/research-review/pilots/mth-0186.json"),
     ("mth-0187", "B", ROOT / "data/research-review/pilots/mth-0187.json"),
+    ("mth-0193", "repeated", ROOT / "data/research-review/pilots/mth-0193.json"),
 )
 SMALL_SAMPLE_THRESHOLD = 5
 
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.statistical_error_analysis import exact_binomial_interval  # noqa: E402
+from scripts.statistical_error_analysis import (  # noqa: E402
+    bootstrap_interval,
+    exact_binomial_interval,
+)
 
 DIMENSION_CATEGORIES: dict[str, tuple[str, ...]] = {
     "evidence_support": (
@@ -164,6 +168,47 @@ def _slices(rows: Sequence[Mapping[str, Any]], key: str) -> list[dict[str, Any]]
     ]
 
 
+def _empty_slices(labels: Sequence[str]) -> list[dict[str, Any]]:
+    """Expose known-but-unobserved dimensions without fabricating labels."""
+
+    return [{"slice": label, **_dimension_set([])} for label in sorted(set(labels))]
+
+
+def _repeated_run_scores(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Summarize MTH-0193 repeated-run rates with bootstrap intervals.
+
+    The two enriched packet pilots are comparison inputs for the agreement
+    section, not repetitions of the MTH-0193 run.  Keep them out of this
+    run-level summary so its denominator describes only the repeated pilot.
+    """
+
+    repeated_rows = [row for row in rows if row.get("pilot_id") == "mth-0193"]
+    runs = sorted({str(row["run_id"]) for row in repeated_rows if row.get("run_id")})
+    result: dict[str, Any] = {"run_count": len(runs), "dimensions": {}}
+    for dimension, categories in DIMENSION_CATEGORIES.items():
+        result["dimensions"][dimension] = {}
+        for category in categories:
+            values = [
+                sum(
+                    row["labels"][dimension] == category
+                    for row in repeated_rows
+                    if row.get("run_id") == run_id
+                )
+                / sum(row.get("run_id") == run_id for row in repeated_rows)
+                for run_id in runs
+                if any(row.get("run_id") == run_id for row in repeated_rows)
+            ]
+            result["dimensions"][dimension][category] = {
+                "name": f"repeated_run:{dimension}:{category}",
+                "run_denominator": len(values),
+                "mean": sum(values) / len(values) if values else None,
+                "status": "measured" if values else "not-evaluated",
+                "interval": bootstrap_interval(values) if values else None,
+                "warnings": _warnings(len(values)),
+            }
+    return result
+
+
 def _copy_observation(
     pilot_id: str,
     packet_label: str,
@@ -171,6 +216,8 @@ def _copy_observation(
     study_packet_digest: str,
     assignment_digest: Mapping[str, Any],
     record: Mapping[str, Any],
+    *,
+    run_id: str | None = None,
 ) -> dict[str, Any]:
     partition = record["partition"]
     if partition == "holdout":
@@ -181,6 +228,7 @@ def _copy_observation(
         raise ScoringError("assignment and review task IDs differ")
     return {
         "pilot_id": pilot_id,
+        "run_id": run_id or pilot_id,
         "packet_label": packet_label,
         "pilot_digest": pilot_digest,
         "study_packet_digest": study_packet_digest,
@@ -208,63 +256,96 @@ def _load_observations() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     sources: list[dict[str, Any]] = []
     for pilot_id, packet_label, path in PILOT_SOURCES:
         pilot = _read(path)
-        if pilot["pilot_id"] != pilot_id or pilot["packet_label"] != packet_label:
+        if pilot["pilot_id"] != pilot_id:
             raise ScoringError(f"unexpected pilot identity in {path}")
-        if pilot["record_kind"] != "agent-review-pilot":
-            raise ScoringError(f"unexpected record kind in {path}")
         if not pilot["research_only"] or not pilot["non_canonical"]:
             raise ScoringError(f"pilot is not research-only and non-canonical: {path}")
-        provenance = pilot["provenance"]
-        if (
-            provenance["reviewer_kind"] != "agent"
-            or provenance["human_review"] is not False
-            or provenance["mode"] != "agent-review-pilot"
-            or provenance["execution_actor"] != "llm-based-agent"
-            or provenance["provider"] != "not-recorded"
-            or provenance["model"] != "not-recorded"
-        ):
-            raise ScoringError(f"invalid provenance in {path}")
-        assignment_digests = {
-            item["task_id"]: item for item in pilot["assignment_digests"]
-        }
-        packet_digest = pilot.get("study_packet_digest", pilot.get("packet_digest"))
-        if not packet_digest:
-            raise ScoringError(f"missing packet digest in {path}")
         pilot_digest = file_digest(path)
-        sources.append(
-            {
-                "pilot_id": pilot_id,
-                "packet_label": packet_label,
-                "artifact": relative_artifact_path(path),
-                "digest": pilot_digest,
-                "study_packet_digest": packet_digest,
-                "execution_actor": "llm-based-agent",
-                "provider": "not-recorded",
-                "model": "not-recorded",
-                "assignment_digests": pilot["assignment_digests"],
-                "run_timing": pilot["run_timing"],
+        if pilot["record_kind"] == "agent-review-pilot":
+            provenance = pilot["provenance"]
+            if (
+                provenance["reviewer_kind"] != "agent"
+                or provenance["human_review"] is not False
+                or provenance["mode"] != "agent-review-pilot"
+            ):
+                raise ScoringError(f"invalid provenance in {path}")
+            assignment_digests = {
+                item["task_id"]: item for item in pilot["assignment_digests"]
             }
-        )
-        for record in pilot["review_records"]:
-            task_id = record["task_id"]
-            if task_id not in assignment_digests:
-                raise ScoringError(f"missing assignment digest for {task_id}")
-            rows.append(
-                _copy_observation(
-                    pilot_id,
-                    packet_label,
-                    pilot_digest,
-                    packet_digest,
-                    assignment_digests[task_id],
-                    record,
-                )
+            packet_digest = pilot.get("study_packet_digest", pilot.get("packet_digest"))
+            if not packet_digest:
+                raise ScoringError(f"missing packet digest in {path}")
+            sources.append(
+                {
+                    "pilot_id": pilot_id,
+                    "packet_label": packet_label,
+                    "artifact": relative_artifact_path(path),
+                    "digest": pilot_digest,
+                    "study_packet_digest": packet_digest,
+                    "assignment_digests": pilot["assignment_digests"],
+                    "run_timing": pilot["run_timing"],
+                }
             )
+            for record in pilot["review_records"]:
+                task_id = record["task_id"]
+                if task_id not in assignment_digests:
+                    raise ScoringError(f"missing assignment digest for {task_id}")
+                rows.append(
+                    _copy_observation(
+                        pilot_id,
+                        packet_label,
+                        pilot_digest,
+                        packet_digest,
+                        assignment_digests[task_id],
+                        record,
+                        run_id=pilot_id,
+                    )
+                )
+        elif pilot["record_kind"] == "agent-review-repeated-pilot":
+            if (
+                pilot["reviewer_kind"] != "agent"
+                or pilot["human_review"] is not False
+                or pilot["promotion_decision"] != "not-determined"
+            ):
+                raise ScoringError(f"invalid repeated-pilot provenance in {path}")
+            for run in pilot["runs"]:
+                for record in run["observations"]:
+                    rows.append(
+                        _copy_observation(
+                            pilot_id,
+                            record["packet_label"],
+                            pilot_digest,
+                            record["packet_digest"],
+                            {
+                                "task_id": record["task_id"],
+                                "assignment_id": record["assignment_id"],
+                            },
+                            record,
+                            run_id=run["run_id"],
+                        )
+                    )
+            sources.append(
+                {
+                    "pilot_id": pilot_id,
+                    "packet_label": packet_label,
+                    "artifact": relative_artifact_path(path),
+                    "digest": pilot_digest,
+                    "study_packet_digest": pilot["study_packet_digest"],
+                    "run_count": pilot["run_count"],
+                    "run_ids": [run["run_id"] for run in pilot["runs"]],
+                    "run_timing": [run["run_timing"] for run in pilot["runs"]],
+                }
+            )
+        else:
+            raise ScoringError(f"unexpected record kind in {path}")
     return rows, sources
 
 
 def _agreement_rows(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     by_task: defaultdict[str, list[Mapping[str, Any]]] = defaultdict(list)
     for row in rows:
+        if row["pilot_id"] not in {"mth-0186", "mth-0187"}:
+            continue
         by_task[row["task_id"]].append(row)
     result = []
     for task_id, pair in sorted(by_task.items()):
@@ -322,11 +403,17 @@ def _agreement_set(pairs: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 
 
 def build_artifact() -> dict[str, Any]:
-    """Build the checked-in scoring artifact from the two accepted pilots."""
+    """Build the checked-in scoring artifact from the accepted agent pilots."""
 
     rows, sources = _load_observations()
     pairs = _agreement_rows(rows)
     overall = _dimension_set(rows)
+    empty_human = _dimension_set([])
+    benchmark_path = ROOT / "data/benchmark/mth-0195-independent-exploration.json"
+    benchmark = _read(benchmark_path)
+    benchmark_digest = file_digest(benchmark_path)
+    observed_task_ids = sorted({row["task_id"] for row in rows})
+    benchmark_task_keys = sorted(task["task_key"] for task in benchmark["task_cards"])
     return {
         "schema_version": "1.0",
         "scoring_id": "mth-0188-agent-review-scoring",
@@ -344,7 +431,7 @@ def build_artifact() -> dict[str, Any]:
             "model": "not-recorded",
             "reviewer_kind": "agent",
             "human_review": False,
-            "pilot_ids": ["mth-0186", "mth-0187"],
+            "pilot_ids": ["mth-0186", "mth-0187", "mth-0193"],
             "source_artifacts": [source["artifact"] for source in sources],
         },
         "evaluation_boundary": {
@@ -353,11 +440,26 @@ def build_artifact() -> dict[str, Any]:
             "observed_row_count": len(rows),
             "pilot_count": len(sources),
             "reason": (
-                "Only rows present in the two accepted pilot artifacts are scored; "
+                "Only rows present in the three accepted agent pilot artifacts are "
+                "scored; "
                 "no holdout payload is read or copied."
             ),
         },
         "sources": sources,
+        "benchmark": {
+            "benchmark_id": benchmark["benchmark_id"],
+            "digest": benchmark_digest,
+            "observed_task_ids": [
+                task_id
+                for task_id in benchmark_task_keys
+                if task_id in observed_task_ids
+            ],
+            "unobserved_task_ids": [
+                task_id
+                for task_id in benchmark_task_keys
+                if task_id not in observed_task_ids
+            ],
+        },
         "observations": rows,
         "scores": {
             "overall": overall,
@@ -370,8 +472,38 @@ def build_artifact() -> dict[str, Any]:
                 }
                 for source in sources
             ],
+            "by_run": _slices(rows, "run_id"),
+            "repeated_runs": _repeated_run_scores(rows),
             "by_task": _slices(rows, "task_id"),
             "by_domain": _slices(rows, "domain_id"),
+            "by_benchmark_task": _empty_slices(benchmark_task_keys),
+        },
+        "strata": {
+            "agent_review": {
+                "reviewer_kind": "agent",
+                "human_review": False,
+                "scores": {
+                    "overall": overall,
+                    "by_run": _slices(rows, "run_id"),
+                    "repeated_runs": _repeated_run_scores(rows),
+                    "by_task": _slices(rows, "task_id"),
+                    "by_domain": _slices(rows, "domain_id"),
+                    "by_benchmark_task": _empty_slices(benchmark_task_keys),
+                },
+            },
+            "human_review": {
+                "reviewer_kind": "human",
+                "human_review": True,
+                "scores": {
+                    "overall": empty_human,
+                    "by_run": [],
+                    "by_task": [],
+                    "by_domain": [],
+                    "by_benchmark_task": _empty_slices(benchmark_task_keys),
+                },
+                "status": "not-evaluated",
+                "reason": "No human-review observations were supplied.",
+            },
         },
         "agreement": {
             "observation_kind": "agent-pilot-agreement",

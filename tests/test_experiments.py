@@ -15,6 +15,7 @@ ROOT = Path(__file__).parents[1]
 SCRIPT = ROOT / "scripts" / "g5_sqlite_transaction_experiment.py"
 WAL_SCRIPT = ROOT / "scripts" / "g5_sqlite_wal_visibility_experiment.py"
 SAVEPOINT_SCRIPT = ROOT / "scripts" / "g5_sqlite_savepoint_experiment.py"
+BUSY_TIMEOUT_SCRIPT = ROOT / "scripts" / "g5_sqlite_busy_timeout_experiment.py"
 
 
 class SQLiteExperimentTests(unittest.TestCase):
@@ -228,6 +229,66 @@ class SQLiteExperimentTests(unittest.TestCase):
         from mathen.mathviews import validate_math_view_contract
 
         validate_math_view_contract(view, evidence_ids={observation["id"]})
+
+    def test_busy_timeout_protocol_observes_bounded_lock_and_reopen(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "busy-results.json"
+            observation_output = Path(directory) / "busy-observation.json"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(BUSY_TIMEOUT_SCRIPT),
+                    "--expected-source-id",
+                    self.source_id(),
+                    "--repetitions",
+                    "2",
+                    "--output",
+                    str(output),
+                    "--observation-output",
+                    str(observation_output),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            report = json.loads(output.read_text(encoding="utf-8"))
+            observation = json.loads(observation_output.read_text(encoding="utf-8"))
+        self.assertEqual(report["metrics"]["contender_lock_failures"], 2)
+        self.assertEqual(report["metrics"]["reopened_rows"], 5)
+        self.assertEqual(report["metrics"]["oracle_checks_passed"], 2)
+        self.assertEqual(report["metrics"]["repetitions_consistent"], 1)
+        self.assertIn('"contender_lock_failures": 2', completed.stdout)
+        self.validate_evidence(observation)
+        self.assertFalse(observation["result_boundary"]["canonical"])
+        for result in report["artifacts"][0]["results"]:
+            self.assertEqual(
+                result["contender_failure"]["exception_message"], "database is locked"
+            )
+            self.assertEqual(result["reopened"]["row_count"], 5)
+
+    def test_recorded_busy_timeout_observation_and_math_view_are_valid(self) -> None:
+        observation = json.loads(
+            (
+                ROOT
+                / "data/experiments/g5-sqlite-busy-timeout-observation-mth-0197.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.validate_evidence(observation)
+        self.assertEqual(observation["observation_version"], "1")
+        self.assertEqual(observation["result"]["status"], "observed")
+        self.assertIsNone(
+            next(
+                measurement["value"]
+                for measurement in observation["result"]["measurements"]
+                if measurement["id"] == "timing"
+            )
+        )
+        view = load_math_view_contract(
+            ROOT / "data/mathviews/sqlite-busy-timeout-mth-0197.json",
+            evidence_ids={observation["id"]},
+        )
+        self.assertEqual(view.to_dict()["classification"]["result"], "valid")
+        self.assertEqual(len(view.to_dict()["validation_records"]), 2)
 
     @staticmethod
     def _savepoint_observation() -> dict:

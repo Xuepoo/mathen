@@ -1,0 +1,1910 @@
+{
+  "benchmark_id": "mth-0195-independent-cross-system-exploration",
+  "candidate_contract": {
+    "canonical": false,
+    "claim_status": "proposed",
+    "promotion_requires_human_review": true,
+    "proven": false
+  },
+  "conditions": [
+    {
+      "definition": "Normalized unique token overlap with deterministic ordering, positive scores only, and bounded top-k=10.",
+      "id": "bounded-lexical",
+      "input_partition": "evaluation",
+      "kind": "discovery",
+      "output_bound": 10,
+      "provenance": {
+        "exact_model_id": null,
+        "input_bundle_digest": "sha256:2de1ab317fab09628e7412335a0b8e612575a9884e5747580bf075dd3c01c0d3",
+        "prompt_digest": null,
+        "provider": null
+      },
+      "secret_safe_output": true,
+      "status": "protocol-defined"
+    },
+    {
+      "definition": "Future candidates preserve task-specific evidence IDs, typed claims, scope, task kind, and proven=false.",
+      "id": "structured-evidence-bounded",
+      "input_partition": "evaluation",
+      "kind": "synthesis",
+      "output_bound": 10,
+      "provenance": {
+        "exact_model_id": "none",
+        "input_bundle_digest": "sha256:2de1ab317fab09628e7412335a0b8e612575a9884e5747580bf075dd3c01c0d3",
+        "prompt_digest": null,
+        "provider": "deterministic-fixture"
+      },
+      "secret_safe_output": true,
+      "status": "protocol-defined"
+    },
+    {
+      "definition": "Direct-LLM evaluation requires exact provider, model, prompt, input, runtime, and secret-safe output provenance.",
+      "id": "direct-llm",
+      "input_partition": "evaluation",
+      "kind": "direct-llm",
+      "not_evaluated_reason": "No model, prompt, runtime provenance, or model output was supplied.",
+      "output_bound": 10,
+      "provenance": {
+        "exact_model_id": null,
+        "input_bundle_digest": null,
+        "prompt_digest": null,
+        "provider": null,
+        "runtime_digest": null
+      },
+      "secret_safe_output": false,
+      "status": "not-evaluated"
+    }
+  ],
+  "domain_slices": [
+    {
+      "digest": "sha256:cdaaf6902735d68be9d4f1c84b98285f16743c76c7c8ae4021a5465929046201",
+      "domain": "isolation",
+      "system_ids": [
+        "carryctx",
+        "firecracker",
+        "git"
+      ],
+      "task_ids": [
+        "task-19-boundary-firecracker",
+        "task-20-boundary-carryctx-worktree",
+        "task-21-boundary-collaboration-composition",
+        "task-22-boundary-formal-security",
+        "task-23-boundary-cross-layer-isolation",
+        "task-24-boundary-reference-counterexample"
+      ]
+    },
+    {
+      "digest": "sha256:80c7f981ff02b23792827c6267224b103c121430687d8d28e085e55635b74f18",
+      "domain": "orchestration",
+      "system_ids": [
+        "airflow",
+        "crossplane",
+        "kubernetes"
+      ],
+      "task_ids": [
+        "task-13-orchestration-kubernetes-reconcile",
+        "task-14-orchestration-airflow-dag",
+        "task-15-orchestration-provider-composition",
+        "task-16-orchestration-convergence-proof",
+        "task-17-orchestration-exactly-once",
+        "task-18-orchestration-reconcile-counterexample"
+      ]
+    },
+    {
+      "digest": "sha256:d87262cb5b9b4151073174c141645271861444e87d883c4d9299b117e6a6183a",
+      "domain": "storage",
+      "system_ids": [
+        "duckdb",
+        "postgresql",
+        "sqlite"
+      ],
+      "task_ids": [
+        "task-01-storage-local-transaction",
+        "task-02-storage-replay-analytics",
+        "task-03-storage-embedded-composition",
+        "task-04-storage-universal-isolation",
+        "task-05-storage-cross-file-snapshot",
+        "task-06-storage-wal-order-counterexample"
+      ]
+    },
+    {
+      "digest": "sha256:3718c52575a35f0fc05448781af0fd34ca3c3aa83f1d0af885ba6c0121aa8848",
+      "domain": "streaming",
+      "system_ids": [
+        "kafka",
+        "temporal"
+      ],
+      "task_ids": [
+        "task-07-stream-kafka-replay",
+        "task-08-stream-temporal-history",
+        "task-09-stream-workflow-composition",
+        "task-10-stream-global-order",
+        "task-11-stream-cross-history",
+        "task-12-stream-partition-counterexample"
+      ]
+    }
+  ],
+  "evidence_bundle": {
+    "digest": "sha256:2de1ab317fab09628e7412335a0b8e612575a9884e5747580bf075dd3c01c0d3",
+    "id": "mth-0195-frozen-reviewed-evidence",
+    "records": [
+      {
+        "card_evidence_id": "airflow-architecture-doc",
+        "card_id": "airflow",
+        "claim_type": "fact",
+        "description": "Apache Airflow Architecture Overview; frozen reviewed-card reference only.",
+        "id": "airflow:airflow-architecture-doc",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "airflow-source-commit",
+        "card_id": "airflow",
+        "claim_type": "fact",
+        "description": "Apache Airflow source at c01a68cb1e30; frozen reviewed-card reference only.",
+        "id": "airflow:airflow-source-commit",
+        "kind": "source-code",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "airflow-executor-doc",
+        "card_id": "airflow",
+        "claim_type": "fact",
+        "description": "Apache Airflow Executor; frozen reviewed-card reference only.",
+        "id": "airflow:airflow-executor-doc",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "carryctx-readme-fixed",
+        "card_id": "carryctx",
+        "claim_type": "fact",
+        "description": "CarryCtx README at fixed CLI commit; frozen reviewed-card reference only.",
+        "id": "carryctx:carryctx-readme-fixed",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "carryctx-vcs-backend-source",
+        "card_id": "carryctx",
+        "claim_type": "fact",
+        "description": "CarryCtx VCS backend boundary at fixed commit; frozen reviewed-card reference only.",
+        "id": "carryctx:carryctx-vcs-backend-source",
+        "kind": "source-code",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "carryctx-worktrees-doc",
+        "card_id": "carryctx",
+        "claim_type": "fact",
+        "description": "CarryCtx worktree documentation; frozen reviewed-card reference only.",
+        "id": "carryctx:carryctx-worktrees-doc",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "carryctx-merge-design-doc",
+        "card_id": "carryctx",
+        "claim_type": "fact",
+        "description": "CarryCtx mergeable Git-managed state design; frozen reviewed-card reference only.",
+        "id": "carryctx:carryctx-merge-design-doc",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "crossplane-composition-doc",
+        "card_id": "crossplane",
+        "claim_type": "fact",
+        "description": "Crossplane compositions; frozen reviewed-card reference only.",
+        "id": "crossplane:crossplane-composition-doc",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "crossplane-composition-source",
+        "card_id": "crossplane",
+        "claim_type": "fact",
+        "description": "Crossplane composition functions controller at pinned commit; frozen reviewed-card reference only.",
+        "id": "crossplane:crossplane-composition-source",
+        "kind": "source-code",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "crossplane-managed-doc",
+        "card_id": "crossplane",
+        "claim_type": "fact",
+        "description": "Crossplane managed resources; frozen reviewed-card reference only.",
+        "id": "crossplane:crossplane-managed-doc",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "crossplane-managed-source",
+        "card_id": "crossplane",
+        "claim_type": "fact",
+        "description": "Crossplane managed-resource reconciler at pinned commit; frozen reviewed-card reference only.",
+        "id": "crossplane:crossplane-managed-source",
+        "kind": "source-code",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "duckdb-why",
+        "card_id": "duckdb",
+        "claim_type": "fact",
+        "description": "Why DuckDB; frozen reviewed-card reference only.",
+        "id": "duckdb:duckdb-why",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "firecracker-design",
+        "card_id": "firecracker",
+        "claim_type": "fact",
+        "description": "Firecracker Design; frozen reviewed-card reference only.",
+        "id": "firecracker:firecracker-design",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "git-data-model",
+        "card_id": "git",
+        "claim_type": "fact",
+        "description": "Git user manual: Git objects and references; frozen reviewed-card reference only.",
+        "id": "git:git-data-model",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "kafka-introduction",
+        "card_id": "kafka",
+        "claim_type": "fact",
+        "description": "Introduction to Apache Kafka; frozen reviewed-card reference only.",
+        "id": "kafka:kafka-introduction",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "kafka-repository-commit",
+        "card_id": "kafka",
+        "claim_type": "fact",
+        "description": "Apache Kafka source at 787c2b4d9f03; frozen reviewed-card reference only.",
+        "id": "kafka:kafka-repository-commit",
+        "kind": "source-code",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "kubernetes-architecture-doc",
+        "card_id": "kubernetes",
+        "claim_type": "fact",
+        "description": "Kubernetes cluster architecture; frozen reviewed-card reference only.",
+        "id": "kubernetes:kubernetes-architecture-doc",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "kubernetes-controller-doc",
+        "card_id": "kubernetes",
+        "claim_type": "fact",
+        "description": "Kubernetes controllers; frozen reviewed-card reference only.",
+        "id": "kubernetes:kubernetes-controller-doc",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "kubernetes-controller-source",
+        "card_id": "kubernetes",
+        "claim_type": "fact",
+        "description": "Kubernetes controller source at 2770c7b39f56; frozen reviewed-card reference only.",
+        "id": "kubernetes:kubernetes-controller-source",
+        "kind": "source-code",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "postgresql-architecture",
+        "card_id": "postgresql",
+        "claim_type": "fact",
+        "description": "Architectural Fundamentals; frozen reviewed-card reference only.",
+        "id": "postgresql:postgresql-architecture",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "postgresql-mvcc",
+        "card_id": "postgresql",
+        "claim_type": "fact",
+        "description": "Concurrency Control; frozen reviewed-card reference only.",
+        "id": "postgresql:postgresql-mvcc",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "postgresql-transaction-isolation",
+        "card_id": "postgresql",
+        "claim_type": "fact",
+        "description": "Transaction Isolation; frozen reviewed-card reference only.",
+        "id": "postgresql:postgresql-transaction-isolation",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "sqlite-appropriate-uses",
+        "card_id": "sqlite",
+        "claim_type": "fact",
+        "description": "Appropriate Uses For SQLite; frozen reviewed-card reference only.",
+        "id": "sqlite:sqlite-appropriate-uses",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "sqlite-architecture",
+        "card_id": "sqlite",
+        "claim_type": "fact",
+        "description": "Architecture of SQLite; frozen reviewed-card reference only.",
+        "id": "sqlite:sqlite-architecture",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "sqlite-wal",
+        "card_id": "sqlite",
+        "claim_type": "fact",
+        "description": "Write-Ahead Logging; frozen reviewed-card reference only.",
+        "id": "sqlite:sqlite-wal",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "sqlite-atomic-commit",
+        "card_id": "sqlite",
+        "claim_type": "fact",
+        "description": "Atomic Commit In SQLite; frozen reviewed-card reference only.",
+        "id": "sqlite:sqlite-atomic-commit",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "temporal-server-architecture",
+        "card_id": "temporal",
+        "claim_type": "fact",
+        "description": "Temporal Server architecture and services; frozen reviewed-card reference only.",
+        "id": "temporal:temporal-server-architecture",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "temporal-workflow-execution",
+        "card_id": "temporal",
+        "claim_type": "fact",
+        "description": "Temporal Workflow Execution; frozen reviewed-card reference only.",
+        "id": "temporal:temporal-workflow-execution",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "temporal-determinism",
+        "card_id": "temporal",
+        "claim_type": "fact",
+        "description": "Temporal Workflow Definition deterministic constraints; frozen reviewed-card reference only.",
+        "id": "temporal:temporal-determinism",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "temporal-task-queues",
+        "card_id": "temporal",
+        "claim_type": "fact",
+        "description": "Temporal Task Queues; frozen reviewed-card reference only.",
+        "id": "temporal:temporal-task-queues",
+        "kind": "official-doc",
+        "source_revision_id": "reviewed-cards"
+      },
+      {
+        "card_evidence_id": "contract-review",
+        "card_id": "negative-knowledge",
+        "claim_type": "inference",
+        "description": "Reviewed bounded contract boundary; not a universal theorem.",
+        "id": "negative-knowledge:contract-review",
+        "kind": "secondary",
+        "source_revision_id": "contract-boundaries"
+      }
+    ],
+    "source_revision_digests": {
+      "contract-boundaries": "sha256:a24eba82119bdb9f77037184194fe4050f675a0ae9c0bbccd1531445547e77ff",
+      "mth-0118-contract": "sha256:02480d88885b8bcf4576d1e65716c9355a2e1be0b86bace3949cbf9fe076750d",
+      "reviewed-cards": "sha256:edb62335c0d38b9eddd443694efe7bcd657b0e87d55780d466ff600fc441af64",
+      "scope-context-contract": "sha256:0297a8f18fea107de291f2291599aadfc841160f00bb0be69391eca6e113cbe9"
+    }
+  },
+  "future_hooks": {
+    "llm_runs": {
+      "artifact": null,
+      "required_provenance": [
+        "provider",
+        "exact_model_id",
+        "prompt_digest",
+        "input_bundle_digest",
+        "runtime_digest"
+      ],
+      "status": "reserved"
+    },
+    "prototype_runs": {
+      "artifact": null,
+      "expected_fields": [
+        "task_id",
+        "implementation_digest",
+        "run_digest",
+        "result_status"
+      ],
+      "status": "reserved"
+    },
+    "reviewer_labels": {
+      "artifact": null,
+      "expected_fields": [
+        "task_id",
+        "candidate_id",
+        "label",
+        "reviewer_id_digest"
+      ],
+      "status": "reserved"
+    }
+  },
+  "metrics": [
+    {
+      "denominator": 0,
+      "name": "evidence_locality",
+      "numerator": 0,
+      "reason": "No reviewer labels, model outputs, or prototype runs are included in this authored task set.",
+      "status": "not-evaluated",
+      "value": null
+    },
+    {
+      "denominator": 0,
+      "name": "claim_discipline",
+      "numerator": 0,
+      "reason": "No reviewer labels, model outputs, or prototype runs are included in this authored task set.",
+      "status": "not-evaluated",
+      "value": null
+    },
+    {
+      "denominator": 0,
+      "name": "scope_preservation",
+      "numerator": 0,
+      "reason": "No reviewer labels, model outputs, or prototype runs are included in this authored task set.",
+      "status": "not-evaluated",
+      "value": null
+    },
+    {
+      "denominator": 0,
+      "name": "false_link_rate",
+      "numerator": 0,
+      "reason": "No reviewer labels, model outputs, or prototype runs are included in this authored task set.",
+      "status": "not-evaluated",
+      "value": null
+    },
+    {
+      "denominator": 0,
+      "name": "abstention_rate",
+      "numerator": 0,
+      "reason": "No reviewer labels, model outputs, or prototype runs are included in this authored task set.",
+      "status": "not-evaluated",
+      "value": null
+    },
+    {
+      "denominator": 0,
+      "name": "counterexample_recall",
+      "numerator": 0,
+      "reason": "No reviewer labels, model outputs, or prototype runs are included in this authored task set.",
+      "status": "not-evaluated",
+      "value": null
+    },
+    {
+      "denominator": 0,
+      "name": "composition_obligation_satisfaction",
+      "numerator": 0,
+      "reason": "No reviewer labels, model outputs, or prototype runs are included in this authored task set.",
+      "status": "not-evaluated",
+      "value": null
+    }
+  ],
+  "negative_knowledge": {
+    "candidate_generation_exclusions": [
+      "task-04-storage-universal-isolation",
+      "task-05-storage-cross-file-snapshot",
+      "task-06-storage-wal-order-counterexample",
+      "task-10-stream-global-order",
+      "task-11-stream-cross-history",
+      "task-12-stream-partition-counterexample",
+      "task-16-orchestration-convergence-proof",
+      "task-17-orchestration-exactly-once",
+      "task-18-orchestration-reconcile-counterexample",
+      "task-22-boundary-formal-security",
+      "task-23-boundary-cross-layer-isolation",
+      "task-24-boundary-reference-counterexample"
+    ],
+    "exclusion_reason": "Negative, unknown, and counterexample tasks are held out from candidate generation; negative-knowledge boundaries are never candidate labels.",
+    "holdout_ids": [
+      "task-04-storage-universal-isolation",
+      "task-06-storage-wal-order-counterexample",
+      "task-10-stream-global-order",
+      "task-12-stream-partition-counterexample",
+      "task-16-orchestration-convergence-proof",
+      "task-18-orchestration-reconcile-counterexample",
+      "task-22-boundary-formal-security",
+      "task-24-boundary-reference-counterexample"
+    ],
+    "source_ids": [
+      "contract-boundaries"
+    ]
+  },
+  "non_claims": [
+    "This authored task set does not measure truth, compatibility, causality, originality, production readiness, or model quality.",
+    "Every task is an independent authored instance with its own question, evidence slice, input digest, and source/card digest; independence is a task-design property, not statistical power.",
+    "Direct-LLM remains not-evaluated; no model output, reviewer label, empirical score, or superiority claim is asserted.",
+    "Candidates remain proposed, non-canonical, and proven=false; a bounded composition candidate is not a compatibility proof."
+  ],
+  "outcome": {
+    "reason": "The task set and provenance digests are frozen; labels, model outputs, and prototype results were intentionally not supplied.",
+    "status": "not-evaluated"
+  },
+  "partitions": {
+    "digest": "sha256:c62dd04f6211ced97cbf2f54e9c451a6de3e82170e5c37d819c68964eba24e4a",
+    "disjoint": true,
+    "exhaustive": true,
+    "sets": {
+      "evaluation": [
+        "task-03-storage-embedded-composition",
+        "task-09-stream-workflow-composition",
+        "task-15-orchestration-provider-composition",
+        "task-21-boundary-collaboration-composition"
+      ],
+      "holdout": [
+        "task-04-storage-universal-isolation",
+        "task-05-storage-cross-file-snapshot",
+        "task-06-storage-wal-order-counterexample",
+        "task-10-stream-global-order",
+        "task-11-stream-cross-history",
+        "task-12-stream-partition-counterexample",
+        "task-16-orchestration-convergence-proof",
+        "task-17-orchestration-exactly-once",
+        "task-18-orchestration-reconcile-counterexample",
+        "task-22-boundary-formal-security",
+        "task-23-boundary-cross-layer-isolation",
+        "task-24-boundary-reference-counterexample"
+      ],
+      "train": [
+        "task-01-storage-local-transaction",
+        "task-02-storage-replay-analytics",
+        "task-07-stream-kafka-replay",
+        "task-08-stream-temporal-history",
+        "task-13-orchestration-kubernetes-reconcile",
+        "task-14-orchestration-airflow-dag",
+        "task-19-boundary-firecracker",
+        "task-20-boundary-carryctx-worktree"
+      ]
+    }
+  },
+  "protocol_version": "mth-0195-v1",
+  "purpose": "Author independent, evidence-bounded cross-system exploration tasks without asserting empirical results or superiority.",
+  "research_only": true,
+  "review_budget": {
+    "budget_is_not_result": true,
+    "labeling_status": "not-started",
+    "max_candidate_records": 48,
+    "max_minutes": 150,
+    "planned_reviewer_count": 2
+  },
+  "reviewed_card_digests": [
+    {
+      "digest": "sha256:1d5d1e50c2f5c023b3057477316480aa9a2c23e1592e8f0b4f10a1eef5de6e87",
+      "path": "data/systems/airflow.json",
+      "system_id": "airflow"
+    },
+    {
+      "digest": "sha256:bdee6db652f2e13f88077c89294f42e535e0ecd46ff123a3277cffe7dd284158",
+      "path": "data/systems/carryctx.json",
+      "system_id": "carryctx"
+    },
+    {
+      "digest": "sha256:36e365c283cc30a532293a59449fdd912517a3a3ede27665ae3c66a48c36c2bc",
+      "path": "data/systems/crossplane.json",
+      "system_id": "crossplane"
+    },
+    {
+      "digest": "sha256:8a23865635e4faeb4578bf50445fc89864a51711e2d82957ab16c23c04c2fdd6",
+      "path": "data/systems/duckdb.json",
+      "system_id": "duckdb"
+    },
+    {
+      "digest": "sha256:427013dd1da343f1fd6a1e66df39aaff7f9b421ad8fdeb6a9f2f673df49eaf5d",
+      "path": "data/systems/firecracker.json",
+      "system_id": "firecracker"
+    },
+    {
+      "digest": "sha256:3bcaa2f349bde0e04880458d6a7e1af58dca647c6e755a87eafb740124cc9e40",
+      "path": "data/systems/git.json",
+      "system_id": "git"
+    },
+    {
+      "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
+      "path": "data/systems/kafka.json",
+      "system_id": "kafka"
+    },
+    {
+      "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
+      "path": "data/systems/kubernetes.json",
+      "system_id": "kubernetes"
+    },
+    {
+      "digest": "sha256:2eb9a8b36744c1e67150b408bbacb16ba667d9d7ffa85d971e48bf1cf9b1a32f",
+      "path": "data/systems/postgresql.json",
+      "system_id": "postgresql"
+    },
+    {
+      "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
+      "path": "data/systems/sqlite.json",
+      "system_id": "sqlite"
+    },
+    {
+      "digest": "sha256:a8de115ba218d6059b0731f7a3874a23df5d6523146a5ca2cb0abc81b6dbe055",
+      "path": "data/systems/temporal.json",
+      "system_id": "temporal"
+    }
+  ],
+  "reviewed_cards_digest": "sha256:edb62335c0d38b9eddd443694efe7bcd657b0e87d55780d466ff600fc441af64",
+  "schema_version": "1.0",
+  "source_revisions": [
+    {
+      "digest": "sha256:02480d88885b8bcf4576d1e65716c9355a2e1be0b86bace3949cbf9fe076750d",
+      "id": "mth-0118-contract",
+      "scope": "research-only benchmark and candidate boundary",
+      "source_ref": "docs/mth-0118-benchmark-harness.md"
+    },
+    {
+      "digest": "sha256:0297a8f18fea107de291f2291599aadfc841160f00bb0be69391eca6e113cbe9",
+      "id": "scope-context-contract",
+      "scope": "scope and evidence preservation contract",
+      "source_ref": "docs/scope-context-contract.md"
+    },
+    {
+      "digest": "sha256:a24eba82119bdb9f77037184194fe4050f675a0ae9c0bbccd1531445547e77ff",
+      "id": "contract-boundaries",
+      "scope": "reviewed negative-knowledge boundary record",
+      "source_ref": "data/negative-knowledge/contract-boundaries.json"
+    },
+    {
+      "digest": "sha256:edb62335c0d38b9eddd443694efe7bcd657b0e87d55780d466ff600fc441af64",
+      "id": "reviewed-cards",
+      "scope": "frozen reviewed Architecture Cards used as references only",
+      "source_ref": "data/systems/*.json"
+    }
+  ],
+  "task_card_digests": [
+    {
+      "digest": "sha256:ac0882f306484fbee799e1ddb984a0760c99d1ae8b101b686fd01a1dfcf2b60f",
+      "id": "task-01-storage-local-transaction"
+    },
+    {
+      "digest": "sha256:fc1d7c8612b638610416b5da44e44bfd63d963600c92ca83933567090e398c1f",
+      "id": "task-02-storage-replay-analytics"
+    },
+    {
+      "digest": "sha256:fb759917ffc6adb7f8a3b50337c5ffa8aae8ac5c6adbc272536c6a9b5329fc46",
+      "id": "task-03-storage-embedded-composition"
+    },
+    {
+      "digest": "sha256:34a3aec11f1876f4248530e824700d78e6ca9ecb5e25810223a38fa2bc1f97a4",
+      "id": "task-04-storage-universal-isolation"
+    },
+    {
+      "digest": "sha256:2cc22c2ec1d81c4f012d61349707e27ba3af8f3e0a33e98a540f9b457dc97585",
+      "id": "task-05-storage-cross-file-snapshot"
+    },
+    {
+      "digest": "sha256:8e564818cb0ed5b60275c3c9f571b368ccffc0db45dc28b32e9ffe670874186d",
+      "id": "task-06-storage-wal-order-counterexample"
+    },
+    {
+      "digest": "sha256:591cbe636f208346ba3153d49d50ce0f9aaa5d133d00624672509ba96fc63473",
+      "id": "task-07-stream-kafka-replay"
+    },
+    {
+      "digest": "sha256:e4b2e29d450ad139f1044071a89d3fe6369a71166c4c6d3eafef880c08fa0360",
+      "id": "task-08-stream-temporal-history"
+    },
+    {
+      "digest": "sha256:2d146b89d639f2189b3bf56e9fbe208fd3bcc6da89e869ec9b24240dc3cff67c",
+      "id": "task-09-stream-workflow-composition"
+    },
+    {
+      "digest": "sha256:c48a4569fcb112cc3c87072408c1ec3aef150c92f46e9ce0b2128e3e55fd9b37",
+      "id": "task-10-stream-global-order"
+    },
+    {
+      "digest": "sha256:12ae0baeac76dd639ee44b1a9cbd4408cfb6840bc1a38a644cbb973ce8aa71ad",
+      "id": "task-11-stream-cross-history"
+    },
+    {
+      "digest": "sha256:59e7b6ff066fe20a24fc80afa44d2a3b84385f0a9526d9efbdd59406e5303d1c",
+      "id": "task-12-stream-partition-counterexample"
+    },
+    {
+      "digest": "sha256:56c5a1bddebeb56ed26941221433b999035e25e745d58daa43d2d90be8891219",
+      "id": "task-13-orchestration-kubernetes-reconcile"
+    },
+    {
+      "digest": "sha256:6fbc497bfb8b95c43275e22a9e332ec48239448fdf22c6aac885e20f1b9cc3d8",
+      "id": "task-14-orchestration-airflow-dag"
+    },
+    {
+      "digest": "sha256:ffe89adae24b4d8382196c5e8dfc6638d185bd53fcb65f624205b4b5b3c10f8f",
+      "id": "task-15-orchestration-provider-composition"
+    },
+    {
+      "digest": "sha256:2ff1b2b74813df4d2853a66f67d959b5edcf410ecb6fceac04f25c5c504961ee",
+      "id": "task-16-orchestration-convergence-proof"
+    },
+    {
+      "digest": "sha256:5920d9e66f5eb07d8ce74fe81d7cdd240fe3c34d32b8caf9dcc8543177c7b37d",
+      "id": "task-17-orchestration-exactly-once"
+    },
+    {
+      "digest": "sha256:952f96739a6a41fd1813a5eb7cd4e0a17e817dfea7cf51b62b2024c9e1da0e9c",
+      "id": "task-18-orchestration-reconcile-counterexample"
+    },
+    {
+      "digest": "sha256:af3676b221e451a1ddf83edf23270ab430fc4f0e40c00a778c243c6c170960df",
+      "id": "task-19-boundary-firecracker"
+    },
+    {
+      "digest": "sha256:698bc9e38b50a3e8d549d523c90fc083f4355f06182a243f779e74ee586fa4ff",
+      "id": "task-20-boundary-carryctx-worktree"
+    },
+    {
+      "digest": "sha256:b8fae5a6b975be9fcc9fee2caecaca31cc06fbbbeb71b8b99656354494af87d2",
+      "id": "task-21-boundary-collaboration-composition"
+    },
+    {
+      "digest": "sha256:45ba4d8dbdee54997bc8e780b01b7f02efdb056f9c0f7fe4b83c6f48f66770a2",
+      "id": "task-22-boundary-formal-security"
+    },
+    {
+      "digest": "sha256:01a4b0c02a0791c350281c38991488134a45e0d0eb9504a98ad4cc893d759ed8",
+      "id": "task-23-boundary-cross-layer-isolation"
+    },
+    {
+      "digest": "sha256:3d672b1051dad91f281418032f00c9906efbe0593d033b5e6836226d4a301e5b",
+      "id": "task-24-boundary-reference-counterexample"
+    }
+  ],
+  "task_cards": [
+    {
+      "answer_contract": "positive-evidence",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
+          "path": "data/systems/sqlite.json",
+          "system_id": "sqlite"
+        },
+        {
+          "digest": "sha256:2eb9a8b36744c1e67150b408bbacb16ba667d9d7ffa85d971e48bf1cf9b1a32f",
+          "path": "data/systems/postgresql.json",
+          "system_id": "postgresql"
+        }
+      ],
+      "domain": "storage",
+      "evidence_ids": [
+        "sqlite:sqlite-appropriate-uses",
+        "sqlite:sqlite-architecture",
+        "postgresql:postgresql-architecture",
+        "postgresql:postgresql-mvcc"
+      ],
+      "id": "task-01-storage-local-transaction",
+      "input_digest": "sha256:171ab0b480619f0ce86b12d884df7f65c70c0c486f54e675371dc3085093740e",
+      "input_text": "storage sqlite postgresql sqlite-appropriate-uses sqlite-architecture postgresql-architecture postgresql-mvcc positive-evidence",
+      "kind": "positive",
+      "negative_knowledge": false,
+      "partition": "train",
+      "question": "Identify bounded local and client/server transaction mechanisms without merging their deployment scopes.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "sqlite",
+          "postgresql"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "sqlite",
+        "postgresql"
+      ],
+      "task_key": "storage-local-transaction"
+    },
+    {
+      "answer_contract": "positive-evidence",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
+          "path": "data/systems/sqlite.json",
+          "system_id": "sqlite"
+        },
+        {
+          "digest": "sha256:8a23865635e4faeb4578bf50445fc89864a51711e2d82957ab16c23c04c2fdd6",
+          "path": "data/systems/duckdb.json",
+          "system_id": "duckdb"
+        }
+      ],
+      "domain": "storage",
+      "evidence_ids": [
+        "sqlite:sqlite-wal",
+        "duckdb:duckdb-why"
+      ],
+      "id": "task-02-storage-replay-analytics",
+      "input_digest": "sha256:7cd79d15118b385b5d758543a52f23bc04cab45e0b49441ef143c0739e795a29",
+      "input_text": "storage sqlite duckdb sqlite-wal duckdb-why positive-evidence",
+      "kind": "positive",
+      "negative_knowledge": false,
+      "partition": "train",
+      "question": "Contrast SQLite's WAL reader snapshot with DuckDB's embedded analytical execution using only cited evidence.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "sqlite",
+          "duckdb"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "sqlite",
+        "duckdb"
+      ],
+      "task_key": "storage-replay-analytics"
+    },
+    {
+      "answer_contract": "candidate",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
+          "path": "data/systems/sqlite.json",
+          "system_id": "sqlite"
+        },
+        {
+          "digest": "sha256:8a23865635e4faeb4578bf50445fc89864a51711e2d82957ab16c23c04c2fdd6",
+          "path": "data/systems/duckdb.json",
+          "system_id": "duckdb"
+        }
+      ],
+      "domain": "storage",
+      "evidence_ids": [
+        "sqlite:sqlite-architecture",
+        "sqlite:sqlite-wal",
+        "duckdb:duckdb-why"
+      ],
+      "id": "task-03-storage-embedded-composition",
+      "input_digest": "sha256:29324bdb80a1bc73a0309cb061f305db01fcd048f25658ab5a5cca2cd58311b9",
+      "input_text": "storage sqlite duckdb sqlite-architecture sqlite-wal duckdb-why candidate",
+      "kind": "composition",
+      "negative_knowledge": false,
+      "partition": "evaluation",
+      "question": "Draft a bounded SQLite-to-DuckDB analytical handoff candidate; state the interface, workload, and unverified obligations.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "sqlite",
+          "duckdb"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "sqlite",
+        "duckdb"
+      ],
+      "task_key": "storage-embedded-composition"
+    },
+    {
+      "answer_contract": "abstain-boundary",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
+          "path": "data/systems/sqlite.json",
+          "system_id": "sqlite"
+        },
+        {
+          "digest": "sha256:2eb9a8b36744c1e67150b408bbacb16ba667d9d7ffa85d971e48bf1cf9b1a32f",
+          "path": "data/systems/postgresql.json",
+          "system_id": "postgresql"
+        },
+        {
+          "digest": "sha256:8a23865635e4faeb4578bf50445fc89864a51711e2d82957ab16c23c04c2fdd6",
+          "path": "data/systems/duckdb.json",
+          "system_id": "duckdb"
+        }
+      ],
+      "domain": "storage",
+      "evidence_ids": [
+        "sqlite:sqlite-wal",
+        "postgresql:postgresql-transaction-isolation",
+        "duckdb:duckdb-why",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-04-storage-universal-isolation",
+      "input_digest": "sha256:97ab18daa4f4f9174906513f7f10b7526a1feed8165f889bb7e8f1413989277e",
+      "input_text": "storage sqlite postgresql duckdb sqlite-wal postgresql-transaction-isolation duckdb-why contract-review abstain-boundary",
+      "kind": "negative",
+      "negative_knowledge": true,
+      "partition": "holdout",
+      "question": "Does a shared storage interface establish one universal isolation guarantee across these systems?",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "sqlite",
+          "postgresql",
+          "duckdb"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "sqlite",
+        "postgresql",
+        "duckdb"
+      ],
+      "task_key": "storage-universal-isolation"
+    },
+    {
+      "answer_contract": "unknown",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
+          "path": "data/systems/sqlite.json",
+          "system_id": "sqlite"
+        },
+        {
+          "digest": "sha256:8a23865635e4faeb4578bf50445fc89864a51711e2d82957ab16c23c04c2fdd6",
+          "path": "data/systems/duckdb.json",
+          "system_id": "duckdb"
+        }
+      ],
+      "domain": "storage",
+      "evidence_ids": [
+        "sqlite:sqlite-wal",
+        "sqlite:sqlite-atomic-commit",
+        "duckdb:duckdb-why",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-05-storage-cross-file-snapshot",
+      "input_digest": "sha256:e32b5160354df03686dcf2347dea9b691bd185f2c2a78129785cab1b78926d66",
+      "input_text": "storage sqlite duckdb sqlite-wal sqlite-atomic-commit duckdb-why contract-review unknown",
+      "kind": "unknown",
+      "negative_knowledge": false,
+      "partition": "holdout",
+      "question": "Is a crash-consistent snapshot preserved when SQLite WAL state and a separate DuckDB file are read as one unit?",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "sqlite",
+          "duckdb"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "sqlite",
+        "duckdb"
+      ],
+      "task_key": "storage-cross-file-snapshot"
+    },
+    {
+      "answer_contract": "counterexample",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:0525331c12e917358ab27afa437d86407ba86ca32fddf38638ea8c79dcaaf761",
+          "path": "data/systems/sqlite.json",
+          "system_id": "sqlite"
+        }
+      ],
+      "domain": "storage",
+      "evidence_ids": [
+        "sqlite:sqlite-wal",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-06-storage-wal-order-counterexample",
+      "input_digest": "sha256:8fc1a0adce8871dfa6c88164fb520e36d59e84f83300493429e40a0793a84b84",
+      "input_text": "storage sqlite sqlite-wal contract-review counterexample",
+      "kind": "counterexample",
+      "negative_knowledge": true,
+      "partition": "holdout",
+      "question": "Give a bounded counterexample to treating a SQLite WAL reader snapshot as a cross-file or global total-order guarantee.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "sqlite"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "sqlite"
+      ],
+      "task_key": "storage-wal-order-counterexample"
+    },
+    {
+      "answer_contract": "positive-evidence",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
+          "path": "data/systems/kafka.json",
+          "system_id": "kafka"
+        }
+      ],
+      "domain": "streaming",
+      "evidence_ids": [
+        "kafka:kafka-introduction",
+        "kafka:kafka-repository-commit"
+      ],
+      "id": "task-07-stream-kafka-replay",
+      "input_digest": "sha256:9bf40f6e0e378451c1414339ab6aa109fcfa39bcdd4e99e157683d4cec528027",
+      "input_text": "streaming kafka kafka-introduction kafka-repository-commit positive-evidence",
+      "kind": "positive",
+      "negative_knowledge": false,
+      "partition": "train",
+      "question": "Locate the bounded retention and replay mechanism in Kafka and name the ordering scope it actually documents.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kafka"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "kafka"
+      ],
+      "task_key": "stream-kafka-replay"
+    },
+    {
+      "answer_contract": "positive-evidence",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:a8de115ba218d6059b0731f7a3874a23df5d6523146a5ca2cb0abc81b6dbe055",
+          "path": "data/systems/temporal.json",
+          "system_id": "temporal"
+        }
+      ],
+      "domain": "streaming",
+      "evidence_ids": [
+        "temporal:temporal-server-architecture",
+        "temporal:temporal-workflow-execution",
+        "temporal:temporal-determinism"
+      ],
+      "id": "task-08-stream-temporal-history",
+      "input_digest": "sha256:ccc468a78377fcb9835883be4374ee47d71fa571f436666868350727c77cceb2",
+      "input_text": "streaming temporal temporal-server-architecture temporal-workflow-execution temporal-determinism positive-evidence",
+      "kind": "positive",
+      "negative_knowledge": false,
+      "partition": "train",
+      "question": "Locate Temporal's workflow-history and deterministic-replay boundary without treating it as a generic event log.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "temporal"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "temporal"
+      ],
+      "task_key": "stream-temporal-history"
+    },
+    {
+      "answer_contract": "candidate",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
+          "path": "data/systems/kafka.json",
+          "system_id": "kafka"
+        },
+        {
+          "digest": "sha256:a8de115ba218d6059b0731f7a3874a23df5d6523146a5ca2cb0abc81b6dbe055",
+          "path": "data/systems/temporal.json",
+          "system_id": "temporal"
+        }
+      ],
+      "domain": "streaming",
+      "evidence_ids": [
+        "kafka:kafka-introduction",
+        "temporal:temporal-server-architecture",
+        "temporal:temporal-task-queues"
+      ],
+      "id": "task-09-stream-workflow-composition",
+      "input_digest": "sha256:d18d074d27cc774b71b81a2571fcf2a2360690197c0f7b5eeeae866e95bc8ce2",
+      "input_text": "streaming kafka temporal kafka-introduction temporal-server-architecture temporal-task-queues candidate",
+      "kind": "composition",
+      "negative_knowledge": false,
+      "partition": "evaluation",
+      "question": "Draft a bounded Kafka-to-Temporal event handoff candidate and list delivery, ordering, and replay obligations that remain untested.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kafka",
+          "temporal"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "kafka",
+        "temporal"
+      ],
+      "task_key": "stream-workflow-composition"
+    },
+    {
+      "answer_contract": "abstain-boundary",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
+          "path": "data/systems/kafka.json",
+          "system_id": "kafka"
+        },
+        {
+          "digest": "sha256:a8de115ba218d6059b0731f7a3874a23df5d6523146a5ca2cb0abc81b6dbe055",
+          "path": "data/systems/temporal.json",
+          "system_id": "temporal"
+        }
+      ],
+      "domain": "streaming",
+      "evidence_ids": [
+        "kafka:kafka-introduction",
+        "temporal:temporal-workflow-execution",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-10-stream-global-order",
+      "input_digest": "sha256:64cca89428056b313353fc823d00f8b90aa722ef22aade6d98a2410099c65cf8",
+      "input_text": "streaming kafka temporal kafka-introduction temporal-workflow-execution contract-review abstain-boundary",
+      "kind": "negative",
+      "negative_knowledge": true,
+      "partition": "holdout",
+      "question": "Does retained Kafka or Temporal history establish one total order across every partition, consumer, and workflow?",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kafka",
+          "temporal"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "kafka",
+        "temporal"
+      ],
+      "task_key": "stream-global-order"
+    },
+    {
+      "answer_contract": "unknown",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
+          "path": "data/systems/kafka.json",
+          "system_id": "kafka"
+        },
+        {
+          "digest": "sha256:a8de115ba218d6059b0731f7a3874a23df5d6523146a5ca2cb0abc81b6dbe055",
+          "path": "data/systems/temporal.json",
+          "system_id": "temporal"
+        }
+      ],
+      "domain": "streaming",
+      "evidence_ids": [
+        "kafka:kafka-introduction",
+        "temporal:temporal-workflow-execution",
+        "temporal:temporal-determinism",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-11-stream-cross-history",
+      "input_digest": "sha256:20db2b0171b5838cada028bf2334cb5d2914e245ce68dc3f25cb755b4ff35a63",
+      "input_text": "streaming kafka temporal kafka-introduction temporal-workflow-execution temporal-determinism contract-review unknown",
+      "kind": "unknown",
+      "negative_knowledge": false,
+      "partition": "holdout",
+      "question": "Is replay behavior equivalent when a Kafka event stream is used to trigger a Temporal workflow across retries and version changes?",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kafka",
+          "temporal"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "kafka",
+        "temporal"
+      ],
+      "task_key": "stream-cross-history"
+    },
+    {
+      "answer_contract": "counterexample",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:94d42d238d89a9612613470c8f8b9d15b24816e8349e5e097bf309b23a1e5e14",
+          "path": "data/systems/kafka.json",
+          "system_id": "kafka"
+        }
+      ],
+      "domain": "streaming",
+      "evidence_ids": [
+        "kafka:kafka-introduction",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-12-stream-partition-counterexample",
+      "input_digest": "sha256:50b45e2e74a5308d653e81d9f76dc2912d10e02cde533a2e87e22622d7218774",
+      "input_text": "streaming kafka kafka-introduction contract-review counterexample",
+      "kind": "counterexample",
+      "negative_knowledge": true,
+      "partition": "holdout",
+      "question": "Give a bounded counterexample to upgrading Kafka per-partition ordering into a topic-wide total order.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kafka"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "kafka"
+      ],
+      "task_key": "stream-partition-counterexample"
+    },
+    {
+      "answer_contract": "positive-evidence",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
+          "path": "data/systems/kubernetes.json",
+          "system_id": "kubernetes"
+        }
+      ],
+      "domain": "orchestration",
+      "evidence_ids": [
+        "kubernetes:kubernetes-architecture-doc",
+        "kubernetes:kubernetes-controller-doc",
+        "kubernetes:kubernetes-controller-source"
+      ],
+      "id": "task-13-orchestration-kubernetes-reconcile",
+      "input_digest": "sha256:958d4182d01a0f8c858dffaa08f384569bb5aa1fdaee9bca78056b443ae57b5b",
+      "input_text": "orchestration kubernetes kubernetes-architecture-doc kubernetes-controller-doc kubernetes-controller-source positive-evidence",
+      "kind": "positive",
+      "negative_knowledge": false,
+      "partition": "train",
+      "question": "Describe Kubernetes controller reconciliation as an evidence-backed control-loop mechanism, not a convergence proof.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kubernetes"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "kubernetes"
+      ],
+      "task_key": "orchestration-kubernetes-reconcile"
+    },
+    {
+      "answer_contract": "positive-evidence",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:1d5d1e50c2f5c023b3057477316480aa9a2c23e1592e8f0b4f10a1eef5de6e87",
+          "path": "data/systems/airflow.json",
+          "system_id": "airflow"
+        }
+      ],
+      "domain": "orchestration",
+      "evidence_ids": [
+        "airflow:airflow-architecture-doc",
+        "airflow:airflow-source-commit",
+        "airflow:airflow-executor-doc"
+      ],
+      "id": "task-14-orchestration-airflow-dag",
+      "input_digest": "sha256:a8423dfa3231aa6b061b629a69fde64ae236b42aaeaf2f23dc3e2fc8b4d47c58",
+      "input_text": "orchestration airflow airflow-architecture-doc airflow-source-commit airflow-executor-doc positive-evidence",
+      "kind": "positive",
+      "negative_knowledge": false,
+      "partition": "train",
+      "question": "Describe Airflow's DAG scheduling and executor boundary while preserving its workload and deployment scope.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "airflow"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "airflow"
+      ],
+      "task_key": "orchestration-airflow-dag"
+    },
+    {
+      "answer_contract": "candidate",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
+          "path": "data/systems/kubernetes.json",
+          "system_id": "kubernetes"
+        },
+        {
+          "digest": "sha256:36e365c283cc30a532293a59449fdd912517a3a3ede27665ae3c66a48c36c2bc",
+          "path": "data/systems/crossplane.json",
+          "system_id": "crossplane"
+        }
+      ],
+      "domain": "orchestration",
+      "evidence_ids": [
+        "kubernetes:kubernetes-controller-doc",
+        "crossplane:crossplane-composition-doc",
+        "crossplane:crossplane-composition-source",
+        "crossplane:crossplane-managed-doc"
+      ],
+      "id": "task-15-orchestration-provider-composition",
+      "input_digest": "sha256:00c9ed591e8e862fee4e46e73ee685fbac1e6bcea9d3e1fbbe595cd94c92fc17",
+      "input_text": "orchestration kubernetes crossplane kubernetes-controller-doc crossplane-composition-doc crossplane-composition-source crossplane-managed-doc candidate",
+      "kind": "composition",
+      "negative_knowledge": false,
+      "partition": "evaluation",
+      "question": "Draft a bounded Kubernetes-Crossplane managed-resource composition candidate with explicit provider and reconciliation obligations.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kubernetes",
+          "crossplane"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "kubernetes",
+        "crossplane"
+      ],
+      "task_key": "orchestration-provider-composition"
+    },
+    {
+      "answer_contract": "abstain-boundary",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
+          "path": "data/systems/kubernetes.json",
+          "system_id": "kubernetes"
+        },
+        {
+          "digest": "sha256:1d5d1e50c2f5c023b3057477316480aa9a2c23e1592e8f0b4f10a1eef5de6e87",
+          "path": "data/systems/airflow.json",
+          "system_id": "airflow"
+        },
+        {
+          "digest": "sha256:36e365c283cc30a532293a59449fdd912517a3a3ede27665ae3c66a48c36c2bc",
+          "path": "data/systems/crossplane.json",
+          "system_id": "crossplane"
+        }
+      ],
+      "domain": "orchestration",
+      "evidence_ids": [
+        "kubernetes:kubernetes-controller-doc",
+        "airflow:airflow-architecture-doc",
+        "crossplane:crossplane-managed-doc",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-16-orchestration-convergence-proof",
+      "input_digest": "sha256:d6707caa6fcca1e5c86ba17b21b0e87eb15e3d0a1ba71b02291db3f6ea6377f8",
+      "input_text": "orchestration kubernetes airflow crossplane kubernetes-controller-doc airflow-architecture-doc crossplane-managed-doc contract-review abstain-boundary",
+      "kind": "negative",
+      "negative_knowledge": true,
+      "partition": "holdout",
+      "question": "Does the presence of a reconciliation or scheduling loop prove convergence under every failure condition?",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kubernetes",
+          "airflow",
+          "crossplane"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "kubernetes",
+        "airflow",
+        "crossplane"
+      ],
+      "task_key": "orchestration-convergence-proof"
+    },
+    {
+      "answer_contract": "unknown",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
+          "path": "data/systems/kubernetes.json",
+          "system_id": "kubernetes"
+        },
+        {
+          "digest": "sha256:1d5d1e50c2f5c023b3057477316480aa9a2c23e1592e8f0b4f10a1eef5de6e87",
+          "path": "data/systems/airflow.json",
+          "system_id": "airflow"
+        }
+      ],
+      "domain": "orchestration",
+      "evidence_ids": [
+        "kubernetes:kubernetes-controller-doc",
+        "airflow:airflow-executor-doc",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-17-orchestration-exactly-once",
+      "input_digest": "sha256:c84de06f3d6f9462336f760f455d4e001f3363b324a8632921f9eff92174351e",
+      "input_text": "orchestration kubernetes airflow kubernetes-controller-doc airflow-executor-doc contract-review unknown",
+      "kind": "unknown",
+      "negative_knowledge": false,
+      "partition": "holdout",
+      "question": "Is exactly-once execution preserved when Airflow work is launched through a Kubernetes control path?",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kubernetes",
+          "airflow"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "kubernetes",
+        "airflow"
+      ],
+      "task_key": "orchestration-exactly-once"
+    },
+    {
+      "answer_contract": "counterexample",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:8c5b331dd3b52f6b828f7d7720b7988de733dd2edf89eaf1b136fcad9a6dde05",
+          "path": "data/systems/kubernetes.json",
+          "system_id": "kubernetes"
+        },
+        {
+          "digest": "sha256:36e365c283cc30a532293a59449fdd912517a3a3ede27665ae3c66a48c36c2bc",
+          "path": "data/systems/crossplane.json",
+          "system_id": "crossplane"
+        }
+      ],
+      "domain": "orchestration",
+      "evidence_ids": [
+        "kubernetes:kubernetes-controller-doc",
+        "crossplane:crossplane-managed-doc",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-18-orchestration-reconcile-counterexample",
+      "input_digest": "sha256:23f360c3af73d8b150c99482d30b2c11a7db1594b0848bc8dc0396154a1b9a98",
+      "input_text": "orchestration kubernetes crossplane kubernetes-controller-doc crossplane-managed-doc contract-review counterexample",
+      "kind": "counterexample",
+      "negative_knowledge": true,
+      "partition": "holdout",
+      "question": "Give a bounded counterexample in which reconciliation runs but unresolved conflict or non-idempotent behavior prevents a convergence claim.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "kubernetes",
+          "crossplane"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "kubernetes",
+        "crossplane"
+      ],
+      "task_key": "orchestration-reconcile-counterexample"
+    },
+    {
+      "answer_contract": "positive-evidence",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:427013dd1da343f1fd6a1e66df39aaff7f9b421ad8fdeb6a9f2f673df49eaf5d",
+          "path": "data/systems/firecracker.json",
+          "system_id": "firecracker"
+        }
+      ],
+      "domain": "isolation",
+      "evidence_ids": [
+        "firecracker:firecracker-design"
+      ],
+      "id": "task-19-boundary-firecracker",
+      "input_digest": "sha256:8fa4efbef8734745bbc3ac71f47729aa448ea3f5b27603090caa86c0556e415f",
+      "input_text": "isolation firecracker firecracker-design positive-evidence",
+      "kind": "positive",
+      "negative_knowledge": false,
+      "partition": "train",
+      "question": "Describe Firecracker's deliberately minimal machine boundary and its stated target workload without inferring a universal security result.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "firecracker"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "firecracker"
+      ],
+      "task_key": "boundary-firecracker"
+    },
+    {
+      "answer_contract": "positive-evidence",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:bdee6db652f2e13f88077c89294f42e535e0ecd46ff123a3277cffe7dd284158",
+          "path": "data/systems/carryctx.json",
+          "system_id": "carryctx"
+        },
+        {
+          "digest": "sha256:3bcaa2f349bde0e04880458d6a7e1af58dca647c6e755a87eafb740124cc9e40",
+          "path": "data/systems/git.json",
+          "system_id": "git"
+        }
+      ],
+      "domain": "isolation",
+      "evidence_ids": [
+        "carryctx:carryctx-vcs-backend-source",
+        "carryctx:carryctx-worktrees-doc",
+        "git:git-data-model"
+      ],
+      "id": "task-20-boundary-carryctx-worktree",
+      "input_digest": "sha256:5a32b0cada63689d3e9542a21e3329c1ce3d0f6756f91ac651c0e411881e7ebd",
+      "input_text": "isolation carryctx git carryctx-vcs-backend-source carryctx-worktrees-doc git-data-model positive-evidence",
+      "kind": "positive",
+      "negative_knowledge": false,
+      "partition": "train",
+      "question": "Contrast CarryCtx worktree coordination with Git object storage without equating workspace scope with object isolation.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "carryctx",
+          "git"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "carryctx",
+        "git"
+      ],
+      "task_key": "boundary-carryctx-worktree"
+    },
+    {
+      "answer_contract": "candidate",
+      "candidate_generation_allowed": true,
+      "card_digests": [
+        {
+          "digest": "sha256:bdee6db652f2e13f88077c89294f42e535e0ecd46ff123a3277cffe7dd284158",
+          "path": "data/systems/carryctx.json",
+          "system_id": "carryctx"
+        },
+        {
+          "digest": "sha256:3bcaa2f349bde0e04880458d6a7e1af58dca647c6e755a87eafb740124cc9e40",
+          "path": "data/systems/git.json",
+          "system_id": "git"
+        }
+      ],
+      "domain": "isolation",
+      "evidence_ids": [
+        "carryctx:carryctx-merge-design-doc",
+        "carryctx:carryctx-vcs-backend-source",
+        "git:git-data-model"
+      ],
+      "id": "task-21-boundary-collaboration-composition",
+      "input_digest": "sha256:086da2ab105f8300f9f7c6d4474eb44f4ab373ac9acaac1a9119fe74434b2cb5",
+      "input_text": "isolation carryctx git carryctx-merge-design-doc carryctx-vcs-backend-source git-data-model candidate",
+      "kind": "composition",
+      "negative_knowledge": false,
+      "partition": "evaluation",
+      "question": "Draft a bounded CarryCtx-Git collaboration composition candidate and state its merge, provenance, and workspace obligations.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "carryctx",
+          "git"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:b9ba5f48a6fb675c1f77379669195e64b595f21cefae6eb02c46916038c1afe7",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract"
+      ],
+      "systems": [
+        "carryctx",
+        "git"
+      ],
+      "task_key": "boundary-collaboration-composition"
+    },
+    {
+      "answer_contract": "abstain-boundary",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:427013dd1da343f1fd6a1e66df39aaff7f9b421ad8fdeb6a9f2f673df49eaf5d",
+          "path": "data/systems/firecracker.json",
+          "system_id": "firecracker"
+        },
+        {
+          "digest": "sha256:3bcaa2f349bde0e04880458d6a7e1af58dca647c6e755a87eafb740124cc9e40",
+          "path": "data/systems/git.json",
+          "system_id": "git"
+        },
+        {
+          "digest": "sha256:bdee6db652f2e13f88077c89294f42e535e0ecd46ff123a3277cffe7dd284158",
+          "path": "data/systems/carryctx.json",
+          "system_id": "carryctx"
+        }
+      ],
+      "domain": "isolation",
+      "evidence_ids": [
+        "firecracker:firecracker-design",
+        "git:git-data-model",
+        "carryctx:carryctx-worktrees-doc",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-22-boundary-formal-security",
+      "input_digest": "sha256:37332e11da23618ca43f3d7fb32b832fa0031fef478efe162b843ddb9f9670a2",
+      "input_text": "isolation firecracker git carryctx firecracker-design git-data-model carryctx-worktrees-doc contract-review abstain-boundary",
+      "kind": "negative",
+      "negative_knowledge": true,
+      "partition": "holdout",
+      "question": "Does naming an execution, object, or workspace boundary establish a formal security or correctness proof?",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "firecracker",
+          "git",
+          "carryctx"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "firecracker",
+        "git",
+        "carryctx"
+      ],
+      "task_key": "boundary-formal-security"
+    },
+    {
+      "answer_contract": "unknown",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:427013dd1da343f1fd6a1e66df39aaff7f9b421ad8fdeb6a9f2f673df49eaf5d",
+          "path": "data/systems/firecracker.json",
+          "system_id": "firecracker"
+        },
+        {
+          "digest": "sha256:3bcaa2f349bde0e04880458d6a7e1af58dca647c6e755a87eafb740124cc9e40",
+          "path": "data/systems/git.json",
+          "system_id": "git"
+        }
+      ],
+      "domain": "isolation",
+      "evidence_ids": [
+        "firecracker:firecracker-design",
+        "git:git-data-model",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-23-boundary-cross-layer-isolation",
+      "input_digest": "sha256:422ed1d9a7b95d642e311562c53701dd753494936123af70ffd3b7f2fac265c9",
+      "input_text": "isolation firecracker git firecracker-design git-data-model contract-review unknown",
+      "kind": "unknown",
+      "negative_knowledge": false,
+      "partition": "holdout",
+      "question": "Would a Git repository inside a Firecracker microVM preserve a single isolation contract across host, VM, filesystem, and object layers?",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "firecracker",
+          "git"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "firecracker",
+        "git"
+      ],
+      "task_key": "boundary-cross-layer-isolation"
+    },
+    {
+      "answer_contract": "counterexample",
+      "candidate_generation_allowed": false,
+      "card_digests": [
+        {
+          "digest": "sha256:3bcaa2f349bde0e04880458d6a7e1af58dca647c6e755a87eafb740124cc9e40",
+          "path": "data/systems/git.json",
+          "system_id": "git"
+        }
+      ],
+      "domain": "isolation",
+      "evidence_ids": [
+        "git:git-data-model",
+        "negative-knowledge:contract-review"
+      ],
+      "id": "task-24-boundary-reference-counterexample",
+      "input_digest": "sha256:12b3144a722e08a62abc6b9d05d62e41de286c6627e3ded0862ff65622697dec",
+      "input_text": "isolation git git-data-model contract-review counterexample",
+      "kind": "counterexample",
+      "negative_knowledge": true,
+      "partition": "holdout",
+      "question": "Give a bounded counterexample to treating Git's mutable references as immutable content-addressed objects.",
+      "scope": {
+        "deployment": "offline research fixture",
+        "systems": [
+          "git"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_digest": "sha256:6daa052e1c5d159e9d2016442bf1faa556472fa721f38d62cb817629e81fe8fc",
+      "source_revision_ids": [
+        "mth-0118-contract",
+        "scope-context-contract",
+        "contract-boundaries"
+      ],
+      "systems": [
+        "git"
+      ],
+      "task_key": "boundary-reference-counterexample"
+    }
+  ]
+}
