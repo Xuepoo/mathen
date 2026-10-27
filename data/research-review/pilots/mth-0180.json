@@ -1,0 +1,136 @@
+{
+  "pilot_id": "mth-0180",
+  "record_kind": "agent-review-pilot",
+  "research_only": true,
+  "canonical": false,
+  "study_id": "mth-0175-example",
+  "study_commit": "ed38e40",
+  "study_digest": "sha256:dda66e995a0903f69965968c300ea2d7cce6ed46b8be1b04349fb054e90abf97",
+  "packet_id": "packet-f7b7f8b71f850b0717d12962",
+  "packet_digest": "sha256:afdf10ab0b6105bdfda086398834369cbe5807136e390e6399f9754143d9f607",
+  "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+  "assignment_ids": [
+    "assignment-aeac0f3000560b73394b0f1e",
+    "assignment-a46c75a5735290e955b12485",
+    "assignment-310dd57dd56056d1fe479d10",
+    "assignment-a61fefb4bdc14191e77b42f3"
+  ],
+  "provenance": {
+    "mode": "agent-review-pilot",
+    "reviewer_kind": "agent",
+    "human_review": false,
+    "independent_packet_review": true,
+    "frozen_study_packet": true,
+    "packet_selection": "A",
+    "execution_actor": "llm-based-agent",
+    "provider": "not-recorded",
+    "model": "not-recorded"
+  },
+  "timing": {
+    "started_at": "2026-10-27T14:06:30+08:00",
+    "ended_at": "2026-10-27T14:14:16.082486+08:00",
+    "elapsed_seconds": 466.082486,
+    "scope": "packet-A review session; per-record timing repeats this observed session boundary and is not a per-task estimate"
+  },
+  "review_records": [
+    {
+      "review_id": "mth-0180-retrieval-1",
+      "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+      "task_id": "retrieval-1",
+      "assignment_id": "assignment-aeac0f3000560b73394b0f1e",
+      "labels": {
+        "evidence_support": "unknown",
+        "claim_type": "unknown",
+        "scope_completeness": "unknown",
+        "false_link": "unknown",
+        "counterexample_awareness": "unknown",
+        "usefulness": "not-useful",
+        "abstention": "abstained",
+        "reviewer_effort": "medium"
+      },
+      "timing": {
+        "started_at": "2026-10-27T14:06:30+08:00",
+        "ended_at": "2026-10-27T14:14:16.082486+08:00",
+        "elapsed_seconds": 466.082486
+      },
+      "notes": "The packet supplies a review prompt and opaque candidate/source references but no candidate statement or embedded evidence. Evidence-dependent dimensions remain unknown; the item is not useful for a bounded judgment from this packet alone, so the review abstains."
+    },
+    {
+      "review_id": "mth-0180-retrieval-2",
+      "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+      "task_id": "retrieval-2",
+      "assignment_id": "assignment-a61fefb4bdc14191e77b42f3",
+      "labels": {
+        "evidence_support": "unknown",
+        "claim_type": "unknown",
+        "scope_completeness": "unknown",
+        "false_link": "unknown",
+        "counterexample_awareness": "unknown",
+        "usefulness": "not-useful",
+        "abstention": "abstained",
+        "reviewer_effort": "medium"
+      },
+      "timing": {
+        "started_at": "2026-10-27T14:06:30+08:00",
+        "ended_at": "2026-10-27T14:14:16.082486+08:00",
+        "elapsed_seconds": 466.082486
+      },
+      "notes": "The packet supplies a review prompt and opaque candidate/source references but no candidate statement or embedded evidence. Evidence-dependent dimensions remain unknown; the item is not useful for a bounded judgment from this packet alone, so the review abstains."
+    },
+    {
+      "review_id": "mth-0180-sqlite-1",
+      "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+      "task_id": "sqlite-1",
+      "assignment_id": "assignment-310dd57dd56056d1fe479d10",
+      "labels": {
+        "evidence_support": "unknown",
+        "claim_type": "unknown",
+        "scope_completeness": "unknown",
+        "false_link": "unknown",
+        "counterexample_awareness": "unknown",
+        "usefulness": "not-useful",
+        "abstention": "abstained",
+        "reviewer_effort": "medium"
+      },
+      "timing": {
+        "started_at": "2026-10-27T14:06:30+08:00",
+        "ended_at": "2026-10-27T14:14:16.082486+08:00",
+        "elapsed_seconds": 466.082486
+      },
+      "notes": "The packet supplies a review prompt and opaque candidate/source references but no candidate statement or embedded evidence. Evidence-dependent dimensions remain unknown; the item is not useful for a bounded judgment from this packet alone, so the review abstains."
+    },
+    {
+      "review_id": "mth-0180-sqlite-2",
+      "reviewer_key": "blind-seat-willow-dune-flint-spruce-juniper-river-mist-cedar-pine-frost-willow-mist-juniper-jade-dune-flint",
+      "task_id": "sqlite-2",
+      "assignment_id": "assignment-a46c75a5735290e955b12485",
+      "labels": {
+        "evidence_support": "unknown",
+        "claim_type": "unknown",
+        "scope_completeness": "unknown",
+        "false_link": "unknown",
+        "counterexample_awareness": "unknown",
+        "usefulness": "not-useful",
+        "abstention": "abstained",
+        "reviewer_effort": "medium"
+      },
+      "timing": {
+        "started_at": "2026-10-27T14:06:30+08:00",
+        "ended_at": "2026-10-27T14:14:16.082486+08:00",
+        "elapsed_seconds": 466.082486
+      },
+      "notes": "The packet supplies a review prompt and opaque candidate/source references but no candidate statement or embedded evidence. Evidence-dependent dimensions remain unknown; the item is not useful for a bounded judgment from this packet alone, so the review abstains."
+    }
+  ],
+  "adjudications": [],
+  "agreement": {
+    "status": "not-determined"
+  },
+  "promotion_decision": "not-determined",
+  "promotion_boundary": {
+    "review_implies_promotion": false,
+    "adjudication_implies_promotion": false,
+    "canonical_cards_written": false,
+    "production_records_written": false
+  }
+}

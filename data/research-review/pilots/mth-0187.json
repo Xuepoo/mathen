@@ -1,0 +1,839 @@
+{
+  "agreement": {
+    "status": "not-determined"
+  },
+  "assignment_digests": [
+    {
+      "assignment_id": "assignment-d92c98a277855603b32a50a0",
+      "candidate_digest": "sha256:33fd808a1e8d14396d1a14cfb39296b444223150b9560a1c08e24ca829ff90dc",
+      "evidence_digests": [
+        "sha256:443bd24990788a8b2dfb4a525c1d06e0f3be33efb74631a1803de54ee5f49866",
+        "sha256:64941064907c16ab6aeb8854b8dce3b73e0ad87bbb193c4eac778ea85811e548",
+        "sha256:59dfe8b99edf449902df0527d9d58111fa650cc3e1140428d11db2a4c871309f",
+        "sha256:7662b9a763f0288d05bb43bca40e0bd3bc706e60664fd4aafdec7f04b615c2bf"
+      ],
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+      "task_id": "task-05-stream-history"
+    },
+    {
+      "assignment_id": "assignment-223aade70eb12150014d4e72",
+      "candidate_digest": "sha256:80f5f56052c64997400ba8418bc2f0e6f564632b8a10b46be9571f7a6fc2b392",
+      "evidence_digests": [
+        "sha256:7c96480e20dcba413e05648b567d80b6cc5ba7aab27f2cb5fcfed986cc4ac269",
+        "sha256:bc100e71fcbeba5e5a4003fa6b9049a977e1b16b88354704c3e9c4c33d71e8e3"
+      ],
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+      "task_id": "task-11-boundary-isolation"
+    },
+    {
+      "assignment_id": "assignment-1a17e0690f59277475a57860",
+      "candidate_digest": "sha256:d5fb9f43bc951c2f9ab3df2813897f6d0b8430c2af9a610f4a7e28270eaa1dd5",
+      "evidence_digests": [
+        "sha256:443bd24990788a8b2dfb4a525c1d06e0f3be33efb74631a1803de54ee5f49866",
+        "sha256:64941064907c16ab6aeb8854b8dce3b73e0ad87bbb193c4eac778ea85811e548",
+        "sha256:59dfe8b99edf449902df0527d9d58111fa650cc3e1140428d11db2a4c871309f",
+        "sha256:7662b9a763f0288d05bb43bca40e0bd3bc706e60664fd4aafdec7f04b615c2bf"
+      ],
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+      "task_id": "task-04-stream-history"
+    },
+    {
+      "assignment_id": "assignment-380e630b3952f4e6b2d3412e",
+      "candidate_digest": "sha256:73129dff908acfe62341853fc949baa782be4e2e454a0b106698bd728b3103aa",
+      "evidence_digests": [
+        "sha256:5dd126f962bb5f785285ac0152e0a6f098adbe18ff60ab2576f813653fd49623",
+        "sha256:8cf1d9fd27fcb028b4a7a55fd7e59e7d436ebcf20fbb0826ca0bea9d0034cf2e",
+        "sha256:26db22b0172aa614822c1fb65e5784f0b75fa132993009738ffcc0920885a35b",
+        "sha256:24e575986f604c9ae61005e7a8105d185a031bbca7a67d772118ad3fa6bea775",
+        "sha256:ced6e2cee7147462e9eff53388dfae217e44adc81b97b65e34673f85e66b3131",
+        "sha256:802d3ce78323b0cbf5a8209cdcd87cfdf3005f38a6073ff5329b390aa2e18018"
+      ],
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+      "task_id": "task-08-reconciliation"
+    },
+    {
+      "assignment_id": "assignment-9766dd8150eb30366a92ff94",
+      "candidate_digest": "sha256:32a1069795c3db99309f127d9213bf23449b8b7cb5b008febf1cab50fd1e6ea1",
+      "evidence_digests": [
+        "sha256:5dd126f962bb5f785285ac0152e0a6f098adbe18ff60ab2576f813653fd49623",
+        "sha256:8cf1d9fd27fcb028b4a7a55fd7e59e7d436ebcf20fbb0826ca0bea9d0034cf2e",
+        "sha256:26db22b0172aa614822c1fb65e5784f0b75fa132993009738ffcc0920885a35b",
+        "sha256:24e575986f604c9ae61005e7a8105d185a031bbca7a67d772118ad3fa6bea775",
+        "sha256:ced6e2cee7147462e9eff53388dfae217e44adc81b97b65e34673f85e66b3131",
+        "sha256:802d3ce78323b0cbf5a8209cdcd87cfdf3005f38a6073ff5329b390aa2e18018"
+      ],
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+      "task_id": "task-07-reconciliation"
+    },
+    {
+      "assignment_id": "assignment-76872f80ab1177d4ac8048f5",
+      "candidate_digest": "sha256:0b3576ddc8645078febcd9e92af339aaf3168e17f3154157d63e36a5a89f2cc8",
+      "evidence_digests": [
+        "sha256:364c9d9e824b1b5f1133580e9147f3ab61ebc5e52bb5c8b72d082ca657e38ade",
+        "sha256:183c6eaf9c973ca7fa086b24bec7dcf1b3ac0ee156bbcc1f61d0b14e82378969",
+        "sha256:829d2168d0a077ab79b2f000abd82cace641d71fba46878194265a039d563776",
+        "sha256:cbfbf0930b5f2998ab4b6750db65417a0c75ffac1d3fe80eaa1cc701a0162702",
+        "sha256:67cf9fde68d051f9ce591a4782efc51ca97e57c87fe76cf5ce191216ce13472b"
+      ],
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+      "task_id": "task-02-storage-mechanism"
+    },
+    {
+      "assignment_id": "assignment-bccfdb9c30a89a567cb5664b",
+      "candidate_digest": "sha256:df43376ed4ed68db3934064be63164b66e410b8b733ac5aa438aaf6a939840ed",
+      "evidence_digests": [
+        "sha256:364c9d9e824b1b5f1133580e9147f3ab61ebc5e52bb5c8b72d082ca657e38ade",
+        "sha256:183c6eaf9c973ca7fa086b24bec7dcf1b3ac0ee156bbcc1f61d0b14e82378969",
+        "sha256:829d2168d0a077ab79b2f000abd82cace641d71fba46878194265a039d563776",
+        "sha256:cbfbf0930b5f2998ab4b6750db65417a0c75ffac1d3fe80eaa1cc701a0162702",
+        "sha256:67cf9fde68d051f9ce591a4782efc51ca97e57c87fe76cf5ce191216ce13472b"
+      ],
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+      "task_id": "task-01-storage-mechanism"
+    },
+    {
+      "assignment_id": "assignment-41be65d2a340dff36d1f2936",
+      "candidate_digest": "sha256:c736daf15cd8886edb699fde41fcf4afc495134cad13788498c54875e2cfbf23",
+      "evidence_digests": [
+        "sha256:7c96480e20dcba413e05648b567d80b6cc5ba7aab27f2cb5fcfed986cc4ac269",
+        "sha256:bc100e71fcbeba5e5a4003fa6b9049a977e1b16b88354704c3e9c4c33d71e8e3"
+      ],
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+      "task_id": "task-10-boundary-isolation"
+    }
+  ],
+  "non_canonical": true,
+  "packet_digest": "sha256:e68c31237f1956611c285637ac6ba7a2ce39fecef58cc1623e0030648d0bfd24",
+  "packet_id": "packet-71d5036b8f1cdc4a173821c7",
+  "packet_label": "B",
+  "pilot_id": "mth-0187",
+  "pilot_kind": "agent-review-pilot",
+  "promotion_boundary": {
+    "canonical_cards_written": false,
+    "production_records_written": false,
+    "promotion_decision": "not-determined",
+    "review_implies_promotion": false
+  },
+  "promotion_decision": "not-determined",
+  "provenance": {
+    "evidence_boundary": "packet B candidate statements, local evidence excerpts, scope/context, locality, and negative-knowledge references only",
+    "execution_actor": "llm-based-agent",
+    "human_review": false,
+    "mode": "agent-review-pilot",
+    "model": "not-recorded",
+    "packet_selection": "B",
+    "provider": "not-recorded",
+    "reviewer_kind": "agent"
+  },
+  "record_kind": "agent-review-pilot",
+  "research_only": true,
+  "review_records": [
+    {
+      "assignment_id": "assignment-d92c98a277855603b32a50a0",
+      "candidate_claim_type": "inference",
+      "candidate_digest": "sha256:33fd808a1e8d14396d1a14cfb39296b444223150b9560a1c08e24ca829ff90dc",
+      "candidate_statement": "The reviewed systems retain event or workflow history, with ordering and replay claims bounded to the cited mechanism.",
+      "domain_id": "streaming",
+      "evidence_excerpt_digests": [
+        "sha256:443bd24990788a8b2dfb4a525c1d06e0f3be33efb74631a1803de54ee5f49866",
+        "sha256:64941064907c16ab6aeb8854b8dce3b73e0ad87bbb193c4eac778ea85811e548",
+        "sha256:59dfe8b99edf449902df0527d9d58111fa650cc3e1140428d11db2a4c871309f",
+        "sha256:7662b9a763f0288d05bb43bca40e0bd3bc706e60664fd4aafdec7f04b615c2bf"
+      ],
+      "evidence_ids": [
+        "kafka:kafka-introduction",
+        "kafka:kafka-repository-commit",
+        "temporal:temporal-source-commit",
+        "temporal:temporal-server-architecture"
+      ],
+      "labels": {
+        "abstention": "not-abstained",
+        "claim_type": "inference",
+        "counterexample_awareness": "aware",
+        "evidence_support": "partially-supported",
+        "false_link": "not-false",
+        "reviewer_effort": "medium",
+        "scope_completeness": "partial",
+        "usefulness": "useful"
+      },
+      "locality": {
+        "candidate_evidence_ids": [
+          "kafka:kafka-introduction",
+          "kafka:kafka-repository-commit",
+          "temporal:temporal-source-commit",
+          "temporal:temporal-server-architecture"
+        ],
+        "candidate_evidence_local": true,
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+        "source_ids": [
+          "system:kafka",
+          "system:temporal"
+        ]
+      },
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "negative_knowledge_refs": [
+        "append-only-not-immutable",
+        "replication-not-consensus",
+        "snapshot-not-isolation",
+        "reconciliation-not-convergence-proof"
+      ],
+      "notes": "Kafka excerpts support durable ordered logs and replay. Temporal source evidence supports recorded workflow history, but the current architecture excerpt explicitly says applicability to the pinned revision is not assumed; the candidate is therefore useful but only partially supported and scoped.",
+      "partition": "evaluation",
+      "review_id": "mth-0187-b-task-05-stream-history",
+      "scope_context": {
+        "deployment": "offline review fixture",
+        "systems": [
+          "kafka",
+          "temporal"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_ids": [
+        "system:kafka",
+        "system:temporal"
+      ],
+      "task_id": "task-05-stream-history",
+      "timing": {
+        "elapsed_seconds": 7.902010111138225e-06,
+        "ended_at": "2026-10-27T17:16:05.877365+08:00",
+        "measurement_status": "observed",
+        "scope": "wall-clock packet-payload handling for this assignment; excludes earlier conversational review reasoning",
+        "started_at": "2026-10-27T17:16:05.877356+08:00"
+      }
+    },
+    {
+      "assignment_id": "assignment-223aade70eb12150014d4e72",
+      "candidate_claim_type": "inference",
+      "candidate_digest": "sha256:80f5f56052c64997400ba8418bc2f0e6f564632b8a10b46be9571f7a6fc2b392",
+      "candidate_statement": "The reviewed systems define execution or object boundaries, without implying equivalent security or durability guarantees.",
+      "domain_id": "isolation",
+      "evidence_excerpt_digests": [
+        "sha256:7c96480e20dcba413e05648b567d80b6cc5ba7aab27f2cb5fcfed986cc4ac269",
+        "sha256:bc100e71fcbeba5e5a4003fa6b9049a977e1b16b88354704c3e9c4c33d71e8e3"
+      ],
+      "evidence_ids": [
+        "firecracker:firecracker-design",
+        "git:git-data-model"
+      ],
+      "labels": {
+        "abstention": "not-abstained",
+        "claim_type": "inference",
+        "counterexample_awareness": "aware",
+        "evidence_support": "supported",
+        "false_link": "not-false",
+        "reviewer_effort": "medium",
+        "scope_completeness": "complete",
+        "usefulness": "useful"
+      },
+      "locality": {
+        "candidate_evidence_ids": [
+          "firecracker:firecracker-design",
+          "git:git-data-model"
+        ],
+        "candidate_evidence_local": true,
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+        "source_ids": [
+          "system:firecracker",
+          "system:git"
+        ]
+      },
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "negative_knowledge_refs": [
+        "append-only-not-immutable",
+        "replication-not-consensus",
+        "snapshot-not-isolation",
+        "reconciliation-not-convergence-proof"
+      ],
+      "notes": "Firecracker supports a hardware-virtualization execution boundary and Git supports content-addressed object/reference boundaries. The statement does not equate those mechanisms with the same security or durability guarantee; the supplied negative references were considered.",
+      "partition": "evaluation",
+      "review_id": "mth-0187-b-task-11-boundary-isolation",
+      "scope_context": {
+        "deployment": "offline review fixture",
+        "systems": [
+          "firecracker",
+          "git"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_ids": [
+        "system:firecracker",
+        "system:git"
+      ],
+      "task_id": "task-11-boundary-isolation",
+      "timing": {
+        "elapsed_seconds": 4.836998414248228e-06,
+        "ended_at": "2026-10-27T17:16:05.877374+08:00",
+        "measurement_status": "observed",
+        "scope": "wall-clock packet-payload handling for this assignment; excludes earlier conversational review reasoning",
+        "started_at": "2026-10-27T17:16:05.877370+08:00"
+      }
+    },
+    {
+      "assignment_id": "assignment-1a17e0690f59277475a57860",
+      "candidate_claim_type": "fact",
+      "candidate_digest": "sha256:d5fb9f43bc951c2f9ab3df2813897f6d0b8430c2af9a610f4a7e28270eaa1dd5",
+      "candidate_statement": "The reviewed systems retain event or workflow history, with ordering and replay claims bounded to the cited mechanism.",
+      "domain_id": "streaming",
+      "evidence_excerpt_digests": [
+        "sha256:443bd24990788a8b2dfb4a525c1d06e0f3be33efb74631a1803de54ee5f49866",
+        "sha256:64941064907c16ab6aeb8854b8dce3b73e0ad87bbb193c4eac778ea85811e548",
+        "sha256:59dfe8b99edf449902df0527d9d58111fa650cc3e1140428d11db2a4c871309f",
+        "sha256:7662b9a763f0288d05bb43bca40e0bd3bc706e60664fd4aafdec7f04b615c2bf"
+      ],
+      "evidence_ids": [
+        "kafka:kafka-introduction",
+        "kafka:kafka-repository-commit",
+        "temporal:temporal-source-commit",
+        "temporal:temporal-server-architecture"
+      ],
+      "labels": {
+        "abstention": "not-abstained",
+        "claim_type": "fact",
+        "counterexample_awareness": "aware",
+        "evidence_support": "partially-supported",
+        "false_link": "not-false",
+        "reviewer_effort": "medium",
+        "scope_completeness": "partial",
+        "usefulness": "useful"
+      },
+      "locality": {
+        "candidate_evidence_ids": [
+          "kafka:kafka-introduction",
+          "kafka:kafka-repository-commit",
+          "temporal:temporal-source-commit",
+          "temporal:temporal-server-architecture"
+        ],
+        "candidate_evidence_local": true,
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+        "source_ids": [
+          "system:kafka",
+          "system:temporal"
+        ]
+      },
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "negative_knowledge_refs": [
+        "append-only-not-immutable",
+        "replication-not-consensus",
+        "snapshot-not-isolation",
+        "reconciliation-not-convergence-proof"
+      ],
+      "notes": "Kafka directly supports event-log retention, ordering, and replay. Temporal source inspection supports workflow-history reconstruction, while the current architecture excerpt is not assumed applicable to the pinned revision; this fact is consequently bounded and only partially supported.",
+      "partition": "train",
+      "review_id": "mth-0187-b-task-04-stream-history",
+      "scope_context": {
+        "deployment": "offline review fixture",
+        "systems": [
+          "kafka",
+          "temporal"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_ids": [
+        "system:kafka",
+        "system:temporal"
+      ],
+      "task_id": "task-04-stream-history",
+      "timing": {
+        "elapsed_seconds": 3.956985892727971e-06,
+        "ended_at": "2026-10-27T17:16:05.877381+08:00",
+        "measurement_status": "observed",
+        "scope": "wall-clock packet-payload handling for this assignment; excludes earlier conversational review reasoning",
+        "started_at": "2026-10-27T17:16:05.877378+08:00"
+      }
+    },
+    {
+      "assignment_id": "assignment-380e630b3952f4e6b2d3412e",
+      "candidate_claim_type": "inference",
+      "candidate_digest": "sha256:73129dff908acfe62341853fc949baa782be4e2e454a0b106698bd728b3103aa",
+      "candidate_statement": "The reviewed systems schedule or reconcile work through documented control or workflow mechanisms, without a universal convergence claim.",
+      "domain_id": "orchestration",
+      "evidence_excerpt_digests": [
+        "sha256:5dd126f962bb5f785285ac0152e0a6f098adbe18ff60ab2576f813653fd49623",
+        "sha256:8cf1d9fd27fcb028b4a7a55fd7e59e7d436ebcf20fbb0826ca0bea9d0034cf2e",
+        "sha256:26db22b0172aa614822c1fb65e5784f0b75fa132993009738ffcc0920885a35b",
+        "sha256:24e575986f604c9ae61005e7a8105d185a031bbca7a67d772118ad3fa6bea775",
+        "sha256:ced6e2cee7147462e9eff53388dfae217e44adc81b97b65e34673f85e66b3131",
+        "sha256:802d3ce78323b0cbf5a8209cdcd87cfdf3005f38a6073ff5329b390aa2e18018"
+      ],
+      "evidence_ids": [
+        "kubernetes:kubernetes-architecture-doc",
+        "kubernetes:kubernetes-controller-doc",
+        "airflow:airflow-source-commit",
+        "airflow:airflow-architecture-doc",
+        "carryctx:carryctx-cli-fixed-commit",
+        "carryctx:carryctx-readme-fixed"
+      ],
+      "labels": {
+        "abstention": "not-abstained",
+        "claim_type": "inference",
+        "counterexample_awareness": "aware",
+        "evidence_support": "partially-supported",
+        "false_link": "not-false",
+        "reviewer_effort": "medium",
+        "scope_completeness": "complete",
+        "usefulness": "useful"
+      },
+      "locality": {
+        "candidate_evidence_ids": [
+          "kubernetes:kubernetes-architecture-doc",
+          "kubernetes:kubernetes-controller-doc",
+          "airflow:airflow-source-commit",
+          "airflow:airflow-architecture-doc",
+          "carryctx:carryctx-cli-fixed-commit",
+          "carryctx:carryctx-readme-fixed"
+        ],
+        "candidate_evidence_local": true,
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+        "source_ids": [
+          "system:kubernetes",
+          "system:airflow",
+          "system:carryctx"
+        ]
+      },
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "negative_knowledge_refs": [
+        "append-only-not-immutable",
+        "replication-not-consensus",
+        "snapshot-not-isolation",
+        "reconciliation-not-convergence-proof"
+      ],
+      "notes": "Kubernetes and Airflow excerpts support control loops, scheduling, and task dispatch. CarryCtx excerpts support lifecycle/checkpoint workflow mechanisms, but do not establish the same reconciliation semantics; the inference is partially supported and the negative reference rejects a convergence proof.",
+      "partition": "evaluation",
+      "review_id": "mth-0187-b-task-08-reconciliation",
+      "scope_context": {
+        "deployment": "offline review fixture",
+        "systems": [
+          "kubernetes",
+          "airflow",
+          "carryctx"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_ids": [
+        "system:kubernetes",
+        "system:airflow",
+        "system:carryctx"
+      ],
+      "task_id": "task-08-reconciliation",
+      "timing": {
+        "elapsed_seconds": 3.3790129236876965e-06,
+        "ended_at": "2026-10-27T17:16:05.877386+08:00",
+        "measurement_status": "observed",
+        "scope": "wall-clock packet-payload handling for this assignment; excludes earlier conversational review reasoning",
+        "started_at": "2026-10-27T17:16:05.877384+08:00"
+      }
+    },
+    {
+      "assignment_id": "assignment-9766dd8150eb30366a92ff94",
+      "candidate_claim_type": "fact",
+      "candidate_digest": "sha256:32a1069795c3db99309f127d9213bf23449b8b7cb5b008febf1cab50fd1e6ea1",
+      "candidate_statement": "The reviewed systems schedule or reconcile work through documented control or workflow mechanisms, without a universal convergence claim.",
+      "domain_id": "orchestration",
+      "evidence_excerpt_digests": [
+        "sha256:5dd126f962bb5f785285ac0152e0a6f098adbe18ff60ab2576f813653fd49623",
+        "sha256:8cf1d9fd27fcb028b4a7a55fd7e59e7d436ebcf20fbb0826ca0bea9d0034cf2e",
+        "sha256:26db22b0172aa614822c1fb65e5784f0b75fa132993009738ffcc0920885a35b",
+        "sha256:24e575986f604c9ae61005e7a8105d185a031bbca7a67d772118ad3fa6bea775",
+        "sha256:ced6e2cee7147462e9eff53388dfae217e44adc81b97b65e34673f85e66b3131",
+        "sha256:802d3ce78323b0cbf5a8209cdcd87cfdf3005f38a6073ff5329b390aa2e18018"
+      ],
+      "evidence_ids": [
+        "kubernetes:kubernetes-architecture-doc",
+        "kubernetes:kubernetes-controller-doc",
+        "airflow:airflow-source-commit",
+        "airflow:airflow-architecture-doc",
+        "carryctx:carryctx-cli-fixed-commit",
+        "carryctx:carryctx-readme-fixed"
+      ],
+      "labels": {
+        "abstention": "not-abstained",
+        "claim_type": "fact",
+        "counterexample_awareness": "aware",
+        "evidence_support": "partially-supported",
+        "false_link": "not-false",
+        "reviewer_effort": "medium",
+        "scope_completeness": "complete",
+        "usefulness": "useful"
+      },
+      "locality": {
+        "candidate_evidence_ids": [
+          "kubernetes:kubernetes-architecture-doc",
+          "kubernetes:kubernetes-controller-doc",
+          "airflow:airflow-source-commit",
+          "airflow:airflow-architecture-doc",
+          "carryctx:carryctx-cli-fixed-commit",
+          "carryctx:carryctx-readme-fixed"
+        ],
+        "candidate_evidence_local": true,
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+        "source_ids": [
+          "system:kubernetes",
+          "system:airflow",
+          "system:carryctx"
+        ]
+      },
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "negative_knowledge_refs": [
+        "append-only-not-immutable",
+        "replication-not-consensus",
+        "snapshot-not-isolation",
+        "reconciliation-not-convergence-proof"
+      ],
+      "notes": "Kubernetes and Airflow directly support the stated control and scheduling mechanisms. CarryCtx supports workflow/checkpoint control, but the supplied excerpt does not establish a universal reconciliation model; the fact remains partially supported and bounded by the cited mechanisms.",
+      "partition": "train",
+      "review_id": "mth-0187-b-task-07-reconciliation",
+      "scope_context": {
+        "deployment": "offline review fixture",
+        "systems": [
+          "kubernetes",
+          "airflow",
+          "carryctx"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_ids": [
+        "system:kubernetes",
+        "system:airflow",
+        "system:carryctx"
+      ],
+      "task_id": "task-07-reconciliation",
+      "timing": {
+        "elapsed_seconds": 3.2779935281723738e-06,
+        "ended_at": "2026-10-27T17:16:05.877392+08:00",
+        "measurement_status": "observed",
+        "scope": "wall-clock packet-payload handling for this assignment; excludes earlier conversational review reasoning",
+        "started_at": "2026-10-27T17:16:05.877389+08:00"
+      }
+    },
+    {
+      "assignment_id": "assignment-76872f80ab1177d4ac8048f5",
+      "candidate_claim_type": "inference",
+      "candidate_digest": "sha256:0b3576ddc8645078febcd9e92af339aaf3168e17f3154157d63e36a5a89f2cc8",
+      "candidate_statement": "The reviewed systems expose storage mechanisms whose deployment and consistency scope must be stated per system.",
+      "domain_id": "storage",
+      "evidence_excerpt_digests": [
+        "sha256:364c9d9e824b1b5f1133580e9147f3ab61ebc5e52bb5c8b72d082ca657e38ade",
+        "sha256:183c6eaf9c973ca7fa086b24bec7dcf1b3ac0ee156bbcc1f61d0b14e82378969",
+        "sha256:829d2168d0a077ab79b2f000abd82cace641d71fba46878194265a039d563776",
+        "sha256:cbfbf0930b5f2998ab4b6750db65417a0c75ffac1d3fe80eaa1cc701a0162702",
+        "sha256:67cf9fde68d051f9ce591a4782efc51ca97e57c87fe76cf5ce191216ce13472b"
+      ],
+      "evidence_ids": [
+        "sqlite:sqlite-appropriate-uses",
+        "sqlite:sqlite-architecture",
+        "postgresql:postgresql-architecture",
+        "postgresql:postgresql-mvcc",
+        "duckdb:duckdb-why"
+      ],
+      "labels": {
+        "abstention": "not-abstained",
+        "claim_type": "inference",
+        "counterexample_awareness": "aware",
+        "evidence_support": "supported",
+        "false_link": "not-false",
+        "reviewer_effort": "low",
+        "scope_completeness": "complete",
+        "usefulness": "useful"
+      },
+      "locality": {
+        "candidate_evidence_ids": [
+          "sqlite:sqlite-appropriate-uses",
+          "sqlite:sqlite-architecture",
+          "postgresql:postgresql-architecture",
+          "postgresql:postgresql-mvcc",
+          "duckdb:duckdb-why"
+        ],
+        "candidate_evidence_local": true,
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+        "source_ids": [
+          "system:sqlite",
+          "system:postgresql",
+          "system:duckdb"
+        ]
+      },
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "negative_knowledge_refs": [
+        "append-only-not-immutable",
+        "replication-not-consensus",
+        "snapshot-not-isolation",
+        "reconciliation-not-convergence-proof"
+      ],
+      "notes": "The supplied SQLite, PostgreSQL, and DuckDB excerpts support the inference that storage mechanisms require per-system deployment and consistency scope. The qualification avoids treating embedded, client/server, and analytical deployment as equivalent.",
+      "partition": "evaluation",
+      "review_id": "mth-0187-b-task-02-storage-mechanism",
+      "scope_context": {
+        "deployment": "offline review fixture",
+        "systems": [
+          "sqlite",
+          "postgresql",
+          "duckdb"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_ids": [
+        "system:sqlite",
+        "system:postgresql",
+        "system:duckdb"
+      ],
+      "task_id": "task-02-storage-mechanism",
+      "timing": {
+        "elapsed_seconds": 3.1939998734742403e-06,
+        "ended_at": "2026-10-27T17:16:05.877403+08:00",
+        "measurement_status": "observed",
+        "scope": "wall-clock packet-payload handling for this assignment; excludes earlier conversational review reasoning",
+        "started_at": "2026-10-27T17:16:05.877394+08:00"
+      }
+    },
+    {
+      "assignment_id": "assignment-bccfdb9c30a89a567cb5664b",
+      "candidate_claim_type": "fact",
+      "candidate_digest": "sha256:df43376ed4ed68db3934064be63164b66e410b8b733ac5aa438aaf6a939840ed",
+      "candidate_statement": "The reviewed systems expose storage mechanisms whose deployment and consistency scope must be stated per system.",
+      "domain_id": "storage",
+      "evidence_excerpt_digests": [
+        "sha256:364c9d9e824b1b5f1133580e9147f3ab61ebc5e52bb5c8b72d082ca657e38ade",
+        "sha256:183c6eaf9c973ca7fa086b24bec7dcf1b3ac0ee156bbcc1f61d0b14e82378969",
+        "sha256:829d2168d0a077ab79b2f000abd82cace641d71fba46878194265a039d563776",
+        "sha256:cbfbf0930b5f2998ab4b6750db65417a0c75ffac1d3fe80eaa1cc701a0162702",
+        "sha256:67cf9fde68d051f9ce591a4782efc51ca97e57c87fe76cf5ce191216ce13472b"
+      ],
+      "evidence_ids": [
+        "sqlite:sqlite-appropriate-uses",
+        "sqlite:sqlite-architecture",
+        "postgresql:postgresql-architecture",
+        "postgresql:postgresql-mvcc",
+        "duckdb:duckdb-why"
+      ],
+      "labels": {
+        "abstention": "not-abstained",
+        "claim_type": "fact",
+        "counterexample_awareness": "aware",
+        "evidence_support": "supported",
+        "false_link": "not-false",
+        "reviewer_effort": "low",
+        "scope_completeness": "complete",
+        "usefulness": "useful"
+      },
+      "locality": {
+        "candidate_evidence_ids": [
+          "sqlite:sqlite-appropriate-uses",
+          "sqlite:sqlite-architecture",
+          "postgresql:postgresql-architecture",
+          "postgresql:postgresql-mvcc",
+          "duckdb:duckdb-why"
+        ],
+        "candidate_evidence_local": true,
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+        "source_ids": [
+          "system:sqlite",
+          "system:postgresql",
+          "system:duckdb"
+        ]
+      },
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "negative_knowledge_refs": [
+        "append-only-not-immutable",
+        "replication-not-consensus",
+        "snapshot-not-isolation",
+        "reconciliation-not-convergence-proof"
+      ],
+      "notes": "The local fact excerpts document SQLite, PostgreSQL, and DuckDB storage mechanisms and their distinct deployment/concurrency characteristics. The candidate's per-system scope qualification is supported and does not claim uniform consistency behavior.",
+      "partition": "train",
+      "review_id": "mth-0187-b-task-01-storage-mechanism",
+      "scope_context": {
+        "deployment": "offline review fixture",
+        "systems": [
+          "sqlite",
+          "postgresql",
+          "duckdb"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_ids": [
+        "system:sqlite",
+        "system:postgresql",
+        "system:duckdb"
+      ],
+      "task_id": "task-01-storage-mechanism",
+      "timing": {
+        "elapsed_seconds": 3.2199895940721035e-06,
+        "ended_at": "2026-10-27T17:16:05.877409+08:00",
+        "measurement_status": "observed",
+        "scope": "wall-clock packet-payload handling for this assignment; excludes earlier conversational review reasoning",
+        "started_at": "2026-10-27T17:16:05.877406+08:00"
+      }
+    },
+    {
+      "assignment_id": "assignment-41be65d2a340dff36d1f2936",
+      "candidate_claim_type": "fact",
+      "candidate_digest": "sha256:c736daf15cd8886edb699fde41fcf4afc495134cad13788498c54875e2cfbf23",
+      "candidate_statement": "The reviewed systems define execution or object boundaries, without implying equivalent security or durability guarantees.",
+      "domain_id": "isolation",
+      "evidence_excerpt_digests": [
+        "sha256:7c96480e20dcba413e05648b567d80b6cc5ba7aab27f2cb5fcfed986cc4ac269",
+        "sha256:bc100e71fcbeba5e5a4003fa6b9049a977e1b16b88354704c3e9c4c33d71e8e3"
+      ],
+      "evidence_ids": [
+        "firecracker:firecracker-design",
+        "git:git-data-model"
+      ],
+      "labels": {
+        "abstention": "not-abstained",
+        "claim_type": "fact",
+        "counterexample_awareness": "aware",
+        "evidence_support": "supported",
+        "false_link": "not-false",
+        "reviewer_effort": "low",
+        "scope_completeness": "complete",
+        "usefulness": "useful"
+      },
+      "locality": {
+        "candidate_evidence_ids": [
+          "firecracker:firecracker-design",
+          "git:git-data-model"
+        ],
+        "candidate_evidence_local": true,
+        "source_digest": "sha256:823a0aa39439bbabeac67554143dbccbb4d38f40537f288e7c12335469f6efb1",
+        "source_ids": [
+          "system:firecracker",
+          "system:git"
+        ]
+      },
+      "negative_knowledge_digests": [
+        "sha256:78e1bcd08b3e18c6554d5c925ff4956ff670285c4502d3144f2fb36a1e27a7dc",
+        "sha256:c383d9438a29cd6e00cd00dad548c1b81a68c203814b30b90cc48da5427fd486",
+        "sha256:47139e6ca7d8f5e0920296352f406a9c7a971c2dcf3f15e4b23a22431feddbad",
+        "sha256:9045091652139e48a1a2226b8a2e953f38b99787753c4476c2ed5c4bf12e95f9"
+      ],
+      "negative_knowledge_refs": [
+        "append-only-not-immutable",
+        "replication-not-consensus",
+        "snapshot-not-isolation",
+        "reconciliation-not-convergence-proof"
+      ],
+      "notes": "The supplied Firecracker and Git excerpts support the two bounded boundary mechanisms named in the candidate. The statement avoids equating execution isolation with Git object durability or security, and the negative references preserve that distinction.",
+      "partition": "train",
+      "review_id": "mth-0187-b-task-10-boundary-isolation",
+      "scope_context": {
+        "deployment": "offline review fixture",
+        "systems": [
+          "firecracker",
+          "git"
+        ],
+        "time": "frozen reviewed-card snapshot",
+        "workload": "authored cross-system architecture exploration"
+      },
+      "source_ids": [
+        "system:firecracker",
+        "system:git"
+      ],
+      "task_id": "task-10-boundary-isolation",
+      "timing": {
+        "elapsed_seconds": 4.227011231705546e-06,
+        "ended_at": "2026-10-27T17:16:05.877415+08:00",
+        "measurement_status": "observed",
+        "scope": "wall-clock packet-payload handling for this assignment; excludes earlier conversational review reasoning",
+        "started_at": "2026-10-27T17:16:05.877411+08:00"
+      }
+    }
+  ],
+  "reviewer_key": "blind-seat-quartz-frost-jade-mist-linen-spruce-sable-maple-dune-dune-slate-cedar-opal-river-frost-spruce",
+  "run_timing": {
+    "elapsed_seconds": 0.00047159899258986115,
+    "ended_at": "2026-10-27T17:16:05.877418+08:00",
+    "measurement_status": "observed",
+    "scope": "wall-clock artifact-generation run; excludes earlier conversational review reasoning",
+    "started_at": "2026-10-27T17:16:05.876939+08:00"
+  },
+  "study_id": "mth-0185-enriched-study"
+}

@@ -1,0 +1,117 @@
+{
+  "task": "MTH-0181",
+  "pilot_kind": "agent-review-pilot",
+  "packet_role": "B",
+  "study_id": "mth-0175-example",
+  "study_packet_digest": "sha256:dda66e995a0903f69965968c300ea2d7cce6ed46b8be1b04349fb054e90abf97",
+  "frozen_study_ref": "data/research-review/mth-0175-study.json",
+  "frozen_source_revision": "not-recorded",
+  "packet_id": "packet-8f2875980480619c6d6f31cb",
+  "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+  "provenance": {
+    "observation_kind": "agent-review-pilot",
+    "reviewer_kind": "agent",
+    "human_review": false,
+    "independent_packet_review": true,
+    "evidence_boundary": "frozen packet assignment snapshots only",
+    "execution_actor": "llm-based-agent",
+    "provider": "not-recorded",
+    "model": "not-recorded"
+  },
+  "run_timing": {
+    "started_at": "2026-10-27T06:17:36.817Z",
+    "ended_at": "2026-10-27T06:20:23.835Z",
+    "elapsed_seconds": 167.019
+  },
+  "review_records": [
+    {
+      "review_id": "mth-0181-b-sqlite-1",
+      "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+      "task_id": "sqlite-1",
+      "labels": {
+        "evidence_support": "unknown",
+        "claim_type": "unknown",
+        "scope_completeness": "unknown",
+        "false_link": "unknown",
+        "counterexample_awareness": "unknown",
+        "usefulness": "unknown",
+        "abstention": "abstained",
+        "reviewer_effort": "low"
+      },
+      "timing": {
+        "started_at": "2026-10-27T06:17:36.817Z",
+        "ended_at": "2026-10-27T06:18:09.703Z",
+        "elapsed_seconds": 32.887
+      },
+      "notes": "The packet provides only a review prompt and references; the referenced evidence payload and candidate item are absent, so evidence-dependent judgments are unknown and the review abstains."
+    },
+    {
+      "review_id": "mth-0181-b-retrieval-2",
+      "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+      "task_id": "retrieval-2",
+      "labels": {
+        "evidence_support": "unknown",
+        "claim_type": "unknown",
+        "scope_completeness": "unknown",
+        "false_link": "unknown",
+        "counterexample_awareness": "unknown",
+        "usefulness": "unknown",
+        "abstention": "abstained",
+        "reviewer_effort": "low"
+      },
+      "timing": {
+        "started_at": "2026-10-27T06:18:09.703Z",
+        "ended_at": "2026-10-27T06:19:04.077Z",
+        "elapsed_seconds": 54.374
+      },
+      "notes": "The packet provides only a review prompt and references; the referenced evidence payload and candidate item are absent, so evidence-dependent judgments are unknown and the review abstains."
+    },
+    {
+      "review_id": "mth-0181-b-retrieval-1",
+      "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+      "task_id": "retrieval-1",
+      "labels": {
+        "evidence_support": "unknown",
+        "claim_type": "unknown",
+        "scope_completeness": "unknown",
+        "false_link": "unknown",
+        "counterexample_awareness": "unknown",
+        "usefulness": "unknown",
+        "abstention": "abstained",
+        "reviewer_effort": "low"
+      },
+      "timing": {
+        "started_at": "2026-10-27T06:19:04.077Z",
+        "ended_at": "2026-10-27T06:19:32.798Z",
+        "elapsed_seconds": 28.721
+      },
+      "notes": "The packet provides only a review prompt and references; the referenced evidence payload and candidate item are absent, so evidence-dependent judgments are unknown and the review abstains."
+    },
+    {
+      "review_id": "mth-0181-b-sqlite-2",
+      "reviewer_key": "blind-seat-river-onyx-spruce-wren-onyx-moss-jade-birch-sable-stone-stone-lark-coral-jade-amber-coral",
+      "task_id": "sqlite-2",
+      "labels": {
+        "evidence_support": "unknown",
+        "claim_type": "unknown",
+        "scope_completeness": "unknown",
+        "false_link": "unknown",
+        "counterexample_awareness": "unknown",
+        "usefulness": "unknown",
+        "abstention": "abstained",
+        "reviewer_effort": "low"
+      },
+      "timing": {
+        "started_at": "2026-10-27T06:19:32.798Z",
+        "ended_at": "2026-10-27T06:20:23.835Z",
+        "elapsed_seconds": 51.037
+      },
+      "notes": "The packet provides only a review prompt and references; the referenced evidence payload and candidate item are absent, so evidence-dependent judgments are unknown and the review abstains."
+    }
+  ],
+  "research_only": true,
+  "non_canonical": true,
+  "promotion_decision": "not-determined",
+  "canonical_cards_written": false,
+  "production_records_written": false
+}

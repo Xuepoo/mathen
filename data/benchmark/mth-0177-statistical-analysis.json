@@ -1,0 +1,1302 @@
+{
+  "aggregation": {
+    "interval_policy": {
+      "binary": "Clopper-Pearson exact interval only when denominator is positive.",
+      "continuous": "Deterministic percentile bootstrap only when values are present.",
+      "empty_denominator": "value and interval are null; status is not-evaluated."
+    },
+    "overall": {
+      "by_domain": [
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "isolation",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "orchestration",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "storage",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "streaming",
+          "warnings": []
+        }
+      ],
+      "by_task": [
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-10-boundary-isolation",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-11-boundary-isolation",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-12-boundary-isolation",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-07-reconciliation",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-08-reconciliation",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-09-reconciliation",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-01-storage-mechanism",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-02-storage-mechanism",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-03-storage-mechanism",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-04-stream-history",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-05-stream-history",
+          "warnings": []
+        },
+        {
+          "metrics": {
+            "abstention": {
+              "denominator": 0,
+              "interval": null,
+              "name": "abstention",
+              "numerator": 0,
+              "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "claim-discipline": {
+              "denominator": 0,
+              "interval": null,
+              "name": "claim-discipline",
+              "numerator": 0,
+              "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "counterexample-miss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "counterexample-miss",
+              "numerator": 0,
+              "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "false-link": {
+              "denominator": 0,
+              "interval": null,
+              "name": "false-link",
+              "numerator": 0,
+              "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "reviewer-disagreement": {
+              "denominator": 0,
+              "interval": null,
+              "name": "reviewer-disagreement",
+              "numerator": 0,
+              "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            },
+            "scope-loss": {
+              "denominator": 0,
+              "interval": null,
+              "name": "scope-loss",
+              "numerator": 0,
+              "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+              "status": "not-evaluated",
+              "value": null,
+              "warnings": []
+            }
+          },
+          "slice": "task-06-stream-history",
+          "warnings": []
+        }
+      ],
+      "metrics": {
+        "abstention": {
+          "denominator": 0,
+          "interval": null,
+          "name": "abstention",
+          "numerator": 0,
+          "reason": "No observations: abstention observations among rows that evaluated this dimension.",
+          "status": "not-evaluated",
+          "value": null,
+          "warnings": []
+        },
+        "claim-discipline": {
+          "denominator": 0,
+          "interval": null,
+          "name": "claim-discipline",
+          "numerator": 0,
+          "reason": "No observations: claim-discipline observations among rows that evaluated this dimension.",
+          "status": "not-evaluated",
+          "value": null,
+          "warnings": []
+        },
+        "counterexample-miss": {
+          "denominator": 0,
+          "interval": null,
+          "name": "counterexample-miss",
+          "numerator": 0,
+          "reason": "No observations: counterexample-miss observations among rows that evaluated this dimension.",
+          "status": "not-evaluated",
+          "value": null,
+          "warnings": []
+        },
+        "false-link": {
+          "denominator": 0,
+          "interval": null,
+          "name": "false-link",
+          "numerator": 0,
+          "reason": "No observations: false-link observations among rows that evaluated this dimension.",
+          "status": "not-evaluated",
+          "value": null,
+          "warnings": []
+        },
+        "reviewer-disagreement": {
+          "denominator": 0,
+          "interval": null,
+          "name": "reviewer-disagreement",
+          "numerator": 0,
+          "reason": "No observations: reviewer-disagreement observations among rows that evaluated this dimension.",
+          "status": "not-evaluated",
+          "value": null,
+          "warnings": []
+        },
+        "scope-loss": {
+          "denominator": 0,
+          "interval": null,
+          "name": "scope-loss",
+          "numerator": 0,
+          "reason": "No observations: scope-loss observations among rows that evaluated this dimension.",
+          "status": "not-evaluated",
+          "value": null,
+          "warnings": []
+        }
+      },
+      "observed_count": 0,
+      "warnings": []
+    },
+    "repeated_runs": {
+      "metrics": {
+        "abstention": {
+          "interval": null,
+          "mean": null,
+          "run_denominator": 0,
+          "status": "not-evaluated",
+          "warnings": []
+        },
+        "claim-discipline": {
+          "interval": null,
+          "mean": null,
+          "run_denominator": 0,
+          "status": "not-evaluated",
+          "warnings": []
+        },
+        "counterexample-miss": {
+          "interval": null,
+          "mean": null,
+          "run_denominator": 0,
+          "status": "not-evaluated",
+          "warnings": []
+        },
+        "false-link": {
+          "interval": null,
+          "mean": null,
+          "run_denominator": 0,
+          "status": "not-evaluated",
+          "warnings": []
+        },
+        "reviewer-disagreement": {
+          "interval": null,
+          "mean": null,
+          "run_denominator": 0,
+          "status": "not-evaluated",
+          "warnings": []
+        },
+        "scope-loss": {
+          "interval": null,
+          "mean": null,
+          "run_denominator": 0,
+          "status": "not-evaluated",
+          "warnings": []
+        }
+      },
+      "run_count": 0
+    }
+  },
+  "analysis_id": "mth-0177-statistical-analysis",
+  "error_taxonomy": [
+    {
+      "definition": "A returned candidate is labeled as an invalid relation or irrelevant link.",
+      "id": "false-link"
+    },
+    {
+      "definition": "A result omits or changes the task/system/deployment scope needed for interpretation.",
+      "id": "scope-loss"
+    },
+    {
+      "definition": "A result changes claim type, overstates status, or lacks required evidence discipline.",
+      "id": "claim-discipline"
+    },
+    {
+      "definition": "The method abstains on an eligible observation; abstention is retained as its own dimension.",
+      "id": "abstention"
+    },
+    {
+      "definition": "A supplied counterexample or negative-knowledge target is not surfaced when eligible.",
+      "id": "counterexample-miss"
+    },
+    {
+      "definition": "Explicit reviewer labels disagree for the same observation.",
+      "id": "reviewer-disagreement"
+    }
+  ],
+  "non_claims": [
+    "No run, reviewer label, model output, interval, or statistical power is asserted.",
+    "Separate dimensions are retained; no aggregate quality score is computed.",
+    "Protocol capacity and task repetition are not empirical replication."
+  ],
+  "observations": {
+    "llm_outputs": [],
+    "reviewer_labels": [],
+    "rows": [],
+    "runs": []
+  },
+  "outcome": {
+    "reason": "No repeated run, reviewer, or LLM observations were supplied.",
+    "status": "not-evaluated"
+  },
+  "protocol_capacity": {
+    "domain_slices": [
+      {
+        "domain": "isolation",
+        "system_ids": [
+          "firecracker",
+          "git"
+        ],
+        "task_ids": [
+          "task-10-boundary-isolation",
+          "task-11-boundary-isolation",
+          "task-12-boundary-isolation"
+        ]
+      },
+      {
+        "domain": "orchestration",
+        "system_ids": [
+          "airflow",
+          "carryctx",
+          "kubernetes"
+        ],
+        "task_ids": [
+          "task-07-reconciliation",
+          "task-08-reconciliation",
+          "task-09-reconciliation"
+        ]
+      },
+      {
+        "domain": "storage",
+        "system_ids": [
+          "duckdb",
+          "postgresql",
+          "sqlite"
+        ],
+        "task_ids": [
+          "task-01-storage-mechanism",
+          "task-02-storage-mechanism",
+          "task-03-storage-mechanism"
+        ]
+      },
+      {
+        "domain": "streaming",
+        "system_ids": [
+          "kafka",
+          "temporal"
+        ],
+        "task_ids": [
+          "task-04-stream-history",
+          "task-05-stream-history",
+          "task-06-stream-history"
+        ]
+      }
+    ],
+    "reason": "Authored MTH-0174 capacity is copied from its immutable protocol digest; no observations are included.",
+    "source_artifact": "data/benchmark/mth-0174-cross-system.json",
+    "source_commit": "9dbed68",
+    "source_digest": "sha256:0079440b630a7319b73d0934fd01610b2773854047ab62787a8b3560bfb0b2e1",
+    "status": "protocol-capacity",
+    "task_count": 12
+  },
+  "purpose": "Deterministic aggregation and error-analysis hooks for MTH-0174 and MTH-0172.",
+  "research_only": true,
+  "schema_version": "1.0",
+  "small_sample_policy": {
+    "threshold": 5,
+    "warning": "A warning is emitted when a measured denominator is below the threshold; observations are not discarded."
+  },
+  "sources": {
+    "mth_0172": {
+      "artifact": "data/benchmark/mth-0172-candidate-quality.json",
+      "digest": "sha256:77c06204f5c8286dd07d237b8ef4ffe6351f2a2652b48b0eeb1293528ea3b1c8"
+    },
+    "mth_0174": {
+      "artifact": "data/benchmark/mth-0174-cross-system.json",
+      "commit": "9dbed68",
+      "digest": "sha256:0079440b630a7319b73d0934fd01610b2773854047ab62787a8b3560bfb0b2e1"
+    }
+  }
+}

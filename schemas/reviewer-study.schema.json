@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.xuepoo.xyz/schemas/reviewer-study.schema.json",
+  "title": "Mathen blinded reviewer study",
+  "description": "Research-only protocol and empty packets; labels and timings are never generated.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["study_kind", "schema_version", "study_id", "research_only", "reproducibility", "reviewer_pool", "balance", "instructions", "rubric", "timing", "packets", "review_records", "disagreement_records", "adjudications", "adjudication_protocol", "results", "promotion_boundary"],
+  "properties": {
+    "study_kind": { "const": "blinded_reviewer_study" },
+    "schema_version": { "const": "1.0" },
+    "analysis_version": { "type": "string", "minLength": 1 },
+    "study_id": { "type": "string", "minLength": 1 },
+    "research_only": { "const": true },
+    "purpose": { "type": "string", "minLength": 1 },
+    "reproducibility": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_ref", "source_revision", "task_set_digest", "assignment_seed", "generated_at"],
+      "properties": {
+        "source_ref": { "type": "string", "minLength": 1 },
+        "source_revision": { "type": "string", "minLength": 1 },
+        "task_set_digest": { "type": "string", "minLength": 1 },
+        "assignment_seed": { "type": "string", "minLength": 1 },
+        "generated_at": { "type": "string", "minLength": 1 }
+      }
+    },
+    "reviewer_pool": {
+      "type": "object", "additionalProperties": false,
+      "required": ["count", "independent", "identity_visibility", "reviewer_keys"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 2 },
+        "independent": { "const": true },
+        "identity_visibility": { "const": "opaque" },
+        "reviewer_keys": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "balance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["balanced", "domain_task_counts", "tasks_per_reviewer", "overlap_policy"],
+      "properties": {
+        "balanced": { "const": true },
+        "domain_task_counts": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "integer", "minimum": 1 } },
+        "tasks_per_reviewer": { "type": "integer", "minimum": 1 },
+        "overlap_policy": { "const": "all-reviewers-review-all-tasks" }
+      }
+    },
+    "instructions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "rubric": { "$ref": "#/$defs/rubric" },
+    "timing": { "$ref": "#/$defs/timingPolicy" },
+    "packets": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/packet" } },
+    "review_records": { "type": "array", "items": { "$ref": "#/$defs/reviewRecord" } },
+    "disagreement_records": { "type": "array", "items": { "$ref": "#/$defs/disagreement" } },
+    "adjudications": { "type": "array", "items": { "$ref": "#/$defs/adjudication" } },
+    "adjudication_protocol": { "type": "object", "additionalProperties": true },
+    "results": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "agreement", "promotion_decision"],
+      "properties": {
+        "status": { "type": "string", "minLength": 1 },
+        "agreement": { "type": "object", "additionalProperties": false, "required": ["status"], "properties": { "status": { "const": "not-determined" } } },
+        "promotion_decision": { "const": "not-determined" }
+      }
+    },
+    "promotion_boundary": { "$ref": "#/$defs/promotionBoundary" }
+  },
+  "$defs": {
+    "task": {
+      "type": "object", "additionalProperties": false,
+      "required": ["task_id", "domain_id", "prompt", "candidate_refs", "source_refs"],
+      "properties": {
+        "task_id": { "type": "string", "minLength": 1 },
+        "domain_id": { "type": "string", "minLength": 1 },
+        "prompt": { "type": "string", "minLength": 1 },
+        "candidate_refs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "source_refs": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "assignment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assignment_id", "reviewer_key", "task_id", "domain_id", "order", "task"],
+      "properties": {
+        "assignment_id": { "type": "string", "minLength": 1 },
+        "reviewer_key": { "type": "string", "minLength": 1 },
+        "task_id": { "type": "string", "minLength": 1 },
+        "domain_id": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer", "minimum": 1 },
+        "task": { "$ref": "#/$defs/task" }
+      }
+    },
+    "packet": {
+      "type": "object", "additionalProperties": false,
+      "required": ["packet_id", "reviewer_key", "instructions", "assignments", "review_records"],
+      "properties": {
+        "packet_id": { "type": "string", "minLength": 1 },
+        "reviewer_key": { "type": "string", "minLength": 1 },
+        "instructions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "assignments": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/assignment" } },
+        "review_records": { "type": "array", "items": { "$ref": "#/$defs/reviewRecord" } }
+      }
+    },
+    "rubric": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "missing_value", "unknown_value", "dimensions"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1 },
+        "missing_value": { "const": "not-recorded" },
+        "unknown_value": { "const": "unknown" },
+        "dimensions": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["id", "allowed_values", "question"], "properties": { "id": { "type": "string", "minLength": 1 }, "allowed_values": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }, "question": { "type": "string", "minLength": 1 } } } }
+      }
+    },
+    "timingPolicy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["required_for_submitted_record", "fields", "missing_value", "policy"],
+      "properties": {
+        "required_for_submitted_record": { "const": true },
+        "fields": { "const": ["started_at", "ended_at", "elapsed_seconds"] },
+        "missing_value": { "const": "not-recorded" },
+        "policy": { "type": "string", "minLength": 1 }
+      }
+    },
+    "timing": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "started_at": { "type": ["string", "null"] },
+        "ended_at": { "type": ["string", "null"] },
+        "elapsed_seconds": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "reviewRecord": {
+      "type": "object", "additionalProperties": false,
+      "required": ["review_id", "reviewer_key", "task_id", "labels", "timing"],
+      "properties": {
+        "review_id": { "type": "string", "minLength": 1 },
+        "reviewer_key": { "type": "string", "minLength": 1 },
+        "task_id": { "type": "string", "minLength": 1 },
+        "labels": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+        "timing": { "$ref": "#/$defs/timing" },
+        "notes": { "type": "string" }
+      }
+    },
+    "disagreement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["task_id", "domain_id", "dimension", "reviewer_keys", "values"],
+      "properties": {
+        "task_id": { "type": "string", "minLength": 1 },
+        "domain_id": { "type": "string", "minLength": 1 },
+        "dimension": { "type": "string", "minLength": 1 },
+        "reviewer_keys": { "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 1 } },
+        "values": { "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "adjudication": {
+      "type": "object", "additionalProperties": false,
+      "required": ["task_id", "status", "outcome", "rationale", "adjudicator_key"],
+      "properties": {
+        "task_id": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["open", "resolved", "abstained"] },
+        "outcome": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "adjudicator_key": { "type": "string", "minLength": 1 }
+      }
+    },
+    "promotionBoundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["promotion_decision", "review_implies_promotion", "adjudication_implies_promotion", "canonical_cards_written", "production_records_written"],
+      "properties": {
+        "promotion_decision": { "const": "not-determined" },
+        "review_implies_promotion": { "const": false },
+        "adjudication_implies_promotion": { "const": false },
+        "canonical_cards_written": { "const": false },
+        "production_records_written": { "const": false }
+      }
+    }
+  }
+}

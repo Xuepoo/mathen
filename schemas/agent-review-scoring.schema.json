@@ -1,0 +1,380 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/agent-review-scoring.schema.json",
+  "title": "Mathen MTH-0188 agent-review pilot scoring artifact",
+  "description": "Research-only deterministic scoring for the two enriched agent-review pilots.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "scoring_id",
+    "record_kind",
+    "research_only",
+    "non_canonical",
+    "purpose",
+    "provenance",
+    "evaluation_boundary",
+    "sources",
+    "observations",
+    "scores",
+    "agreement",
+    "small_sample_policy",
+    "non_claims",
+    "promotion_boundary"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "scoring_id": {"const": "mth-0188-agent-review-scoring"},
+    "record_kind": {"const": "agent-review-scoring"},
+    "research_only": {"const": true},
+    "non_canonical": {"const": true},
+    "purpose": {"type": "string", "minLength": 1},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "evaluation_boundary": {"$ref": "#/$defs/evaluationBoundary"},
+    "sources": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"$ref": "#/$defs/source"}
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/observation"}
+    },
+    "scores": {"$ref": "#/$defs/scores"},
+    "agreement": {"$ref": "#/$defs/agreement"},
+    "small_sample_policy": {"$ref": "#/$defs/smallSamplePolicy"},
+    "non_claims": {"$ref": "#/$defs/strings"},
+    "promotion_boundary": {"$ref": "#/$defs/promotionBoundary"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "strings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "execution_actor",
+        "provider",
+        "model",
+        "reviewer_kind",
+        "human_review",
+        "pilot_ids",
+        "source_artifacts"
+      ],
+      "properties": {
+        "mode": {"const": "agent-review-pilot"},
+        "execution_actor": {"const": "llm-based-agent"},
+        "provider": {"const": "not-recorded"},
+        "model": {"const": "not-recorded"},
+        "reviewer_kind": {"const": "agent"},
+        "human_review": {"const": false},
+        "pilot_ids": {"const": ["mth-0186", "mth-0187"]},
+        "source_artifacts": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "evaluationBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "included_partitions",
+        "holdout_included",
+        "observed_row_count",
+        "pilot_count",
+        "reason"
+      ],
+      "properties": {
+        "included_partitions": {"const": ["train", "evaluation"]},
+        "holdout_included": {"const": false},
+        "observed_row_count": {"type": "integer", "minimum": 1},
+        "pilot_count": {"const": 2},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "started_at",
+        "ended_at",
+        "elapsed_seconds",
+        "measurement_status",
+        "scope"
+      ],
+      "properties": {
+        "started_at": {"type": "string", "minLength": 1},
+        "ended_at": {"type": "string", "minLength": 1},
+        "elapsed_seconds": {"type": "number", "minimum": 0},
+        "measurement_status": {"const": "observed"},
+        "scope": {"type": "string", "minLength": 1}
+      }
+    },
+    "label": {"type": "string", "minLength": 1},
+    "locality": {"type": "object"},
+    "scope": {"type": "object"},
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pilot_id",
+        "packet_label",
+        "pilot_digest",
+        "study_packet_digest",
+        "task_id",
+        "assignment_id",
+        "domain_id",
+        "partition",
+        "candidate_statement",
+        "candidate_claim_type",
+        "candidate_digest",
+        "evidence_ids",
+        "evidence_excerpt_digests",
+        "source_ids",
+        "negative_knowledge_refs",
+        "negative_knowledge_digests",
+        "scope_context",
+        "locality",
+        "labels",
+        "timing"
+      ],
+      "properties": {
+        "pilot_id": {"enum": ["mth-0186", "mth-0187"]},
+        "packet_label": {"enum": ["A", "B"]},
+        "pilot_digest": {"$ref": "#/$defs/digest"},
+        "study_packet_digest": {"$ref": "#/$defs/digest"},
+        "task_id": {"type": "string", "minLength": 1},
+        "assignment_id": {"type": "string", "minLength": 1},
+        "domain_id": {"type": "string", "minLength": 1},
+        "partition": {"enum": ["train", "evaluation"]},
+        "candidate_statement": {"type": "string", "minLength": 1},
+        "candidate_claim_type": {"enum": ["fact", "inference", "hypothesis", "analogy"]},
+        "candidate_digest": {"$ref": "#/$defs/digest"},
+        "evidence_ids": {"$ref": "#/$defs/strings"},
+        "evidence_excerpt_digests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/digest"}
+        },
+        "source_ids": {"$ref": "#/$defs/strings"},
+        "negative_knowledge_refs": {"$ref": "#/$defs/strings"},
+        "negative_knowledge_digests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/digest"}
+        },
+        "scope_context": {"$ref": "#/$defs/scope"},
+        "locality": {"$ref": "#/$defs/locality"},
+        "labels": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "evidence_support",
+            "claim_type",
+            "scope_completeness",
+            "false_link",
+            "usefulness",
+            "counterexample_awareness",
+            "abstention",
+            "reviewer_effort"
+          ],
+          "properties": {
+            "evidence_support": {"$ref": "#/$defs/label"},
+            "claim_type": {"$ref": "#/$defs/label"},
+            "scope_completeness": {"$ref": "#/$defs/label"},
+            "false_link": {"$ref": "#/$defs/label"},
+            "usefulness": {"$ref": "#/$defs/label"},
+            "counterexample_awareness": {"$ref": "#/$defs/label"},
+            "abstention": {"$ref": "#/$defs/label"},
+            "reviewer_effort": {"$ref": "#/$defs/label"}
+          }
+        },
+        "timing": {"$ref": "#/$defs/timing"}
+      }
+    },
+    "interval": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["method", "confidence", "lower", "upper"],
+      "properties": {
+        "method": {"const": "clopper-pearson-exact"},
+        "confidence": {"const": 0.95},
+        "lower": {"type": "number", "minimum": 0, "maximum": 1},
+        "upper": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "numerator",
+        "denominator",
+        "value",
+        "status",
+        "reason",
+        "interval",
+        "warnings"
+      ],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "numerator": {"type": "integer", "minimum": 0},
+        "denominator": {"type": "integer", "minimum": 0},
+        "value": {"type": ["number", "null"]},
+        "status": {"enum": ["measured", "not-evaluated"]},
+        "reason": {"type": "string", "minLength": 1},
+        "interval": {"$ref": "#/$defs/interval"},
+        "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "dimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["categories", "warnings"],
+      "properties": {
+        "categories": {"type": "object", "additionalProperties": {"$ref": "#/$defs/metric"}},
+        "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "dimensionSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed_count", "dimensions"],
+      "properties": {
+        "observed_count": {"type": "integer", "minimum": 0},
+        "dimensions": {"type": "object", "minProperties": 8, "additionalProperties": {"$ref": "#/$defs/dimension"}}
+      }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overall", "by_pilot", "by_task", "by_domain"],
+      "properties": {
+        "overall": {"$ref": "#/$defs/dimensionSet"},
+        "by_pilot": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/slice"}},
+        "by_task": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/slice"}},
+        "by_domain": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/slice"}}
+      }
+    },
+    "slice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slice", "observed_count", "dimensions"],
+      "properties": {
+        "slice": {"type": "string", "minLength": 1},
+        "observed_count": {"type": "integer", "minimum": 0},
+        "dimensions": {"type": "object", "minProperties": 8, "additionalProperties": {"$ref": "#/$defs/dimension"}}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pilot_id", "packet_label", "artifact", "digest", "execution_actor", "provider", "model", "study_packet_digest", "assignment_digests", "run_timing"],
+      "properties": {
+        "pilot_id": {"enum": ["mth-0186", "mth-0187"]},
+        "packet_label": {"enum": ["A", "B"]},
+        "artifact": {"type": "string", "minLength": 1},
+        "digest": {"$ref": "#/$defs/digest"},
+        "execution_actor": {"const": "llm-based-agent"},
+        "provider": {"const": "not-recorded"},
+        "model": {"const": "not-recorded"},
+        "study_packet_digest": {"$ref": "#/$defs/digest"},
+        "assignment_digests": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+        "run_timing": {"$ref": "#/$defs/timing"}
+      }
+    },
+    "agreementPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "domain_id", "candidate_digest", "pilot_labels", "dimensions"],
+      "properties": {
+        "task_id": {"type": "string", "minLength": 1},
+        "domain_id": {"type": "string", "minLength": 1},
+        "candidate_digest": {"$ref": "#/$defs/digest"},
+        "pilot_labels": {"type": "object", "required": ["A", "B"], "additionalProperties": {"type": "object"}},
+        "dimensions": {"type": "object", "minProperties": 8, "additionalProperties": {"$ref": "#/$defs/agreementObservation"}}
+      }
+    },
+    "agreementObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "agent_pilot_only"],
+      "properties": {
+        "status": {"enum": ["agree", "disagree"]},
+        "agent_pilot_only": {"const": true}
+      }
+    },
+    "agreement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_kind", "reviewer_kind", "human_review", "pilot_pair", "status", "paired_rows", "overall", "by_task", "by_domain", "non_claims"],
+      "properties": {
+        "observation_kind": {"const": "agent-pilot-agreement"},
+        "reviewer_kind": {"const": "agent"},
+        "human_review": {"const": false},
+        "pilot_pair": {"const": ["mth-0186", "mth-0187"]},
+        "status": {"const": "observed"},
+        "paired_rows": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/agreementPair"}},
+        "overall": {"$ref": "#/$defs/agreementSet"},
+        "by_task": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/agreementSlice"}},
+        "by_domain": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/agreementSetSlice"}},
+        "non_claims": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "agreementSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paired_count", "dimensions"],
+      "properties": {
+        "paired_count": {"type": "integer", "minimum": 1},
+        "dimensions": {"type": "object", "minProperties": 8, "additionalProperties": {"$ref": "#/$defs/dimension"}}
+      }
+    },
+    "agreementSlice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slice", "paired_count", "dimensions", "warnings"],
+      "properties": {
+        "slice": {"type": "string", "minLength": 1},
+        "paired_count": {"const": 1},
+        "dimensions": {"type": "object", "minProperties": 8, "additionalProperties": {"$ref": "#/$defs/dimension"}},
+        "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "agreementSetSlice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slice", "paired_count", "dimensions"],
+      "properties": {
+        "slice": {"type": "string", "minLength": 1},
+        "paired_count": {"type": "integer", "minimum": 1},
+        "dimensions": {"type": "object", "minProperties": 8, "additionalProperties": {"$ref": "#/$defs/dimension"}}
+      }
+    },
+    "smallSamplePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["threshold", "warning"],
+      "properties": {
+        "threshold": {"const": 5},
+        "warning": {"type": "string", "minLength": 1}
+      }
+    },
+    "promotionBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["promotion_decision", "review_implies_promotion", "canonical_cards_written", "production_records_written"],
+      "properties": {
+        "promotion_decision": {"const": "not-determined"},
+        "review_implies_promotion": {"const": false},
+        "canonical_cards_written": {"const": false},
+        "production_records_written": {"const": false}
+      }
+    }
+  }
+}

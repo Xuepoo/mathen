@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathen.dev/schemas/collected-observations.schema.json",
+  "title": "Mathen MTH-0183 collected research observations",
+  "description": "Research-only agent-review and model-run observation aggregation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_id", "research_only", "provenance", "purpose", "sources", "observations", "aggregation", "error_taxonomy", "limitations", "non_claims", "outcome"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "artifact_id": {"const": "mth-0183-collected-observations"},
+    "research_only": {"const": true},
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["execution_actor", "provider", "model"],
+      "properties": {
+        "execution_actor": {"const": "llm-based-agent"},
+        "provider": {"const": "not-recorded"},
+        "model": {"const": "not-recorded"}
+      }
+    },
+    "purpose": {"type": "string", "minLength": 1},
+    "sources": {"$ref": "#/$defs/sources"},
+    "observations": {"$ref": "#/$defs/observations"},
+    "aggregation": {"$ref": "#/$defs/aggregation"},
+    "error_taxonomy": {"type": "array", "minItems": 6, "items": {"$ref": "#/$defs/taxonomy"}},
+    "limitations": {"$ref": "#/$defs/strings"},
+    "non_claims": {"$ref": "#/$defs/strings"},
+    "outcome": {"$ref": "#/$defs/outcome"}
+  },
+  "$defs": {
+    "strings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact", "digest", "execution_actor", "provider", "model"],
+      "properties": {
+        "artifact": {"type": "string", "minLength": 1},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "execution_actor": {"const": "llm-based-agent"},
+        "provider": {"const": "not-recorded"},
+        "model": {"const": "not-recorded"},
+        "pilot_id": {"type": "string", "minLength": 1},
+        "reviewer_kind": {"enum": ["agent", "human", "model"]},
+        "human_review": {"type": "boolean"}
+      }
+    },
+    "sources": {
+      "type": "object", "additionalProperties": false,
+      "required": ["statistical_primitives", "agent_review_pilots", "model_run"],
+      "properties": {
+        "statistical_primitives": {
+          "type": "object", "additionalProperties": false,
+          "required": ["artifact", "script"],
+          "properties": {"artifact": {"type": "string", "minLength": 1}, "script": {"type": "string", "minLength": 1}}
+        },
+        "agent_review_pilots": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/source"}},
+        "model_run": {"$ref": "#/$defs/modelRun"}
+      }
+    },
+    "timing": {
+      "type": "object", "additionalProperties": false,
+      "required": ["started_at", "ended_at", "elapsed_seconds", "timing_scope"],
+      "properties": {
+        "started_at": {"type": "string", "minLength": 1}, "ended_at": {"type": "string", "minLength": 1},
+        "elapsed_seconds": {"type": "number", "minimum": 0}, "timing_scope": {"const": "agent-run"}
+      }
+    },
+    "row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["observation_id", "source_pilot", "stratum", "reviewer_kind", "human_review", "task_id", "labels", "evidence_payload_available", "evaluated_labels", "unknown_labels", "evaluation_status", "errors", "evaluated_errors", "timing", "notes"],
+      "properties": {
+        "observation_id": {"type": "string", "minLength": 1}, "source_pilot": {"type": "string", "minLength": 1},
+        "stratum": {"const": "agent-review"}, "reviewer_kind": {"const": "agent"}, "human_review": {"const": false},
+        "task_id": {"type": "string", "minLength": 1}, "labels": {"type": "object"},
+        "evidence_payload_available": {"const": false}, "evaluated_labels": {"type": "array", "items": {"type": "string"}},
+        "unknown_labels": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "evaluation_status": {"const": "abstained"},
+        "errors": {"type": "array", "items": {"type": "string"}}, "evaluated_errors": {"type": "array", "items": {"type": "string"}},
+        "timing": {"$ref": "#/$defs/timing"}, "notes": {"type": "string", "minLength": 1}
+      }
+    },
+    "modelRun": {
+      "type": "object", "additionalProperties": false,
+      "required": ["run_id", "stratum", "reviewer_kind", "human_review", "status", "output_metrics", "reason", "artifact", "digest", "timing_scope"],
+      "properties": {
+        "run_id": {"type": "string", "minLength": 1}, "stratum": {"const": "model-run"}, "reviewer_kind": {"const": "model"}, "human_review": {"const": false},
+        "status": {"const": "not-evaluated"}, "output_metrics": {"type": "object", "additionalProperties": {"type": ["number", "null"]}},
+        "reason": {"type": "string", "minLength": 1}, "artifact": {"type": "string", "minLength": 1},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "timing_scope": {"type": "string", "minLength": 1}
+      }
+    },
+    "observations": {
+      "type": "object", "additionalProperties": false, "required": ["agent-review", "human-review", "model-run"],
+      "properties": {"agent-review": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/row"}}, "human-review": {"type": "array", "items": {"type": "object"}}, "model-run": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/modelRun"}}}
+    },
+    "metric": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "numerator", "denominator", "value", "status", "reason", "interval", "warnings"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1}, "numerator": {"type": "integer", "minimum": 0}, "denominator": {"type": "integer", "minimum": 0},
+        "value": {"type": ["number", "null"]}, "status": {"enum": ["measured", "not-evaluated"]}, "reason": {"type": "string", "minLength": 1},
+        "interval": {"type": ["object", "null"]}, "warnings": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "errorAnalysis": {"type": "object", "additionalProperties": true, "required": ["observed_count", "metrics", "by_domain", "by_task", "warnings"], "properties": {"observed_count": {"type": "integer", "minimum": 0}, "metrics": {"type": "object", "additionalProperties": {"$ref": "#/$defs/metric"}}, "by_domain": {"type": "array"}, "by_task": {"type": "array"}, "warnings": {"type": "array"}}},
+    "aggregation": {"type": "object", "additionalProperties": false, "required": ["agent-review", "human-review", "model-run"], "properties": {"agent-review": {"type": "object"}, "human-review": {"type": "object"}, "model-run": {"type": "object"}}},
+    "taxonomy": {"type": "object", "additionalProperties": false, "required": ["id", "definition"], "properties": {"id": {"enum": ["false-link", "scope-loss", "claim-discipline", "abstention", "counterexample-miss", "reviewer-disagreement"]}, "definition": {"type": "string", "minLength": 1}}},
+    "outcome": {"type": "object", "additionalProperties": false, "required": ["status", "agent_observation_count", "human_observation_count", "model_run_status", "reason"], "properties": {"status": {"type": "string", "minLength": 1}, "agent_observation_count": {"type": "integer", "minimum": 0}, "human_observation_count": {"type": "integer", "minimum": 0}, "model_run_status": {"const": "not-evaluated"}, "reason": {"type": "string", "minLength": 1}}}
+  }
+}
