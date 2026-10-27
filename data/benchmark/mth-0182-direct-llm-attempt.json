@@ -1,0 +1,48 @@
+{
+  "benchmark_version": "mth-0118-v1",
+  "candidates": [],
+  "input_bundle": {
+    "digest": "sha256:7c66acdb212c50d8009555e9354399cb5dc84729502a6657b2607776037c2e7d",
+    "evidence_ids": [],
+    "id": "mth-0174-cross-system-evaluation-boundary"
+  },
+  "manifest_kind": "direct_llm_control",
+  "outcome": {
+    "reason": "Not evaluated: no safe local model/runtime was available. Environment inspection found no local model-serving executable or supported inference runtime; no provider was selected, no prompt was rendered, no request was made, and no output was produced.",
+    "status": "not-evaluated"
+  },
+  "output": {
+    "digest": null,
+    "record_count": 0,
+    "secret_safe": true,
+    "status": "absent",
+    "storage_ref": null
+  },
+  "prompt": {
+    "digest": "sha256:6c429ece29e8c5abff288317328918d35aaf4c857635654d12ba48970ea7eb5a",
+    "id": "mth-0182-prompt-not-rendered"
+  },
+  "protocol_version": "mth-0176-v1",
+  "provider": {
+    "exact_model_id": "unavailable",
+    "name": "unavailable"
+  },
+  "result_boundary": {
+    "canonical": false,
+    "promotion_requires_human_review": true,
+    "storage_scope": "research"
+  },
+  "run_id": "mth-0182-direct-llm-attempt",
+  "runtime": {
+    "execution_environment": "research-only-dry-run",
+    "runner_version": "mth-0176-v1",
+    "runtime_kind": "unavailable",
+    "runtime_version": "not-run",
+    "source_revision": "not-run"
+  },
+  "sampling": {
+    "decoding_parameters": {},
+    "seed": 0
+  },
+  "schema_version": "1.0"
+}
