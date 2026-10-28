@@ -1,7 +1,15 @@
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 const ACCESS_COOKIE = "mathen_access";
 const DEFAULT_SESSION_TTL_SECONDS = 60 * 60;
+const OIDC_JWKS_CACHE_TTL_MS = 5 * 60 * 1_000;
+const OIDC_JWKS_REFRESH_INTERVAL_MS = 30 * 1_000;
+const OIDC_JWKS_FETCH_TIMEOUT_MS = 5_000;
+const OIDC_JWKS_CACHE_MAX_ENTRIES = 8;
+const OIDC_JWKS_MAX_BYTES = 64 * 1024;
+const OIDC_JWKS_MAX_KEYS = 32;
+const OIDC_MAX_TOKEN_BYTES = 16 * 1024;
 export type SiteverifyFetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+export type OidcFetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 export type AccessEnvironment = {
   APP_ENV: string;
@@ -10,9 +18,17 @@ export type AccessEnvironment = {
   TURNSTILE_HOSTNAME?: string;
   TURNSTILE_SESSION_TTL_SECONDS?: string;
   API_ACCESS_TOKEN?: string;
+  AUTH0_ISSUER?: string;
+  AUTH0_AUDIENCE?: string;
+  AUTH0_JWKS_URI?: string;
+  AUTH0_REQUIRED_SCOPE?: string;
   API_RATE_LIMIT_PER_MINUTE?: string;
   API_RATE_LIMIT_WINDOW_SECONDS?: string;
 };
+
+type CachedJwks = { expiresAt: number; refreshAfter: number; keys: Map<string, JsonWebKey> };
+
+const oidcJwksCache = new Map<string, CachedJwks>();
 
 export type RateLimitResult = { allowed: true } | { allowed: false; retryAfterSeconds: number };
 
@@ -89,6 +105,105 @@ export function hasServiceToken(request: Request, env: AccessEnvironment) {
   if (!expected) return false;
   const authorization = request.headers.get("Authorization")?.trim();
   return authorization === `Bearer ${expected}`;
+}
+
+export function oidcAuthenticationConfigured(env: AccessEnvironment) {
+  return Boolean(oidcIssuer(env) && env.AUTH0_AUDIENCE?.trim());
+}
+
+export function oidcIssuer(env: AccessEnvironment) {
+  const issuer = env.AUTH0_ISSUER?.trim();
+  if (!issuer) return undefined;
+  try {
+    return new URL(issuer).protocol === "https:" ? issuer : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function oidcJwksUri(env: AccessEnvironment) {
+  const configured = env.AUTH0_JWKS_URI?.trim();
+  const fallback = oidcIssuer(env);
+  const uri =
+    configured || (fallback ? `${fallback.replace(/\/$/, "")}/.well-known/jwks.json` : undefined);
+  if (!uri) return undefined;
+  try {
+    const url = new URL(uri);
+    return url.protocol === "https:" ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function oidcRequiredScopes(env: AccessEnvironment) {
+  return (env.AUTH0_REQUIRED_SCOPE ?? "").trim().split(/\s+/).filter(Boolean);
+}
+
+export async function verifyOidcBearerToken(
+  request: Request,
+  env: AccessEnvironment,
+  fetcher: OidcFetcher = fetch,
+  now = Date.now(),
+) {
+  if (!oidcAuthenticationConfigured(env)) return false;
+  const authorization = request.headers.get("Authorization")?.trim() ?? "";
+  const match = /^Bearer\s+(\S+)$/i.exec(authorization);
+  return match ? verifyOidcAccessToken(match[1]!, env, fetcher, now) : false;
+}
+
+export async function verifyOidcAccessToken(
+  token: string,
+  env: AccessEnvironment,
+  fetcher: OidcFetcher = fetch,
+  now = Date.now(),
+) {
+  if (!oidcAuthenticationConfigured(env) || token.length > OIDC_MAX_TOKEN_BYTES) return false;
+  const parts = token.split(".");
+  if (parts.length !== 3 || parts.some((part) => !part)) return false;
+
+  const header = decodeJson(parts[0]!);
+  const claims = decodeJson(parts[1]!);
+  const signature = base64UrlDecodeBytes(parts[2]!);
+  if (!isRecord(header) || !isRecord(claims) || !signature) return false;
+  if (header.alg !== "RS256" || typeof header.kid !== "string" || !header.kid) return false;
+
+  const issuer = oidcIssuer(env);
+  const audience = env.AUTH0_AUDIENCE?.trim();
+  if (!issuer || !audience || claims.iss !== issuer || !hasAudience(claims.aud, audience)) {
+    return false;
+  }
+  if (typeof claims.exp !== "number" || !Number.isFinite(claims.exp)) return false;
+  const nowSeconds = Math.floor(now / 1_000);
+  if (claims.exp <= nowSeconds) return false;
+  if (
+    claims.nbf !== undefined &&
+    (typeof claims.nbf !== "number" || !Number.isFinite(claims.nbf) || claims.nbf > nowSeconds)
+  ) {
+    return false;
+  }
+  if (!hasRequiredScopes(claims, oidcRequiredScopes(env))) return false;
+
+  const jwksUri = oidcJwksUri(env);
+  if (!jwksUri) return false;
+  const jwk = await findJwk(jwksUri, header.kid, fetcher, now);
+  if (!jwk) return false;
+  try {
+    const key = await crypto.subtle.importKey(
+      "jwk",
+      jwk,
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"],
+    );
+    return await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      key,
+      signature,
+      new TextEncoder().encode(`${parts[0]}.${parts[1]}`),
+    );
+  } catch {
+    return false;
+  }
 }
 
 export async function createAccessCookie(env: AccessEnvironment, now = Date.now()) {
@@ -195,4 +310,81 @@ function base64UrlDecodeBytes(value: string) {
 function base64UrlDecodeText(value: string) {
   const bytes = base64UrlDecodeBytes(value);
   return bytes ? new TextDecoder().decode(bytes) : "";
+}
+
+function decodeJson(value: string): unknown {
+  try {
+    const decoded = base64UrlDecodeText(value);
+    return decoded ? JSON.parse(decoded) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function hasAudience(value: unknown, expected: string) {
+  return value === expected || (Array.isArray(value) && value.includes(expected));
+}
+
+function hasRequiredScopes(claims: Record<string, unknown>, required: string[]) {
+  if (!required.length) return true;
+  const scopes = new Set<string>();
+  if (typeof claims.scope === "string") {
+    for (const scope of claims.scope.split(/\s+/)) if (scope) scopes.add(scope);
+  }
+  if (Array.isArray(claims.permissions)) {
+    for (const permission of claims.permissions) {
+      if (typeof permission === "string") scopes.add(permission);
+    }
+  }
+  return required.every((scope) => scopes.has(scope));
+}
+
+async function findJwk(uri: string, kid: string, fetcher: OidcFetcher, now: number) {
+  const cached = oidcJwksCache.get(uri);
+  if (cached && cached.expiresAt > now) {
+    const key = cached.keys.get(kid);
+    if (key || cached.refreshAfter > now) return key;
+  }
+  const keys = await fetchJwks(uri, fetcher, now);
+  return keys?.get(kid);
+}
+
+async function fetchJwks(uri: string, fetcher: OidcFetcher, now: number) {
+  try {
+    const response = await fetcher(uri, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(OIDC_JWKS_FETCH_TIMEOUT_MS),
+    });
+    if (!response.ok) return undefined;
+    const body = await response.text();
+    if (new TextEncoder().encode(body).byteLength > OIDC_JWKS_MAX_BYTES) return undefined;
+    const parsed = JSON.parse(body) as { keys?: unknown };
+    if (!Array.isArray(parsed.keys) || parsed.keys.length > OIDC_JWKS_MAX_KEYS) return undefined;
+    const keys = new Map<string, JsonWebKey>();
+    for (const value of parsed.keys) {
+      if (!isRecord(value) || typeof value.kid !== "string" || value.kty !== "RSA") continue;
+      if (value.use !== undefined && value.use !== "sig") continue;
+      if (value.alg !== undefined && value.alg !== "RS256") continue;
+      if (typeof value.n !== "string" || typeof value.e !== "string") continue;
+      keys.set(value.kid, value as JsonWebKey);
+    }
+    oidcJwksCache.delete(uri);
+    while (oidcJwksCache.size >= OIDC_JWKS_CACHE_MAX_ENTRIES) {
+      const oldest = oidcJwksCache.keys().next().value as string | undefined;
+      if (!oldest) break;
+      oidcJwksCache.delete(oldest);
+    }
+    oidcJwksCache.set(uri, {
+      expiresAt: now + OIDC_JWKS_CACHE_TTL_MS,
+      refreshAfter: now + OIDC_JWKS_REFRESH_INTERVAL_MS,
+      keys,
+    });
+    return keys;
+  } catch {
+    return undefined;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

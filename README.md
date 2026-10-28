@@ -145,6 +145,11 @@ necessary.
   rejected and misleading candidates
 - [`docs/extraction-provenance.md`](docs/extraction-provenance.md) — replaceable
   model and graph provenance
+- [`docs/mcp.md`](docs/mcp.md) — read-only agent access
+- [`docs/auth0-mcp-setup.md`](docs/auth0-mcp-setup.md) — Auth0 OAuth/OIDC setup
+  and OpenCode hosted MCP login
+- [`docs/configuration.md`](docs/configuration.md) — local configuration
+- [`docs/hosting.md`](docs/hosting.md) — deployment boundary
 - [`docs/catalog.md`](docs/catalog.md) — catalog backlog
 
 ### Supporting research notes

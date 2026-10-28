@@ -11,6 +11,52 @@ import {
   serializeMathematicalView,
   serializeEvidence,
 } from "./index.js";
+import { verifyOidcAccessToken } from "./access.js";
+
+function base64Url(value: string | Uint8Array) {
+  const bytes = typeof value === "string" ? new TextEncoder().encode(value) : value;
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+}
+
+async function syntheticOidcToken() {
+  const pair = await crypto.subtle.generateKey(
+    {
+      name: "RSASSA-PKCS1-v1_5",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: "SHA-256",
+    },
+    true,
+    ["sign", "verify"],
+  );
+  const jwk = {
+    ...(await crypto.subtle.exportKey("jwk", pair.publicKey)),
+    kid: "ordinary-route-regression",
+    alg: "RS256",
+    use: "sig",
+  };
+  const claims = {
+    iss: "https://tenant.example.test/",
+    aud: "https://mathen.example.test/api",
+    exp: 1_800_000_100,
+    nbf: 1_700_000_000,
+    scope: "read:cards",
+  };
+  const header = base64Url(JSON.stringify({ alg: "RS256", typ: "JWT", kid: jwk.kid }));
+  const payload = base64Url(JSON.stringify(claims));
+  const input = `${header}.${payload}`;
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    pair.privateKey,
+    new TextEncoder().encode(input),
+  );
+  return {
+    token: `${input}.${base64Url(new Uint8Array(signature))}`,
+    fetcher: async () => Response.json({ keys: [jwk] }),
+  };
+}
 
 test("hosted MCP uses the /api prefix on any deployment origin", async () => {
   for (const origin of ["https://preview.example.test", "http://localhost:8787"]) {
@@ -32,6 +78,54 @@ test("hosted MCP uses the /api prefix on any deployment origin", async () => {
   }
 });
 
+test("hosted MCP exposes OAuth protected-resource metadata and a standard challenge", async () => {
+  const env = {
+    DB: {} as D1Database,
+    APP_ENV: "production",
+    ASSETS: {} as Fetcher,
+    AUTH0_ISSUER: "https://tenant.example.test/",
+    AUTH0_AUDIENCE: "https://mathen.example.test/api",
+    AUTH0_JWKS_URI: "https://tenant.example.test/.well-known/ordinary-route-regression.json",
+    AUTH0_REQUIRED_SCOPE: "read:cards",
+    TURNSTILE_SECRET_KEY: "secret",
+    TURNSTILE_SITE_KEY: "site",
+  };
+  const metadata = await app.request(
+    "https://example.test/api/.well-known/oauth-protected-resource",
+    {},
+    env,
+  );
+  assert.equal(metadata.status, 200);
+  assert.deepEqual(await metadata.json(), {
+    resource: "https://example.test/api/mcp",
+    bearer_methods_supported: ["header"],
+    authorization_servers: ["https://tenant.example.test/"],
+    scopes_supported: ["read:cards"],
+  });
+  const metadataAlias = await app.request(
+    "https://example.test/api/.well-known/oauth-protected-resource/mcp",
+    {},
+    env,
+  );
+  assert.equal(metadataAlias.status, 200);
+  assert.deepEqual(await metadataAlias.json(), {
+    resource: "https://example.test/api/mcp",
+    bearer_methods_supported: ["header"],
+    authorization_servers: ["https://tenant.example.test/"],
+    scopes_supported: ["read:cards"],
+  });
+  const unauthorized = await app.request(
+    "https://example.test/api/mcp",
+    { method: "POST", headers: { Authorization: "Bearer malformed" } },
+    env,
+  );
+  assert.equal(unauthorized.status, 401);
+  assert.equal(
+    unauthorized.headers.get("www-authenticate"),
+    'Bearer realm="mathen-mcp", resource_metadata="https://example.test/api/.well-known/oauth-protected-resource", error="invalid_token", scope="read:cards"',
+  );
+});
+
 test("D1-backed routes require Turnstile access when protection is configured", async () => {
   const response = await app.request(
     "/api/systems",
@@ -45,6 +139,35 @@ test("D1-backed routes require Turnstile access when protection is configured", 
     },
   );
 
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), {
+    error: "Turnstile access verification required",
+    code: "access_required",
+  });
+});
+
+test("a valid MCP OIDC token cannot bypass Turnstile on ordinary API routes", async () => {
+  const fixture = await syntheticOidcToken();
+  const env = {
+    DB: {} as D1Database,
+    APP_ENV: "production",
+    ASSETS: {} as Fetcher,
+    TURNSTILE_SECRET_KEY: "secret",
+    TURNSTILE_SITE_KEY: "site",
+    AUTH0_ISSUER: "https://tenant.example.test/",
+    AUTH0_AUDIENCE: "https://mathen.example.test/api",
+    AUTH0_JWKS_URI: "https://tenant.example.test/.well-known/ordinary-route-regression.json",
+    AUTH0_REQUIRED_SCOPE: "read:cards",
+  };
+  assert.equal(
+    await verifyOidcAccessToken(fixture.token, env, fixture.fetcher, 1_700_000_001_000),
+    true,
+  );
+  const response = await app.request(
+    "/api/systems",
+    { headers: { Authorization: `Bearer ${fixture.token}` } },
+    env,
+  );
   assert.equal(response.status, 403);
   assert.deepEqual(await response.json(), {
     error: "Turnstile access verification required",
