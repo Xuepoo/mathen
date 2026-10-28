@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD013 -->
+
 # MTH-0207 — VectoJS bounded evidence report
 
 **Status:** research-only · non-canonical · review-required · promotion-not-determined
