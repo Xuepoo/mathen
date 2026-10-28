@@ -31,10 +31,12 @@ async function syntheticOidcToken() {
     true,
     ["sign", "verify"],
   );
-  const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
-  jwk.kid = "ordinary-route-regression";
-  jwk.alg = "RS256";
-  jwk.use = "sig";
+  const jwk = {
+    ...(await crypto.subtle.exportKey("jwk", pair.publicKey)),
+    kid: "ordinary-route-regression",
+    alg: "RS256",
+    use: "sig",
+  };
   const claims = {
     iss: "https://tenant.example.test/",
     aud: "https://mathen.example.test/api",
@@ -83,7 +85,7 @@ test("hosted MCP exposes OAuth protected-resource metadata and a standard challe
     ASSETS: {} as Fetcher,
     AUTH0_ISSUER: "https://tenant.example.test/",
     AUTH0_AUDIENCE: "https://mathen.example.test/api",
-    AUTH0_JWKS_URI: "https://tenant.example.test/.well-known/jwks.json",
+    AUTH0_JWKS_URI: "https://tenant.example.test/.well-known/ordinary-route-regression.json",
     AUTH0_REQUIRED_SCOPE: "read:cards",
     TURNSTILE_SECRET_KEY: "secret",
     TURNSTILE_SITE_KEY: "site",
@@ -154,7 +156,7 @@ test("a valid MCP OIDC token cannot bypass Turnstile on ordinary API routes", as
     TURNSTILE_SITE_KEY: "site",
     AUTH0_ISSUER: "https://tenant.example.test/",
     AUTH0_AUDIENCE: "https://mathen.example.test/api",
-    AUTH0_JWKS_URI: "https://tenant.example.test/.well-known/jwks.json",
+    AUTH0_JWKS_URI: "https://tenant.example.test/.well-known/ordinary-route-regression.json",
     AUTH0_REQUIRED_SCOPE: "read:cards",
   };
   assert.equal(

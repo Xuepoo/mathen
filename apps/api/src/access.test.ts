@@ -42,10 +42,12 @@ async function oidcFixture(
     true,
     ["sign", "verify"],
   );
-  const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
-  jwk.kid = keyId;
-  jwk.alg = "RS256";
-  jwk.use = "sig";
+  const jwk = {
+    ...(await crypto.subtle.exportKey("jwk", pair.publicKey)),
+    kid: keyId,
+    alg: "RS256",
+    use: "sig",
+  };
   const claims = {
     iss: oidcEnv.AUTH0_ISSUER,
     aud: oidcEnv.AUTH0_AUDIENCE,
