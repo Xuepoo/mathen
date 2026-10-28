@@ -125,15 +125,16 @@ same way.
 ## 5. Publish protected-resource metadata
 
 The MCP resource must publish OAuth protected-resource metadata at a public
-HTTPS URL. For a path-based deployment, use the path-aware well-known URL
-required by the MCP authorization profile. A typical production shape is:
+HTTPS URL. The hosted Mathen API exposes the primary metadata URL below, plus
+an optional `/mcp` compatibility URL:
 
 ```text
-https://<mathen-production-host>/.well-known/oauth-protected-resource/api/mcp
+https://<mathen-production-host>/api/.well-known/oauth-protected-resource
+https://<mathen-production-host>/api/.well-known/oauth-protected-resource/mcp
 ```
 
-Use the exact URL advertised by the deployed MCP 401 challenge. The document
-should contain values like these:
+Use the primary URL advertised by the deployed MCP 401 challenge. The
+document should contain values like these:
 
 ```json
 {
@@ -293,14 +294,12 @@ The deployment workflow currently writes that secret when it is present. Never
 move it to a public Worker variable. Rotate or revoke it in the Worker when it
 is exposed.
 
-The checked-in `apps/api/wrangler.jsonc` currently defines public deployment
-variables such as `APP_ENV` and the MCP origin/rate limits, but not the Auth0
-variables above. The current deploy workflow forwards Turnstile variables and
-writes `API_ACCESS_TOKEN`; it does not yet forward `AUTH0_ISSUER`,
-`AUTH0_AUDIENCE`, or `AUTH0_REQUIRED_SCOPE`. Treat this tutorial as the
-operator configuration contract for an OAuth-enabled deployment and verify
-that the deployment implementation has been updated before claiming OAuth is
-active.
+The checked-in `apps/api/wrangler.jsonc` defines the optional Auth0 variables
+above, and the deploy workflow forwards them from GitHub production Variables.
+No real Auth0 tenant values have been configured, deployed, or live-verified.
+Treat this tutorial as the operator configuration contract for an OAuth-enabled
+deployment and do not claim OAuth is active until those deployment and live
+verification checks are complete.
 
 At no point should a secret or access token appear in a repository, issue,
 chat, command history, URL query string, browser bundle, card, or log. Use
@@ -395,13 +394,16 @@ This tutorial must not be read as a deployment claim. In the current checked-in
 Mathen implementation:
 
 - the hosted `/api/mcp` authorization path performs exact `Bearer
-  API_ACCESS_TOKEN` matching; Auth0 JWT/JWKS, issuer, audience, and scope
-  validation are not yet implemented here;
-- the Worker does not currently publish the protected-resource metadata route
-  or an OAuth-specific `WWW-Authenticate` challenge;
-- `AUTH0_ISSUER`, `AUTH0_AUDIENCE`, and `AUTH0_REQUIRED_SCOPE` are documented
-  target variables, not currently declared in `apps/api/wrangler.jsonc` or
-  forwarded by `.github/workflows/deploy.yml`;
+  API_ACCESS_TOKEN` matching and also contains optional Auth0 JWT/JWKS, issuer,
+  audience, and scope validation when the Auth0 variables are configured;
+- the Worker code now publishes the protected-resource metadata routes at
+  `/api/.well-known/oauth-protected-resource` and the optional
+  `/api/.well-known/oauth-protected-resource/mcp`, and emits the OAuth-specific
+  `WWW-Authenticate` challenge when Auth0 validation is configured;
+- `AUTH0_ISSUER`, `AUTH0_AUDIENCE`, `AUTH0_JWKS_URI`, and
+  `AUTH0_REQUIRED_SCOPE` are declared and forwarded by the checked-in
+  deployment configuration, but no real Auth0 tenant variables have been
+  configured, deployed, or live-verified;
 - OpenCode OAuth support, Auth0 tenant capabilities, CIMD/DCR availability,
   redirect handling, and credential storage vary by client and version; verify
   the versions used by the operator;
@@ -412,9 +414,9 @@ Mathen implementation:
   should be claimed from source configuration alone. Perform the staging and
   production read-back checks above and retain only non-secret evidence.
 
-Until those implementation and deployment checks are complete, use the
-documented `API_ACCESS_TOKEN` legacy path and treat Auth0 configuration as
-preparation for a future OAuth-enabled deployment.
+Until those deployment and live-verification checks are complete, the legacy
+`API_ACCESS_TOKEN` path remains the currently verified production path. Treat
+Auth0 configuration as preparation for a future OAuth-enabled deployment.
 
 ## References
 
