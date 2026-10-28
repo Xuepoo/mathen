@@ -33,10 +33,18 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_KEY }}
           TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
           TURNSTILE_HOSTNAME: ${{ vars.TURNSTILE_HOSTNAME }}
-          TURNSTILE_SESSION_TTL_SECONDS: ${{ vars.TURNSTILE_SESSION_TTL_SECONDS }}
+          TURNSTILE_SESSION_TTL_SECONDS: ${{ vars.TURNSTILE_SESSION_TTL_SECONDS }} # yamllint disable-line rule:line-length
+          AUTH0_ISSUER: ${{ vars.AUTH0_ISSUER }}
+          AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
+          AUTH0_JWKS_URI: ${{ vars.AUTH0_JWKS_URI }}
+          AUTH0_REQUIRED_SCOPE: ${{ vars.AUTH0_REQUIRED_SCOPE }}
         run: |
           args=()
-          for name in TURNSTILE_SITE_KEY TURNSTILE_HOSTNAME TURNSTILE_SESSION_TTL_SECONDS; do
+          for name in \
+            TURNSTILE_SITE_KEY TURNSTILE_HOSTNAME \
+            TURNSTILE_SESSION_TTL_SECONDS AUTH0_ISSUER \
+            AUTH0_AUDIENCE AUTH0_JWKS_URI AUTH0_REQUIRED_SCOPE
+          do
             if [ -n "${!name:-}" ]; then
               args+=(--var "${name}:${!name}")
             fi
@@ -52,8 +60,10 @@ jobs:
           API_ACCESS_TOKEN: ${{ secrets.API_ACCESS_TOKEN }}
         run: |
           if [ -n "${TURNSTILE_SECRET_KEY:-}" ]; then
-            printf '%s' "$TURNSTILE_SECRET_KEY" | bun run wrangler secret put TURNSTILE_SECRET_KEY
+            printf '%s' "$TURNSTILE_SECRET_KEY" |
+              bun run wrangler secret put TURNSTILE_SECRET_KEY
           fi
           if [ -n "${API_ACCESS_TOKEN:-}" ]; then
-            printf '%s' "$API_ACCESS_TOKEN" | bun run wrangler secret put API_ACCESS_TOKEN
+            printf '%s' "$API_ACCESS_TOKEN" |
+              bun run wrangler secret put API_ACCESS_TOKEN
           fi

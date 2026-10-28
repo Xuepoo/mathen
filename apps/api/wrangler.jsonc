@@ -29,6 +29,11 @@
 		"MCP_RATE_LIMIT_PER_MINUTE": "60",
 		"MCP_RATE_LIMIT_WINDOW_SECONDS": "60",
 		"MCP_ALLOWED_ORIGINS": "https://mathen.xuepoo.xyz,https://mathen-api.ven3428set.workers.dev",
+		// Optional hosted MCP OAuth resource-server configuration.
+		"AUTH0_ISSUER": "",
+		"AUTH0_AUDIENCE": "",
+		"AUTH0_JWKS_URI": "",
+		"AUTH0_REQUIRED_SCOPE": "",
 		// Public deployment settings; keep credentials in Wrangler secrets.
 		"TURNSTILE_SITE_KEY": "",
 		// Empty pins verification to the incoming request URL's hostname.
@@ -43,7 +48,11 @@
 				"R2_BUCKET_PREVIEW": "mathen-artifacts-preview",
 				"MCP_RATE_LIMIT_PER_MINUTE": "30",
 				"MCP_RATE_LIMIT_WINDOW_SECONDS": "60",
-				"MCP_ALLOWED_ORIGINS": ""
+				"MCP_ALLOWED_ORIGINS": "",
+				"AUTH0_ISSUER": "",
+				"AUTH0_AUDIENCE": "",
+				"AUTH0_JWKS_URI": "",
+				"AUTH0_REQUIRED_SCOPE": ""
 			},
 			"r2_buckets": [
 				{

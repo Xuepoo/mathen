@@ -8,8 +8,12 @@ import {
   createAccessCookie,
   InMemoryRateLimiter,
   hasServiceToken,
+  oidcAuthenticationConfigured,
+  oidcIssuer,
+  oidcRequiredScopes,
   parseCookie,
   verifyAccessCookie,
+  verifyOidcBearerToken,
   verifyTurnstileToken,
   turnstileHostname,
   configuredRateLimit,
@@ -19,7 +23,10 @@ import {
   handleMcpRequest,
   mcpAuthorized,
   mcpCorsHeaders,
+  mcpForwardedAuthorization,
+  mcpOAuthChallenge,
   mcpOriginAllowed,
+  mcpProtectedResourceMetadata,
 } from "./mcp.js";
 import {
   buildLayeredGraphProjection,
@@ -57,6 +64,10 @@ type Bindings = {
   TURNSTILE_HOSTNAME?: string;
   TURNSTILE_SESSION_TTL_SECONDS?: string;
   API_ACCESS_TOKEN?: string;
+  AUTH0_ISSUER?: string;
+  AUTH0_AUDIENCE?: string;
+  AUTH0_JWKS_URI?: string;
+  AUTH0_REQUIRED_SCOPE?: string;
   API_RATE_LIMIT_PER_MINUTE?: string;
   API_RATE_LIMIT_WINDOW_SECONDS?: string;
   MCP_RATE_LIMIT_PER_MINUTE?: string;
@@ -157,6 +168,7 @@ export const app = new Hono<{ Bindings: Bindings }>().basePath("/api");
 
 const accessRateLimiter = new InMemoryRateLimiter();
 const mcpRateLimiter = new InMemoryRateLimiter();
+const internalMcpRequests = new WeakSet<Request>();
 
 app.use("*", async (c, next) => {
   c.header("X-Request-ID", crypto.randomUUID());
@@ -164,7 +176,9 @@ app.use("*", async (c, next) => {
   if (
     pathname === "/api/health" ||
     pathname === "/api/access/config" ||
-    pathname === "/api/access/turnstile"
+    pathname === "/api/access/turnstile" ||
+    pathname === "/api/.well-known/oauth-protected-resource" ||
+    pathname === "/api/.well-known/oauth-protected-resource/mcp"
   ) {
     return next();
   }
@@ -179,6 +193,8 @@ app.use("*", async (c, next) => {
       "Retry-After": String(limit.retryAfterSeconds),
     });
   }
+  if (pathname === "/api/mcp") return next();
+  if (internalMcpRequests.has(c.req.raw)) return next();
   if (accessProtectionEnabled(c.env)) {
     const cookie = parseCookie(c.req.header("Cookie") ?? null, accessCookieName());
     if (!hasServiceToken(c.req.raw, c.env) && !(await verifyAccessCookie(cookie, c.env))) {
@@ -198,6 +214,22 @@ app.get("/health", (c) =>
   c.json({ status: "ok", service: "mathen-api", environment: c.env.APP_ENV }),
 );
 
+app.get("/.well-known/oauth-protected-resource", (c) =>
+  c.json(
+    mcpProtectedResourceMetadata(c.req.raw, oidcIssuer(c.env), oidcRequiredScopes(c.env)),
+    200,
+    { "Cache-Control": "public, max-age=300" },
+  ),
+);
+
+app.get("/.well-known/oauth-protected-resource/mcp", (c) =>
+  c.json(
+    mcpProtectedResourceMetadata(c.req.raw, oidcIssuer(c.env), oidcRequiredScopes(c.env)),
+    200,
+    { "Cache-Control": "public, max-age=300" },
+  ),
+);
+
 app.all("/mcp", async (c) => {
   const corsHeaders = mcpCorsHeaders(c.req.raw, c.env.MCP_ALLOWED_ORIGINS);
   if (c.req.method === "OPTIONS") {
@@ -213,9 +245,15 @@ app.all("/mcp", async (c) => {
       Object.fromEntries(corsHeaders),
     );
   }
-  if (!mcpAuthorized(c.req.raw, c.env.API_ACCESS_TOKEN)) {
+  const hasLegacyToken = mcpAuthorized(c.req.raw, c.env.API_ACCESS_TOKEN);
+  const hasOidcToken = await verifyOidcBearerToken(c.req.raw, c.env);
+  if (!hasLegacyToken && !hasOidcToken) {
+    const hasBearer = /^Bearer\s+\S+$/i.test(c.req.header("Authorization")?.trim() ?? "");
+    const requiredScope = oidcRequiredScopes(c.env).join(" ");
     return c.json({ error: "MCP bearer authentication required", code: "unauthorized" }, 401, {
-      "WWW-Authenticate": "Bearer",
+      "WWW-Authenticate": oidcAuthenticationConfigured(c.env)
+        ? mcpOAuthChallenge(c.req.raw, hasBearer, requiredScope)
+        : "Bearer",
       ...Object.fromEntries(corsHeaders),
     });
   }
@@ -235,8 +273,11 @@ app.all("/mcp", async (c) => {
   const backend = createMcpApiBackend(async (path) => {
     const request = new Request(new URL(`/api${path}`, c.req.url), {
       method: "GET",
-      headers: { Authorization: `Bearer ${apiToken}` },
+      headers: {
+        Authorization: mcpForwardedAuthorization(c.req.raw, apiToken),
+      },
     });
+    internalMcpRequests.add(request);
     const response = await app.fetch(request, c.env, c.executionCtx);
     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
     const body = (await response.json()) as { data?: unknown };

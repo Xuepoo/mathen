@@ -18,10 +18,14 @@ https://mathen.xuepoo.xyz/api/mcp
 The route is `/api/mcp`, under the same `/api` prefix as the read API. Python
 CLI users can set `mcp.url` in TOML or override it with `MATHEN_MCP_URL`.
 
-The endpoint is stateless and reviewed-only. It requires the `API_ACCESS_TOKEN`
-Bearer credential and supports JSON Streamable HTTP requests for `initialize`,
-`tools/list`, and `tools/call`. It does not expose filesystem-only drafts. Use
-the stdio server below for offline filesystem access.
+The endpoint is stateless and reviewed-only. It accepts the legacy
+`API_ACCESS_TOKEN` Bearer credential and can additionally accept an Auth0
+access token when `AUTH0_ISSUER` and `AUTH0_AUDIENCE` are configured. Auth0
+acceptance is limited to this hosted MCP endpoint; it does not bypass
+Turnstile or the signed access cookie on ordinary `/api/*` routes. The
+endpoint supports JSON Streamable HTTP requests for `initialize`, `tools/list`,
+and `tools/call`. It does not expose filesystem-only drafts. Use the stdio
+server below for offline filesystem access.
 
 For hosted requests, the exact authentication header is:
 
@@ -29,11 +33,22 @@ For hosted requests, the exact authentication header is:
 Authorization: Bearer <API_ACCESS_TOKEN>
 ```
 
-The value must match the configured Worker secret exactly. Do not put a real
-token in a URL, source file, browser bundle, card, issue, or log. The hosted
-endpoint is read-only and this repository does not claim that production MCP
-authentication has been verified; operators must provision the secret and run
-their own deployment smoke test.
+The value must match the configured Worker secret exactly. For Auth0, configure
+`AUTH0_ISSUER`, `AUTH0_AUDIENCE`, and optionally `AUTH0_JWKS_URI` and
+`AUTH0_REQUIRED_SCOPE` as Worker variables. The JWKS endpoint must be HTTPS; if
+`AUTH0_JWKS_URI` is omitted, the issuer's `/.well-known/jwks.json` endpoint is
+used. Protected-resource metadata is public at:
+
+```text
+GET https://mathen.xuepoo.xyz/api/.well-known/oauth-protected-resource
+```
+
+An unauthenticated or invalid-token MCP response advertises that exact URL in
+`WWW-Authenticate`. Do not put a real token in a URL, source file, browser
+bundle, card, issue, or log. The hosted endpoint is read-only and this
+repository does not claim that production MCP authentication has been
+verified; operators must provision credentials and run their own deployment
+smoke test.
 
 If a request includes `Origin`, it must exactly match one of the comma-separated
 `MCP_ALLOWED_ORIGINS` values. The current implementation also accepts an

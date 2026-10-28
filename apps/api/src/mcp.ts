@@ -34,6 +34,45 @@ export function mcpAuthorized(request: Request, token?: string): boolean {
   return Boolean(expected && request.headers.get("Authorization")?.trim() === `Bearer ${expected}`);
 }
 
+export function mcpForwardedAuthorization(request: Request, token?: string) {
+  return request.headers.get("Authorization") ?? (token?.trim() ? `Bearer ${token.trim()}` : "");
+}
+
+export function mcpResourceMetadataUrl(request: Request) {
+  const url = new URL(request.url);
+  return `${url.origin}/api/.well-known/oauth-protected-resource`;
+}
+
+export function mcpOAuthChallenge(request: Request, invalidToken = false, scope?: string) {
+  const parameters = [
+    `realm=${quoteHeaderValue("mathen-mcp")}`,
+    `resource_metadata=${quoteHeaderValue(mcpResourceMetadataUrl(request))}`,
+  ];
+  if (invalidToken) parameters.push(`error=${quoteHeaderValue("invalid_token")}`);
+  if (scope) parameters.push(`scope=${quoteHeaderValue(scope)}`);
+  return `Bearer ${parameters.join(", ")}`;
+}
+
+function quoteHeaderValue(value: string) {
+  return `"${value
+    .replaceAll("\\", "\\\\")
+    .replaceAll('"', '\\"')
+    .replace(/[\r\n]/g, "")}"`;
+}
+
+export function mcpProtectedResourceMetadata(request: Request, issuer?: string, scopes?: string[]) {
+  const resource = new URL(request.url);
+  resource.pathname = "/api/mcp";
+  resource.search = "";
+  const metadata: Record<string, unknown> = {
+    resource: resource.toString(),
+    bearer_methods_supported: ["header"],
+  };
+  if (issuer) metadata.authorization_servers = [issuer];
+  if (scopes?.length) metadata.scopes_supported = scopes;
+  return metadata;
+}
+
 export function mcpOriginAllowed(request: Request, configuredOrigins?: string): boolean {
   const origin = request.headers.get("Origin")?.trim();
   if (!origin) return true;
