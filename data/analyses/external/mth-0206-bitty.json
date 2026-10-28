@@ -1,0 +1,432 @@
+{
+  "analysis_id": "mth-0206-bitty",
+  "system": "bitty",
+  "title": "Bitty core terminal-platform architecture research",
+  "status": "research-only",
+  "canonical": false,
+  "review_status": "review-required",
+  "promotion_status": "promotion-not-determined",
+  "summary": "The fixed Bitty core revision presents a bounded terminal runtime whose PTY bytes flow through parsing, terminal state, snapshots, rendering, and platform presentation; core UI lifecycle and persistence add typed identities, generation fencing, bounded resources, and fail-closed restoration. Core IPC evidence is a read/publication bridge rather than a daemon implementation.",
+  "scope": {
+    "included": [
+      "Bitty core crates and source documentation at commit a168b1976bea8bbab2149e09e24868890f5a4223",
+      "Core terminal-platform documentation at bitty-terminal-docs commit 68af6669c1d28a7dea1651208f800b2e3d232455",
+      "UI/runtime orchestration, PTY/process lifecycle, platform adapter, rendering boundary, terminal registry/view lifecycle, session persistence, and the core Runtime IPC publication seam"
+    ],
+    "excluded": [
+      "bitty plugins and extensions, including plugin implementation details",
+      "bitty-ai, wheel, experiments, website, gallery, SDK, and all other sibling repositories",
+      "A shipped bittyd daemon, daemon transport, remote UI, or daemon registry implementation",
+      "Canonical Mathen cards, data/systems, typed cross-system relations, API/MCP changes, migrations, production changes, papers, and external-repository edits"
+    ],
+    "boundary_notes": [
+      "References in local documentation to excluded repositories were treated as out-of-scope context and were not used as evidence.",
+      "The local host_bridge source was used only for the core-owned IPC publication boundary; no external IPC repository content was inspected or cited."
+    ]
+  },
+  "provenance": {
+    "method": "Fixed-commit local source/document review using git show and line-addressed excerpts; evidence digests are SHA-256 over the exact excerpt strings stored below.",
+    "sources": [
+      {
+        "repository": "bitty",
+        "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+        "commit_subject": "[CTX-2627] fix(runtime): gate unix-only cursor test imports"
+      },
+      {
+        "repository": "bitty-terminal-docs",
+        "commit": "68af6669c1d28a7dea1651208f800b2e3d232455",
+        "commit_subject": "[CTX-0035] docs(specifications): publish bittyd session-host requirements candidate (#294)"
+      }
+    ],
+    "working_tree_policy": "Working-tree modifications in the two source repositories were not used; all citations resolve against the fixed commits above.",
+    "reviewer_note": "This manifest is an evidence packet, not a reviewed Architecture Card. Claims remain local to the cited revision and documentation snapshot."
+  },
+  "features": [
+    {
+      "id": "bounded-terminal-state-pipeline",
+      "name": "Bounded staged terminal-state pipeline",
+      "category": "execution-model",
+      "description": "Core routes PTY bytes through a VT parser and terminal actions into terminal state, then exposes snapshots and damage to rendering. The parser/state boundary is the only canonical write path, while malformed input and reply/event buffering are bounded.",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-DOC-001", "BTY-DOC-002", "BTY-SRC-001", "BTY-SRC-002"]
+    },
+    {
+      "id": "bounded-pty-process-backpressure",
+      "name": "Owned PTY lifecycle with end-to-end backpressure",
+      "category": "process-model",
+      "description": "The core PTY crate owns direct-argv process spawning, resize, wait, and bounded reader/writer buffering. A stalled consumer propagates pressure through the channel and kernel PTY rather than permitting unbounded memory growth.",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-SRC-003", "BTY-SRC-004"]
+    },
+    {
+      "id": "headless-rendering-seam",
+      "name": "Snapshot/damage rendering with a headless verification seam",
+      "category": "presentation-model",
+      "description": "Rendering consumes public snapshot/damage data and produces owned draw records. Runtime tests can use an in-memory headless surface, while real GPU/window verification is separately gated and explicitly documented as an evidence gap.",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-SRC-001", "BTY-SRC-005", "BTY-SRC-006"]
+    },
+    {
+      "id": "typed-registry-view-lifecycle",
+      "name": "Typed terminal/view lifecycle with generation fencing",
+      "category": "state-model",
+      "description": "The runtime registry separates terminal, view, runtime, persistent, and generation identities; validates geometry and resource bounds before mutation; and preserves prior valid state on typed failure. The documented lifecycle excludes daemon and remote UI orchestration.",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-DOC-003", "BTY-DOC-004", "BTY-SRC-007", "BTY-SRC-008"]
+    },
+    {
+      "id": "fail-closed-session-rehydration",
+      "name": "Bounded atomic session persistence with fresh process identities",
+      "category": "state-model",
+      "description": "Session capture is bounded and atomically committed through a temporary sibling, sync, and rename. Restore validates before mutation, rehydrates history/layout, and always creates fresh PTY/runtime identities instead of resurrecting live processes.",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-SRC-009", "BTY-SRC-010"]
+    },
+    {
+      "id": "read-publication-ipc-boundary",
+      "name": "Read/publication IPC boundary over committed runtime state",
+      "category": "integration-model",
+      "description": "The core Runtime bridge publishes bounded, committed terminal observations and registers read-only inspection tools. The bridge does not paint, mutate terminal truth, write to the PTY, spawn a process, or open a socket; effectful execution is a separately authorized path in the core source and is not treated here as daemon functionality.",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-SRC-011"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "id": "terminal-operational-pipeline",
+      "model": "bounded transition pipeline / operational semantics",
+      "question": "Can terminal input and rendering be reasoned about as staged transitions with explicit ownership and bounded side channels?",
+      "assumptions": [
+        "PTY bytes are the external input stream.",
+        "Parser actions are the only state mutation vocabulary.",
+        "Snapshot/damage is a read boundary consumed by rendering.",
+        "Queue and reply caps are enforced as stated by the cited implementation/docs."
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-DOC-001", "BTY-DOC-002", "BTY-SRC-001", "BTY-SRC-002"]
+    },
+    {
+      "id": "identity-generation-state-machine",
+      "model": "typed state machine with monotonic generation fences",
+      "question": "Can stale terminal/view/process references be modeled as invalid transitions rather than ambiguous handles?",
+      "assumptions": [
+        "TerminalId, ViewId, RuntimeId, PersistentId, and Generation remain distinct domains.",
+        "Generation values are monotonic and never wrap into valid allocation space.",
+        "Resource validation occurs before lifecycle mutation."
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-DOC-004", "BTY-SRC-007", "BTY-SRC-008"]
+    },
+    {
+      "id": "bounded-queue-flow-control",
+      "model": "finite-capacity queue / backpressure system",
+      "question": "What failure behavior follows when PTY output or cold-path observations exceed consumer capacity?",
+      "assumptions": [
+        "The PTY reader channel has the cited hard byte cap.",
+        "The runtime cold queue drops oldest events at capacity as documented.",
+        "The model describes capacity and propagation, not throughput or latency guarantees."
+      ],
+      "claim_type": "inference",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-SRC-002", "BTY-SRC-003"]
+    }
+  ],
+  "trade_offs": [
+    {
+      "id": "boundedness-vs-retention",
+      "description": "Finite queues and reply caps bound memory and prevent untrusted input from forcing growth, but capacity overflow drops queued observations/replies or applies backpressure to the child process.",
+      "claim_type": "inference",
+      "evidence_ids": ["BTY-SRC-002", "BTY-SRC-003"]
+    },
+    {
+      "id": "typed-identity-vs-plumbing",
+      "description": "Separate identity types and generation checks make stale-handle behavior explicit, at the cost of more lifecycle state and validation at boundaries.",
+      "claim_type": "inference",
+      "evidence_ids": ["BTY-DOC-004", "BTY-SRC-007"]
+    },
+    {
+      "id": "headless-verification-vs-real-surface-coverage",
+      "description": "A deterministic headless rendering seam supports CI without a display or GPU, while real adapter/window/swap-chain behavior remains separately gated and cannot be inferred from headless evidence.",
+      "claim_type": "fact",
+      "evidence_ids": ["BTY-SRC-001", "BTY-SRC-005", "BTY-SRC-006"]
+    },
+    {
+      "id": "fresh-process-restore-vs-continuation",
+      "description": "Session restoration preserves layout/history while avoiding live-process resurrection; this favors safe deterministic re-creation over transparent process continuity.",
+      "claim_type": "fact",
+      "evidence_ids": ["BTY-SRC-009"]
+    }
+  ],
+  "candidate_relationships": [
+    {
+      "id": "rel-runtime-supports-registry",
+      "source_feature_id": "bounded-terminal-state-pipeline",
+      "target_feature_id": "typed-registry-view-lifecycle",
+      "type": "supports",
+      "claim_type": "inference",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-SRC-001", "BTY-SRC-007"],
+      "notes": "The runtime owns the pipeline while the registry owns multi-terminal/view lifecycle; the relationship is a bounded composition hypothesis, not a canonical Mathen relation."
+    },
+    {
+      "id": "rel-session-fences-runtime",
+      "source_feature_id": "fail-closed-session-rehydration",
+      "target_feature_id": "typed-registry-view-lifecycle",
+      "type": "supports",
+      "claim_type": "inference",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-SRC-007", "BTY-SRC-009"],
+      "notes": "Fresh RuntimeId creation and one-live-session-per-view behavior align with registry identity fencing; no claim of daemon persistence or cross-process continuation."
+    },
+    {
+      "id": "rel-ipc-observes-runtime",
+      "source_feature_id": "read-publication-ipc-boundary",
+      "target_feature_id": "bounded-terminal-state-pipeline",
+      "type": "supports",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "evidence_ids": ["BTY-SRC-001", "BTY-SRC-011"],
+      "notes": "The bridge reads committed state and publishes bounded observations; it does not become a second terminal-state writer."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "BTY-DOC-001",
+      "source_kind": "official-doc",
+      "repository": "bitty-terminal-docs",
+      "commit": "68af6669c1d28a7dea1651208f800b2e3d232455",
+      "path": "specifications/terminal-state-rfc.md",
+      "lines": "47-57",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "PTY bytes -> UTF-8 decoder -> VT Parser -> Action stream -> Terminal State -> Snapshot -> Renderer\n                                   |                                |\n                              (bounded, recoverable)         (damage, replies)\n\nThe only write path into terminal state is the `Action` stream produced by the\nparser. No other component—renderer, plugin, MCP client, debug tooling—may\nmutate canonical state. Reads occur through versioned snapshots only.",
+      "excerpt_sha256": "5ca4e595ebfdd8ad88ec31b69ad7924fa608f4b0aced3762f3ea3645f1562d97",
+      "notes": "Only the core parser/state/snapshot assertion is used; plugin/MCP words are not analyzed."
+    },
+    {
+      "id": "BTY-DOC-002",
+      "source_kind": "official-doc",
+      "repository": "bitty-terminal-docs",
+      "commit": "68af6669c1d28a7dea1651208f800b2e3d232455",
+      "path": "specifications/terminal-state-rfc.md",
+      "lines": "143-152;154-182",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "Bounded parsing per the security baseline: maximum parameter count, parameter\nmagnitude, OSC payload size, and sequence length; exceeding a limit yields a\nwell-defined `Action` (truncate/cancel) rather than unbounded growth or a\nwedge.\n\nAfter each applied action, terminal state satisfies geometry, cell totality,\ncursor integrity, scrollback, mode, tab-stop, reply-bound, and no-hidden-channel\ninvariants.",
+      "excerpt_sha256": "d0f0894f8ba0c84a07a93a3ddfb138321d721ce3c9cb05fa07b237d7240cce0e",
+      "notes": "Digest covers the shortened evidence excerpt recorded here, not the entire source section."
+    },
+    {
+      "id": "BTY-DOC-003",
+      "source_kind": "official-doc",
+      "repository": "bitty-terminal-docs",
+      "commit": "68af6669c1d28a7dea1651208f800b2e3d232455",
+      "path": "specifications/terminal-registry-view-lifecycle-rfc.md",
+      "lines": "47-70",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "The single-window vertical slice proves one terminal behind one view. Bitty\nmust then scale that proof to one window hosting many terminals and views\nwithout conflating identities, leaking PTY handles, or making resize, focus, or\npersistence ambiguous.\n\nOut of scope: multi-window orchestration, daemon (`bittyd`) and remote UI,\nPanel Runtime and Event Bus, per-plugin view policy, exact key-binding defaults,\nexact glyph hit-testing math, and registry or package-transport mechanics.",
+      "excerpt_sha256": "08129d85746bd5300579b965e28b3234d2cf8ef67a18dee3c1ed7b2e24c4be04",
+      "notes": "This is both core lifecycle evidence and the explicit daemon/remote-UI boundary."
+    },
+    {
+      "id": "BTY-DOC-004",
+      "source_kind": "official-doc",
+      "repository": "bitty-terminal-docs",
+      "commit": "68af6669c1d28a7dea1651208f800b2e3d232455",
+      "path": "specifications/terminal-registry-view-lifecycle-rfc.md",
+      "lines": "113-138",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "`TerminalRegistry` is the Core-owned table that creates, tracks, and disposes\n`Terminal` instances and their PTY handles. `TerminalId`, `ViewId`, `RuntimeId`,\n`PersistentId`, and `Generation` are distinct lifecycle identities.\n\nIdentity hygiene is load-bearing; ownership is single and explicit; the hot path\nstays single-owner; geometry flows from view rectangle to PTY size; persistence\nnever resurrects a live PTY; allocations are bounded; and failure is fail-closed\nand typed.",
+      "excerpt_sha256": "15f95f4c6a8c6af644dfd05960cfd1390907392e6f35378579776513a7e00ac4",
+      "notes": "The first sentence paraphrases the terminology table; the principles are bounded to the cited local RFC."
+    },
+    {
+      "id": "BTY-SRC-001",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-runtime/src/lib.rs",
+      "lines": "11-29;54-69",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "PTY bytes --handle_pty_bytes--> Parser --TerminalAction--> State --Snapshot+Damage--tick--> DrawList --present--> Surface\n                                       |                         |                ^\n                                       +--> bounded cold queue --+--> plugin runtime\n\nThe hot path is PTY bytes -> parser -> state -> damage -> render `DrawList` -> present.\nCold-path events are observed through a strictly bounded `ColdQueue`.\n`Runtime::new` builds a headless surface and `Runtime::tick` presents an in-memory RGBA buffer.",
+      "excerpt_sha256": "5c2a7c104517ad8db520ed15b3952c1322c7fc926bc3b9be4416c51acba96df8",
+      "notes": "Plugin-runtime wording is not used as a plugin claim; only the core hot/cold separation and headless seam are retained."
+    },
+    {
+      "id": "BTY-SRC-002",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-runtime/src/runtime.rs",
+      "lines": "1-22",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "PTY bytes -> VT Parser -> TerminalAction -> Terminal State -> Snapshot + Damage\n                                  |                |\n                          cold-path queue      GridRenderer -> DrawList -> Surface::present\n\nThe hot path never touches Lua, plugins, or the cold queue beyond pushing\nbounded events. The cold-path queue is strictly bounded so untrusted PTY\nbytes cannot grow the heap without limit. When full, the oldest event is dropped\nand a counter increments.",
+      "excerpt_sha256": "862860d32c505d2bcf9353ff390d33d1ad7ffbcdaab1511306586ff20d541b75",
+      "notes": "Only queue behavior and the hot path are in scope."
+    },
+    {
+      "id": "BTY-SRC-003",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-pty/src/lib.rs",
+      "lines": "28-61",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "No shell interpolation: `PtyBuilder` spawns the program from a direct argv vector.\nOn Unix the wrapped layer opens PTY descriptors close-on-exec and starts the child\nin a fresh session. Output flows kernel -> pump thread -> bounded channel -> consumer.\nThe channel holds at most the configured chunks, with a hard in-crate buffer bound\nof 128 KiB; a stalled consumer causes end-to-end backpressure rather than memory growth.",
+      "excerpt_sha256": "f37d5e543c9a138cb83c2d66fa8783fc0fb4edf314571cde4c319495fd28c067",
+      "notes": "The excerpt retains only core PTY/process behavior, not upstream implementation details."
+    },
+    {
+      "id": "BTY-SRC-004",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-pty/src/lib.rs",
+      "lines": "45-54;56-61",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "Output flows kernel -> pump thread -> bounded channel -> consumer. Reads are\nchunked; the channel has a finite capacity and the hard in-crate buffer bound is\n128 KiB. If the consumer stalls, the channel and kernel PTY buffer fill and the\nchild's writes block, providing end-to-end backpressure with no data loss or\nunbounded memory growth. Unix and Windows ConPTY are implemented Tier-1 backends.",
+      "excerpt_sha256": "e0b85e390e332f2dabc3c3acf97abcec2d49b925bc2deab619e3b3940230f05d",
+      "notes": "This repeats the PTY bound as a separate evidence anchor for the trade-off model."
+    },
+    {
+      "id": "BTY-SRC-005",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-render/src/lib.rs",
+      "lines": "1-13;68-83",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "The render crate plans frames from damage descriptors and renders terminal snapshots\ninto owned draw records. Its grid pipeline reads only the public `Snapshot`/`Damage`\nsurface; terminal state is never mutated. Implemented scope includes frame planning,\natlas math, a bounded glyph cache, GPU surface lifecycle, and `Snapshot`/`Damage` ->\n`DrawList`/`Atlas` translation, with an opt-in headless software compositor.",
+      "excerpt_sha256": "dafcf710fc40c96acebb782dc98fbaeced6fb542668d6ed2cf7a7286091d3207",
+      "notes": "The source explicitly marks deferred rendering items; those are limitations below, not inferred features."
+    },
+    {
+      "id": "BTY-SRC-006",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-platform/src/lib.rs",
+      "lines": "31-70",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "`App::run` drives an `AppHandler` on the OS event loop and `PlatformEvent` is the\nowned event vocabulary. The adapter has no grid, render, terminal-state, or plugin\ncoupling. Pure event/DPI logic is headless-testable; display-dependent integration\ntests are opt-in, and no display returns an owned `DisplayUnavailable` error rather\nthan panicking.",
+      "excerpt_sha256": "9a9d0d23fef522109e10a0eb70ddb4b56f6c54558f3a4739baa2fdc1f725a4d3",
+      "notes": "This is the core UI/platform adapter boundary; no plugin behavior is analyzed."
+    },
+    {
+      "id": "BTY-SRC-007",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-runtime/src/registry.rs",
+      "lines": "1-16;36-52;55-145",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "The registry implements distinct TerminalId and ViewId identities, RuntimeId versus\nPersistentId, per-registry generations, attachment/detachment, persistence, bounded\n64/32/16 resources, and typed failure semantics. All allocations are validated before\nmutation; invalid handles return typed errors and retain prior valid state.\nMAX_TERMINALS=64, MAX_VIEWS_PER_WORKSPACE=32, MAX_WORKSPACES_PER_WINDOW=16;\nGeneration is monotonic and refuses allocation near exhaustion.",
+      "excerpt_sha256": "efd7e932e169514e7d14a159376fdea7edc70aa3c4217dbf501aafbbd6dc0e9e",
+      "notes": "The excerpt combines module-level contract text and declarations from the same fixed source file."
+    },
+    {
+      "id": "BTY-SRC-008",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-runtime/src/registry.rs",
+      "lines": "58-83;110-180;204-230",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "`TerminalId` is a stable handle within one registry generation and is a distinct newtype\nfrom `ViewId`; `RuntimeId` is an ephemeral identifier bound to a live PTY incarnation.\n`Generation` starts at 1 and is monotonic. `PersistentId` is bounded to 64 bytes and\nvalidated against `[a-z0-9_-]`. `LogicalRect` is the validated geometry boundary and\nrejects non-finite or negative dimensions.",
+      "excerpt_sha256": "10e89c7916fca6f454d080533b7a508289f5ab420634f21fa3b68ff44d3112ac",
+      "notes": "This anchor supplies concrete identity and geometry validation details."
+    },
+    {
+      "id": "BTY-SRC-009",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-runtime/src/runtime/session.rs",
+      "lines": "86-126;148-168",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "A restore never resurrects a live PTY or `RuntimeId`: every restored shell spawns fresh,\nwhile rehydrated scrollback is immutable history in that fresh grid. A snapshot view\ncolliding with a live pane session is rejected before mutation.\nBounds include a 1 MiB file, 4096-byte lines, 16 workspaces, 32 panes/workspace,\n128 total panes, 200 scrollback lines/pane, and layout depth 64. Corrupt, oversize,\nor version-mismatched files yield an error and the runtime is never half-restored.",
+      "excerpt_sha256": "09316e9e450cd82913e5325b6fa30823251bc619a66a3566b2d932d57c4419b5",
+      "notes": "This is a source-level session lifecycle and bound, not evidence for a daemon session host."
+    },
+    {
+      "id": "BTY-SRC-010",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-runtime/src/runtime/session.rs",
+      "lines": "134-146",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "Session commit uses a unique temporary sibling, `write_all` and `sync_all`, then an\natomic rename onto the final name plus a best-effort parent-directory sync. Partial\ntemps are never read, the previous complete session remains authoritative, and oversize\nsnapshots fail before touching the filesystem.",
+      "excerpt_sha256": "feb581b132a2f09ebf25df5965553eadc4d2d6c94cb365e765b605df76eb992b",
+      "notes": "Atomicity is stated only for the local session file mechanism."
+    },
+    {
+      "id": "BTY-SRC-011",
+      "source_kind": "source-code",
+      "repository": "bitty",
+      "commit": "a168b1976bea8bbab2149e09e24868890f5a4223",
+      "path": "crates/bitty-runtime/src/host_bridge.rs",
+      "lines": "1-25;37-62;90-157",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "The Runtime bridge reads committed terminal state and publishes bounded values for\nout-of-process consumers. It does not paint, write to the PTY, mutate terminal truth,\nspawn a process, or open a socket. Snapshot publication includes generation, bounded\ntext, cwd, and bounded semantic-zone metadata; read-only inspect tools are registered\nwhile effect tools remain deny-by-default. The bridge is headless-testable and has no\nnetwork or hardcoded host path.",
+      "excerpt_sha256": "fbc2542a66b61cf4a5c530e6a038d7fe815ce44fbb9a84f092b4f02647e740b8",
+      "notes": "The bridge is evidence of a core IPC publication boundary, not a daemon or transport implementation."
+    },
+    {
+      "id": "BTY-DOC-005",
+      "source_kind": "official-doc",
+      "repository": "bitty-terminal-docs",
+      "commit": "68af6669c1d28a7dea1651208f800b2e3d232455",
+      "path": "specifications/bittyd-session-host-requirements-candidate.md",
+      "lines": "12-25;70-99",
+      "claim_type": "fact",
+      "claim_status": "proposed",
+      "excerpt": "Status: design input. Not an accepted contract and not implementation evidence.\n`bittyd` does not ship today, no contract in this area is accepted, and nothing here\nauthorizes daemon, transport, registry, or fake-server code.\n\nThe candidate says the v0.2.0 slice does not persist sessions across a daemon restart,\nclients must work with no daemon present, and no TCP listener or remote transport is\npart of the requirement set.",
+      "excerpt_sha256": "507e75f1acbb552a4996d3125b9e89444aa1af3bc0b7ca5f26c4f62634fa61bc",
+      "notes": "This is a negative/candidate boundary only. It does not establish any daemon implementation or accepted contract."
+    }
+  ],
+  "limitations": [
+    "Documentation RFCs contain accepted/candidate language, but this research does not independently verify lifecycle status beyond recording the local wording.",
+    "The fixed core revision contains a headless rendering seam; the source explicitly says real GPU/window paths are separately gated, so no broad production rendering claim is made.",
+    "The core IPC bridge publishes observations and registers read-only tools, but it explicitly does not open sockets or implement a daemon. No daemon architecture is inferred.",
+    "Session persistence is local file persistence with fresh process identities; it is not evidence of cross-process or daemon-restart continuity.",
+    "No performance, latency, capacity-under-load, security-audit, historical-influence, or cross-repository dependency claim is made.",
+    "Candidate relationships are research hypotheses and are not canonical Mathen relations."
+  ],
+  "out_of_scope_record": [
+    "bitty plugins/extensions",
+    "bitty-ai",
+    "wheel",
+    "experiments",
+    "website",
+    "gallery",
+    "SDK",
+    "other sibling repositories"
+  ],
+  "review_notes": [
+    "All feature, view, trade-off, and relationship claims are marked proposed/review-required for later human review.",
+    "No promotion decision was made and no canonical system record was edited."
+  ]
+}
