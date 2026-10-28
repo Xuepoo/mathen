@@ -1,0 +1,239 @@
+{
+  "id": "mth-0207-vectojs",
+  "title": "VectoJS core runtime and framework/core documentation research",
+  "status": "research-only",
+  "canonicality": "non-canonical",
+  "review_status": "review-required",
+  "promotion_status": "promotion-not-determined",
+  "subject": "VectoJS",
+  "fixed_revisions": {
+    "vectojs": "906d4f466e1e2d3436df8593e59a35241ef9db5a",
+    "vectojs-docs": "661671ef3d4f9a33c25c4bcae99ae04e9fabe872"
+  },
+  "scope": {
+    "included": [
+      "vectojs core package source under packages/core/src",
+      "vectojs core tests only when needed to identify an implementation contract",
+      "vectojs-docs authoritative framework/core documentation under content/learn and content/reference",
+      "Canvas Runtime and retained Entity/Scene tree",
+      "Virtual Math Tree (VMT)",
+      "semantic/accessibility and content projection",
+      "WebGL point/sprite/glyph backend",
+      "WebGPU particle backend",
+      "visibility, culling, materialization, and projection policies",
+      "mathematical structures explicitly evidenced in the included source/docs"
+    ],
+    "excluded": [
+      "gallery",
+      "website and site-only material",
+      "native forge applications",
+      "skills",
+      "motif",
+      "other sibling repositories",
+      "API, MCP, migrations, production deployment, and paper analysis"
+    ],
+    "boundary_note": "No excluded surface was used as evidence. Names of excluded surfaces are recorded only as scope boundaries."
+  },
+  "provenance": {
+    "method": "Manual, bounded source and documentation review at the fixed commits; excerpts were captured from git-show output and source-file SHA-256 digests were computed from the pinned blobs.",
+    "source_repositories": [
+      {
+        "name": "vectojs",
+        "local_path": "/mnt/data/Workspace/Projects/vectojs/vectojs",
+        "commit": "906d4f466e1e2d3436df8593e59a35241ef9db5a"
+      },
+      {
+        "name": "vectojs-docs",
+        "local_path": "/mnt/data/Workspace/Projects/vectojs/vectojs-docs",
+        "commit": "661671ef3d4f9a33c25c4bcae99ae04e9fabe872"
+      }
+    ],
+    "evidence_digest_algorithm": "SHA-256",
+    "interpretation_rule": "Facts describe explicit source or documentation statements. Inferences connect multiple explicit statements. Hypotheses identify questions or possible composition without asserting it. Analogy is reserved for structural resemblance and does not imply influence or superiority."
+  },
+  "claims": [
+    {
+      "id": "claim-vmt-retained-tree",
+      "claim_type": "fact",
+      "topic": "VMT and Canvas Runtime",
+      "statement": "Core models a scene as a retained tree of Entity instances. Entities have parent/children links, local visual properties, and per-frame world-transform caching; Scene owns traversal, scheduling, rendering, and projection coordination.",
+      "evidence_ids": ["ev-entity-tree", "ev-vmt-pipeline"]
+    },
+    {
+      "id": "claim-affine-composition",
+      "claim_type": "fact",
+      "topic": "mathematical structure",
+      "statement": "The core transform representation is a six-scalar affine transform matching CanvasRenderingContext2D. Documentation states local transforms compose as parent matrix multiplied by local matrix, and world-to-local uses a closed-form inverse with a determinant singularity check.",
+      "evidence_ids": ["ev-affine-source", "ev-affine-doc"]
+    },
+    {
+      "id": "claim-render-contract",
+      "claim_type": "fact",
+      "topic": "Canvas Runtime and backend abstraction",
+      "statement": "Entities render through an IRenderer-style method contract. The authoritative documentation describes the same Entity.render calls and ordering being interpreted by Canvas2D, WebGL, WebGPU, SVG, and other renderer implementations; this is a backend contract, not proof of pixel-identical output.",
+      "evidence_ids": ["ev-renderer-doc", "ev-canvas-source"]
+    },
+    {
+      "id": "claim-semantic-projection",
+      "claim_type": "fact",
+      "topic": "semantic/accessibility projection",
+      "statement": "Core can mirror interactive entities into a transparent DOM accessibility layer, synchronizing native tags/ARIA state and geometry derived from the entity world transform. A11yProjectionManager collects projected elements, prunes inactive elements, and can reorder normal elements into visual reading order while preserving composite DOM nesting.",
+      "evidence_ids": ["ev-a11y-manager", "ev-a11y-doc", "ev-runtime-doc"]
+    },
+    {
+      "id": "claim-content-projection",
+      "claim_type": "fact",
+      "topic": "semantic/accessibility projection",
+      "statement": "Content projection is an opt-in Entity hook that returns logical text and optional line/grid geometry. Scene mirrors it into position-synchronized DOM, with selectable content and browser-native find, copy, screen-reader, crawler, and translation behavior documented for materialized projections.",
+      "evidence_ids": ["ev-content-interface", "ev-content-doc"]
+    },
+    {
+      "id": "claim-tiered-materialization",
+      "claim_type": "fact",
+      "topic": "visibility/materialization",
+      "statement": "The framework documents separate visual, coarse semantic, and fine interaction tiers. contentSemanticMargin controls whether a block has any projected DOM; contentProjectionMargin controls per-line/per-cell carriers; contentSemanticBudget spreads coarse materialization across syncs. An infinite interaction margin is documented as potentially O(total document glyphs).",
+      "evidence_ids": ["ev-tiered-projection", "ev-scene-options"]
+    },
+    {
+      "id": "claim-a11y-engagement",
+      "claim_type": "fact",
+      "topic": "visibility/materialization",
+      "statement": "Entity.a11yProjection supports eager, onDemand, and never modes. The source documents onDemand engagement through focus, pointer target, or explicit request, and states that an entity without a materialized mirror receives no pointer events through the engine's normal projected-mirror dispatch path; findEntityAt is described as a query API.",
+      "evidence_ids": ["ev-a11y-policy-source", "ev-a11y-doc"]
+    },
+    {
+      "id": "claim-projection-policy",
+      "claim_type": "fact",
+      "topic": "projection backends",
+      "statement": "Core exposes a canvas/dom/auto visual projection vocabulary. Projection resolution checks DOM/backend availability and capability rows, reports fallback reasons, and uses hysteresis state for auto decisions; backend materialization remains an implementation of a registered ProjectionBackend mount/update/unmount contract.",
+      "evidence_ids": ["ev-policy-source", "ev-backend-source"]
+    },
+    {
+      "id": "claim-webgl-backend",
+      "claim_type": "fact",
+      "topic": "WebGL backend",
+      "statement": "The WebGL point renderer creates a WebGL2-backed PointRenderer or returns null when context/shader setup is unavailable. It batches circles, rectangles, sprites, and MSDF glyphs on a dedicated stacked canvas, with fallback to Canvas2D described in core docs; transformed primitives that cannot be represented exactly fall back to the normal renderer.",
+      "evidence_ids": ["ev-webgl-source", "ev-webgl-doc", "ev-scene-options"]
+    },
+    {
+      "id": "claim-webgpu-backend",
+      "claim_type": "fact",
+      "topic": "WebGPU backend",
+      "statement": "The WebGPU particle manager builds compute and render pipelines, allocates storage/uniform buffers per particle entity, dispatches workgroups at ceil(maxParticles/256), then renders six vertices per particle instance. Scene options document auto/webgpu/cpu selection with CPU fallback when WebGPU initialization fails.",
+      "evidence_ids": ["ev-webgpu-source", "ev-scene-options"]
+    },
+    {
+      "id": "claim-visibility-coupling",
+      "claim_type": "inference",
+      "topic": "visibility/materialization",
+      "statement": "The reviewed design separates pixel visibility/culling from semantic materialization: a node can be omitted from a DOM projection while the VMT remains the retained source for rendering and geometry queries, and content projection can retain coarse text while windowing fine carriers.",
+      "evidence_ids": ["ev-tiered-projection", "ev-vmt-pipeline", "ev-content-interface"]
+    },
+    {
+      "id": "claim-geometry-invariant",
+      "claim_type": "inference",
+      "topic": "projection backends",
+      "statement": "A candidate cross-projection invariant is agreement on world geometry, visibility, and lifecycle state while representation differs by medium. This is inferred from the ProjectionBackend comments and the shared affine geometry used by a11y/content synchronization; it is not independently verified as a global runtime invariant here.",
+      "evidence_ids": ["ev-backend-source", "ev-a11y-manager", "ev-affine-source"]
+    },
+    {
+      "id": "claim-math-model-boundary",
+      "claim_type": "hypothesis",
+      "topic": "mathematical structure",
+      "statement": "The VMT may be modeled as a dynamic rooted tree carrying affine state, with projections as partial materializations and viewport predicates as visibility filters. This is a reusable candidate model for later formalization, not a proof that the implementation satisfies a complete algebraic specification.",
+      "evidence_ids": ["ev-affine-doc", "ev-tiered-projection", "ev-vmt-pipeline"]
+    }
+  ],
+  "mathematical_views": [
+    {
+      "id": "view-affine-scene-graph",
+      "model": "Affine transformation composition over a rooted entity tree",
+      "question": "How are local entity coordinates mapped to world coordinates and back?",
+      "assumptions": ["Each node carries a six-scalar affine transform.", "Parent-to-child composition follows the documented matrix product.", "Singular transforms have no defined inverse for world-to-local."],
+      "claim_type": "inference",
+      "evidence_ids": ["ev-affine-source", "ev-affine-doc"],
+      "limitation": "The artifact does not prove numerical equivalence across every renderer or every cache/WASM path."
+    },
+    {
+      "id": "view-partial-projection",
+      "model": "Tiered partial materialization over a retained scene tree",
+      "question": "Which representations of a retained node exist under interaction and viewport policy?",
+      "assumptions": ["Visual rendering, semantic text presence, and fine interaction carriers are distinct materializations.", "Margins and budgets are policy inputs, not semantic truth by themselves.", "A missing materialization is not evidence that the underlying entity is absent."],
+      "claim_type": "hypothesis",
+      "evidence_ids": ["ev-tiered-projection", "ev-content-interface", "ev-policy-source"],
+      "limitation": "No formal transition system or exhaustive state-machine proof was derived from the source."
+    }
+  ],
+  "trade_offs": [
+    {
+      "topic": "Canvas/VMT versus DOM materialization",
+      "benefits": ["Retains numeric transforms and canvas/GPU rendering without requiring one visible DOM node per drawable.", "Native DOM projection can supply semantics, selection, and input behavior."],
+      "costs": ["Projection synchronization and DOM ordering/layout have their own cost.", "Off-viewport or on-demand materialization can reduce reachability or pointer dispatch until policy engages it."]
+    },
+    {
+      "topic": "WebGL/WebGPU acceleration",
+      "benefits": ["Batched WebGL primitives and compute-driven WebGPU particles can move selected workloads to GPU paths.", "Capability failures have documented fallback paths."],
+      "costs": ["Dedicated stacked layers can change painter-order behavior.", "GPU coordinate-space and representability constraints require fallback or careful policy; no benchmark result is promoted by this artifact."]
+    },
+    {
+      "topic": "Windowing and budgets",
+      "benefits": ["Separate semantic and interaction windows can retain text while bounding fine carriers.", "Budgets spread first materialization work across syncs."],
+      "costs": ["Not-yet-materialized content is not immediately searchable/interactive through the DOM path.", "Ignoring projection hints can retain correctness while paying for discarded line construction."]
+    }
+  ],
+  "evidence": [
+    {"id":"ev-entity-tree","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/tree/Entity.ts","lines":"804-872","excerpt":"Entity is an abstract retained scene-graph node with children/parent links, local transform fields, a per-frame world-matrix cache, and an optional WASM store slot.","sha256":"fbd0f1468cb3bf92758fbdbb9d4d62c24ff5837b3eeb59e32fca600fea217da2"},
+    {"id":"ev-vmt-pipeline","kind":"official-doc","repository":"vectojs-docs","commit":"661671ef3d4f9a33c25c4bcae99ae04e9fabe872","path":"content/learn/deep-dive/06-vmt-runtime.md","lines":"7-54","excerpt":"The VMT is described as a retained numeric tree; the pipeline includes dirty propagation, transform gather, culling/hit test, render walk, and pixels plus DOM mirrors.","sha256":"fab80dbae67b17bde6ad8020495af8821d373168f052de6645c9178cbd45ed15"},
+    {"id":"ev-affine-source","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/tree/Entity.ts","lines":"32-52","excerpt":"AffineTransform contains six scalars a,b,c,d,e,f; Bounds is an axis-aligned local-space box used to enable viewport culling.","sha256":"fbd0f1468cb3bf92758fbdbb9d4d62c24ff5837b3eeb59e32fca600fea217da2"},
+    {"id":"ev-affine-doc","kind":"official-doc","repository":"vectojs-docs","commit":"661671ef3d4f9a33c25c4bcae99ae04e9fabe872","path":"content/learn/math-foundations.md","lines":"72-114","excerpt":"Documentation gives a homogeneous affine matrix, parent-times-local composition, scalar traversal, and closed-form inverse with determinant check.","sha256":"8a1c4e832a51649d226d937630ff8709deaa7885cf6b92b3094789e8f8aeddca"},
+    {"id":"ev-renderer-doc","kind":"official-doc","repository":"vectojs-docs","commit":"661671ef3d4f9a33c25c4bcae99ae04e9fabe872","path":"content/learn/deep-dive/07-renderer.md","lines":"25-87","excerpt":"The renderer deep dive lists Canvas2D, WebGL, WebGPU, SVG, and Three surfaces and states that Entity.render calls use the IRenderer contract and traversal order.","sha256":"ed3bfae9d91ee49f810b9d0efbb6affa2bacfc8e6c6398fd9b2cffb5c2c30a78"},
+    {"id":"ev-canvas-source","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/renderer/CanvasRenderer.ts","lines":"20-81,126-157","excerpt":"CanvasRenderer wraps CanvasRenderingContext2D, applies device-pixel-ratio scaling, and caps same-style circle batches at MAX_BATCH 64.","sha256":"dc6402ee9377fcbd419ae99df81312fb302494752d0267d0f43ce9b717bbeca4"},
+    {"id":"ev-a11y-manager","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/tree/scene/A11yProjectionManager.ts","lines":"80-210","excerpt":"The manager collects active mirrors, tracks regions, sorts normal elements by visual reading order, and cursor-inserts nested DOM while preserving focus/selection concerns.","sha256":"f2100c869c0e794076bbae4d39ece273408f180d37920544ed6bd1a79e6171da"},
+    {"id":"ev-a11y-doc","kind":"official-doc","repository":"vectojs-docs","commit":"661671ef3d4f9a33c25c4bcae99ae04e9fabe872","path":"content/learn/deep-dive/03-semantic-projection.md","lines":"7-73,81-108","excerpt":"The docs describe a transparent a11yRoot, visual/semantic/interaction tiers, shared depth-first synchronization, pruning, visual ordering, margins, budget, and eager/onDemand/never modes.","sha256":"f2c188b61de7b6b3da14dd76b6f31b36b288a55a8e0edf0c2acb2c4190d6145d"},
+    {"id":"ev-runtime-doc","kind":"official-doc","repository":"vectojs-docs","commit":"661671ef3d4f9a33c25c4bcae99ae04e9fabe872","path":"content/learn/runtime-architecture.md","lines":"9-59","excerpt":"Runtime architecture documentation describes one Scene per canvas, a retained Entity tree, DOM semantic projection, and Canvas2D/WebGL/WebGPU backend choices.","sha256":"b43ce110bc95f7825a5bd7b2c4a19770add60ea354e17e1ca320908e9a3dde2c"},
+    {"id":"ev-content-interface","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/tree/Entity.ts","lines":"88-185,187-220","excerpt":"ContentProjection exposes logical text, line/run geometry, selectable state, optional grid, and ContentProjectionHint; the hint is advisory and must not omit source text needed for find/copy/AT.","sha256":"fbd0f1468cb3bf92758fbdbb9d4d62c24ff5837b3eeb59e32fca600fea217da2"},
+    {"id":"ev-content-doc","kind":"official-doc","repository":"vectojs-docs","commit":"661671ef3d4f9a33c25c4bcae99ae04e9fabe872","path":"content/reference/core-renderer.md","lines":"139-176","excerpt":"The reference describes getContentProjection, transparent position-synced DOM, viewport laziness, dirty checking, selection geometry, and off-viewport search limitations.","sha256":"5e2837bfa8dc93e68f2f20e4911237fc45793be6f04c7e6946ca91ff110475a8"},
+    {"id":"ev-tiered-projection","kind":"official-doc","repository":"vectojs-docs","commit":"661671ef3d4f9a33c25c4bcae99ae04e9fabe872","path":"content/learn/deep-dive/03-semantic-projection.md","lines":"19-62,79-100","excerpt":"The three-tier diagram and table distinguish visual, coarse semantic, and fine interaction materializations; margin/budget semantics and measured cost notes are documented.","sha256":"f2c188b61de7b6b3da14dd76b6f31b36b288a55a8e0edf0c2acb2c4190d6145d"},
+    {"id":"ev-scene-options","kind":"official-doc","repository":"vectojs-docs","commit":"661671ef3d4f9a33c25c4bcae99ae04e9fabe872","path":"content/reference/core-scene.md","lines":"12-60,100-140","excerpt":"SceneOptions documents Canvas/WebGL/WebGPU choices, content margins and budget, projection policy/hysteresis/budget, and fallback behavior.","sha256":"dd535573bfbc99e8e5b9900a9c6cf309660275d920617dccc9f00159a6306028"},
+    {"id":"ev-a11y-policy-source","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/tree/Entity.ts","lines":"944-990","excerpt":"Entity documents eager/onDemand/never a11y materialization, engagement predicates, and projected-mirror pointer dispatch behavior.","sha256":"fbd0f1468cb3bf92758fbdbb9d4d62c24ff5837b3eeb59e32fca600fea217da2"},
+    {"id":"ev-policy-source","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/tree/scene/ProjectionPolicy.ts","lines":"1-20,38-70,230-326","excerpt":"ProjectionPolicy defines canvas/dom/auto, capability rows, fallback reasons, resolution logic, queryable resolution data, and hysteresisVote.","sha256":"141f79218b1a5e723bf6394db18b7c9e45f5488b10ccb67ed971bba303efd738"},
+    {"id":"ev-backend-source","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/tree/scene/ProjectionBackend.ts","lines":"3-65","excerpt":"ProjectionBackend names canvas/dom/a11y/content representations and mount/update/unmount lifecycle, with update receiving the world affine matrix.","sha256":"5233a7a1f56698602160f1c79e3bdd259b2c20b153b2b5acac6e7a8a50199b35"},
+    {"id":"ev-webgl-source","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/renderer/WebGLPointRenderer.ts","lines":"1-80,671-709","excerpt":"WebGLPointRenderer describes batched primitives and creates a WebGL2 context, returning null on unavailable context or shader failure.","sha256":"f2fa5942d019736038f421050d55a654bb5a223eabdd5c9e8b285250a1cf978e"},
+    {"id":"ev-webgl-doc","kind":"official-doc","repository":"vectojs-docs","commit":"661671ef3d4f9a33c25c4bcae99ae04e9fabe872","path":"content/reference/core-renderer.md","lines":"369-419","excerpt":"The WebGL reference describes one WebGL2 canvas, batched point/rect/sprite/MSDF programs, fallback for unsupported transforms, and draw/upload trade-offs.","sha256":"5e2837bfa8dc93e68f2f20e4911237fc45793be6f04c7e6946ca91ff110475a8"},
+    {"id":"ev-webgpu-source","kind":"source-code","repository":"vectojs","commit":"906d4f466e1e2d3436df8593e59a35241ef9db5a","path":"packages/core/src/renderer/WebGPUParticleSystemManager.ts","lines":"204-320,322-409","excerpt":"The manager creates compute/render pipelines and bind groups, allocates particle buffers, dispatches ceil(maxParticles/256) workgroups, draws six vertices per particle, and releases GPU objects.","sha256":"e1a0d4edb80bcba940076fa7ea7add4985e16cac407c1e50deebc1fd72e60acc"}
+  ],
+  "candidate_relationships": [
+    {
+      "id": "candidate-retained-tree-partial-projection",
+      "kind": "analogy",
+      "status": "candidate-only",
+      "target": null,
+      "statement": "VectoJS's retained entity tree plus partial visual/semantic materializations may be useful as a structural comparison pattern for systems that separate logical state from materialized views.",
+      "evidence_ids": ["ev-vmt-pipeline", "ev-tiered-projection"],
+      "guardrail": "No target system was inspected; this does not assert relation, historical influence, implementation equivalence, or superiority."
+    },
+    {
+      "id": "candidate-affine-projection-contract",
+      "kind": "hypothesis",
+      "status": "candidate-only",
+      "target": null,
+      "statement": "A future cross-system comparison could test whether a shared affine geometry contract reduces drift between visual and semantic projections.",
+      "evidence_ids": ["ev-affine-source", "ev-backend-source", "ev-a11y-manager"],
+      "guardrail": "This is a research question, not a relation or a claim that the contract is sufficient."
+    }
+  ],
+  "limitations": [
+    "Only the two pinned repositories and the bounded core/framework documentation paths were reviewed.",
+    "No runtime benchmark, browser experiment, GPU capability matrix, or independent accessibility audit was performed.",
+    "Documentation measurements and prose were recorded as documentation evidence, not re-measured observations.",
+    "The artifact does not inspect or infer API/MCP, migrations, production, papers, gallery, website, native forge apps, skills, motif, or sibling repositories.",
+    "Source comments and docs may describe intended behavior; this review does not establish that every edge case or backend path satisfies those intentions.",
+    "Candidate relationships are deliberately unresolved and do not imply historical influence or superiority from structural resemblance."
+  ],
+  "non_inference_guardrails": [
+    "Do not promote this artifact to data/systems without review.",
+    "Do not treat claim_type inference or hypothesis as fact.",
+    "Do not infer historical influence, relation type, or superiority from shared terms such as tree, projection, matrix, Canvas, WebGL, or WebGPU.",
+    "Promotion remains not determined by this artifact."
+  ]
+}
