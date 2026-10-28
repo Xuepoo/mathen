@@ -1,0 +1,438 @@
+{
+  "analysis_version": 1,
+  "research_id": "MTH-0208",
+  "system_id": "wheel",
+  "system_name": "Wheel",
+  "category": "agent-harness",
+  "source": {
+    "repository": "/mnt/data/Workspace/Projects/bitty-terminal/bitty-ai/plugins/wheel",
+    "fixed_commit": "0d4495692870b91de30ce574060bc8950ffcada8",
+    "requested_ref": "HEAD",
+    "provenance": "local-source-read-only",
+    "inspection_boundary": "Only the pinned Wheel checkout was inspected; no Wheel files were modified.",
+    "analyzed_at": "2026-10-28"
+  },
+  "status": {
+    "research_only": true,
+    "canonical": false,
+    "non_canonical": true,
+    "review_required": true,
+    "promotion_not_determined": true,
+    "claim_status": "under-review"
+  },
+  "scope": [
+    "out-of-process harness and runtime",
+    "authority and security boundary",
+    "task and agent roles",
+    "session daemon lifecycle",
+    "host/plugin boundary",
+    "documented Git, SQLite, and graph/DAG references"
+  ],
+  "summary": "At the pinned revision, Wheel is documented and implemented as a pre-release independent POSIX harness process. The harness, rather than a Bitty plugin VM, holds user-level execution authority behind a policy layer. Agents use typed tool intents and role gates; a team coordinator executes dependency-shaped task waves with reviewer handoffs; context is a content-addressed, Git-inspired DAG. An experimental detached per-user session daemon owns one WheelContext and exposes bounded JSON-over-private-FIFO control. The local test suite contains an explicit SQLite cross-process reference; this record preserves that textual reference without claiming that the production Wheel runtime is SQLite-backed. No local OpenCode reference was found.",
+  "claims": [
+    {
+      "id": "wheel-independent-process-authority",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "subject": "deployment and authority",
+      "statement": "Wheel is positioned as an independent out-of-process harness; it runs as the invoking OS user, is not sandboxed by the Bitty plugin VM, and Bitty presentation/input does not supply execution authority.",
+      "scope": "Wheel 0.1.0 product position and documented trust boundary at the fixed commit.",
+      "evidence_ids": [
+        "ev-readme-position",
+        "ev-security-trust"
+      ],
+      "provenance": "Direct statements in README.md and SECURITY-MODEL.md at the fixed source commit.",
+      "limitations": [
+        "This is repository evidence, not an independent runtime security audit.",
+        "The source explicitly states that a harness defect is user-level compromise."
+      ]
+    },
+    {
+      "id": "wheel-authority-ceiling",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "subject": "authority classes",
+      "statement": "The documented 0.1.0 authority ceiling includes workspace read/write, arbitrary argv, high-risk shell command strings, configured-provider network egress, and named provider secret environment access; policy grants remain deny-by-default per session, role, or tool.",
+      "scope": "Documented authority ledger and README authority section; not a claim that every policy control is complete.",
+      "evidence_ids": [
+        "ev-authority-ledger",
+        "ev-readme-authority",
+        "ev-security-current-code"
+      ],
+      "provenance": "Direct policy and implementation-inventory text at the fixed commit.",
+      "limitations": [
+        "SECURITY-MODEL.md labels its policy as normative and not proof of implementation.",
+        "The same document lists lexical-only path containment, ambient HOME access, partial command screening, and no OS confinement as gaps."
+      ]
+    },
+    {
+      "id": "wheel-host-seam-process-boundary",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "subject": "host capability seam",
+      "statement": "Wheel concentrates filesystem, process, temporary-file, wall-clock, and CPU-time primitives behind WheelHost's explicitly selected standalone POSIX backend. Process execution uses a recorded setsid process group, bounded capture, scrubbed allowlisted environment, explicit stdin staging, and typed timeout/cleanup outcomes.",
+      "scope": "The standalone backend and its documented process result contract.",
+      "evidence_ids": [
+        "ev-host-backend",
+        "ev-host-process-source",
+        "ev-security-current-code"
+      ],
+      "provenance": "Direct source comments/implementation and README/SECURITY-MODEL inventory.",
+      "limitations": [
+        "The argv implementation still uses a constant shell wrapper in pure Lua.",
+        "Children can escape the recorded group by creating another session/process group; there is no rlimit, cgroup, seccomp, or OS confinement.",
+        "These observations do not establish least privilege."
+      ]
+    },
+    {
+      "id": "wheel-role-task-orchestration",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "subject": "agent roles and task execution",
+      "statement": "Wheel defines Commander, Coding, Debug, Research, and Reviewer roles. Research and Reviewer are intended to be read-only, Commander plans/orchestrates without direct modification, and WheelTeam dispatches ready tasks across waves, publishes artifacts, performs worker-to-reviewer handoffs, and cascades readiness or blocking through dependencies.",
+      "scope": "Role/tool declarations and the orchestration loop in the fixed source revision.",
+      "evidence_ids": [
+        "ev-agent-roles",
+        "ev-role-policy",
+        "ev-team-loop",
+        "ev-kernel-task-dag"
+      ],
+      "provenance": "Direct Lua source and repository documentation.",
+      "limitations": [
+        "The security inventory says the full role matrix is only partially enforced: there is no Primary role and Commander Custom-mutating/full-matrix enforcement is incomplete.",
+        "The orchestration loop is local harness behavior, not evidence of distributed scheduling or parallel OS execution."
+      ]
+    },
+    {
+      "id": "wheel-session-daemon",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "subject": "session and daemon lifecycle",
+      "statement": "The experimental session runtime can outlive a client: a detached daemon owns one WheelContext and serves bounded wheel-session/1 JSON requests over two private POSIX FIFOs. Start uses private paths, lock handoff, readiness-published metadata, and stale-state checks; stop is an explicit shutdown method rather than an unrecorded process signal.",
+      "scope": "Per-user local session control plane, not a remote service.",
+      "evidence_ids": [
+        "ev-session-readme",
+        "ev-session-security",
+        "ev-session-source",
+        "ev-daemon-source"
+      ],
+      "provenance": "Direct README, SECURITY-MODEL.md, session.lua, and daemon.lua evidence.",
+      "limitations": [
+        "FIFO modes do not provide peer credentials: any process of the same OS user can send requests.",
+        "A partial frame can stall the single-threaded daemon; pure Lua has no in-process read timeout.",
+        "The daemon does not own a task DAG, call a provider, execute an agent, or expose a remote listener."
+      ]
+    },
+    {
+      "id": "wheel-plugin-boundary",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "subject": "host/plugin boundary",
+      "statement": "The documented 0.1.0 artifact is the standalone harness, not a Bitty plugin distribution. The in-tree bitty-plugin.toml is transitional, and an optional panel/terminal supplies presentation and input only; no plugin-host execution adapter or runtime manifest grant is claimed.",
+      "scope": "Wheel's 0.1.0 packaging and integration position.",
+      "evidence_ids": [
+        "ev-readme-plugin-boundary",
+        "ev-readme-authority",
+        "ev-security-current-code"
+      ],
+      "provenance": "Direct README and SECURITY-MODEL statements.",
+      "limitations": [
+        "The transitional manifest remains in the source tree; its presence is not evidence of supported plugin packaging.",
+        "Future host IPC or plugin facade work is explicitly outside this evidence record."
+      ]
+    },
+    {
+      "id": "wheel-git-inspired-context-dag",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "subject": "context versioning",
+      "statement": "Wheel explicitly documents a Git-inspired context versioning engine: immutable content-addressed checkpoints, branches, reflog entries, semantic three-way merge using a lowest common ancestor, cherry-pick, and task-isolated branches.",
+      "scope": "Structural resemblance documented by Wheel; no historical influence or compatibility with Git is asserted.",
+      "evidence_ids": [
+        "ev-git-context-doc",
+        "ev-context-snapshot-doc"
+      ],
+      "provenance": "Direct README.md and CONTEXT-SNAPSHOT.md wording.",
+      "limitations": [
+        "This is a documented design analogy/structural resemblance, not a claim that Wheel embeds Git or interoperates with Git repositories.",
+        "The source does not establish historical influence beyond the phrase Git-inspired."
+      ]
+    },
+    {
+      "id": "wheel-dag-graph-structure",
+      "claim_type": "inference",
+      "claim_status": "under-review",
+      "subject": "task and context graph structure",
+      "statement": "The task control plane and context versioning can be analyzed as bounded directed graph structures: task dependencies form a DAG whose readiness is promoted after predecessor success, while context commits have parent hashes and are validated for unknown parents and cycles.",
+      "scope": "Mathematical/architectural interpretation of explicit DAG, parent, LCA, and cycle-validation language in local sources.",
+      "evidence_ids": [
+        "ev-kernel-task-dag",
+        "ev-team-loop",
+        "ev-context-snapshot-doc"
+      ],
+      "provenance": "Inference constrained to explicit local graph vocabulary and transition code.",
+      "limitations": [
+        "No claim is made about general graph-theory completeness, algorithmic complexity, or formal proof of acyclicity beyond the documented validation behavior.",
+        "The task and context graphs are distinct structures."
+      ]
+    },
+    {
+      "id": "wheel-sqlite-reference",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "subject": "SQLite reference",
+      "statement": "The pinned tests/e2e_cross_process.lua explicitly labels its cross-process host fixture as using SQLite: a task decomposition is described as crossing a process boundary into SQLite, readiness propagation is likewise labeled SQLite, and a second host is spawned mounting the same SQLite database.",
+      "scope": "Textual evidence in the test fixture only; it does not generalize to the standalone Wheel daemon or production runtime.",
+      "evidence_ids": [
+        "ev-sqlite-e2e"
+      ],
+      "provenance": "Direct test-source text at the fixed commit.",
+      "limitations": [
+        "The inspected source does not establish that the local session daemon persists to SQLite.",
+        "This record makes no database implementation, durability, or concurrency claim beyond the cited test wording."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-readme-position",
+      "kind": "documentation",
+      "source_path": "README.md",
+      "line_range": "3-3,31-47,144-147",
+      "excerpt": "Independent out-of-process harness for the 0.1.0 window.\nWheel runs as its own OS process with the user's authority, constrained by Wheel's policy layer. It does not run inside the Bitty plugin VM and receives no plugin capability grant at runtime.\nWhen Wheel runs in a Bitty panel or terminal, the presentation table supplies presentation and input only, never execution authority.",
+      "source_sha256": "sha256:bd876f7c9347c9e403f8b729cbfd6f19736d6a7d06230afec76ff4980cbfb241",
+      "excerpt_sha256": "sha256:4b33ed3e74f15fd1e0733229153b49f2d01af26d8a584366dc2074043c735388"
+    },
+    {
+      "id": "ev-security-trust",
+      "kind": "security-documentation",
+      "source_path": "SECURITY-MODEL.md",
+      "line_range": "88-105",
+      "excerpt": "Wheel 0.1.0 is user-installed software that runs as the invoking OS user. It is not sandboxed by the Bitty plugin VM and receives no manifest grant at runtime. Its authority is the user's OS authority, constrained by Wheel's own policy layer.\nThe trust boundary is therefore the OS user account.\nA harness defect is user-level compromise.",
+      "source_sha256": "sha256:32ed46b5e710050430a053df20198108fff9f9c9e4fc49e0d57d38cef2fd559f",
+      "excerpt_sha256": "sha256:50f7bfb51456e56b706567ef525c88b599924bd4f80c3c4efd3b525e4b31d86a"
+    },
+    {
+      "id": "ev-authority-ledger",
+      "kind": "security-documentation",
+      "source_path": "SECURITY-MODEL.md",
+      "line_range": "109-120",
+      "excerpt": "Workspace read and workspace write are scoped to the session workspace root; arbitrary argv uses programs on PATH or absolute paths with cwd in workspace; shell command strings are high risk; network egress is outbound to configured provider endpoints; secret environment is limited to named provider keys. Every class is deny-by-default at the policy layer.",
+      "source_sha256": "sha256:32ed46b5e710050430a053df20198108fff9f9c9e4fc49e0d57d38cef2fd559f",
+      "excerpt_sha256": "sha256:b30db14e1f1aeed915309bf54f168e937cf5b9a5b1876cd0e144004fe178a48a"
+    },
+    {
+      "id": "ev-readme-authority",
+      "kind": "documentation",
+      "source_path": "README.md",
+      "line_range": "981-1007",
+      "excerpt": "Wheel 0.1.0 runs as an independent harness process and holds the user's OS authority under its own policy, not under a plugin manifest. Its one execution backend is the standalone POSIX surface, selected explicitly by the host seam.\nThe owner-approved ceiling is workspace read/write, arbitrary argv, shell command strings, network egress, and named provider secret environment reads.",
+      "source_sha256": "sha256:bd876f7c9347c9e403f8b729cbfd6f19736d6a7d06230afec76ff4980cbfb241",
+      "excerpt_sha256": "sha256:59362fec94791d762c93c2e0db8830fdf0deed63afcca70c73c6564ed1918961"
+    },
+    {
+      "id": "ev-security-current-code",
+      "kind": "security-documentation",
+      "source_path": "SECURITY-MODEL.md",
+      "line_range": "947-985,995-1064",
+      "excerpt": "This section is inventory, not assurance.\nThe repository contains a WheelHost seam, a detached per-user session daemon, and role gates; the inventory states that mechanisms remain unverified until evidence gates pass.\nKnown gaps include lexical-only containment, ambient HOME access, partial role enforcement, no OS confinement, same-user FIFO access, and no provider/task/agent execution in the session slice.",
+      "source_sha256": "sha256:32ed46b5e710050430a053df20198108fff9f9c9e4fc49e0d57d38cef2fd559f",
+      "excerpt_sha256": "sha256:64bbea32bf0d5b71859ec196ea65f3363baa715d6c2ab379e7e984981c70c5e8"
+    },
+    {
+      "id": "ev-host-backend",
+      "kind": "source-code",
+      "source_path": "lua/wheel/host.lua",
+      "line_range": "65-99,1924-1948",
+      "excerpt": "The standalone backend executes against the local POSIX host. A supervisor starts a setsid session leader, records its PID/PGID, uses timeout, captures output to private files, rebuilds an allowlist environment, and fails closed when required tools are unavailable. The only production backend identifier is standalone; unknown names and non-POSIX platforms fail closed with a typed capability denial.",
+      "source_sha256": "sha256:f68fcebdc35491a25508f196da3473c7b483df4b42ad115d36258b67a3d0b2b7",
+      "excerpt_sha256": "sha256:fd61099e22122793d57ec94ce66a8ae94f0bd94cb738dfdb4fc246ac9b709ce7"
+    },
+    {
+      "id": "ev-host-process-source",
+      "kind": "source-code",
+      "source_path": "lua/wheel/host.lua",
+      "line_range": "1463-1529,1557-1625",
+      "excerpt": "The process wrapper uses a constant script and positional arguments; no caller value is interpolated into script text. It records status, PGID, and sweep state, bounds output, maps timeout status, and returns explicit outcome and cleanup fields. A lost leader produces unverified cleanup and no signal is sent.",
+      "source_sha256": "sha256:f68fcebdc35491a25508f196da3473c7b483df4b42ad115d36258b67a3d0b2b7",
+      "excerpt_sha256": "sha256:6b30588246850f3bbfddfb5e650a364727c0690552370c5f673ec96af30c0d4f"
+    },
+    {
+      "id": "ev-agent-roles",
+      "kind": "source-code",
+      "source_path": "lua/wheel/agent.lua",
+      "line_range": "30-58,237-249,710-730",
+      "excerpt": "WheelAgent.Role defines commander, coding, debug, research, and reviewer. Research and Reviewer have a read-only tool allowlist. Every agent defaults to a headless panel working container, while status reports role, panel, workspace, active task, provider, context branch, and context head.",
+      "source_sha256": "sha256:57063a3b3f99b1a4c9e902ee91eae3bdbb5b67ff107ac28f13246cfd0a54b2be",
+      "excerpt_sha256": "sha256:82f08d7854c961b0d64f1e18ad4405b37006f41b0450356c69190dc0d6bfa076"
+    },
+    {
+      "id": "ev-role-policy",
+      "kind": "security-documentation",
+      "source_path": "SECURITY-MODEL.md",
+      "line_range": "452-476",
+      "excerpt": "Research and Reviewer are strictly read-only; Commander plans and orchestrates; a subagent cannot exceed the authority of its dispatcher; a reviewer cannot approve work it implemented; and project configuration may narrow a role but may not widen it beyond the matrix.",
+      "source_sha256": "sha256:32ed46b5e710050430a053df20198108fff9f9c9e4fc49e0d57d38cef2fd559f",
+      "excerpt_sha256": "sha256:54b814fd056ce54a4cee28ac651e94debbe73e5bff89d9ca50e33a92e024f42c"
+    },
+    {
+      "id": "ev-team-loop",
+      "kind": "source-code",
+      "source_path": "lua/wheel/team.lua",
+      "line_range": "589-817",
+      "excerpt": "The orchestration loop checks completed, ready, and running task sets; dispatches ready tasks to idle workers; optionally branches per task; publishes artifacts; hands completed work to an independent reviewer; merges accepted branches; releases success/failure; and returns waves, handoffs, checkpoints, duration, and blocked_reason telemetry.",
+      "source_sha256": "sha256:ccfe9626a426652a89ab090fbc82dba186e5f4ef2ee3c0fe7e37249688b2f89d",
+      "excerpt_sha256": "sha256:704c36921fedbac2f281dd241815a751678ff024ca34c04c2da63a37b4483649"
+    },
+    {
+      "id": "ev-kernel-task-dag",
+      "kind": "source-code",
+      "source_path": "lua/wheel/kernel.lua",
+      "line_range": "288-420",
+      "excerpt": "task.create sets a task to ready when dependencies are empty and pending otherwise. task.start requires ready, fences with a generation, task.complete requires running and the expected generation, promotes pending dependents when all dependencies succeed, and task.fail cascades blocked status to downstream dependents.",
+      "source_sha256": "sha256:2770faa521bbdef251830d141a003332476e4a26d12e3bf73a6fc8150b8eb951",
+      "excerpt_sha256": "sha256:b63cca9dd47ee03c8fd857f0ab0f0b4bc861eecf4bfc998a94d623ed14a5e962"
+    },
+    {
+      "id": "ev-session-readme",
+      "kind": "documentation",
+      "source_path": "README.md",
+      "line_range": "709-759,770-775",
+      "excerpt": "scripts/wheel-session launches daemon.lua detached with setsid. The daemon owns one WheelContext and exposes a local-only control plane over two POSIX FIFOs. Requests are capped at 64 KiB and responses at 1 MiB; locks serialize clients; start rejects live duplicates; stop sends explicit shutdown; and the slice is not an agent executor or network service.",
+      "source_sha256": "sha256:bd876f7c9347c9e403f8b729cbfd6f19736d6a7d06230afec76ff4980cbfb241",
+      "excerpt_sha256": "sha256:4c9549e92d418ebf6bdb8fb2f92a3fcad524ff1ef5b252ef99656aadb5970748"
+    },
+    {
+      "id": "ev-session-security",
+      "kind": "security-documentation",
+      "source_path": "SECURITY-MODEL.md",
+      "line_range": "370-430",
+      "excerpt": "The session root and directory are user-owned 0700; metadata and FIFOs are 0600; client and daemon revalidate paths; frames and context storage are bounded; metadata excludes slot content; shutdown is explicit; and the daemon is single-threaded. Same-user processes can still open the FIFOs, and a partial frame can stall the daemon.",
+      "source_sha256": "sha256:32ed46b5e710050430a053df20198108fff9f9c9e4fc49e0d57d38cef2fd559f",
+      "excerpt_sha256": "sha256:5bd0562e67c8102fda0bbc80b5dfce06faab5795e8f8ea34bdbb83c7e96457bd"
+    },
+    {
+      "id": "ev-session-source",
+      "kind": "source-code",
+      "source_path": "lua/wheel/session.lua",
+      "line_range": "1-33,1809-1896,1911-1983",
+      "excerpt": "The session protocol is wheel-session/1 with bounded newline-delimited JSON. prepare_start validates the name/root, obtains a start lock, rejects live metadata, removes stale control files, creates request/response FIFOs, and returns the session directory. Start-lock handoff is mutex-serialized and ownership-verified before metadata publication.",
+      "source_sha256": "sha256:897e8c898496873e69b03304df6bc69f1cd477bf39483999f21c549639bd8910",
+      "excerpt_sha256": "sha256:c92ac1f658be09d827492fd788c6e79f286879bd83392766482f1c9a6befd4bc"
+    },
+    {
+      "id": "ev-daemon-source",
+      "kind": "source-code",
+      "source_path": "lua/wheel/daemon.lua",
+      "line_range": "1-13,425-455,542-634",
+      "excerpt": "The daemon owns one WheelContext, opens two FIFOs, publishes metadata only after readiness, and serves newline-framed JSON until explicit shutdown or bounded protocol failure. It does not own a task DAG, call a provider, spawn an agent, or listen on a network.",
+      "source_sha256": "sha256:87105f53f3ae82b11ec86e76a7f7cb39207d41ac1538f8eaa160e7ec32d3d162",
+      "excerpt_sha256": "sha256:320e56351f7ddcd7754bff24b6fc72e2b183b4982b83efb753b8f83d10894848"
+    },
+    {
+      "id": "ev-readme-plugin-boundary",
+      "kind": "documentation",
+      "source_path": "README.md",
+      "line_range": "230-234,983-1011",
+      "excerpt": "The in-tree bitty-plugin.toml is transitional and not the 0.1.0 installation path. Wheel's standalone harness is the execution authority; there is no plugin-host adapter or bitty.api_version authority probe, and an optional host IPC client is post-decision follow-up.",
+      "source_sha256": "sha256:bd876f7c9347c9e403f8b729cbfd6f19736d6a7d06230afec76ff4980cbfb241",
+      "excerpt_sha256": "sha256:a0a06bb48af2333a36a1baa3129eebb5d7f2e73d36d8b5daa2e3a781183fbd86"
+    },
+    {
+      "id": "ev-git-context-doc",
+      "kind": "documentation",
+      "source_path": "README.md",
+      "line_range": "697-707",
+      "excerpt": "Wheel models agent context as an immutable, content-addressed versioned DAG inspired by Git principles. Checkpoints are commits; refs and branches support checkout; reflog records HEAD movement; semantic merge computes the LCA; cherry-pick imports findings; and task workflows use dedicated branches.",
+      "source_sha256": "sha256:bd876f7c9347c9e403f8b729cbfd6f19736d6a7d06230afec76ff4980cbfb241",
+      "excerpt_sha256": "sha256:f220447fa5fb7e4a62f6a582a24a204731102beb0b3431e7b98bda01b240a663"
+    },
+    {
+      "id": "ev-context-snapshot-doc",
+      "kind": "documentation",
+      "source_path": "CONTEXT-SNAPSHOT.md",
+      "line_range": "9-9,146-156",
+      "excerpt": "WheelContext models shared context as slots, a Merkle tree, commits, refs, and a reflog. Snapshot validation rejects inconsistent hashes, dangling refs, unknown parents, parent cycles, and partial commit graphs; the live context must have a closed commit graph before export.",
+      "source_sha256": "sha256:1d9a3d05f7c33287333586535eb14b229e243bd353dfdc46aaae921098319728",
+      "excerpt_sha256": "sha256:6845cc3942899f24e6ad8fb34d8fda8e688863f879f0b70bd9f4e8dad2ebb6af"
+    },
+    {
+      "id": "ev-sqlite-e2e",
+      "kind": "test-source",
+      "source_path": "tests/e2e_cross_process.lua",
+      "line_range": "174-191,241-254,331-349",
+      "excerpt": "The cross-process fixture describes a four-task diamond DAG with a task named Implement Storage Engine and description SQLite backend, reports decomposition into SQLite, labels cascade readiness in SQLite, then spawns a fresh second host process mounting the same SQLite database and verifies restored state.",
+      "source_sha256": "sha256:9fef84df026f82037a72a0a832c13db275ecd5ad889af44ba9465d7b33424799",
+      "excerpt_sha256": "sha256:18bd29339b5cdf39b03b1e8332a3e3fc00a2bf0ba3d0b675747f4d05ea68999e"
+    }
+  ],
+  "candidate_relationships": [
+    {
+      "id": "cand-git-like-context-versioning",
+      "target_system": "git",
+      "relationship_type": "resembles",
+      "claim_type": "analogy",
+      "claim_status": "under-review",
+      "statement": "Wheel's content-addressed checkpoints, refs, branches, reflog, LCA merge, and cherry-pick structurally resemble Git concepts.",
+      "evidence_ids": [
+        "ev-git-context-doc",
+        "ev-context-snapshot-doc"
+      ],
+      "scope": "Structural comparison of documented context state; no historical influence, code reuse, or interoperability claim.",
+      "provenance": "Candidate generated from explicit local documentation.",
+      "limitations": [
+        "Do not promote to a historical or implementation relation without external evidence and review."
+      ]
+    },
+    {
+      "id": "cand-sqlite-cross-process-persistence",
+      "target_system": "sqlite",
+      "relationship_type": "references",
+      "claim_type": "fact",
+      "claim_status": "under-review",
+      "statement": "A Wheel cross-process test fixture explicitly references a shared SQLite database.",
+      "evidence_ids": [
+        "ev-sqlite-e2e"
+      ],
+      "scope": "Test fixture wording only; excludes the standalone session daemon unless separately evidenced.",
+      "provenance": "Direct local test-source reference.",
+      "limitations": [
+        "The reference does not establish a general Wheel/SQLite architecture relationship."
+      ]
+    },
+    {
+      "id": "cand-dag-topological-orchestration",
+      "target_system": "graph-theory",
+      "relationship_type": "modeled-by",
+      "claim_type": "inference",
+      "claim_status": "under-review",
+      "statement": "Wheel's dependency tasks and parent-linked context commits provide candidate directed-graph views, including topological readiness and parent-cycle validation.",
+      "evidence_ids": [
+        "ev-kernel-task-dag",
+        "ev-team-loop",
+        "ev-context-snapshot-doc"
+      ],
+      "scope": "Analytical candidate view only; graph-theory is not named as an external dependency or proof framework in Wheel.",
+      "provenance": "Bounded inference from local DAG, topological, LCA, parent, and cycle terminology.",
+      "limitations": [
+        "No formal mathematical validation or complexity result is asserted."
+      ]
+    }
+  ],
+  "unverified_or_absent_references": [
+    {
+      "name": "OpenCode",
+      "result": "not-found-in-inspected-source",
+      "scope": "Pinned Wheel HEAD, searched repository text for OpenCode/open-code variants.",
+      "claim_type": "fact",
+      "provenance": "Negative local inspection result; not evidence that no external relationship exists."
+    }
+  ],
+  "limitations": [
+    "This is an evidence extraction and architecture research record, not a canonical Architecture Card.",
+    "All claims are bounded to fixed commit 0d4495692870b91de30ce574060bc8950ffcada8 and cited paths/lines.",
+    "Policy prose, implementation inventory, source comments, and test labels are kept distinct; policy is not treated as compliance proof.",
+    "No live Wheel process, network provider, release artifact, host integration, or external repository was inspected.",
+    "No data/systems card, production relation, API/MCP contract, migration, paper, or MTH-0151 artifact is created or modified."
+  ]
+}
