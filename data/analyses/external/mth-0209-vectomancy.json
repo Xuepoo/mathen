@@ -1,0 +1,285 @@
+{
+  "schema_version": "mth-0209-external-research-v1",
+  "record_id": "mth-0209-vectomancy",
+  "title": "Vectomancy architecture research record",
+  "claim_boundary": "Research-only observations of the Vectomancy repository. This record is non-canonical, review-required, and does not determine promotion.",
+  "source": {
+    "repository": "vectomancy",
+    "path": "/mnt/data/Workspace/Projects/vectomancy/vectomancy",
+    "commit": "6615ffd656cdc2f21b4480a60473dc80d050e530",
+    "commit_verification": "git -C /mnt/data/Workspace/Projects/vectomancy/vectomancy rev-parse HEAD",
+    "working_tree_observation": "Clean at inspection time; source was inspected read-only.",
+    "provenance": "Direct README, documentation, source, and test inspection at the pinned commit. No Vectomancy files were edited.",
+    "source_digests": {
+      "README.md": "sha256:337c92ae6f469a49dc4f1b8e1e855625ee941a84fd7947bd5683acc3df498c62",
+      "docs/user_manual.md": "sha256:793d65513564fcd04c4034287cae0ab41db2b9625333afb21d65b2070ae1e380",
+      "docs/configuration_guide.md": "sha256:522f42ec4741cf22358556fc7d13266037755141ab926c44c9f93632c5b1a7a4",
+      "cli/src/cli.rs": "sha256:24ff774ea6ca9cfdece8e69fafef2da94ef28714be40d27c8ce6d47fc69b30e9",
+      "cli/src/main.rs": "sha256:919eba289650694ffec1a48d39eb7fb738923cb66ec23b7d25f19e877bfa9f65",
+      "src/config.rs": "sha256:2727e1959757f2e7ce2f5e1d1f4fd9f7474f4d2b5370d35a33ad5dff82b38e7a",
+      "src/models/mod.rs": "sha256:e3603bf4d9e89229b3d632664acb30be8f3a8e05206cac43b2e1debfba55714c",
+      "src/math/mod.rs": "sha256:db58fedb23513b2bf38fe10986c1f5278faadd0a93c98e9c083f91e993f6b195",
+      "src/math/wgpu_math.rs": "sha256:2aa5a8f093094040f477ef254766394180626da3cac6a9f5159d6f666ae412b3",
+      "src/parser/mod.rs": "sha256:b8701e2d74bcac327b43705665a1bb25fc12d60442af4ac6ab6aae4b1734397e",
+      "src/parser/raster.rs": "sha256:cd44232eca51a99f6cdf3e7b8e910a2e05cb8467bd9cc05cecc9239f1355f2cf",
+      "src/parser/vector.rs": "sha256:65f0a2e875c4857e9752496f005810727c763ec1de365f643f5b0001cd3f9900",
+      "crates/vectomancy-raster/src/lib.rs": "sha256:79c910b8eeb32942b2484dfb93f522c2eef7fad5b9eba2cb18c3995568f7f785",
+      "crates/vectomancy-transform/src/fourier.rs": "sha256:cdcb2251db4c51aeb6b803fcd42bec19494ce50e9749fc14d0648d5352c09d07",
+      "crates/vectomancy-transform/src/spline.rs": "sha256:d0effcaf75a2e46bc9af5c59e89f252a944c721adb6fe190beb9540a1418ada3",
+      "crates/vectomancy-transform/src/tsp.rs": "sha256:1ca8aef97289f9e21bbef1a3bb98f67dea5fb97991d398ebb07bae4e1b4dda11",
+      "crates/vectomancy-geometry/src/algorithms/chaikin.rs": "sha256:6f07fb93b0fc473244100d062c2de1e564bff0aa251ad6f26d857e8cb07d16f4",
+      "crates/vectomancy-export/src/lib.rs": "sha256:78a93584b71b2518c1370d20fb1d59c5339366b485d3471faa1dd9e093019409",
+      "text/src/parser.rs": "sha256:5bac1945180ec0b94e1c67fe2f542594c5c2be877a47b92531150545536dab2f",
+      "video/src/lib.rs": "sha256:c0e6ee19590bfe6049ab7aa90ea90af7d88ab7011973ab75766fbc757e47ebe6",
+      "cli/tests/cli_tests.rs": "sha256:8fd59354d6d64dfa54266b17043122e0ab73b77b7ecf85dbd90891c212e2ccd9",
+      "crates/vectomancy-transform/tests/transform_tests.rs": "sha256:0a14f4c0e2566834fc3b6d87f7d22c2638dfaa851ae1e487f654eeafbeb715f9"
+    }
+  },
+  "scope": {
+    "included": [
+      "CLI decomposition and dispatch",
+      "Raster, SVG, text, and video pipelines",
+      "Fourier/FFT, spline, RDP, TSP, and Chaikin transformations",
+      "AST and serialized output contracts",
+      "CPU/GPU/threading behavior visible in source",
+      "Configuration precedence and output selection",
+      "Tests that locally exercise these contracts"
+    ],
+    "excluded": [
+      "General performance claims not measured by the inspected tests",
+      "General mathematical correctness or approximation quality",
+      "Historical influence, dependency relations, compatibility, or production readiness",
+      "Changes to data/systems, relations, API/MCP, migrations, production artifacts, papers, or MTH-0151"
+    ]
+  },
+  "evidence": [
+    {
+      "id": "VEC-CLI-001",
+      "claim_type": "fact",
+      "scope": "CLI surface at commit",
+      "source_paths": ["README.md:62-100", "cli/src/cli.rs:45-311", "cli/src/main.rs:42-55"],
+      "excerpt": "The CLI declares image, video (feature-gated), text, and render subcommands; image accepts multiple input paths/directories and mode/format/terms/Chaikin/detail/tolerance/color/GPU/thread controls, while render consumes MathExpressionAST JSON.",
+      "digest": "sha256:commit-6615ffd:cli-decomposition",
+      "provenance": "README and Clap declarations; dispatch rejects a missing subcommand with InvalidInput.",
+      "limitations": "This records the declared interface and dispatch code, not every runtime combination or packaging behavior."
+    },
+    {
+      "id": "VEC-IMAGE-001",
+      "claim_type": "fact",
+      "scope": "Raster image pipeline",
+      "source_paths": ["src/parser/mod.rs:10-36", "crates/vectomancy-raster/src/lib.rs:349-451"],
+      "excerpt": "PNG/JPG/JPEG/WEBP file or memory input is decoded; the raster path converts to luminance, computes parallel horizontal/vertical Sobel filters, applies Otsu thresholding, performs Zhang-Suen thinning, traces endpoint and remaining components, and optionally averages RGB pixels along each path.",
+      "digest": "sha256:commit-6615ffd:raster-stage-chain",
+      "provenance": "Deterministic source inspection of decode_raster_memory and parser dispatch.",
+      "limitations": "The code establishes the implemented stages and data flow, not that the extracted paths are complete, topologically correct, or visually optimal."
+    },
+    {
+      "id": "VEC-SVG-001",
+      "claim_type": "fact",
+      "scope": "SVG/vector input",
+      "source_paths": ["src/parser/vector.rs:18-157", "crates/vectomancy-svg/src/lib.rs:13-140", "crates/vectomancy-pipeline/src/lib.rs:120-132"],
+      "excerpt": "usvg parses SVG data, recursively visits groups and paths, maps absolute transforms, preserves line/quadratic/cubic/close segments as BezierSegment values, and optionally converts stroke/fill colors; the CLI treats SVG as Segments and routes it to spline/Fourier/Chaikin branches.",
+      "digest": "sha256:commit-6615ffd:svg-bezier-ingestion",
+      "provenance": "Source inspection of both the facade parser and workspace SVG crate.",
+      "limitations": "Only inspected path-node handling is asserted; unsupported SVG node kinds and renderer behavior are outside this record."
+    },
+    {
+      "id": "VEC-TRANSFORM-001",
+      "claim_type": "fact",
+      "scope": "Raster path transformation branches",
+      "source_paths": ["cli/src/main.rs:173-303", "src/math/mod.rs:30-60", "src/math/mod.rs:323-352"],
+      "excerpt": "Raster Paths are filtered by min_path_len, simplified with recursive Ramer-Douglas-Peucker using a perpendicular-distance epsilon, then Spline builds cubic/line equations, Fourier computes FFT terms, or Chaikin applies repeated 0.75/0.25 corner cuts while preserving endpoints for open paths.",
+      "digest": "sha256:commit-6615ffd:raster-transform-branches",
+      "provenance": "CLI branch code plus math implementations.",
+      "limitations": "The source reveals formulas and branch order; it does not prove approximation error bounds or preservation of all geometric properties."
+    },
+    {
+      "id": "VEC-FOURIER-001",
+      "claim_type": "fact",
+      "scope": "Fourier representation and adaptive selection",
+      "source_paths": ["src/math/mod.rs:201-320", "crates/vectomancy-transform/src/fourier.rs:10-79", "src/models/mod.rs:18-32"],
+      "excerpt": "Points become complex samples (x + i*y), rustfft performs a forward FFT, each coefficient becomes amplitude=norm/n, signed frequency, and phase, and terms are amplitude-sorted. Adaptive mode retains the DC term then accumulates non-DC amplitude squared until the configured energy target or term cap; non-adaptive mode filters amplitude <= 0.001 and takes the cap.",
+      "digest": "sha256:commit-6615ffd:fft-term-selection",
+      "provenance": "Facade math implementation and transform crate implementation both inspected; FourierTerm fields are serialized model fields.",
+      "limitations": "This is an implementation description, not a claim that the selected terms reconstruct the input accurately or that the energy threshold is a formal approximation guarantee."
+    },
+    {
+      "id": "VEC-FOURIER-002",
+      "claim_type": "fact",
+      "scope": "SVG/text-to-Fourier preparation",
+      "source_paths": ["cli/src/main.rs:339-377", "crates/vectomancy-transform/src/tsp.rs:5-72"],
+      "excerpt": "For SVG segments, the CLI samples each segment collection at 100 points, orders those points with a KD-tree nearest-neighbor traversal, then runs bounded 2-opt reversal passes before batch FFT. The same sample/TSP preparation is used for the Chaikin SVG branch.",
+      "digest": "sha256:commit-6615ffd:svg-tsp-fourier-preparation",
+      "provenance": "CLI branch and TSP source; transform tests assert the simple nearest-neighbor ordering case.",
+      "limitations": "The implementation gives a heuristic ordering procedure; no global TSP optimality or single-stroke quality is established."
+    },
+    {
+      "id": "VEC-SPLINE-001",
+      "claim_type": "fact",
+      "scope": "Spline polynomial encoding",
+      "source_paths": ["crates/vectomancy-transform/src/spline.rs:4-170", "src/models/mod.rs:25-32"],
+      "excerpt": "build_splines emits SplineEquation records with start_t/end_t and four coefficients for each x/y polynomial. Line, quadratic, cubic, and Close segments are handled; simplify rounds each coefficient to four decimal places.",
+      "digest": "sha256:commit-6615ffd:spline-polynomial-contract",
+      "provenance": "Direct source inspection; transform test verifies a MoveTo/LineTo produces one equation.",
+      "limitations": "The formulas are recorded as code evidence; tests do not establish numerical error bounds, continuity across arbitrary segment sequences, or exactness after rounding."
+    },
+    {
+      "id": "VEC-CHAikin-001",
+      "claim_type": "fact",
+      "scope": "Chaikin smoothing",
+      "source_paths": ["crates/vectomancy-geometry/src/algorithms/chaikin.rs:3-61", "src/math/mod.rs:323-352", "crates/vectomancy-pipeline/src/lib.rs:46-115", "crates/vectomancy-geometry/tests/geometry_tests.rs:19-34"],
+      "excerpt": "The workspace geometry implementation emits Q0=0.75P0+0.25P1 and Q1=0.25P0+0.75P1 per iteration, doubles interior samples per iteration, and handles closed/open paths separately. The facade implementation preserves first and last points for open paths. A geometry test checks one closed-polyline smoothing result.",
+      "digest": "sha256:commit-6615ffd:chaikin-implementation-and-test",
+      "provenance": "Algorithm source and local unit test.",
+      "limitations": "A local test of one case does not establish general mathematical correctness or intended visual smoothness."
+    },
+    {
+      "id": "VEC-TEXT-001",
+      "claim_type": "fact",
+      "scope": "Text/font pipeline",
+      "source_paths": ["text/src/parser.rs:5-168", "cli/src/main.rs:934-1131", "cli/tests/cli_tests.rs:74-117"],
+      "excerpt": "Text accepts TTF/OTF bytes and detects WOFF2 for conversion to TTF, scales glyph outlines, applies kerning and letter spacing, interprets escaped newline/carriage-return sequences, ignores controls, inserts fallback glyphs for missing characters, emits Bezier segments, and defaults to text_output.json when no output path is supplied. The CLI integration test runs 'text hello' with the fixture font and asserts a non-empty output file.",
+      "digest": "sha256:commit-6615ffd:text-outline-pipeline",
+      "provenance": "Text parser, CLI branch, and integration test.",
+      "limitations": "The test does not assert output geometry, font coverage, WOFF2 behavior, or rendering fidelity."
+    },
+    {
+      "id": "VEC-VIDEO-001",
+      "claim_type": "fact",
+      "scope": "Video decode and frame processing",
+      "source_paths": ["video/src/lib.rs:10-29", "video/src/lib.rs:57-147", "video/src/lib.rs:169-246", "cli/src/main.rs:583-855"],
+      "excerpt": "FFmpeg selects the best video stream, decodes packets on a spawned thread into a bounded channel of cloned AVFrame wrappers, converts frames to RGB24 with software scaling, and the CLI batches decoded frames with std::thread::scope. Each frame runs raster extraction and the selected math branch; frame outputs are numbered frame_%04d.<ext>.",
+      "digest": "sha256:commit-6615ffd:video-channel-and-frame-workers",
+      "provenance": "Video crate and CLI video branch.",
+      "limitations": "The source describes concurrency and codec calls, not throughput, memory bounds beyond channel capacity, or behavior under all decoder failures."
+    },
+    {
+      "id": "VEC-VIDEO-002",
+      "claim_type": "fact",
+      "scope": "Video output contract",
+      "source_paths": ["cli/src/main.rs:864-930", "docs/configuration_guide.md:154-205"],
+      "excerpt": "When output has a video extension, frame outputs are PNGs in a temporary directory and an external ffmpeg command is invoked at 30 fps. GIF uses palettegen/paletteuse; WebM uses libvpx-vp9 and may use yuva420p; other listed containers use libx264/yuv420p. Audio is probed and, when present and not GIF, mapped to AAC with -shortest.",
+      "digest": "sha256:commit-6615ffd:video-ffmpeg-output-contract",
+      "provenance": "CLI command construction and configuration guide.",
+      "limitations": "The command construction is evidence of intended invocation; it does not prove ffmpeg availability, codec success, or audio synchronization."
+    },
+    {
+      "id": "VEC-AST-001",
+      "claim_type": "fact",
+      "scope": "AST and color serialization",
+      "source_paths": ["src/models/mod.rs:454-488", "src/models/mod.rs:200-317", "src/emitter/mod.rs:18-137"],
+      "excerpt": "MathExpressionAST is a tagged enum with Fourier{strokes,bounding_box}, Spline{equations,bounding_box}, and Polyline{paths,bounding_box}. ColoredPath serializes color_style under color_rgb. Deserialization accepts solid and current/legacy gradient forms, normalizes non-finite color inputs, sorts gradient stops, and the emitter rejects non-finite coordinates, coefficients, terms, colors, and invalid bounding boxes/interval ordering.",
+      "digest": "sha256:commit-6615ffd:ast-validation-contract",
+      "provenance": "Model and emitter source inspection; emitter validation is called before JSON/template/native output.",
+      "limitations": "Validation is a serialization/output boundary check; it is not a semantic validator of the geometry or math."
+    },
+    {
+      "id": "VEC-EXPORT-001",
+      "claim_type": "fact",
+      "scope": "Output encoding and render templates",
+      "source_paths": ["crates/vectomancy-export/src/lib.rs:8-21", "src/emitter/mod.rs:395-585", "templates/python.tera:9-79", "templates/html.tera:13-83", "templates/desmos.tera:20-116"],
+      "excerpt": "JSON output is pretty-printed AST. Script outputs serialize selected AST data to JSON, compress it with zlib, and Base64-encode it. Python decodes the payload and evaluates Fourier cosine/sine sums, spline polynomials, or polylines; HTML uses Canvas; Desmos emits parametric expressions and loads expressions in batches of 50. SVG is a separate emitter path.",
+      "digest": "sha256:commit-6615ffd:export-and-template-contract",
+      "provenance": "Exporter, emitter, and templates; emitter test decodes the zlib/Base64 payload and checks the original JSON string.",
+      "limitations": "Generated script execution in external Python/browser/Desmos environments was not established by the inspected Rust tests."
+    },
+    {
+      "id": "VEC-RUNTIME-001",
+      "claim_type": "fact",
+      "scope": "CPU/GPU/threading implementation",
+      "source_paths": ["cli/src/main.rs:58-105", "src/math/mod.rs:201-246", "src/math/mod.rs:354-438", "src/math/wgpu_math.rs:23-128", "src/math/wgpu_math.rs:131-327"],
+      "excerpt": "CLI initializes a global Rayon pool from --threads/config, clamping nonzero requests to available parallelism and treating zero as all available cores. CPU batch FFT uses par_iter. GPU FFT is initialized with a OnceLock wgpu context and compute pipelines, pads/interpolates data to a power of two, then reads results back; GPU errors warn and fall back to CPU in the facade. Native raster rendering also has a separate cached wgpu render context.",
+      "digest": "sha256:commit-6615ffd:runtime-parallel-and-gpu-paths",
+      "provenance": "CLI, math facade, GPU compute, and emitter/native source.",
+      "limitations": "Documentation contains speed estimates, but this record does not treat them as facts: no reproducible benchmark result in the inspected tests establishes general performance or CPU/GPU equivalence."
+    },
+    {
+      "id": "VEC-CONFIG-001",
+      "claim_type": "fact",
+      "scope": "Configuration and precedence",
+      "source_paths": ["src/config.rs:27-109", "cli/src/main.rs:56-105", "cli/src/main.rs:532-599", "docs/configuration_guide.md:7-28,207-240"],
+      "excerpt": "Config::load uses --config when supplied, otherwise ProjectDirs('vectomancy')/config.toml, parses TOML, and falls back to defaults on absence/read/parse failure. CLI values generally override section values; image defaults include spline mode, PNG image output, terms 1000, detail 50, min path length 5, simplify_math true, and GPU false. Video reads its section and falls back to image for selected fields.",
+      "digest": "sha256:commit-6615ffd:config-load-and-overrides",
+      "provenance": "Config structs/load code, CLI resolution code, and documentation.",
+      "limitations": "Documentation examples include fields at top level that the shown Config struct nests under sections; this record reports code behavior and flags the documentation as a separate claim source rather than reconciling it silently."
+    },
+    {
+      "id": "VEC-TEST-001",
+      "claim_type": "fact",
+      "scope": "Local test evidence",
+      "source_paths": ["cli/tests/cli_tests.rs:4-117", "cli/tests/cli_tests.rs:119-174", "crates/vectomancy-transform/tests/transform_tests.rs:4-38", "crates/vectomancy-raster/tests/raster_tests.rs:16-113", "crates/vectomancy-pipeline/tests/pipeline_tests.rs:4-32"],
+      "excerpt": "Tests reject invalid/no subcommand, run image and text workflows and assert output files, optionally process ten frames when a local video exists, assert a simple TSP ordering, assert FFT term count, assert one spline equation, exercise raster decoding including blank/tiny images, and assert a Chaikin pipeline returns a polyline scene.",
+      "digest": "sha256:commit-6615ffd:focused-test-contracts",
+      "provenance": "Test source inspection only; tests were not used as evidence of unmeasured performance or broad correctness.",
+      "limitations": "The video test is environment-conditional and uses an absolute local path; passing tests would not establish all video/output cases."
+    }
+  ],
+  "synthesis": [
+    {
+      "id": "VEC-INF-001",
+      "claim_type": "inference",
+      "scope": "Architecture decomposition",
+      "statement": "Vectomancy has a layered flow: CLI/configuration -> format-specific ingestion -> geometry extraction/normalization -> selectable math transform -> tagged AST -> emitter/native renderer -> optional external video stitching.",
+      "evidence_ids": ["VEC-CLI-001", "VEC-IMAGE-001", "VEC-SVG-001", "VEC-TEXT-001", "VEC-VIDEO-001", "VEC-AST-001", "VEC-EXPORT-001"],
+      "basis": "The named functions and data types connect the stages; this is an architectural reading of local code, not a stated historical design claim.",
+      "limitations": "The repository also exposes workspace pipeline crates and a facade, so this decomposition is a useful projection rather than an exhaustive module graph."
+    },
+    {
+      "id": "VEC-INF-002",
+      "claim_type": "inference",
+      "scope": "Runtime scheduling",
+      "statement": "The runtime uses two concurrency layers for video: a decoder producer thread and bounded channel, followed by a bounded batch of scoped frame workers; within workers, Rayon may parallelize image/path work, creating deliberate shared-pool oversubscription according to the source comment.",
+      "evidence_ids": ["VEC-VIDEO-001", "VEC-RUNTIME-001"],
+      "basis": "The source explicitly creates these scheduling boundaries and comments on the tradeoff.",
+      "limitations": "No independent scheduling trace or benchmark is included."
+    },
+    {
+      "id": "VEC-HYP-001",
+      "claim_type": "hypothesis",
+      "scope": "Research candidate relationship",
+      "statement": "Vectomancy may be a candidate mathematical-neighborhood example for architecture records involving transform pipelines, representation changes, and evidence-bounded approximation controls.",
+      "evidence_ids": ["VEC-INF-001", "VEC-FOURIER-001", "VEC-SPLINE-001", "VEC-CHAikin-001", "VEC-AST-001"],
+      "basis": "The implementation exposes explicit transform modes, intermediate representations, and output contracts.",
+      "limitations": "This is a research hypothesis requiring human review; it is not a typed relation, inclusion decision, or claim that Vectomancy is mathematically equivalent to another system."
+    },
+    {
+      "id": "VEC-ANA-001",
+      "claim_type": "analogy",
+      "scope": "Mathematical vocabulary only",
+      "statement": "The AST boundary can be compared by analogy to a compiler-style intermediate representation: ingestion produces structured segments/paths, transforms produce typed variants, and emitters lower them to target formats.",
+      "evidence_ids": ["VEC-SVG-001", "VEC-AST-001", "VEC-EXPORT-001"],
+      "basis": "Structural resemblance in local data flow.",
+      "limitations": "No historical influence, compiler lineage, semantic equivalence, or relation is asserted."
+    }
+  ],
+  "candidate_relationships": [
+    {
+      "id": "VEC-REL-CANDIDATE-001",
+      "status": "candidate",
+      "claim_type": "hypothesis",
+      "candidate_kind": "mathematical-neighborhood",
+      "statement": "Explore Vectomancy alongside systems that expose explicit approximation/transform pipelines and typed intermediate representations.",
+      "evidence_ids": ["VEC-INF-001", "VEC-HYP-001"],
+      "review_required": true,
+      "promotion_status": "promotion-not-determined",
+      "guardrail": "Do not write this candidate to relations or canonical cards from this artifact."
+    }
+  ],
+  "review_boundary": {
+    "research_status": "research-only",
+    "canonical_status": "non-canonical",
+    "review_status": "review-required",
+    "promotion_status": "promotion-not-determined",
+    "human_review_questions": [
+      "Are the source excerpts and commit/digest boundary sufficient for the intended Mathen feature scope?",
+      "Should any inference or analogy be retained, narrowed, or rejected after review?",
+      "Do documented performance claims need a separately reproducible benchmark before citation?",
+      "Should any candidate relationship be represented elsewhere after deliberate review?"
+    ],
+    "non_inference_guards": [
+      "No general performance conclusion is drawn from prose estimates or implementation structure.",
+      "No general mathematical correctness, convergence, optimality, or visual fidelity conclusion is drawn from formulas or focused tests.",
+      "No relation, historical influence, compatibility, production-readiness, or canonical promotion is inferred."
+    ]
+  }
+}
